@@ -1,0 +1,20 @@
+--- a/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
++++ b/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+@@ -37,7 +37,7 @@ class KotlinExpoModulesCorePlugin implements Plugin<Project> {
+       }
+     }
+ 
+-    android().buildTypes.all { buildType ->
++    project.android.buildTypes.all { buildType ->
+       // Set by default only for non-release build types
+       if (buildType.name != 'release') {
+         buildType.ext.expoBuildType = 'development'
+@@ -73,7 +73,7 @@ class KotlinExpoModulesCorePlugin implements Plugin<Project> {
+       }
+     }
+ 
+-    components.release {
++    project.components.release {
+       it.addVariantsFromConfiguration(buildTypes.release) {
+         it.resolutionStrategy.activateDependencyLocking()
+       }

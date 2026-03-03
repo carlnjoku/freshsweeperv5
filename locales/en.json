@@ -1,0 +1,27 @@
+{
+    "welcome": "Welcome",
+    "signup": "Sign Up",
+    "login": "Log In",
+    "email": "Email",
+    "password": "Password",
+    "enter_password":"Enter your password",
+    "forgot_password": "Forgot password?",
+	  "enter_username_or_email": "Enter your username or email",
+    "language": "Language",
+    "dont_have_account":"Don't have account ? Register",
+    "select_language": "Select Language",
+    "apartment_title": "Apartment Title",
+    "apartment_address": "Apartment Address",
+    "apartment_type": "Apartment Type",
+    "room_count": "Number of Rooms",
+    "room_size": "Room Size",
+    "cleaning_supplies": "Have Cleaning Supplies",
+    "instructions": "Specific Instruction",
+    "contact_phone": "Contact Phone Number",
+    "add_apartment": "Add Apartment",
+    "adjust_size": "Adjust Size",
+    "done": "Done",
+    "cancel": "Cancel",
+    "save": "Save"
+    
+  }

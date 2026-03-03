@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 16.28.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "0a73df93-2859-4fa7-80e0-5e306a76fcc1"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "0a73df93-2859-4fa7-80e0-5e306a76fcc1"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "0a73df93-2859-4fa7-80e0-5e306a76fcc1"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

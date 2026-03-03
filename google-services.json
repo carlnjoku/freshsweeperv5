@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "283581670255",
+    "firebase_url": "https://fresh-sweeper-default-rtdb.firebaseio.com",
+    "project_id": "fresh-sweeper",
+    "storage_bucket": "fresh-sweeper.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:283581670255:android:1373d0f385ad0e9c94be9a",
+        "android_client_info": {
+          "package_name": "com.flavoursoft.freshsweeper50"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5rvWFZTFVYeOweeRrWnuTBSVswUOhnpw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flavoursoft.freshsweeperv5"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:283581670255:android:a5a988e56b361b2394be9a",
+        "android_client_info": {
+          "package_name": "com.flavoursoft.freshsweeperv5"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5rvWFZTFVYeOweeRrWnuTBSVswUOhnpw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flavoursoft.freshsweeperv5"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
