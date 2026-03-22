@@ -728,9 +728,10 @@ const TaskProgress = ({route}) => {
   const navigation = useNavigation()
   const{scheduleId, mode} = route.params
 
+
   const [currentStep, setCurrentStep] = useState(1);
   const [progress, setProgress] = useState(0);
-    
+
   const startTime = moment(schedule?.schedule?.cleaning_time, "hh:mm A");
   const totalEstimatedTime = 120 * schedule?.schedule?.total_cleaning_time * 1000;
 

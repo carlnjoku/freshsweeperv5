@@ -568,6 +568,7 @@ import fetchIPGeolocation from '../../services/geolocation';
 import FloatingLabelPickerSelect from '../../components/shared/FloatingLabelPicker';
 import { LanguageContext } from '../../context/LanguageContext';
 import useInviteToken from '../../hooks/useInviteToken';
+import { useNotification } from '../../hooks/useNotification';
 
 
 // export default function Signup({navigation, route}) {
@@ -788,7 +789,9 @@ export default function Signup({navigation, route}) {
 
   console.log('Invite Token:', inviteToken);
   console.log('User Type:', userType);
-  
+
+  const { registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
+
   const [geolocationData, setGeolocationData] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   
@@ -997,6 +1000,8 @@ export default function Signup({navigation, route}) {
               cleanerId:user._id
             }
             try {
+              
+                // registerForPushNotificationsAsync(user._id); // Register token
                 const inviteResp =  userService.acceptInviteOnSignup(payload);
                 // navigation.navigate('PropertyDetails', { propertyId: inviteResp.propertyId });
             } catch (err) {

@@ -28,6 +28,7 @@ import NoScheduleMessage from '../../components/cleaner/NoScheduleMessage';
 import { get_clean_future_requests } from '../../utils/get_cleaner_future_request';
 import { useTranslation } from "react-i18next";
 // import { useNotification } from '../../hooks/useNotification';
+import InviteBanner from '../../components/cleaner/InviteBanner';
 
 const Dashboard = () => {
   const navigation = useNavigation();
@@ -63,6 +64,40 @@ const Dashboard = () => {
 const [showDevMenu, setShowDevMenu] = useState(false);
 const [devTapCount, setDevTapCount] = useState(0);
 const devTapTimeoutRef = useRef(null);
+
+const [showBanner, setShowBanner] = useState(false);
+const [inviteCount, setInviteCount] = useState(0);
+const [pendingInvites, setPendingInvites] = useState([]);
+
+
+useEffect(() => {
+  checkPendingInvites();
+}, []);
+
+const checkPendingInvites = async () => {
+  const response = await userService.getPendingInvites(currentUserId);
+  if (response.data.length > 0) {
+    console.log("Pending---------DT", response.data)
+    setPendingInvites(response.data);
+    setInviteCount(response.data.length)
+    setShowBanner(true);
+  }
+};
+
+const handleAccept = () => {
+  if (pendingInvites.length === 0) return;
+  const invite = pendingInvites[0];
+  navigation.navigate(ROUTES.cleaner_property_preview, {
+    propertyId: invite.property_id,
+    inviteToken: invite.token,
+  });
+  setShowBanner(false);
+};
+
+const handleDismiss = () => {
+  // Optionally store that user dismissed, or just hide
+  setShowBanner(false);
+};
 
 
   useEffect(() => {
@@ -254,6 +289,7 @@ const handleSecretTap = () => {
     try {
       await userService.getMySchedules(currentUserId).then((response) => {
         const res = response.data;
+        console.log("My Upcoming--------QTP", res)
         setUpcomingSchedule(res);
       });
     } catch (e) {
@@ -346,6 +382,7 @@ const handleSecretTap = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Animated.ScrollView
         style={[
           styles.scrollView,
@@ -379,6 +416,14 @@ const handleSecretTap = () => {
           </TouchableOpacity>
         </View> */}
 
+        {showBanner && (
+          <InviteBanner
+            onAccept={handleAccept}
+            onDismiss={handleDismiss}
+            inviteCount={inviteCount}
+            propertyName={pendingInvites[0]?.property_name} // optional: show property name
+          />
+        )}
         {/* Earnings Card */}
         <View style={styles.earningsCard}>
           <View style={styles.earningsContent}>
@@ -393,7 +438,7 @@ const handleSecretTap = () => {
           <View style={styles.earningsProgress}>
             <View style={[styles.progressBar, { width: `${Math.min(weekly_earning/1000 * 100, 100)}%` }]} />
           </View>
-          <Text style={styles.earningsSubtitle}>Keep up the great work! 🎉</Text>
+          <Text style={styles.earningsSubtitle}>Keep up the great work!</Text>
         </View>
 
         {/* Stats Grid */}
@@ -535,15 +580,7 @@ const handleSecretTap = () => {
           </View>
         </View>
 
-        {/* Testing Section - Collapsible */}
-        <TouchableOpacity 
-          style={styles.testingHeader}
-          onPress={() => navigation.navigate(ROUTES.developer_testing)}
-        >
-          <Text style={styles.testingTitle}>Developer Tools</Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.gray} />
-        </TouchableOpacity>
-
+       
       </Animated.ScrollView>
     </SafeAreaView>
   );
@@ -663,7 +700,7 @@ const DashboardDevMenu = ({ visible, onClose, onTriggerError }) => {
         <View style={devMenuStyles.container}>
           <View style={devMenuStyles.content}>
             <View style={devMenuStyles.header}>
-              <Text style={devMenuStyles.title}>🧪 Dashboard Error Tests</Text>
+              <Text style={devMenuStyles.title}>Dashboard Error Tests</Text>
               <TouchableOpacity onPress={onClose} style={devMenuStyles.closeButton}>
                 <Text style={devMenuStyles.closeText}>✕</Text>
               </TouchableOpacity>

@@ -1455,7 +1455,7 @@ import { minutesToDuration } from '../../../utils/minuteToDuration';
 const PaymentHistory = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { bookingId, notificationId } = route.params || {};
+  const { scheduleId, notificationId } = route.params || {};
 
   const {currentUserId, fbaseUser, currentUser} = useContext(AuthContext)
 
@@ -1608,7 +1608,7 @@ const PaymentHistory = () => {
   const handleViewReceipt = (schedule) => {
     navigation.navigate(ROUTES.host_receipt_details, { 
       scheduleId: schedule._id,
-      scheduleData: schedule 
+      payment_intent_id: schedule.payment_intent_id
     });
   };
 
@@ -1796,7 +1796,7 @@ const PaymentHistory = () => {
                       </Text>
                     </TouchableOpacity>
                     
-                    {schedule.status === 'completed' && (
+                    {schedule.status === 'payment_confirmed' && (
                       <TouchableOpacity 
                         style={styles.receiptButton}
                         onPress={() => handleViewReceipt(schedule)}

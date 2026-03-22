@@ -1089,7 +1089,7 @@ const Messages = ({navigation}) => {
           : 'When you receive messages from hosts, they will appear here.'
         }
       </Text>
-      {!searchQuery && (
+      {/* {!searchQuery && (
         <TouchableOpacity 
           style={styles.emptyButton}
           onPress={() => navigation.navigate(ROUTES.cleaner_available_jobs)}
@@ -1097,7 +1097,7 @@ const Messages = ({navigation}) => {
           <MaterialCommunityIcons name="briefcase-search-outline" size={18} color="#FFF" />
           <Text style={styles.emptyButtonText}>Find Jobs</Text>
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 

@@ -19,6 +19,7 @@ import Connection from '../../screens/host/Connection';
 import PaymentHistory from '../../screens/host/Payment/PaymentHistory';
 import Notification from '../../components/shared/Notification';
 import { AuthContext } from '../../context/AuthContext'; // ✅ Import AuthContext
+import TeamManagement from '../../screens/host/TeamManagement';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -151,7 +152,7 @@ const DrawerNavigator = () => {
             fontSize: 16,
             color: COLORS.gray,
           },
-          drawerIcon: (props) => <NotificationDrawerIcon {...props} />
+          drawerIcon: (props) =><NotificationDrawerIcon {...props} />
         }}
       />
       <Drawer.Screen 
@@ -160,6 +161,37 @@ const DrawerNavigator = () => {
         options={{
           headerShown: true,
           title: "My Profile",
+          headerTintColor: COLORS.gray,
+          headerBackTitleVisible: true,
+          headerStyle: {
+            backgroundColor: '#fff',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOpacity: 0.3,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 3,
+          },
+          headerTitleStyle: {
+            fontWeight: '600',
+            fontSize: 16,
+            color: COLORS.gray,
+          },
+          drawerIcon: ({ focused, color, size }) => (
+            <DrawerIcon
+              IconComponent={MaterialCommunityIcons}
+              name="account-outline"
+              color={color}
+              size={20}
+            />
+          )
+        }}
+      />
+      <Drawer.Screen 
+        name={ROUTES.host_team} 
+        component={TeamManagement} 
+        options={{
+          headerShown: true,
+          title: "My Team",
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
           headerStyle: {

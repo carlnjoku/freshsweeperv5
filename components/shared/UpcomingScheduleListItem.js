@@ -11,15 +11,24 @@ import { AuthContext } from '../../context/AuthContext';
 
 const UpcomingScheduleListItem = ({item, currency }) => {
 
-  console.log("Scheduleeeeeeeeeeeeeeeeees")
-  // console.log(item)
-  console.log("Scheduleeeeeeeeeeeeeeeeees")
+
   const navigation = useNavigation();
-  const {userType} = useContext(AuthContext)
+  const {userType, currentUserId} = useContext(AuthContext)
+
+  const assignedToForCleaner = item.assignedTo?.find(
+    (cleaner) => cleaner.cleanerId === currentUserId
+  );
+
+  // Check if schedule is cancelled OR current user's assignment is cancelled
+  const isScheduleCancelled = item.status?.toLowerCase() === 'cancelled';
+  const isUserAssignmentCancelled = assignedToForCleaner?.status?.toLowerCase() === 'cancelled';
+  
+  const isCancelled = isScheduleCancelled || isUserAssignmentCancelled;
 
 
 
   const {handleEdit}  = useBookingContext();
+  
 
   return (
    
@@ -56,7 +65,7 @@ const UpcomingScheduleListItem = ({item, currency }) => {
 
                 {userType==="host" ? 
                 <View style={styles.action}>
-                  {item.status === "open" ?  
+                  {item.status === "pending_payment" ?  
                   <View style={{flexDirection:'row', width:'85%', justifyContent:'space-between', alignItems:'center'}}>
                     
                     <TouchableOpacity 
@@ -66,6 +75,7 @@ const UpcomingScheduleListItem = ({item, currency }) => {
                     >
                       <Text style={styles.details}>View schedule</Text>
                     </TouchableOpacity>
+                    
                     <TouchableOpacity 
                       onPress={() => handleEdit(true, item)} // Pass item to handleEdit
                     >
@@ -94,18 +104,24 @@ const UpcomingScheduleListItem = ({item, currency }) => {
                       'item':item.item
                     })}
                   >
-                    <Text style={styles.details}>DETAILS</Text>
+                    <Text style={styles.details}>View Details</Text>
                   </TouchableOpacity>
 
                   :
-
-                  <TouchableOpacity 
-                    onPress={() => navigation.navigate(ROUTES.cleaner_schedule_details, {
-                      'item':item.item
-                    })}
-                  >
-                      <Text style={styles.clockin}>CLOCK-IN</Text>
-                  </TouchableOpacity>
+                  <>
+                  {!isCancelled  && (
+                    <TouchableOpacity 
+                      onPress={() => navigation.navigate(ROUTES.cleaner_clock_in, {
+                        scheduleId: item._id,
+                        schedule: item,
+                        cleaner: assignedToForCleaner
+                      })}
+                    >
+                        <Text style={styles.clockin}>Click-In</Text>
+                        
+                    </TouchableOpacity>
+                  )}
+                  </>
                 }
                   </View> 
 
@@ -114,8 +130,6 @@ const UpcomingScheduleListItem = ({item, currency }) => {
             </View>
           </View>
         
-      
-
   );
 };
 
@@ -192,7 +206,7 @@ const styles = StyleSheet.create({
     // fontWeight:'bold'
   },
   clockin:{
-    fontSize:12,
+    fontSize:14,
     marginLeft:20,
     color:COLORS.primary,
     fontWeight:'bold'

@@ -70,10 +70,10 @@ const renderEmptyState = (type = 'general') => {
         <Text style={styles.emptyStateText}>{message}</Text>
   
         {/* Optional call-to-action button */}
-        <TouchableOpacity style={styles.actionButton}>
+        {/* <TouchableOpacity style={styles.actionButton}>
           <MaterialCommunityIcons name="refresh" size={16} color="#fff" />
           <Text style={styles.actionButtonText}>Refresh History</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animatable.View>
     );
   };

@@ -136,10 +136,10 @@ export default function Ongoing({ schedules, isLoading = false }) {
         <Text style={styles.emptyStateText}>{message}</Text>
         
         {/* Optional: Add a call-to-action button for cleaners */}
-        <TouchableOpacity style={styles.actionButton}>
+        {/* <TouchableOpacity style={styles.actionButton}>
           <MaterialCommunityIcons name="play" size={16} color="#fff" />
           <Text style={styles.actionButtonText}>Start a Job</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animatable.View>
     );
   };

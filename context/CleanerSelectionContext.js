@@ -76,7 +76,9 @@ export const CleanerSelectionProvider = ({ children }) => {
         removeCleaner,
         replaceCleaner,
         resetCleaners,
+        clearSelectedCleaners: () => setSelectedCleaners([]), // <-- add this to cleaer previous selected cleaners
       }}
+      
     >
       {children}
     </CleanerSelectionContext.Provider>

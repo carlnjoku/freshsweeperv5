@@ -1245,10 +1245,11 @@ import { Button } from 'react-native-paper';
 import userService from '../../services/connection/userService';
 import { useCleanerSelection } from '../../context/CleanerSelectionContext';
 import { AuthContext } from '../../context/AuthContext';
+import { MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
 import ROUTES from '../../constants/routes';
 import CleanerCard from '../../components/cleaner/CleanerCard';
 import COLORS from '../../constants/colors';
-import { MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
+
 import CompareCleanerModal from '../../components/host/CompareCleanerModal';
 import CleanerSelectionModal from '../../components/host/CleanerSelectionModal';
 
@@ -1256,9 +1257,15 @@ import CleanerSelectionModal from '../../components/host/CleanerSelectionModal';
 export default function ScheduleRequest() {
   const route = useRoute();
   const { scheduleId, requestId } = route?.params;
+ 
   const navigation = useNavigation();
   const { currentUserId } = useContext(AuthContext);
-  const { selectedCleaners, addCleaner } = useCleanerSelection();
+
+
+// Add removeCleaner to destructuring
+const { selectedCleaners, addCleaner, removeCleaner, clearSelectedCleaners } = useCleanerSelection();
+
+
 
   const scrollRef = useRef(null);
   const payButtonRef = useRef(null);
@@ -1279,11 +1286,12 @@ export default function ScheduleRequest() {
 
   const shouldShowPayButton = selectedCleaners.length === expectedCleaners;
   const selectedCleanerIds = selectedCleaners.map(c => c._id);
+  
   const unselectedCleaners = pending_payment.filter(
     request => !selectedCleanerIds.includes(request.cleaner._id)
   );
 
-
+  console.log('📦 route.params:', route.params);
   
   // fetch host request
   const fetchHostRequest = async () => {
@@ -1439,6 +1447,11 @@ export default function ScheduleRequest() {
     }
   }, [assignedTo, groupedCleaners, selectedCleaners]);
 
+  // Handler to remove a cleaner
+  const handleRemoveCleaner = (cleanerId) => {
+    removeCleaner(cleanerId);
+  };
+
   const handleProceedToGroupCheckout = () => {
     console.log('=== CHECKOUT DEBUGGING ===');
     console.log('1. groupData:', groupData);
@@ -1527,6 +1540,8 @@ export default function ScheduleRequest() {
     const cleanersWithFee = assignedTo
     ?.map(item => ({
       cleanerId: item.cleanerId,
+      firstname: item.firstname,
+      lastname: item.lastname,
       fee: item.checklist.price || 0,
     }))
     .filter(c => c.cleanerId); // remove any invalid entries
@@ -1630,7 +1645,26 @@ export default function ScheduleRequest() {
           <Text style={styles.debugButtonText}>Test Group Data</Text>
         </TouchableOpacity> */}
       </View>
+      
+      {/* Info message */}
+      <View style={styles.infoContainer}>
+        <MaterialIcons name="info-outline" size={20} color={COLORS.primary} />
+        <Text style={styles.infoText}>
+          Select cleaners by tapping on their cards. You have selected {selectedCleaners.length} of {expectedCleaners} cleaner(s).
+          {selectedCleaners.length === expectedCleaners ? ' Maximum selected.' : ''}
+        </Text>
+      </View>
 
+      {/* Empty state
+      {unselectedCleaners.length === 0 && selectedCleaners.length === 0 && (
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons name="account-clock" size={60} color={COLORS.gray} />
+          <Text style={styles.emptyTitle}>No Cleaners Yet</Text>
+          <Text style={styles.emptyText}>
+            Cleaners haven't accepted this request yet. Once they do, they'll appear here.
+          </Text>
+        </View>
+      )} */}
       <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: 100 }}>
         <FlatList
           ref={flatListRef}
@@ -1638,10 +1672,21 @@ export default function ScheduleRequest() {
           ListHeaderComponent={() => (
             <>
               <Text style={{ marginBottom: 8, fontWeight: 'bold', alignSelf: 'center' }}>Selected Cleaners</Text>
-              {selectedCleaners.map(cleaner => (
+              {/* {selectedCleaners.map(cleaner => (
                 <View key={cleaner._id} style={{ marginVertical: 10, marginHorizontal: 10 }}>
                   <CleanerCard item={cleaner} selected={true} />
                   
+                </View>
+              ))} */}
+              {selectedCleaners.map(cleaner => (
+                <View key={cleaner._id} style={{ marginVertical: 10, marginHorizontal: 10, position: 'relative' }}>
+                  <CleanerCard item={cleaner} selected={true} />
+                  <TouchableOpacity 
+                    style={styles.removeButton}
+                    onPress={() => handleRemoveCleaner(cleaner._id)}
+                  >
+                    <MaterialIcons name="close" size={20} color="#fff" />
+                  </TouchableOpacity>
                 </View>
               ))}
               {shouldShowPayButton && (
@@ -1656,6 +1701,18 @@ export default function ScheduleRequest() {
           renderItem={renderItem}
           keyExtractor={item => item._id || item.cleaner._id}
         />
+
+       
+        {/* Empty state */}
+        {unselectedCleaners.length === 0 && selectedCleaners.length === 0 && (
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons name="account-clock" size={60} color={COLORS.gray} />
+          <Text style={styles.emptyTitle}>No Cleaners Yet</Text>
+          <Text style={styles.emptyText}>
+            Cleaners haven't accepted this request yet. Once they do, they'll appear here.
+          </Text>
+        </View>
+        )}
       </ScrollView>
 
       {/* Compare Modal */}
@@ -1694,4 +1751,55 @@ const styles = StyleSheet.create({
   payButtonText: { color: '#fff', fontWeight: 'bold' },
   debugButton: { margin: 10, padding: 10, borderRadius: 5, backgroundColor: COLORS.gray },
   debugButtonText: { color: '#fff', fontSize: 12 },
+
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f4fd',
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '40',
+  },
+  infoText: {
+    flex: 1,
+    marginLeft: 8,
+    color: '#333',
+    fontSize: 14,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    marginTop: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.gray,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff4444',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 3,
+  },
 });

@@ -356,6 +356,7 @@ export default function AllRequests({ route }) {
         statusIcon={statusIcon}
         currency={currency}
       />
+
     );
   };
 

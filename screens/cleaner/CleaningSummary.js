@@ -6,6 +6,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import GroupActions from '../../components/cleaner/GroupActions';
 import { minutesToDuration } from '../../utils/minuteToDuration';
+import TermsConditions from './TermsConditions';
 
 const { width } = Dimensions.get('window');
 
@@ -157,72 +158,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
 
   // Content for Rules and Penalties Modal
   const renderRulesAndPenaltiesContent = () => (
-    <ScrollView style={styles.rulesContent}>
-      <Text style={styles.rulesTitle}>Terms & Conditions</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📋 Professional Standards</Text>
-        <Text style={styles.rulesText}>
-          • Arrive 10-15 minutes before scheduled time{"\n"}
-          • Wear provided uniform and ID badge{"\n"}
-          • Bring all necessary cleaning equipment{"\n"}
-          • Maintain professional conduct at all times
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⏰ Punctuality Policy</Text>
-        <Text style={styles.rulesText}>
-          • <Text style={styles.penaltyText}>Late arrival (1-15 mins):</Text> 10% pay deduction{"\n"}
-          • <Text style={styles.penaltyText}>Late arrival (16-30 mins):</Text> 25% pay deduction{"\n"}
-          • <Text style={styles.penaltyText}>Late arrival (30+ mins):</Text> Considered no-show
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>❌ No-Show Policy</Text>
-        <Text style={styles.rulesText}>
-          • <Text style={styles.penaltyText}>First no-show:</Text> $25 penalty + 1-week suspension{"\n"}
-          • <Text style={styles.penaltyText}>Second no-show:</Text> $50 penalty + 2-week suspension{"\n"}
-          • <Text style={styles.penaltyText}>Third no-show:</Text> Account deactivation
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔍 Quality Standards</Text>
-        <Text style={styles.rulesText}>
-          • All tasks must be completed as specified{"\n"}
-          • Photos required for each completed room{"\n"}
-          • Client has 2 hours to report quality issues{"\n"}
-          • Poor quality may result in partial payment
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📞 Cancellation Policy</Text>
-        <Text style={styles.rulesText}>
-          • <Text style={styles.penaltyText}>Cancel 24+ hours before:</Text> No penalty{"\n"}
-          • <Text style={styles.penaltyText}>Cancel 4-24 hours before:</Text> $15 penalty{"\n"}
-          • <Text style={styles.penaltyText}>Cancel under 4 hours:</Text> $25 penalty
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>💰 Payment Terms</Text>
-        <Text style={styles.rulesText}>
-          • Payment released 24 hours after completion{"\n"}
-          • Client disputes may delay payment{"\n"}
-          • Damage claims investigated within 48 hours{"\n"}
-          • Weekly payout every Friday
-        </Text>
-      </View>
-
-      <View style={styles.agreementSection}>
-        <Text style={styles.agreementText}>
-          By clicking "I Agree & Accept", you acknowledge that you have read and agree to all terms and conditions outlined above.
-        </Text>
-      </View>
-    </ScrollView>
+    <TermsConditions />
   );
 
   const formatRoomTypes = (roomTypes) => {
@@ -438,6 +374,9 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
       >
         <View style={styles.modalOverlay}>
           {renderModalContent()}
+          
+
+
         </View>
       </Modal>
 

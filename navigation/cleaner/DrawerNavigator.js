@@ -176,6 +176,8 @@ import Settings from '../../screens/cleaner/Settings';
 import Earnings from '../../screens/cleaner/Payments/Earnings';
 import Notification from '../../components/shared/Notification';
 import { AuthContext } from '../../context/AuthContext';
+import MyGigs from '../../screens/cleaner/MyGigs';
+
 
 // Reusable Icon Component with consistent padding
 const DrawerIcon = ({ IconComponent, name, color, size = 20 }) => (
@@ -192,7 +194,7 @@ const NotificationDrawerIcon = ({ focused, color, size }) => {
   return (
     <View style={{ paddingLeft: 10, position: 'relative' }}>
       <MaterialCommunityIcons name="bell-outline" size={size} color={color} />
-      {count > 0 && (
+      {/* {count > 0 && (
         <View style={{
           position: 'absolute',
           top: -5,
@@ -209,7 +211,7 @@ const NotificationDrawerIcon = ({ focused, color, size }) => {
             {count > 99 ? '99+' : count}
           </Text>
         </View>
-      )}
+      )} */}
     </View>
   );
 };
@@ -280,7 +282,7 @@ const DrawerNavigator = () => {
             fontSize: 16,
             color: COLORS.gray,
           },
-          drawerIcon: (props) => <NotificationDrawerIcon {...props} />
+          drawerIcon: (props) =><NotificationDrawerIcon {...props} />
         }}
       />
 
@@ -350,21 +352,49 @@ const DrawerNavigator = () => {
       />
 
       <Drawer.Screen 
-        name={ROUTES.cleaner_earnings} 
-        component={Earnings} 
+        name={ROUTES.cleaner_my_gigs} 
+        component={MyGigs} 
         options={{
           headerShown:true,
-            title:"My Earnings",
-            headerTintColor:COLORS.white,
+            title:"My Gigs",
+            headerTintColor:COLORS.gray,
             headerBackTitleVisible:true,
             headerStyle:{
-              backgroundColor:COLORS.primary
+              backgroundColor:COLORS.white
             },
             
             headerTitleStyle: {
               fontWeight: '600',
               fontSize:18,
-              color:COLORS.white,
+              color:COLORS.gray,
+            },
+            drawerIcon:({focus, color, size}) => (
+              <DrawerIcon
+                IconComponent={MaterialCommunityIcons}
+                name="credit-card-outline"
+                color={color}
+                size={20}
+              />
+            )
+        }}
+      />
+      
+      <Drawer.Screen 
+        name={ROUTES.cleaner_earnings} 
+        component={Earnings} 
+        options={{
+          headerShown:true,
+            title:"My Earnings",
+            headerTintColor:COLORS.gray,
+            headerBackTitleVisible:true,
+            headerStyle:{
+              backgroundColor:COLORS.white
+            },
+            
+            headerTitleStyle: {
+              fontWeight: '600',
+              fontSize:18,
+              color:COLORS.gray,
             },
             drawerIcon:({focus, color, size}) => (
               <DrawerIcon
@@ -383,16 +413,16 @@ const DrawerNavigator = () => {
         options={{
             headerShown:true,
             title:"Settings",
-            headerTintColor:COLORS.white,
+            headerTintColor:COLORS.gray,
             headerBackTitleVisible:true,
             headerStyle:{
-                backgroundColor:COLORS.primary
+                backgroundColor:COLORS.white
             },
             
             headerTitleStyle: {
               fontWeight: '600',
               fontSize:18,
-              color:COLORS.white,
+              color:COLORS.gray,
             },
             drawerIcon:({focus, color, size}) => (
               <DrawerIcon

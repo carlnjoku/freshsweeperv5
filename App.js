@@ -9,6 +9,7 @@ import { CleanerSelectionProvider } from './context/CleanerSelectionContext';
 import { STRIPE_PUBLIC_SECRET_KEY } from './secret';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { BookingProvider } from './context/BookingContext';
 import { Text } from 'react-native';
 // import * as Linking from 'expo-linking';
 import { AuthContext } from './context/AuthContext';
@@ -39,12 +40,14 @@ export default function App() {
           <LanguageProvider>
             <AuthProvider>
               <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
+              <BookingProvider>
                 <PaperProvider>
                   <CleanerSelectionProvider>
                     <AppNavigationWrapper />
                     <GlobalErrorModal />
                   </CleanerSelectionProvider>
                 </PaperProvider>
+              </BookingProvider>
               </StripeProvider>
             </AuthProvider>
           </LanguageProvider>

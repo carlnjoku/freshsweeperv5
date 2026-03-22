@@ -973,7 +973,7 @@
 
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { TextInput, Checkbox, RadioButton } from 'react-native-paper';
-import { StyleSheet,Text, Keyboard, Alert, Platform, StatusBar, Linking,  FlatList, ScrollView, Image, View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet,Text, KeyboardAvoidingView, findNodeHandle, Keyboard, Alert, Platform, StatusBar, Linking,  FlatList, ScrollView, Image, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Button from "../../components/shared/Button";
 import { Modal, Portal, Provider } from "react-native-paper";
 import Slider from "@react-native-community/slider"; // Fixed import
@@ -998,6 +998,7 @@ import PlatformCleanerPicker from "../../components/host/PlatformCleanerPicker";
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import CleanerManagementModal from "./CleanerManagementModal";
+import { testGooglePlacesApiKey } from "../../utils/geocodeAddress";
 
 // Fallback Colors if COLORS is missing
 const FALLBACK_COLORS = {
@@ -1017,6 +1018,12 @@ export default function AddProperty() {
       { type: "Livingroom", number: 0, size: 150, size_range: "Medium" },
       { type: "Kitchen", number: 0, size: 140, size_range: "Small" }, // Added Kitchen
     ]);
+
+    const scrollViewRef = useRef(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [instructionInputY, setInstructionInputY] = useState(0);
+    const instructionInputRef = useRef(null);
+
   
     const[modalVisible, setModalVisible] = useState(false);
     const[aptName, setAptName] = useState("");
@@ -1069,6 +1076,18 @@ export default function AddProperty() {
       const [cleanerModalVisible, setCleanerModalVisible] = useState(false);
       const [platformCleaners, setPlatformCleaners] = useState([]); // list from backend
 
+      useEffect(() => {
+        const checkApiKey = async () => {
+          const isValid = await testGooglePlacesApiKey();
+          if (!isValid) {
+            setShowGoogleAutocomplete(false);
+            setAutocompleteError('Address service unavailable. Please enter manually.');
+          }
+        };
+        if (showGoogleAutocomplete) {
+          checkApiKey();
+        }
+      }, [showGoogleAutocomplete]);
 
       useEffect(() => {
         if (!coordinates?.latitude || !coordinates?.longitude) return;
@@ -1091,6 +1110,7 @@ export default function AddProperty() {
         }
       };
 
+      
 
       
 
@@ -1147,24 +1167,23 @@ export default function AddProperty() {
   };
 
 
-    
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
   
-    useEffect(() => {
-      fetchUser()
-      const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-        setTextInputBottomMargin(60); // Adjust this value as needed
-      });
-  
-      const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        setTextInputBottomMargin(0);
-      });
-  
-      return () => {
-        keyboardDidShowListener.remove();
-        keyboardDidHideListener.remove();
-      };
-    }, []);
-  
+
+  useEffect(()=> {
+    fetchUser()
+  },[])
   
   
     const fetchUser = async () => { 
@@ -1589,10 +1608,20 @@ const handleInviteCleaner = () => {
   
     return (
       <Provider>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} // adjust if needed
+        >
         <View style={{ flex: 1, paddingHorizontal:20, backgroundColor:"white" }}>
         <StatusBar  backgroundColor={COLORS.white}  barStyle="dark-content"/>
-          <ScrollView showsVerticalScrollIndicator={false}> 
-  
+          <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={{ paddingBottom: keyboardHeight }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          > 
+            
             <TextInput
               mode="outlined"
               label="Property Title"
@@ -1634,13 +1663,13 @@ const handleInviteCleaner = () => {
                   </View>
 
                   <TouchableOpacity onPress={() => handleRoomCountChange(room.type, "minus")} style={styles.counterButton}>
-                    <Text>-</Text>
+                    <Text style={styles.buttonSign}>-</Text>
                   </TouchableOpacity>
 
                   <Text style={styles.roomCount}>{room.number}</Text>
 
                   <TouchableOpacity onPress={() => handleRoomCountChange(room.type, "add")} style={styles.counterButton}>
-                    <Text>+</Text>
+                    <Text style={styles.buttonSign}>+</Text>
                   </TouchableOpacity>
 
                   {errors?.room_count?.[room.type] && (
@@ -1681,7 +1710,7 @@ const handleInviteCleaner = () => {
               </View>
             </View>
 
-            <TextInput
+            {/* <TextInput
               mode="outlined"
               label="Specific Instruction"
               placeholder="Specific Instruction"
@@ -1692,6 +1721,36 @@ const handleInviteCleaner = () => {
               style={{ marginBottom: 5, color: COLORS.gray, fontSize: 14, backgroundColor: "#fff" }}
               onChangeText={text => handleChange(text, 'instructions')}
               onFocus={() => handleError(null, 'instruction')}
+              error={errors.instructions}
+              iconName="email-outline"
+              multiline
+            /> */}
+
+            <TextInput
+              mode="outlined"
+              label="Specific Instruction"
+              placeholder="Specific Instruction"
+              placeholderTextColor={COLORS.gray}
+              outlineColor="#D8D8D8"
+              value={inputs.instructions}
+              activeOutlineColor={COLORS.primary}
+              style={{ marginBottom: 5, color: COLORS.gray, fontSize: 14, backgroundColor: "#fff" }}
+              onChangeText={text => handleChange(text, 'instructions')}
+              onFocus={() => {
+                handleError(null, 'instruction');
+                // Wait a bit for the keyboard to fully show and layout to settle
+                setTimeout(() => {
+                  if (instructionInputRef.current && keyboardHeight > 0) {
+                    instructionInputRef.current.measure((x, y, width, height, pageX, pageY) => {
+                      // y is the position relative to the scroll view's content
+                      // We want to scroll so the input is above the keyboard
+                      const scrollToY = Math.max(0, y - keyboardHeight + height + 20);
+                      scrollViewRef.current?.scrollTo({ y: scrollToY, animated: true });
+                    });
+                  }
+                }, 300); // 300ms delay gives enough time for keyboard animation
+              }}
+              
               error={errors.instructions}
               iconName="email-outline"
               multiline
@@ -1769,6 +1828,7 @@ const handleInviteCleaner = () => {
           invitedCleaners={invitedCleaners}         // ✅ pass current value
           setInvitedCleaners={setInvitedCleaners}   // ✅ pass setter
         />
+        </KeyboardAvoidingView>
       </Provider>
     );
 }
@@ -1864,20 +1924,52 @@ const styles = {
         fontSize: 14,
         color: "#666",
     },
-    counterButton: {
-        padding: 12,
-        marginHorizontal: 5,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-        height:40
     
+    counterContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12
+    },
+    
+    counterButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: COLORS.light_gray_1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: COLORS.light_gray_1,
+    
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 1 },
+      shadowRadius: 1,
+      elevation: 1
+    },
+    
+    counterText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#222"
+    },
+    
+    buttonSign:{
+      fontSize:18
     },
     roomCount: {
-        fontSize: 14,
-        fontWeight: "500",
-        marginHorizontal: 5,
+      fontSize: 14,
+      fontWeight: "500",
+      minWidth: 24,
+      color:COLORS.gray,
+      textAlign: "center"
     },
+
+
+
+
+
+
     errorTextRoom: {
         color: "#D32F2F",
         fontSize: 12,

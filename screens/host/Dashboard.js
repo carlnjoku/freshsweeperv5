@@ -12,6 +12,7 @@ import {
   Button,
   RefreshControl,
   FlatList,
+  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -148,68 +149,7 @@ const Dashboard = () => {
     }
   };
 
-  // const fetchSchedules = async () => {
-  //   try {
-  //     const response = await userService.getSchedulesByHostId(currentUserId);
-  //     const res = response.data;
-      
-  //     setSchedules(res);
-
-  //     const pendingCompletionApprovalSchedules = res
-  //       .filter(
-  //         (schedule) =>
-  //           (schedule.status === "completed" || schedule.status === "in_progress") &&
-  //           Array.isArray(schedule.assignedTo) &&
-  //           schedule.assignedTo.some(
-  //             (cleaner) => cleaner.status === "pending_completion_approval"
-  //           )
-  //       )
-  //       .map((schedule) => ({
-  //         ...schedule,
-  //         assignedTo: schedule.assignedTo.filter(
-  //           (cleaner) => cleaner.status === "pending_completion_approval"
-  //         ),
-  //       }));
-
-  //     // const upcomingSchedulesFiltered = res.filter(
-  //     //   (schedule) => schedule.status === "pending_payment"
-  //     // );
-  //     setFilteredPendingCompletionApprovalSchedules(pendingCompletionApprovalSchedules);
-  //     // setUpcomingSchedules(upcomingSchedulesFiltered);
-
-
-  //   // Sort upcoming schedules by date
-  //   const upcomingSchedulesFiltered = res
-  //   .filter((schedule) => schedule.status === "payment_confirmed")
-  //   .sort((a, b) => {
-  //     // Simple string comparison since dates are in 'YYYY-MM-DD' format
-  //     if (a.cleaning_date === b.cleaning_date) {
-  //       // If same date, compare time
-  //       return (a.cleaning_time || '').localeCompare(b.cleaning_time || '');
-  //     }
-  //     return a.cleaning_date.localeCompare(b.cleaning_date);
-  //   });
-
-  //   setUpcomingSchedules(upcomingSchedulesFiltered);
-
-  //   setUpcomingSchedules(
-  //     res.filter(schedule => {
-  //       const scheduleDateTime = new Date(`${schedule.schedule.cleaning_date}T${schedule.schedule.cleaning_time}`); // Combine date and time
-  //       const currentDateTime = new Date(); // Get the current date and time
-    
-  //       return (
-          
-  //         schedule.status.toLowerCase() ===  "pending_payment" || "payment_confirmed" && 
-  //         scheduleDateTime >= currentDateTime // Include only schedules with date-time now or later
-  //       );
-  //     })
-  //   );
-
-
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
+  
 
   const fetchSchedules = async () => {
     try {
@@ -496,6 +436,7 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

@@ -283,3 +283,22 @@ export const geocodeAddress = async (address) => {
 
 // Optional: export a standalone permission request function for components that need it
 export const ensureLocationPermission = requestLocationPermission;
+
+
+
+// Add this to geocoding.js
+export const testGooglePlacesApiKey = async () => {
+  try {
+    // Simple test request to Places Autocomplete API
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=test&key=${GOOGLE_MAPS_API_KEY}`
+    );
+    const data = await response.json();
+    // If status is OK or ZERO_RESULTS, the key is valid.
+    // If status is REQUEST_DENIED, the key is invalid/restricted.
+    return data.status !== 'REQUEST_DENIED';
+  } catch (error) {
+    console.error('Places API test failed:', error);
+    return false;
+  }
+};

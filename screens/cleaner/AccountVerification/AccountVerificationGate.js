@@ -560,7 +560,7 @@ const AccountVerificationGate = () => {
         </Text>
         
         {/* Show deep link status if applicable */}
-        {(deepLinkStripeAccountId || deepLinkCleanerId) && (
+        {/* {(deepLinkStripeAccountId || deepLinkCleanerId) && (
           <View style={styles.deepLinkBanner}>
             <MaterialIcons name="link" size={16} color={COLORS.primary} />
             <Text style={styles.deepLinkText}>
@@ -569,7 +569,7 @@ const AccountVerificationGate = () => {
                 : 'Processing your ID verification...'}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
 
       <View style={{ alignItems: 'center', marginVertical: 10 }}>

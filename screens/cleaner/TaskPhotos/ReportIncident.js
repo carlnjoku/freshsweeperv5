@@ -2951,7 +2951,7 @@ const styles = StyleSheet.create({
   },
   cameraControls: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 200,
     alignSelf: 'center',
   },
   captureButton: {
@@ -2987,12 +2987,14 @@ const styles = StyleSheet.create({
   },
   cameraThumbnailSection: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingVertical: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   preview: { 
     width: 80, 

@@ -5208,7 +5208,7 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
     setStepValidations({ step1: false, step2: false, step3: false, step4: true });
     setIsPolling(false);
     handleCreateSchedule(false);
-    navigation.navigate(ROUTES.host_home_tab);
+    navigation.replace(ROUTES.host_home_tab);
   }, [handleCreateSchedule, navigation]);
 
   // Render

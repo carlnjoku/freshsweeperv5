@@ -737,7 +737,7 @@ const HostSupport = ({ navigation }) => {
         style={styles.fab}
         icon="phone"
         color="white"
-        onPress={() => Linking.openURL("tel:+18001234567")}
+        onPress={() => Linking.openURL("tel:+19733804757")}
         label="Emergency Call"
       />
     </View>

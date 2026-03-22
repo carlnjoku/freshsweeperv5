@@ -528,7 +528,7 @@ const Support = ({ navigation }) => {
         style={styles.fab}
         icon="alert-circle"
         color="white"
-        onPress={() => Linking.openURL("tel:+18001234567")}
+        onPress={() => Linking.openURL("tel:+19733804757")}
         label="Emergency"
       />
     </View>

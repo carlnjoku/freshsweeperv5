@@ -1698,6 +1698,7 @@ import { AuthContext } from '../../context/AuthContext';
 // API base URL - adjust based on your environment
 const API_BASE_URL = 'https://www.freshsweeper.com/api'; // Change to your actual API URL
 
+
 const Notification = () => {
   const { currentUser, updateNotificationUnreadCount } = useContext(AuthContext); // ✅ get updater
 
@@ -1807,6 +1808,8 @@ const Notification = () => {
     const propertyId = metadata?.screen_params?.propertyId;
     const supportTicketId = metadata?.supportTicketId;
     const chatId = metadata?.chatId;
+    const payment_intent_id = metadata?.screen_params?.paymentIntentId;
+    const requestId = metadata?.screen_params?.requestId;
   
     // Mark as read first
     markAsRead(_id);
@@ -1816,8 +1819,8 @@ const Notification = () => {
       // === CLEANING REQUEST NOTIFICATIONS ===
       case 'cleaning_request':
         if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_booking_request_detail, { 
-            scheduleId: scheduleId || bookingId,
+          navigation.navigate(ROUTES.cleaner_schedule_review, { 
+            scheduleId: scheduleId,
             notificationId: _id 
           });
         } else {
@@ -1828,10 +1831,41 @@ const Notification = () => {
         }
         break;
   
+      case 'payment_confirmed':
+        navigation.navigate(ROUTES.host_receipt_details, { 
+          scheduleId: scheduleId || bookingId,
+          payment_intent_id:payment_intent_id,
+          notificationId: _id 
+        });
+        break;
+        
+      case 'payment_confirmed_cleaner':
+        navigation.navigate(ROUTES.cleaner_schedule_details_view, { 
+          scheduleId: scheduleId,
+          notificationId: _id 
+        });
+        break;
+
       case 'schedule_confirmed':
         navigation.navigate(ROUTES.host_booking_detail, { 
           scheduleId: scheduleId || bookingId,
-          notificationId: _id 
+          notificationId: _id,
+          
+        });
+        break;
+    
+      case 'cleaner_accepted_schedule':
+        navigation.navigate(ROUTES.host_schedule_request, {
+          scheduleId: scheduleId,
+          requestId:requestId
+        })
+        break;
+      case 'cleaner_clocked_in':
+        navigation.navigate(ROUTES.host_task_progress, { 
+          scheduleId: scheduleId,
+          mode:"in_progress",
+          notificationId: _id,
+          
         });
         break;
   
@@ -2081,7 +2115,7 @@ const Notification = () => {
       profile_approved: 'View Profile',
       document_expiring: 'Update Documents',
 
-      cleaner_clocked_in: 'View Schedule',
+      cleaner_clocked_in: 'Track Schedule',
       upcoming_schedule_reminder: 'View Details',
       cleaner_accepted_schedule: 'View Schedule',
       payment_confirmed_cleaner: 'View Payment',

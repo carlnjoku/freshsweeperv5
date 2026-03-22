@@ -58,8 +58,16 @@ class UserService {
     addApartment(data){
       return http.post('/api/apartments/add_apartment', data)
     }
-    updateApartment(data){
-      return http.put('/api/apartments/update_apartment', data)
+
+    updateApartment(data, authToken){
+      return http.put(
+        '/api/apartments/update_apartment', data ,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
     }
 
     getApartment(userId){
@@ -71,6 +79,10 @@ class UserService {
   
     acceptInviteOnSignup(payload){
       return http.post('/api/apartments/accept_invite_on_signup', payload);
+    }
+
+    getPendingInvites(cleanerId){
+      return http.get(`/api/apartments/get_pending_invite/${cleanerId}`)
     }
 
     acceptInvite(authToken, inviteToken){
@@ -87,11 +99,112 @@ class UserService {
     
     }
 
+    acceptInvite(payload){
+      return http.post('api/apartments/accept_platform_invite', payload)
+    }
+    acceptPlatformInvite(payload){
+      return http.post('api/apartments/accept_platform_invite', payload)
+    }
+
+  
+    unlinkCleaner(data, authToken){
+      console.log(data)
+      return http.post(
+        '/api/apartments/unlink_cleaner', data,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
     
+    }
+
+    
+
+    
+    
+
+    //
+    getInviteStatus(propertyId, cleanerId){
+      return http.get(`/api/apartments/get_invite_status/${propertyId}/${cleanerId}`)
+    }
+    getLinkedCleaners(authToken){
+      return http.get(
+        '/api/apartments/linked_cleaners',
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+    }
+    getHostInvites(authToken){
+      return http.get(
+        '/api/apartments/get_all_host_invites',
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+    }
+
+    resendInvite(payload){
+      return http.post('/api/apartments/resend_invite_email', payload)
+    }
+    resendPlatformInvite(payload){
+      return http.post('/api/apartments/resend_platform_cleaner', payload)
+    }
+    cancelInvite(payload){
+      return http.post('/api/apartments/invites_cancel', payload)
+    }
+
+    
+
+
+    
+
+    getCleanerGigs(cleanerId, authToken){
+      return http.get(
+        `/api/apartments/get_cleaner_gigs/${cleanerId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+    }
+    getLinkedProperties(authToken){
+      return http.get(
+        `/api/apartments/linked_properties`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+    }
+    getPropertyGigs(property_id, authToken){
+      return http.get(
+        `/api/apartments/property/${property_id}/gigs`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+    }
+
+    cleanerHasLinkedProperty(cleanerId){
+      return http.get(`api/apartments/has_linked_properties/${cleanerId}`)
+    }
+    
+     
     getClanersAssignedByApartmentIds(aptId){
       return http.get(`/api/apartments/get_cleaner_assigned_to_apartments/${aptId}`)
     }
-
+    
     getCustomChecklistsByProperty(checklist){
       return http.post('/api/apartments/get_checklist_by_property', checklist)
     }
@@ -112,6 +225,10 @@ class UserService {
     
     saveChecklist(data){
       return http.post('/api/schedules/create_checklist', data)
+    }
+
+    updateCleanerAvailability(cleanerId, payload){
+      return http.post(`/api/schedules/availability_update/${cleanerId}`, payload)
     }
     
     
@@ -225,7 +342,7 @@ class UserService {
       return http.put('/api/schedules/manual_payment_approval', data)
     }
 
-    approve_completion
+   
     // Profile 
     updateProfile(data) {
       return http.put('/api/users/update_profile', data);
@@ -324,6 +441,18 @@ class UserService {
     getPaymentsByStripeCustomerId(customer_id){
       return http.get(`/api/stripes/payments/stripe/customer/${customer_id}`)
     }
+    getStripeInvoice(invoiceId){
+      return http.get(`/api/stripes/invoice/${invoiceId}`)
+    }
+
+    getStripeReceipt(payment_intent){
+      return http.get(`/api/stripes/receipt/${payment_intent}`)
+    }
+    downloadStripeReceipt(invoiceId){
+      return http.get(`/api/stripes/receipt_pdf/${invoiceId}`)
+    }
+
+     
     
     // Card payment
     createPayment(data){

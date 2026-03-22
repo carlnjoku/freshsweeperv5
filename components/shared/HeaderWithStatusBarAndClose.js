@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
 
   headerContainer: {
     height: Platform.select({
-      ios: 60,
+      ios: 40,
       android: 60,
     }),
     marginTop: 0,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: 'absolute',
     right: 10, // Positions the button to the right
-    top: 18, // Aligns the button vertically in the header
+    top: 10, // Aligns the button vertically in the header
   },
 });
 

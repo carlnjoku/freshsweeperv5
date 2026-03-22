@@ -392,10 +392,10 @@ export default function Upcoming({ schedules, isLoading = false }) {
         <Text style={styles.emptyStateText}>{message}</Text>
         
         {/* Optional: Add a call-to-action button for cleaners */}
-        <TouchableOpacity style={styles.actionButton}>
+        {/* <TouchableOpacity style={styles.actionButton}>
           <MaterialCommunityIcons name="refresh" size={16} color="#fff" />
           <Text style={styles.actionButtonText}>Check for New Jobs</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animatable.View>
     );
   };

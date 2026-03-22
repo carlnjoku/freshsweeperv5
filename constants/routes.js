@@ -41,6 +41,8 @@ const ROUTES = {
     cleaner_task_progress:'Completed Task',
     cleaner_payment_history:'My Payments',
     cleaner_invite_gate:'Invite Gate1',
+    cleaner_my_gigs:'MyGigs',
+    cleaner_property_gigs:'PropertyGig',
 
     host_home_tab: "Home",
     host_home_drawer:"Dashboard Host",
@@ -81,6 +83,7 @@ const ROUTES = {
     host_system_alert_notification:"System Alert",
     host_cancellation_details:"Cancellation Details",
     host_promotion:"Promotion",
+    host_team:"TeamManagement",
 
 
     getting_started: "Getting Started",
@@ -106,9 +109,7 @@ const ROUTES = {
     notification:'Notification',
     system_alert:'System Alert',
     invite_gate:'Invite Gate'
-    
-    
-
+  
   };
 
 

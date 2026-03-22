@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, StatusBar } from 'react-native';
 import { List, Switch, Divider, Button } from 'react-native-paper';
 import ROUTES from '../../constants/routes';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +18,7 @@ const Settings = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {/* Update Profile */}
       <List.Item
         title="Update Profile"

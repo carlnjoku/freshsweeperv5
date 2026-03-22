@@ -17,6 +17,7 @@ import PaymentsHistoryCleaner from '../../screens/cleaner/Payments/PaymentHistor
 import PropertyPreview from '../../screens/cleaner/PropertyPreview';
 import InviteGate from '../../screens/public/IniteGate';
 import Notification from '../../components/shared/Notification';
+import PropertyGigs from '../../screens/cleaner/PropertyGigs';
 
 export default function MainCleanerStack() {
 
@@ -183,6 +184,33 @@ export default function MainCleanerStack() {
         })}
       />
       <Stack.Screen 
+        name={ROUTES.cleaner_property_gigs} 
+        component={PropertyGigs} 
+        options={{
+          headerShown:true,
+            title:"Property Gigs",
+            headerTintColor:COLORS.gray,
+            headerBackTitleVisible:true,
+            headerStyle:{
+              backgroundColor:COLORS.white
+            },
+            
+            headerTitleStyle: {
+              fontWeight: '600',
+              fontSize:18,
+              color:COLORS.gray,
+            },
+            drawerIcon:({focus, color, size}) => (
+              <DrawerIcon
+                IconComponent={MaterialCommunityIcons}
+                name="credit-card-outline"
+                color={color}
+                size={20}
+              />
+            )
+        }}
+      />
+      <Stack.Screen 
         name={ROUTES.cleaner_change_password}
         component={ChangePassword} 
         
@@ -237,10 +265,10 @@ export default function MainCleanerStack() {
             title: "All Requests",
             headerShown:true,
             
-            headerTintColor:COLORS.white,
+            headerTintColor:COLORS.gray,
             headerBackTitleVisible:false,
             headerStyle:{
-                backgroundColor:COLORS.primary,
+                backgroundColor:COLORS.white,
             }
             })}
         />
@@ -298,10 +326,10 @@ export default function MainCleanerStack() {
             title: "Payment History",
             headerShown:true,
             
-            headerTintColor:COLORS.white,
+            headerTintColor:COLORS.gray,
             headerBackTitleVisible:false,
             headerStyle:{
-                backgroundColor:COLORS.primary,
+                backgroundColor:COLORS.white,
             }
             })}
         />

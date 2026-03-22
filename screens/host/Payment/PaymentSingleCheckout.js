@@ -94,9 +94,10 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
               cleaners: JSON.stringify([{
                 cleanerId,
                 fee: cleaning_fee,
-                firstName: cleaner_firstname,
-                lastName: cleaner_lastname
-              }])
+                firstname: cleaner_firstname,
+                lastname: cleaner_lastname
+              }]),
+              paymentIntentId
               
             },
             
@@ -169,10 +170,10 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
       fbaseUser, 
       schedule, 
       scheduleId,
-      cleaning_fee 
+      cleaning_fee,
     )
 
-    onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
+    // onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
 
     
     

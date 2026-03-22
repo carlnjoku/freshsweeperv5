@@ -331,7 +331,7 @@ const Signin = () => {
       
             // Update AuthContext (this will cause re-render but rootNav remains valid)
             await fetchUserFirebaseData(userData._id, userData);
-            writeUserData(userData)
+            // writeUserData(userData)
             console.log('✅ AuthContext updated, now navigating...');
             console.log('Invite token:', inviteToken);
             console.log('User type:', userData.userType);

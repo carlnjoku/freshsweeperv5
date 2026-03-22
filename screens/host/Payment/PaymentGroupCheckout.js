@@ -69,7 +69,8 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
               start_time,
               end_time,
               dayName,
-              cleaners: JSON.stringify(cleanersWithFee)
+              cleaners: JSON.stringify(cleanersWithFee),
+              paymentIntentId
             },
             platformFeeAmount: serviceFee,
             receiptEmail: currentUser.email,
@@ -125,6 +126,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
       // ✅ 1️⃣ Create chatrooms for each cleaner (and pass fee)
       await Promise.all(
         cleanersWithFee.map(({ cleanerId, fee }) =>
+        
           onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
         )
       );
@@ -153,7 +155,8 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
         totalAmount: totalAmount,
         hostName: currentUser.firstname + ' ' + currentUser.lastname,
         hostEmail: currentUser.email,
-        cleanersWithFee: cleanersWithFee // Include individual fees for cleaner notifications
+        cleanersWithFee: cleanersWithFee, // Include individual fees for cleaner notifications
+        paymentIntentId: paymentIntentId
       }
       const response = await userService.sendChatMessagePushNotification(payload)
       

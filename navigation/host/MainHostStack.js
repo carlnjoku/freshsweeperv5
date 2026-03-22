@@ -41,6 +41,8 @@ import ChangeLanguage from '../../screens/sharedscreen/ChangeLanguage';
 import EditProperty from '../../screens/host/EditProperty';
 import EditChecklist from '../../screens/host/EditChecklist';
 import PaymentSingleCheckout from '../../screens/host/Payment/PaymentSingleCheckout';
+import PaymentDetails from '../../screens/host/Payment/PaymentDetails';
+import Receipt from '../../screens/host/Payment/Receipt';
 
 
 
@@ -368,7 +370,7 @@ export default function MainHostStack() {
                 headerStyle: {
                   backgroundColor: COLORS.primary,
                 },
-                title: "Notifications",
+                title: "Notificationss",
 
                 headerTintColor:COLORS.white,
                 headerBackTitleVisible:false,
@@ -426,6 +428,21 @@ export default function MainHostStack() {
         <Stack.Screen 
             name={ROUTES.payment_complete}
             component={PaymentComplete} 
+            // component={ChatConversation1}
+            
+            options={({route}) => ({
+                headerShown:true,
+                headerTintColor:COLORS.white,
+                headerBackTitleVisible:false,
+                headerBackTitle: '',
+                headerStyle:{
+                    backgroundColor:COLORS.primary
+                }
+            })}
+          />
+        <Stack.Screen 
+            name={ROUTES.host_receipt_details}
+            component={Receipt} 
             // component={ChatConversation1}
             
             options={({route}) => ({
