@@ -15,6 +15,7 @@ import { AuthContext } from '../../context/AuthContext';
 import userService from '../../services/connection/userService';
 import COLORS from '../../constants/colors';
 import ROUTES from '../../constants/routes';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const MyGigs = () => {
   const navigation = useNavigation();
@@ -32,7 +33,7 @@ const MyGigs = () => {
       setProperties(response.data || []);
     } catch (err) {
       console.error('Failed to fetch linked properties:', err);
-      setError('Could not load your linked properties. Please try again.');
+      setError(tSafe('load_linked_properties_error', 'Could not load your linked properties. Please try again.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -79,16 +80,20 @@ const MyGigs = () => {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <MaterialCommunityIcons name="calendar-clock" size={18} color={COLORS.primary} />
-          <Text style={styles.statText}>{item.upcoming_gigs_count} upcoming</Text>
+          <Text style={styles.statText}>
+            {item.upcoming_gigs_count} {tSafe('upcoming', 'upcoming')}
+          </Text>
         </View>
         <View style={styles.statItem}>
           <MaterialCommunityIcons name="clipboard-list" size={18} color={COLORS.gray} />
-          <Text style={styles.statText}>{item.total_gigs_count} total</Text>
+          <Text style={styles.statText}>
+            {item.total_gigs_count} {tSafe('total', 'total')}
+          </Text>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.viewGigsText}>View Gigs</Text>
+        <Text style={styles.viewGigsText}>{tSafe('view_gigs', 'View Gigs')}</Text>
         <MaterialIcons name="chevron-right" size={20} color={COLORS.primary} />
       </View>
     </TouchableOpacity>
@@ -108,7 +113,7 @@ const MyGigs = () => {
         <MaterialIcons name="error-outline" size={48} color={COLORS.error} />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchLinkedProperties}>
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText}>{tSafe('retry', 'Retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -118,9 +123,9 @@ const MyGigs = () => {
     return (
       <View style={styles.centered}>
         <MaterialCommunityIcons name="home-outline" size={64} color={COLORS.gray} />
-        <Text style={styles.emptyTitle}>No Linked Properties</Text>
+        <Text style={styles.emptyTitle}>{tSafe('no_linked_properties', 'No Linked Properties')}</Text>
         <Text style={styles.emptyText}>
-          You haven't been invited to any properties yet. When a host invites you, they will appear here.
+          {tSafe('no_linked_properties_message', 'You haven\'t been invited to any properties yet. When a host invites you, they will appear here.')}
         </Text>
       </View>
     );

@@ -418,6 +418,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import CardNoPrimary from '../../components/shared/CardNoPrimary';
 import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
 import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 export default function ContactDisplay({ contact, handleOpenContact }) {
   const handleCall = () => {
@@ -444,15 +445,16 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
       {/* Header with title and edit button */}
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-        <View style={styles.iconWrapper}>
+          <View style={styles.iconWrapper}>
             <MaterialCommunityIcons
               name="card-account-details-outline"
               size={20}
               color={COLORS.white}
             />
           </View>
-          
-          <Text style={styles.title}>Contact Information</Text>
+          <Text style={styles.title}>
+            {tSafe('contact_information', 'Contact Information')}
+          </Text>
         </View>
         <TouchableOpacity onPress={handleOpenContact} style={styles.editButton}>
           <CircleIconNoLabel
@@ -484,9 +486,11 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
             />
           </View>
           <View style={styles.textWrapper}>
-            <Text style={styles.label}>Address</Text>
+            <Text style={styles.label}>
+              {tSafe('address', 'Address')}
+            </Text>
             <Text style={styles.value} numberOfLines={1}>
-              {contact?.address || 'Not provided'}
+              {contact?.address || tSafe('not_provided', 'Not provided')}
             </Text>
           </View>
           {contact?.address && (
@@ -513,8 +517,12 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
             />
           </View>
           <View style={styles.textWrapper}>
-            <Text style={styles.label}>Phone</Text>
-            <Text style={styles.value}>{contact?.phone || 'Not provided'}</Text>
+            <Text style={styles.label}>
+              {tSafe('phone', 'Phone')}
+            </Text>
+            <Text style={styles.value}>
+              {contact?.phone || tSafe('not_provided', 'Not provided')}
+            </Text>
           </View>
           {contact?.phone && (
             <MaterialCommunityIcons
@@ -540,9 +548,11 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
             />
           </View>
           <View style={styles.textWrapper}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>
+              {tSafe('email', 'Email')}
+            </Text>
             <Text style={styles.value} numberOfLines={1}>
-              {contact?.email || 'Not provided'}
+              {contact?.email || tSafe('not_provided', 'Not provided')}
             </Text>
           </View>
           {contact?.email && (
@@ -561,13 +571,17 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
           {contact?.phone && (
             <TouchableOpacity style={styles.footerButton} onPress={handleCall}>
               <MaterialCommunityIcons name="phone" size={18} color={COLORS.white} />
-              <Text style={styles.footerText}>Call</Text>
+              <Text style={styles.footerText}>
+                {tSafe('call', 'Call')}
+              </Text>
             </TouchableOpacity>
           )}
           {contact?.address && (
             <TouchableOpacity style={styles.footerButton} onPress={handleOpenMaps}>
               <MaterialCommunityIcons name="map" size={18} color={COLORS.white} />
-              <Text style={styles.footerText}>Directions</Text>
+              <Text style={styles.footerText}>
+                {tSafe('directions', 'Directions')}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -642,14 +656,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 12,
   },
-  // iconWrapper: {
-  //   width: 44,
-  //   height: 44,
-  //   borderRadius: 12,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   marginRight: 12,
-  // },
   textWrapper: {
     flex: 1,
   },

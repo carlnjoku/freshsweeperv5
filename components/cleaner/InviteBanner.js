@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const { width } = Dimensions.get('window');
 
@@ -46,12 +47,10 @@ const InviteBanner = ({ onAccept, onDismiss, inviteCount = 1, propertyName }) =>
     onAccept && onAccept();
   };
 
-  
-
-    const message = inviteCount === 1
-    ? `You have a pending invitation to join "${propertyName}".`
-    : `You have ${inviteCount} pending invitations to join properties.`;
-
+  // Construct message with translation keys
+  const message = inviteCount === 1
+    ? tSafe('pending_invitation_single', `You have a pending invitation to join "${propertyName}".`, { propertyName })
+    : tSafe('pending_invitation_plural', `You have ${inviteCount} pending invitations to join properties.`, { inviteCount });
 
   return (
     <Animated.View
@@ -68,12 +67,16 @@ const InviteBanner = ({ onAccept, onDismiss, inviteCount = 1, propertyName }) =>
           <MaterialIcons name="mail-outline" size={28} color={COLORS.primary} />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Pending Invitation</Text>
+          <Text style={styles.title}>
+            {tSafe('pending_invitation_title', 'Pending Invitation')}
+          </Text>
           <Text style={styles.message}>{message}</Text>
         </View>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
-            <Text style={styles.acceptText}>Accept</Text>
+            <Text style={styles.acceptText}>
+              {tSafe('accept', 'Accept')}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.dismissButton} onPress={handleDismiss}>
             <MaterialIcons name="close" size={22} color={COLORS.gray} />

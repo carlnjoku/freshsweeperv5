@@ -687,7 +687,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -699,6 +699,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const CancelScheduleModal = ({
   visible,
@@ -714,140 +715,141 @@ const CancelScheduleModal = ({
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [step, setStep] = useState(1);
 
-  // Cancellation policies with penalties and fees
-  const cancellationPolicies = {
+  // Cancellation policies with penalties and fees (translated)
+  const cancellationPolicies = useMemo(() => ({
     host: {
-      title: "Host Cancellation Policy",
+      title: tSafe('host_cancellation_policy_title', 'Host Cancellation Policy'),
       policies: [
         {
-          timeframe: 'More than 48 hours before',
-          fee: 'No cancellation fee',
-          refund: '100% refund',
-          description: 'Cancel anytime more than 48 hours in advance with no charges',
+          timeframe: tSafe('policy_more_48h', 'More than 48 hours before'),
+          fee: tSafe('policy_no_fee', 'No cancellation fee'),
+          refund: tSafe('policy_100_refund', '100% refund'),
+          description: tSafe('policy_more_48h_desc', 'Cancel anytime more than 48 hours in advance with no charges'),
           color: '#34C759',
           icon: 'check-circle'
         },
         {
-          timeframe: '24-48 hours before',
-          fee: '25% cancellation fee',
-          refund: '75% refund',
-          description: 'Small fee to compensate cleaner for reserved time',
+          timeframe: tSafe('policy_24_48h', '24-48 hours before'),
+          fee: tSafe('policy_25_fee', '25% cancellation fee'),
+          refund: tSafe('policy_75_refund', '75% refund'),
+          description: tSafe('policy_24_48h_desc', 'Small fee to compensate cleaner for reserved time'),
           color: '#FF9500',
           icon: 'clock-alert'
         },
         {
-          timeframe: 'Less than 24 hours before',
-          fee: '50% cancellation fee',
-          refund: '50% refund',
-          description: 'Significant fee due to last-minute cancellation',
+          timeframe: tSafe('policy_less_24h', 'Less than 24 hours before'),
+          fee: tSafe('policy_50_fee', '50% cancellation fee'),
+          refund: tSafe('policy_50_refund', '50% refund'),
+          description: tSafe('policy_less_24h_desc', 'Significant fee due to last-minute cancellation'),
           color: '#FF3B30',
           icon: 'alert-circle'
         },
         {
-          timeframe: 'No-show or same-day cancellation',
-          fee: '100% cancellation fee',
-          refund: 'No refund',
-          description: 'Full charge applies for no-shows or same-day cancellations',
+          timeframe: tSafe('policy_no_show', 'No-show or same-day cancellation'),
+          fee: tSafe('policy_100_fee', '100% cancellation fee'),
+          refund: tSafe('policy_no_refund', 'No refund'),
+          description: tSafe('policy_no_show_desc', 'Full charge applies for no-shows or same-day cancellations'),
           color: '#8B0000',
           icon: 'close-circle'
         }
       ]
     },
     cleaner: {
-      title: "Cleaner Cancellation Policy",
+      title: tSafe('cleaner_cancellation_policy_title', 'Cleaner Cancellation Policy'),
       policies: [
         {
-          timeframe: 'More than 72 hours before',
-          penalty: 'No penalty',
-          impact: 'No impact on rating',
-          description: 'Cancel with sufficient notice without penalties',
+          timeframe: tSafe('policy_more_72h', 'More than 72 hours before'),
+          penalty: tSafe('policy_no_penalty', 'No penalty'),
+          impact: tSafe('policy_no_impact', 'No impact on rating'),
+          description: tSafe('policy_more_72h_desc', 'Cancel with sufficient notice without penalties'),
           color: '#34C759',
           icon: 'check-circle'
         },
         {
-          timeframe: '48-72 hours before',
-          penalty: 'Minor rating impact',
-          impact: 'Small decrease in reliability score',
-          description: 'Minor impact on your cleaner profile rating',
+          timeframe: tSafe('policy_48_72h', '48-72 hours before'),
+          penalty: tSafe('policy_minor_impact', 'Minor rating impact'),
+          impact: tSafe('policy_minor_impact_detail', 'Small decrease in reliability score'),
+          description: tSafe('policy_48_72h_desc', 'Minor impact on your cleaner profile rating'),
           color: '#FF9500',
           icon: 'clock-alert'
         },
         {
-          timeframe: '24-48 hours before',
-          penalty: 'Moderate rating impact + warning',
-          impact: 'Noticeable decrease in reliability score',
-          description: 'Affects booking priority and may trigger review',
+          timeframe: tSafe('policy_24_48h_cleaner', '24-48 hours before'),
+          penalty: tSafe('policy_moderate_impact', 'Moderate rating impact + warning'),
+          impact: tSafe('policy_moderate_impact_detail', 'Noticeable decrease in reliability score'),
+          description: tSafe('policy_24_48h_cleaner_desc', 'Affects booking priority and may trigger review'),
           color: '#FFCC00',
           icon: 'alert'
         },
         {
-          timeframe: 'Less than 24 hours before',
-          penalty: 'Significant rating impact + temporary suspension risk',
-          impact: 'Major decrease in reliability score',
-          description: 'May result in temporary account suspension for repeated offenses',
+          timeframe: tSafe('policy_less_24h_cleaner', 'Less than 24 hours before'),
+          penalty: tSafe('policy_severe_impact', 'Significant rating impact + temporary suspension risk'),
+          impact: tSafe('policy_severe_impact_detail', 'Major decrease in reliability score'),
+          description: tSafe('policy_less_24h_cleaner_desc', 'May result in temporary account suspension for repeated offenses'),
           color: '#FF3B30',
           icon: 'close-circle'
         }
       ]
     }
-  };
+  }), []);
 
-  const cancellationReasons = {
+  // Cancellation reasons (translated)
+  const cancellationReasons = useMemo(() => ({
     host: [
       {
         id: 'schedule_conflict',
-        label: 'Schedule conflict',
-        description: 'I have a conflict with the scheduled time',
+        label: tSafe('reason_schedule_conflict', 'Schedule conflict'),
+        description: tSafe('reason_schedule_conflict_desc', 'I have a conflict with the scheduled time'),
       },
       {
         id: 'no_longer_needed',
-        label: 'Service no longer needed',
-        description: 'I don\'t need the cleaning service anymore',
+        label: tSafe('reason_no_longer_needed', 'Service no longer needed'),
+        description: tSafe('reason_no_longer_needed_desc', 'I don\'t need the cleaning service anymore'),
       },
       {
         id: 'found_alternative',
-        label: 'Found alternative',
-        description: 'I found another cleaning service',
+        label: tSafe('reason_found_alternative', 'Found alternative'),
+        description: tSafe('reason_found_alternative_desc', 'I found another cleaning service'),
       },
       {
         id: 'cleaner_issues',
-        label: 'Issues with cleaner',
-        description: 'I want to work with a different cleaner',
+        label: tSafe('reason_cleaner_issues', 'Issues with cleaner'),
+        description: tSafe('reason_cleaner_issues_desc', 'I want to work with a different cleaner'),
       },
       {
         id: 'other',
-        label: 'Other reason',
-        description: 'Another reason not listed',
+        label: tSafe('reason_other', 'Other reason'),
+        description: tSafe('reason_other_desc', 'Another reason not listed'),
       },
     ],
     cleaner: [
       {
         id: 'emergency',
-        label: 'Emergency',
-        description: 'I have a personal emergency',
+        label: tSafe('reason_emergency', 'Emergency'),
+        description: tSafe('reason_emergency_desc', 'I have a personal emergency'),
       },
       {
         id: 'sickness',
-        label: 'Sickness',
-        description: 'I\'m not feeling well',
+        label: tSafe('reason_sickness', 'Sickness'),
+        description: tSafe('reason_sickness_desc', 'I\'m not feeling well'),
       },
       {
         id: 'transportation',
-        label: 'Transportation issue',
-        description: 'I have transportation problems',
+        label: tSafe('reason_transportation', 'Transportation issue'),
+        description: tSafe('reason_transportation_desc', 'I have transportation problems'),
       },
       {
         id: 'schedule_conflict',
-        label: 'Schedule conflict',
-        description: 'I have another booking at this time',
+        label: tSafe('reason_schedule_conflict', 'Schedule conflict'),
+        description: tSafe('reason_schedule_conflict_desc', 'I have another booking at this time'),
       },
       {
         id: 'other',
-        label: 'Other reason',
-        description: 'Another reason not listed',
+        label: tSafe('reason_other', 'Other reason'),
+        description: tSafe('reason_other_desc', 'Another reason not listed'),
       },
     ],
-  };
+  }), []);
 
   // Safe array handling for cleaners
   const safeCleaners = Array.isArray(cleaners) ? cleaners : [];
@@ -881,38 +883,62 @@ const CancelScheduleModal = ({
     }
   };
 
-  // Get cleaner penalty based on timing
+  // Get cleaner penalty based on timing (translated strings for penalties)
   const getCleanerPenalty = () => {
     const hoursUntilBooking = calculateTimeUntilBooking();
     
     if (hoursUntilBooking > 72) {
-      return { penalty: 'None', impact: 'Low', description: 'No impact on your rating' };
+      return {
+        penalty: tSafe('penalty_none', 'None'),
+        impact: tSafe('penalty_impact_low', 'Low'),
+        description: tSafe('penalty_desc_none', 'No impact on your rating'),
+        reliabilityImpact: 0,
+        ratingImpact: 0
+      };
     } else if (hoursUntilBooking > 48) {
-      return { penalty: 'Minor', impact: 'Medium', description: 'Small decrease in reliability score' };
+      return {
+        penalty: tSafe('penalty_minor', 'Minor'),
+        impact: tSafe('penalty_impact_medium', 'Medium'),
+        description: tSafe('penalty_desc_minor', 'Small decrease in reliability score'),
+        reliabilityImpact: 8,
+        ratingImpact: 0.2
+      };
     } else if (hoursUntilBooking > 24) {
-      return { penalty: 'Moderate', impact: 'High', description: 'Noticeable impact on booking priority' };
+      return {
+        penalty: tSafe('penalty_moderate', 'Moderate'),
+        impact: tSafe('penalty_impact_high', 'High'),
+        description: tSafe('penalty_desc_moderate', 'Noticeable impact on booking priority'),
+        reliabilityImpact: 15,
+        ratingImpact: 0.4
+      };
     } else {
-      return { penalty: 'Severe', impact: 'Very High', description: 'Risk of temporary suspension' };
+      return {
+        penalty: tSafe('penalty_severe', 'Severe'),
+        impact: tSafe('penalty_impact_very_high', 'Very High'),
+        description: tSafe('penalty_desc_severe', 'Risk of temporary suspension'),
+        reliabilityImpact: 25,
+        ratingImpact: 0.8
+      };
     }
   };
 
   const getCancellationTitle = () => {
     if (cancellationType === 'partial' && targetCleaner) {
-      return `Cancel ${targetCleaner.firstname}'s Assignment`;
+      return tSafe('cancel_cleaner_assignment_title', 'Cancel {name}\'s Assignment', { name: targetCleaner.firstname });
     }
-    return 'Cancel Booking';
+    return tSafe('cancel_booking_title', 'Cancel Booking');
   };
 
   const getCancellationDescription = () => {
     if (cancellationType === 'partial' && targetCleaner) {
-      return `You are cancelling only ${targetCleaner.firstname}'s assignment. Other cleaners will remain scheduled.`;
+      return tSafe('cancel_partial_description', 'You are cancelling only {name}\'s assignment. Other cleaners will remain scheduled.', { name: targetCleaner.firstname });
     }
     
     if (safeCleaners.length > 1) {
-      return `This will cancel the entire booking for all ${safeCleaners.length} cleaners.`;
+      return tSafe('cancel_full_description_plural', 'This will cancel the entire booking for all {count} cleaners.', { count: safeCleaners.length });
     }
     
-    return 'This will cancel the entire booking.';
+    return tSafe('cancel_full_description', 'This will cancel the entire booking.');
   };
 
   const calculateAffectedCleaners = () => {
@@ -952,11 +978,11 @@ const CancelScheduleModal = ({
 
   const renderReasonStep = () => (
     <View>
-      <Text style={styles.stepTitle}>Why are you cancelling?</Text>
+      <Text style={styles.stepTitle}>{tSafe('cancel_reason_title', 'Why are you cancelling?')}</Text>
       <Text style={styles.stepDescription}>
         {userType === 'host' 
-          ? 'Please let us know why you need to cancel this booking.'
-          : 'Please select your reason for cancellation.'
+          ? tSafe('cancel_reason_host_desc', 'Please let us know why you need to cancel this booking.')
+          : tSafe('cancel_reason_cleaner_desc', 'Please select your reason for cancellation.')
         }
       </Text>
 
@@ -994,7 +1020,7 @@ const CancelScheduleModal = ({
         disabled={!selectedReason}
         onPress={() => setStep(2)}
       >
-        <Text style={styles.continueButtonText}>Continue</Text>
+        <Text style={styles.continueButtonText}>{tSafe('continue', 'Continue')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -1010,7 +1036,9 @@ const CancelScheduleModal = ({
     return (
       <View style={styles.cleanersSection}>
         <Text style={styles.sectionTitle}>
-          {cancellationType === 'partial' ? 'Cleaner Being Removed' : 'All Affected Cleaners'}
+          {cancellationType === 'partial' 
+            ? tSafe('cleaner_being_removed', 'Cleaner Being Removed')
+            : tSafe('all_affected_cleaners', 'All Affected Cleaners')}
         </Text>
         {affectedCleaners.map((cleaner, index) => (
           <View key={cleaner?.cleanerId || index} style={styles.cleanerItem}>
@@ -1019,10 +1047,10 @@ const CancelScheduleModal = ({
             </View>
             <View style={styles.cleanerInfo}>
               <Text style={styles.cleanerName}>
-                {cleaner?.firstname ? `${cleaner.firstname} ${cleaner.lastname}` : 'Unknown Cleaner'}
+                {cleaner?.firstname ? `${cleaner.firstname} ${cleaner.lastname}` : tSafe('unknown_cleaner', 'Unknown Cleaner')}
               </Text>
               <Text style={styles.cleanerStatus}>
-                Status: {cleaner?.status || 'assigned'}
+                {tSafe('status_label', 'Status')}: {cleaner?.status || tSafe('assigned', 'assigned')}
               </Text>
             </View>
             {cancellationType === 'partial' && (
@@ -1034,221 +1062,146 @@ const CancelScheduleModal = ({
     );
   };
 
-  // const renderPolicyDetails = () => {
-  //   const hoursUntilBooking = calculateTimeUntilBooking();
-  //   const feeInfo = userType === 'host' ? calculateCancellationFee() : null;
-  //   const penaltyInfo = userType === 'cleaner' ? getCleanerPenalty() : null;
+  const renderPolicyDetails = () => {
+    const hoursUntilBooking = calculateTimeUntilBooking();
+    const penaltyInfo = userType === 'cleaner' ? getCleanerPenalty() : null;
 
-  //   return (
-  //     <View style={styles.policySection}>
-  //       <Text style={styles.sectionTitle}>
-  //         {userType === 'host' ? 'Cancellation Fees' : 'Cancellation Impact'}
-  //       </Text>
-        
-  //       {/* Current timing and applicable policy */}
-  //       <View style={styles.currentPolicy}>
-  //         <Text style={styles.currentPolicyTitle}>For This Booking:</Text>
-  //         <Text style={styles.timeRemaining}>
-  //           Time until booking: {hoursUntilBooking > 0 ? 
-  //             `${Math.floor(hoursUntilBooking)} hours` : 'Less than 1 hour'}
-  //         </Text>
-          
-  //         {userType === 'host' && feeInfo && (
-  //           <View style={styles.feeDetails}>
-  //             <View style={styles.feeRow}>
-  //               <Text style={styles.feeLabel}>Cancellation Fee:</Text>
-  //               <Text style={styles.feeValue}>${feeInfo.fee.toFixed(2)} ({feeInfo.percentage}%)</Text>
-  //             </View>
-  //             <View style={styles.feeRow}>
-  //               <Text style={styles.feeLabel}>Refund Amount:</Text>
-  //               <Text style={styles.refundValue}>${feeInfo.refund.toFixed(2)}</Text>
-  //             </View>
-  //           </View>
-  //         )}
-          
-  //         {userType === 'cleaner' && penaltyInfo && (
-  //           <View style={styles.penaltyDetails}>
-  //             <View style={styles.penaltyRow}>
-  //               <Text style={styles.penaltyLabel}>Penalty Level:</Text>
-  //               <Text style={[styles.penaltyValue, 
-  //                 penaltyInfo.penalty === 'Severe' ? styles.severePenalty :
-  //                 penaltyInfo.penalty === 'Moderate' ? styles.moderatePenalty :
-  //                 styles.minorPenalty
-  //               ]}>
-  //                 {penaltyInfo.penalty}
-  //               </Text>
-  //             </View>
-  //             <Text style={styles.penaltyDescription}>{penaltyInfo.description}</Text>
-  //           </View>
-  //         )}
-  //       </View>
-
-  //       {/* Full policy breakdown */}
-  //       <View style={styles.policyBreakdown}>
-  //         <Text style={styles.policyBreakdownTitle}>Full Policy Breakdown:</Text>
-  //         {cancellationPolicies[userType]?.policies.map((policy, index) => (
-  //           <View key={index} style={styles.policyItem}>
-  //             <View style={styles.policyHeader}>
-  //               <MaterialCommunityIcons name={policy.icon} size={16} color={policy.color} />
-  //               <Text style={styles.policyTimeframe}>{policy.timeframe}</Text>
-  //             </View>
-  //             <View style={styles.policyDetails}>
-  //               <Text style={styles.policyFee}>
-  //                 {userType === 'host' ? policy.fee : policy.penalty}
-  //               </Text>
-  //               <Text style={styles.policyImpact}>
-  //                 {userType === 'host' ? policy.refund : policy.impact}
-  //               </Text>
-  //             </View>
-  //           </View>
-  //         ))}
-  //       </View>
-  //     </View>
-  //   );
-  // };
-
-  // In your CancelScheduleModal component, enhance the cleaner-specific sections:
-
-// Update the policy details section for cleaner
-const renderPolicyDetails = () => {
-  const hoursUntilBooking = calculateTimeUntilBooking();
-  const penaltyInfo = userType === 'cleaner' ? getCleanerPenalty() : null;
-
-  return (
-    <View style={styles.policySection}>
-      <Text style={styles.sectionTitle}>
-        {userType === 'host' ? 'Cancellation Fees' : 'Cancellation Impact on Your Profile'}
-      </Text>
-      
-      {/* Current timing and applicable policy */}
-      <View style={styles.currentPolicy}>
-        <Text style={styles.currentPolicyTitle}>For This Cancellation:</Text>
-        <Text style={styles.timeRemaining}>
-          Time until booking: {hoursUntilBooking > 0 ? 
-            `${Math.floor(hoursUntilBooking)} hours` : 'Less than 1 hour'}
+    return (
+      <View style={styles.policySection}>
+        <Text style={styles.sectionTitle}>
+          {userType === 'host' ? tSafe('cancellation_fees', 'Cancellation Fees') : tSafe('cancellation_impact', 'Cancellation Impact on Your Profile')}
         </Text>
         
-        {userType === 'cleaner' && penaltyInfo && (
-          <View style={styles.penaltyDetails}>
-            <View style={styles.penaltyRow}>
-              <Text style={styles.penaltyLabel}>Penalty Level:</Text>
-              <Text style={[
-                styles.penaltyValue, 
-                penaltyInfo.penalty === 'Severe' ? styles.severePenalty :
-                penaltyInfo.penalty === 'Moderate' ? styles.moderatePenalty :
-                styles.minorPenalty
-              ]}>
-                {penaltyInfo.penalty}
-              </Text>
-            </View>
-            
-            <View style={styles.impactMetrics}>
-              <View style={styles.metricItem}>
-                <MaterialCommunityIcons name="shield-account" size={16} color="#666" />
-                <Text style={styles.metricLabel}>Reliability Score:</Text>
-                <Text style={styles.metricValue}>-{penaltyInfo.reliabilityImpact}%</Text>
-              </View>
-              <View style={styles.metricItem}>
-                <MaterialCommunityIcons name="star" size={16} color="#666" />
-                <Text style={styles.metricLabel}>Overall Rating:</Text>
-                <Text style={styles.metricValue}>-{penaltyInfo.ratingImpact}</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.penaltyDescription}>{penaltyInfo.description}</Text>
-            
-            {/* Penalty decay information */}
-            <View style={styles.decayInfo}>
-              <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
-              <Text style={styles.decayText}>
-                This penalty will decay by 50% every 30 days with good performance
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Rest of the policy breakdown remains the same */}
-    </View>
-  );
-};
-
-const renderConfirmationStep = () => {
-  const feeInfo = userType === 'host' ? calculateCancellationFee() : null;
-  const penaltyInfo = userType === 'cleaner' ? getCleanerPenalty() : null;
-
-  return (
-    <View>
-      <Text style={styles.stepTitle}>Confirm Assignment Cancellation</Text>
-      
-      {/* Show affected cleaner (always the current cleaner) */}
-      {userType === 'cleaner' && targetCleaner && (
-        <View style={styles.cleanerConfirmation}>
-          <Text style={styles.confirmationText}>
-            You are about to cancel your assignment for:
+        {/* Current timing and applicable policy */}
+        <View style={styles.currentPolicy}>
+          <Text style={styles.currentPolicyTitle}>{tSafe('for_this_cancellation', 'For This Cancellation:')}</Text>
+          <Text style={styles.timeRemaining}>
+            {tSafe('time_until_booking', 'Time until booking: {time}', { 
+              time: hoursUntilBooking > 0 ? `${Math.floor(hoursUntilBooking)} ${tSafe('hours', 'hours')}` : tSafe('less_than_1_hour', 'Less than 1 hour')
+            })}
           </Text>
-          <View style={styles.cleanerCard}>
-            <MaterialCommunityIcons name="account" size={24} color={COLORS.primary} />
-            <View style={styles.cleanerDetails}>
-              <Text style={styles.cleanerName}>
-                {targetCleaner.firstname} {targetCleaner.lastname}
-              </Text>
-              <Text style={styles.cleanerAssignment}>
-                {targetCleaner.group ? `Group ${targetCleaner.group.replace('group_', '')}` : 'Your Assignment'}
-              </Text>
+          
+          {userType === 'cleaner' && penaltyInfo && (
+            <View style={styles.penaltyDetails}>
+              <View style={styles.penaltyRow}>
+                <Text style={styles.penaltyLabel}>{tSafe('penalty_level_label', 'Penalty Level:')}</Text>
+                <Text style={[
+                  styles.penaltyValue, 
+                  penaltyInfo.penalty === 'Severe' ? styles.severePenalty :
+                  penaltyInfo.penalty === 'Moderate' ? styles.moderatePenalty :
+                  styles.minorPenalty
+                ]}>
+                  {penaltyInfo.penalty}
+                </Text>
+              </View>
+              
+              <View style={styles.impactMetrics}>
+                <View style={styles.metricItem}>
+                  <MaterialCommunityIcons name="shield-account" size={16} color="#666" />
+                  <Text style={styles.metricLabel}>{tSafe('reliability_score_label', 'Reliability Score:')}</Text>
+                  <Text style={styles.metricValue}>-{penaltyInfo.reliabilityImpact}%</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <MaterialCommunityIcons name="star" size={16} color="#666" />
+                  <Text style={styles.metricLabel}>{tSafe('overall_rating_label', 'Overall Rating:')}</Text>
+                  <Text style={styles.metricValue}>-{penaltyInfo.ratingImpact}</Text>
+                </View>
+              </View>
+              
+              <Text style={styles.penaltyDescription}>{penaltyInfo.description}</Text>
+              
+              {/* Penalty decay information */}
+              <View style={styles.decayInfo}>
+                <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
+                <Text style={styles.decayText}>
+                  {tSafe('penalty_decay_message', 'This penalty will decay by 50% every 30 days with good performance')}
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
-      )}
 
-      {/* Policy and penalties */}
-      {renderPolicyDetails()}
+        {/* Rest of the policy breakdown (if needed) - you can add more content here */}
+      </View>
+    );
+  };
 
-      {/* Final confirmation */}
-      <View style={styles.confirmationSection}>
-        <Text style={styles.confirmationTitle}>Final Confirmation</Text>
-        <Text style={styles.confirmationText}>
-          {userType === 'cleaner' 
-            ? `Are you sure you want to cancel your assignment? This will result in a ${penaltyInfo?.penalty?.toLowerCase() || 'no'} penalty on your cleaner profile.`
-            : `Are you sure you want to cancel this booking? This action will result in a $${feeInfo?.fee.toFixed(2)} cancellation fee.`
-          }
-        </Text>
+  const renderConfirmationStep = () => {
+    const feeInfo = userType === 'host' ? calculateCancellationFee() : null;
+    const penaltyInfo = userType === 'cleaner' ? getCleanerPenalty() : null;
+
+    return (
+      <View>
+        <Text style={styles.stepTitle}>{tSafe('confirm_cancellation_title', 'Confirm Assignment Cancellation')}</Text>
         
-        {userType === 'cleaner' && penaltyInfo?.penalty !== 'None' && (
-          <Text style={styles.warningText}>
-            ⚠️ Frequent cancellations may affect your ability to receive future bookings.
-          </Text>
+        {/* Show affected cleaner (always the current cleaner) */}
+        {userType === 'cleaner' && targetCleaner && (
+          <View style={styles.cleanerConfirmation}>
+            <Text style={styles.confirmationText}>
+              {tSafe('cancel_cleaner_assignment_confirmation', 'You are about to cancel your assignment for:')}
+            </Text>
+            <View style={styles.cleanerCard}>
+              <MaterialCommunityIcons name="account" size={24} color={COLORS.primary} />
+              <View style={styles.cleanerDetails}>
+                <Text style={styles.cleanerName}>
+                  {targetCleaner.firstname} {targetCleaner.lastname}
+                </Text>
+                <Text style={styles.cleanerAssignment}>
+                  {targetCleaner.group ? tSafe('group_label', 'Group {group}', { group: targetCleaner.group.replace('group_', '') }) : tSafe('your_assignment', 'Your Assignment')}
+                </Text>
+              </View>
+            </View>
+          </View>
         )}
-      </View>
 
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => setStep(1)}
-        >
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[
-            styles.confirmCancelButton,
-            userType === 'cleaner' && styles.cleanerCancelButton
-          ]}
-          onPress={handleCancelBooking}
-        >
-          <MaterialCommunityIcons 
-            name={userType === 'cleaner' ? "account-cancel" : "alert-circle"} 
-            size={20} 
-            color="#FFFFFF" 
-          />
-          <Text style={styles.confirmCancelButtonText}>
-            {userType === 'cleaner' ? 'Cancel Assignment' : 'Confirm Cancellation'}
+        {/* Policy and penalties */}
+        {renderPolicyDetails()}
+
+        {/* Final confirmation */}
+        <View style={styles.confirmationSection}>
+          <Text style={styles.confirmationTitle}>{tSafe('final_confirmation', 'Final Confirmation')}</Text>
+          <Text style={styles.confirmationText}>
+            {userType === 'cleaner' 
+              ? tSafe('confirm_cleaner_cancellation_text', 'Are you sure you want to cancel your assignment? This will result in a {penalty} penalty on your cleaner profile.', { penalty: penaltyInfo?.penalty?.toLowerCase() || tSafe('no', 'no') })
+              : tSafe('confirm_host_cancellation_text', 'Are you sure you want to cancel this booking? This action will result in a ${fee} cancellation fee.', { fee: feeInfo?.fee.toFixed(2) })
+            }
           </Text>
-        </TouchableOpacity>
+          
+          {userType === 'cleaner' && penaltyInfo?.penalty !== 'None' && (
+            <Text style={styles.warningText}>
+              ⚠️ {tSafe('frequent_cancellation_warning', 'Frequent cancellations may affect your ability to receive future bookings.')}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setStep(1)}
+          >
+            <Text style={styles.backButtonText}>{tSafe('back', 'Back')}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.confirmCancelButton,
+              userType === 'cleaner' && styles.cleanerCancelButton
+            ]}
+            onPress={handleCancelBooking}
+          >
+            <MaterialCommunityIcons 
+              name={userType === 'cleaner' ? "account-cancel" : "alert-circle"} 
+              size={20} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.confirmCancelButtonText}>
+              {userType === 'cleaner' ? tSafe('cancel_assignment', 'Cancel Assignment') : tSafe('confirm_cancellation', 'Confirm Cancellation')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
   return (
     <Modal
@@ -1265,7 +1218,9 @@ const renderConfirmationStep = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{getCancellationTitle()}</Text>
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step {step} of 2</Text>
+            <Text style={styles.stepText}>
+              {tSafe('step_of', 'Step {step} of {total}', { step, total: 2 })}
+            </Text>
           </View>
         </View>
 

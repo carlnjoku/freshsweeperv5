@@ -1433,6 +1433,753 @@
 
 
 
+// import React, { useState, useEffect, useContext } from 'react';
+// import {
+//   View,
+//   Text,
+//   ScrollView,
+//   StyleSheet,
+//   TouchableOpacity,
+//   ActivityIndicator,
+//   Alert,
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import { useRoute, useNavigation } from '@react-navigation/native';
+// import ROUTES from '../../../constants/routes';
+// import COLORS from '../../../constants/colors'; // Import COLORS
+// import userService from '../../../services/connection/userService';
+// import { AuthContext } from '../../../context/AuthContext';
+// import { minutesToDuration } from '../../../utils/minuteToDuration';
+// // import { calculateDuration } from '../../../utils/calculateDuration';
+
+// const PaymentHistory = () => {
+//   const route = useRoute();
+//   const navigation = useNavigation();
+//   const { scheduleId, notificationId } = route.params || {};
+
+//   const {currentUserId, fbaseUser, currentUser} = useContext(AuthContext)
+
+//   const [selectedFilter, setSelectedFilter] = useState('all');
+//   const [schedules, setSchedules] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const filters = [
+//     { id: 'all', label: 'All Schedules' },
+//     { id: 'completed', label: 'Completed' },
+//     { id: 'in_progress', label: 'In Progress' },
+//     { id: 'pending_payment', label: 'Pending Payment' },
+//     { id: 'cancelled', label: 'Cancelled' },
+//   ];
+
+//   // Fetch schedules from your API
+//   useEffect(() => {
+//     const fetchSchedules = async () => {
+//       try {
+//         setLoading(true);
+        
+//         // Check if currentUserId exists before making the API call
+//         if (!currentUserId) {
+//           Alert.alert('Error', 'User not authenticated');
+//           setLoading(false);
+//           return;
+//         }
+        
+//         // Use the actual API call
+//         const response = await userService.getSchedulesByHostId(currentUserId);
+//         const res = response.data;
+        
+//         // Set the actual data from API response
+//         setSchedules(res || []);
+        
+//       } catch (error) {
+//         console.error('Error fetching schedules:', error);
+//         Alert.alert('Error', 'Failed to load schedule history');
+//         // Optionally keep empty array instead of mock data
+//         setSchedules([]);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+    
+
+//     fetchSchedules();
+//   }, [currentUserId]); // Add currentUserId as dependency
+
+//   const filteredSchedules = schedules.filter(schedule => {
+//     if (selectedFilter === 'all') return true;
+//     return schedule.status === selectedFilter;
+//   });
+
+//   const calculateDuration = (startTime, endTime) => {
+//         try {
+//             const start = moment(startTime, 'h:mm:ss A');
+//             const end = moment(endTime, 'h:mm:ss A');
+//             const duration = moment.duration(end.diff(start));
+//             const hours = duration.hours();
+//             const minutes = duration.minutes();
+            
+//             if (hours > 0) {
+//                 return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
+//             }
+//             return `${minutes}m`;
+//         } catch (error) {
+//             return 'Duration not available';
+//         }
+//     };
+//   const getStatusColor = (status) => {
+//     const colorMap = {
+//       completed: '#34C759',
+//       in_progress: COLORS.primary, // Use primary color
+//       pending_payment: '#FF9500',
+//       assigned: '#5856D6',
+//       scheduled: '#5AC8FA',
+//       cancelled: '#FF3B30',
+//     };
+//     return colorMap[status] || '#8E8E93';
+//   };
+
+//   const getStatusIcon = (status) => {
+//     const iconMap = {
+//       completed: 'check-circle',
+//       in_progress: 'progress-clock',
+//       pending_payment: 'clock-outline',
+//       assigned: 'account-check',
+//       scheduled: 'calendar-clock',
+//       cancelled: 'close-circle',
+//     };
+//     return iconMap[status] || 'help-circle';
+//   };
+
+//   const getStatusLabel = (status) => {
+//     const labelMap = {
+//       completed: 'Completed',
+//       in_progress: 'In Progress',
+//       pending_payment: 'Pending Payment',
+//       assigned: 'Assigned',
+//       scheduled: 'Scheduled',
+//       cancelled: 'Cancelled',
+//     };
+//     return labelMap[status] || status;
+//   };
+
+//   const formatCurrency = (amount) => {
+//     return `$${amount?.toFixed(2) || '0.00'}`;
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return 'N/A';
+//     const date = new Date(dateString);
+//     return date.toLocaleDateString('en-US', {
+//       month: 'short',
+//       day: 'numeric',
+//       year: 'numeric',
+//     });
+//   };
+
+//   const formatTime = (timeString) => {
+//     if (!timeString) return '';
+//     const time = timeString.split(':');
+//     const hours = parseInt(time[0]);
+//     const minutes = time[1];
+//     const ampm = hours >= 12 ? 'PM' : 'AM';
+//     const formattedHours = hours % 12 || 12;
+//     return `${formattedHours}:${minutes} ${ampm}`;
+//   };
+
+//   const getCleaningDate = (schedule) => {
+//     const date = schedule?.cleaning_date;
+//     const time = schedule?.cleaning_time;
+//     if (!date) return 'No date set';
+    
+//     const formattedDate = formatDate(date);
+//     const formattedTime = formatTime(time);
+    
+//     return `${formattedDate} ${formattedTime ? `• ${formattedTime}` : ''}`;
+//   };
+
+//   const handleViewSchedule = (scheduleId) => {
+//     navigation.navigate(ROUTES.host_schedule_details, { 
+//       scheduleId,
+//       fromHistory: true 
+//     });
+//   };
+
+//   const handleViewReceipt = (schedule) => {
+//     navigation.navigate(ROUTES.host_receipt_details, { 
+//       scheduleId: schedule._id,
+//       payment_intent_id: schedule.payment_intent_id
+//     });
+//   };
+
+//   const handleExportData = () => {
+//     // TODO: Implement export functionality
+//     Alert.alert('Export', 'Export functionality to be implemented');
+//   };
+
+//   const calculateTotalSpent = () => {
+//     return schedules
+//       .filter(s => s.status === 'completed')
+//       .reduce((sum, schedule) => sum + (schedule.overall_checklist?.totalFee || schedule.schedule?.total_cleaning_fee || 0), 0);
+//   };
+
+//   if (loading) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//         <Text style={styles.loadingText}>Loading schedule history...</Text>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.header}>
+//         <TouchableOpacity 
+//           style={styles.backButton}
+//           onPress={() => navigation.goBack()}
+//         >
+//           <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.primary} />
+//         </TouchableOpacity>
+//         <Text style={styles.headerTitle}>Schedule History</Text>
+//         <TouchableOpacity 
+//           style={styles.helpButton}
+//           onPress={handleExportData}
+//         >
+//           <MaterialCommunityIcons name="download" size={24} color={COLORS.primary} />
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+//         <View style={styles.content}>
+//           {/* Summary Cards */}
+//           <View style={styles.summaryCards}>
+//             <View style={styles.summaryCard}>
+//               <Text style={styles.summaryLabel}>Total Spent</Text>
+//               <Text style={styles.summaryAmount}>
+//                 {formatCurrency(calculateTotalSpent())}
+//               </Text>
+//               <Text style={styles.summarySubtext}>Completed schedules</Text>
+//             </View>
+//             <View style={styles.summaryCard}>
+//               <Text style={styles.summaryLabel}>Total Bookings</Text>
+//               <Text style={styles.summaryAmount}>{schedules.length}</Text>
+//               <Text style={styles.summarySubtext}>All schedules</Text>
+//             </View>
+//           </View>
+
+//           {/* Filter Tabs */}
+//           <ScrollView 
+//             horizontal 
+//             showsHorizontalScrollIndicator={false}
+//             style={styles.filterTabsContainer}
+//           >
+//             <View style={styles.filterTabs}>
+//               {filters.map((filter) => (
+//                 <TouchableOpacity
+//                   key={filter.id}
+//                   style={[
+//                     styles.filterTab,
+//                     selectedFilter === filter.id && styles.filterTabActive,
+//                   ]}
+//                   onPress={() => setSelectedFilter(filter.id)}
+//                 >
+//                   <Text
+//                     style={[
+//                       styles.filterTabText,
+//                       selectedFilter === filter.id && styles.filterTabTextActive,
+//                     ]}
+//                   >
+//                     {filter.label}
+//                   </Text>
+//                 </TouchableOpacity>
+//               ))}
+//             </View>
+//           </ScrollView>
+
+//           {/* Schedule List */}
+//           <View style={styles.scheduleList}>
+//             {filteredSchedules.length > 0 ? (
+//               filteredSchedules.map((schedule) => (
+//                 <View key={schedule._id} style={styles.scheduleCard}>
+//                   <View style={styles.scheduleHeader}>
+//                     <View style={styles.scheduleInfo}>
+//                       <View style={styles.scheduleTitleRow}>
+//                         <MaterialCommunityIcons 
+//                           name="office-building" 
+//                           size={20} 
+//                           color="#666" 
+//                         />
+//                         <Text style={styles.scheduleApartment}>
+//                           {schedule.schedule?.apartment_name || 'Unnamed Apartment'}
+//                         </Text>
+//                       </View>
+//                       <Text style={styles.scheduleAddress} numberOfLines={1}>
+//                         {schedule.schedule?.address || 'No address provided'}
+//                       </Text>
+//                       <View style={styles.scheduleMeta}>
+//                         <View style={styles.metaItem}>
+//                           <MaterialCommunityIcons 
+//                             name="calendar" 
+//                             size={14} 
+//                             color="#8E8E93" 
+//                           />
+//                           <Text style={styles.metaText}>
+//                             {getCleaningDate(schedule.schedule)}
+//                           </Text>
+//                         </View>
+//                         {schedule.assignedTo?.length > 0 && (
+//                           <View style={styles.metaItem}>
+//                             <MaterialCommunityIcons 
+//                               name="account-group" 
+//                               size={14} 
+//                               color="#8E8E93" 
+//                             />
+//                             <Text style={styles.metaText}>
+//                               {schedule.assignedTo.length} cleaner{schedule.assignedTo.length > 1 ? 's' : ''}
+//                             </Text>
+//                           </View>
+//                         )}
+//                       </View>
+//                     </View>
+//                     <View style={styles.scheduleAmountContainer}>
+//                       <Text style={styles.scheduleAmount}>
+//                         {formatCurrency(schedule.overall_checklist?.totalFee || schedule.schedule?.total_cleaning_fee || 0)}
+//                       </Text>
+//                       <View style={[styles.statusBadge, { backgroundColor: getStatusColor(schedule.status) + '20' }]}>
+//                         <MaterialCommunityIcons
+//                           name={getStatusIcon(schedule.status)}
+//                           size={12}
+//                           color={getStatusColor(schedule.status)}
+//                         />
+//                         <Text
+//                           style={[
+//                             styles.statusText,
+//                             { color: getStatusColor(schedule.status) },
+//                           ]}
+//                         >
+//                           {getStatusLabel(schedule.status)}
+//                         </Text>
+//                       </View>
+//                     </View>
+//                   </View>
+
+//                   <View style={styles.scheduleDetails}>
+//                     <View style={styles.detailRow}>
+//                       <Text style={styles.detailLabel}>Booking ID:</Text>
+//                       <Text style={[styles.bookingId, { color: COLORS.primary }]}>
+//                         {schedule._id?.substring(0, 8)}...
+//                       </Text>
+//                     </View>
+//                     <View style={styles.detailRow}>
+//                       <Text style={styles.detailLabel}>Created:</Text>
+//                       <Text style={styles.detailValue}>
+//                         {formatDate(schedule.created_at?.$date || schedule.created_at)}
+//                       </Text>
+//                     </View>
+//                     <View style={styles.detailRow}>
+//                       <Text style={styles.detailLabel}>Duration:</Text>
+//                       <Text style={styles.detailValue}>
+//                         {minutesToDuration(schedule.schedule?.total_cleaning_time)}
+//                       </Text>
+//                     </View>
+//                   </View>
+
+//                   <View style={styles.scheduleActions}>
+//                     <TouchableOpacity 
+//                       style={[styles.viewButton, { borderColor: COLORS.primary }]}
+//                       onPress={() => handleViewSchedule(schedule._id)}
+//                     >
+//                       <MaterialCommunityIcons name="eye" size={16} color={COLORS.primary} />
+//                       <Text style={[styles.viewButtonText, { color: COLORS.primary }]}>
+//                         View Details
+//                       </Text>
+//                     </TouchableOpacity>
+                    
+//                     {schedule.status === 'payment_confirmed' && (
+//                       <TouchableOpacity 
+//                         style={styles.receiptButton}
+//                         onPress={() => handleViewReceipt(schedule)}
+//                       >
+//                         <MaterialCommunityIcons name="file-document" size={16} color="#34C759" />
+//                         <Text style={styles.receiptButtonText}>Receipt</Text>
+//                       </TouchableOpacity>
+//                     )}
+                    
+//                     {schedule.status === 'pending_payment' && (
+//                       <TouchableOpacity onPress={()=> navigation.navigate(ROUTES.host_schedule_request, {scheduleId:schedule?._id})} style={[styles.payButton, { backgroundColor: COLORS.primary }]}>
+//                         <MaterialCommunityIcons name="credit-card" size={16} color="#FFFFFF" />
+//                         <Text style={styles.payButtonText}>Pay Now</Text>
+//                       </TouchableOpacity>
+//                     )}
+//                   </View>
+//                 </View>
+//               ))
+//             ) : (
+//               <View style={styles.emptyState}>
+//                 <MaterialCommunityIcons 
+//                   name="calendar-blank" 
+//                   size={64} 
+//                   color="#CCCCCC" 
+//                 />
+//                 <Text style={styles.emptyStateText}>No schedules found</Text>
+//                 <Text style={styles.emptyStateSubtext}>
+//                   {selectedFilter === 'all' 
+//                     ? 'You haven\'t booked any cleaning schedules yet' 
+//                     : `No ${getStatusLabel(selectedFilter).toLowerCase()} schedules`
+//                   }
+//                 </Text>
+//               </View>
+//             )}
+//           </View>
+
+//           {/* Help Section */}
+//           <View style={[styles.helpSection, { backgroundColor: COLORS.primary }]}>
+//             <View style={styles.helpHeader}>
+//               <MaterialCommunityIcons name="help-circle" size={24} color="#FFFFFF" />
+//               <Text style={styles.helpTitle}>Need help with a booking?</Text>
+//             </View>
+//             <Text style={styles.helpText}>
+//               If you have questions about a schedule or need to make changes, 
+//               our support team is available 24/7.
+//             </Text>
+//             <TouchableOpacity style={styles.contactSupportButton}>
+//               <MaterialCommunityIcons name="headset" size={20} color={COLORS.primary} />
+//               <Text style={[styles.contactSupportText, { color: COLORS.primary }]}>
+//                 Contact Support
+//               </Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       </ScrollView>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#F5F5F7',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     paddingHorizontal: 20,
+//     paddingTop: 60,
+//     paddingBottom: 16,
+//     backgroundColor: '#FFFFFF',
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#E5E5EA',
+//   },
+//   backButton: {
+//     padding: 8,
+//   },
+//   headerTitle: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#1C1C1E',
+//   },
+//   helpButton: {
+//     padding: 8,
+//   },
+//   scrollView: {
+//     flex: 1,
+//   },
+//   content: {
+//     padding: 16,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: '#FFFFFF',
+//   },
+//   loadingText: {
+//     marginTop: 16,
+//     fontSize: 16,
+//     color: '#666',
+//   },
+//   summaryCards: {
+//     flexDirection: 'row',
+//     gap: 12,
+//     marginBottom: 24,
+//   },
+//   summaryCard: {
+//     flex: 1,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 16,
+//     padding: 20,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 8,
+//     elevation: 2,
+//   },
+//   summaryLabel: {
+//     fontSize: 14,
+//     color: '#8E8E93',
+//     marginBottom: 8,
+//     fontWeight: '500',
+//   },
+//   summaryAmount: {
+//     fontSize: 28,
+//     fontWeight: '800',
+//     color: '#1C1C1E',
+//     marginBottom: 4,
+//   },
+//   summarySubtext: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//   },
+//   filterTabsContainer: {
+//     marginBottom: 24,
+//   },
+//   filterTabs: {
+//     flexDirection: 'row',
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 12,
+//     padding: 4,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 1 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 4,
+//     elevation: 1,
+//   },
+//   filterTab: {
+//     paddingVertical: 10,
+//     paddingHorizontal: 16,
+//     borderRadius: 8,
+//     alignItems: 'center',
+//     minWidth: 100,
+//   },
+//   filterTabActive: {
+//     backgroundColor: COLORS.primary, // Use primary color
+//   },
+//   filterTabText: {
+//     fontSize: 13,
+//     fontWeight: '500',
+//     color: '#8E8E93',
+//   },
+//   filterTabTextActive: {
+//     color: '#FFFFFF',
+//     fontWeight: '600',
+//   },
+//   scheduleList: {
+//     marginBottom: 24,
+//   },
+//   scheduleCard: {
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 16,
+//     padding: 16,
+//     marginBottom: 12,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 8,
+//     elevation: 2,
+//   },
+//   scheduleHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'flex-start',
+//     marginBottom: 16,
+//   },
+//   scheduleInfo: {
+//     flex: 1,
+//     marginRight: 12,
+//   },
+//   scheduleTitleRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 6,
+//   },
+//   scheduleApartment: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#1C1C1E',
+//     marginLeft: 8,
+//   },
+//   scheduleAddress: {
+//     fontSize: 14,
+//     color: '#666',
+//     marginBottom: 12,
+//   },
+//   scheduleMeta: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     gap: 12,
+//   },
+//   metaItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   metaText: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//     marginLeft: 4,
+//   },
+//   scheduleAmountContainer: {
+//     alignItems: 'flex-end',
+//   },
+//   scheduleAmount: {
+//     fontSize: 22,
+//     fontWeight: '800',
+//     color: '#1C1C1E',
+//     marginBottom: 8,
+//   },
+//   statusBadge: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingHorizontal: 10,
+//     paddingVertical: 6,
+//     borderRadius: 20,
+//   },
+//   statusText: {
+//     fontSize: 11,
+//     fontWeight: '700',
+//     marginLeft: 4,
+//     textTransform: 'uppercase',
+//   },
+//   scheduleDetails: {
+//     backgroundColor: '#F8F9FA',
+//     borderRadius: 12,
+//     padding: 12,
+//     marginBottom: 16,
+//   },
+//   detailRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 6,
+//   },
+//   detailLabel: {
+//     fontSize: 13,
+//     color: '#8E8E93',
+//   },
+//   detailValue: {
+//     fontSize: 13,
+//     color: '#1C1C1E',
+//     fontWeight: '500',
+//   },
+//   bookingId: {
+//     fontSize: 13,
+//     fontWeight: '500',
+//   },
+//   scheduleActions: {
+//     flexDirection: 'row',
+//     gap: 12,
+//   },
+//   viewButton: {
+//     flex: 1,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 12,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 12,
+//     borderWidth: 1.5,
+//   },
+//   viewButtonText: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     marginLeft: 6,
+//   },
+//   receiptButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 12,
+//     paddingHorizontal: 16,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 12,
+//     borderWidth: 1.5,
+//     borderColor: '#34C759',
+//   },
+//   receiptButtonText: {
+//     fontSize: 14,
+//     color: '#34C759',
+//     fontWeight: '600',
+//     marginLeft: 6,
+//   },
+//   payButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 12,
+//     paddingHorizontal: 20,
+//     borderRadius: 12,
+//   },
+//   payButtonText: {
+//     fontSize: 14,
+//     color: '#FFFFFF',
+//     fontWeight: '600',
+//     marginLeft: 6,
+//   },
+//   emptyState: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 60,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 16,
+//     paddingHorizontal: 20,
+//   },
+//   emptyStateText: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#8E8E93',
+//     marginTop: 20,
+//     marginBottom: 8,
+//   },
+//   emptyStateSubtext: {
+//     fontSize: 15,
+//     color: '#C7C7CC',
+//     textAlign: 'center',
+//     lineHeight: 22,
+//   },
+//   helpSection: {
+//     borderRadius: 16,
+//     padding: 20,
+//   },
+//   helpHeader: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   helpTitle: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#FFFFFF',
+//     marginLeft: 10,
+//   },
+//   helpText: {
+//     fontSize: 14,
+//     color: '#FFFFFF',
+//     lineHeight: 20,
+//     marginBottom: 20,
+//     opacity: 0.9,
+//   },
+//   contactSupportButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 14,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 12,
+//   },
+//   contactSupportText: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     marginLeft: 8,
+//   },
+// });
+
+// export default PaymentHistory;
+
+
+
+
+
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -1446,29 +2193,29 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import ROUTES from '../../../constants/routes';
-import COLORS from '../../../constants/colors'; // Import COLORS
+import COLORS from '../../../constants/colors';
 import userService from '../../../services/connection/userService';
 import { AuthContext } from '../../../context/AuthContext';
 import { minutesToDuration } from '../../../utils/minuteToDuration';
-// import { calculateDuration } from '../../../utils/calculateDuration';
+import { tSafe } from '../../../utils/tSafe';
 
 const PaymentHistory = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { scheduleId, notificationId } = route.params || {};
 
-  const {currentUserId, fbaseUser, currentUser} = useContext(AuthContext)
+  const { currentUserId, fbaseUser, currentUser } = useContext(AuthContext);
 
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const filters = [
-    { id: 'all', label: 'All Schedules' },
-    { id: 'completed', label: 'Completed' },
-    { id: 'in_progress', label: 'In Progress' },
-    { id: 'pending_payment', label: 'Pending Payment' },
-    { id: 'cancelled', label: 'Cancelled' },
+    { id: 'all', label: tSafe('filter_all_schedules', 'All Schedules') },
+    { id: 'completed', label: tSafe('filter_completed', 'Completed') },
+    { id: 'in_progress', label: tSafe('filter_in_progress', 'In Progress') },
+    { id: 'pending_payment', label: tSafe('filter_pending_payment', 'Pending Payment') },
+    { id: 'cancelled', label: tSafe('filter_cancelled', 'Cancelled') },
   ];
 
   // Fetch schedules from your API
@@ -1476,35 +2223,25 @@ const PaymentHistory = () => {
     const fetchSchedules = async () => {
       try {
         setLoading(true);
-        
-        // Check if currentUserId exists before making the API call
         if (!currentUserId) {
-          Alert.alert('Error', 'User not authenticated');
+          Alert.alert(tSafe('error_title', 'Error'), tSafe('user_not_authenticated', 'User not authenticated'));
           setLoading(false);
           return;
         }
-        
-        // Use the actual API call
         const response = await userService.getSchedulesByHostId(currentUserId);
         const res = response.data;
-        
-        // Set the actual data from API response
         setSchedules(res || []);
-        
       } catch (error) {
         console.error('Error fetching schedules:', error);
-        Alert.alert('Error', 'Failed to load schedule history');
-        // Optionally keep empty array instead of mock data
+        Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_schedule_history', 'Failed to load schedule history'));
         setSchedules([]);
       } finally {
         setLoading(false);
       }
     };
 
-    
-
     fetchSchedules();
-  }, [currentUserId]); // Add currentUserId as dependency
+  }, [currentUserId]);
 
   const filteredSchedules = schedules.filter(schedule => {
     if (selectedFilter === 'all') return true;
@@ -1512,25 +2249,23 @@ const PaymentHistory = () => {
   });
 
   const calculateDuration = (startTime, endTime) => {
-        try {
-            const start = moment(startTime, 'h:mm:ss A');
-            const end = moment(endTime, 'h:mm:ss A');
-            const duration = moment.duration(end.diff(start));
-            const hours = duration.hours();
-            const minutes = duration.minutes();
-            
-            if (hours > 0) {
-                return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
-            }
-            return `${minutes}m`;
-        } catch (error) {
-            return 'Duration not available';
-        }
-    };
+    try {
+      const start = moment(startTime, 'h:mm:ss A');
+      const end = moment(endTime, 'h:mm:ss A');
+      const duration = moment.duration(end.diff(start));
+      const hours = duration.hours();
+      const minutes = duration.minutes();
+      if (hours > 0) return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
+      return `${minutes}m`;
+    } catch (error) {
+      return tSafe('duration_not_available', 'Duration not available');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colorMap = {
       completed: '#34C759',
-      in_progress: COLORS.primary, // Use primary color
+      in_progress: COLORS.primary,
       pending_payment: '#FF9500',
       assigned: '#5856D6',
       scheduled: '#5AC8FA',
@@ -1553,12 +2288,12 @@ const PaymentHistory = () => {
 
   const getStatusLabel = (status) => {
     const labelMap = {
-      completed: 'Completed',
-      in_progress: 'In Progress',
-      pending_payment: 'Pending Payment',
-      assigned: 'Assigned',
-      scheduled: 'Scheduled',
-      cancelled: 'Cancelled',
+      completed: tSafe('status_completed', 'Completed'),
+      in_progress: tSafe('status_in_progress', 'In Progress'),
+      pending_payment: tSafe('status_pending_payment', 'Pending Payment'),
+      assigned: tSafe('status_assigned', 'Assigned'),
+      scheduled: tSafe('status_scheduled', 'Scheduled'),
+      cancelled: tSafe('status_cancelled', 'Cancelled'),
     };
     return labelMap[status] || status;
   };
@@ -1568,7 +2303,7 @@ const PaymentHistory = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return tSafe('na', 'N/A');
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -1590,11 +2325,9 @@ const PaymentHistory = () => {
   const getCleaningDate = (schedule) => {
     const date = schedule?.cleaning_date;
     const time = schedule?.cleaning_time;
-    if (!date) return 'No date set';
-    
+    if (!date) return tSafe('no_date_set', 'No date set');
     const formattedDate = formatDate(date);
     const formattedTime = formatTime(time);
-    
     return `${formattedDate} ${formattedTime ? `• ${formattedTime}` : ''}`;
   };
 
@@ -1613,8 +2346,7 @@ const PaymentHistory = () => {
   };
 
   const handleExportData = () => {
-    // TODO: Implement export functionality
-    Alert.alert('Export', 'Export functionality to be implemented');
+    Alert.alert(tSafe('export', 'Export'), tSafe('export_coming_soon', 'Export functionality to be implemented'));
   };
 
   const calculateTotalSpent = () => {
@@ -1627,7 +2359,7 @@ const PaymentHistory = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading schedule history...</Text>
+        <Text style={styles.loadingText}>{tSafe('loading_schedule_history', 'Loading schedule history...')}</Text>
       </View>
     );
   }
@@ -1641,7 +2373,7 @@ const PaymentHistory = () => {
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Schedule History</Text>
+        <Text style={styles.headerTitle}>{tSafe('schedule_history_title', 'Schedule History')}</Text>
         <TouchableOpacity 
           style={styles.helpButton}
           onPress={handleExportData}
@@ -1655,16 +2387,16 @@ const PaymentHistory = () => {
           {/* Summary Cards */}
           <View style={styles.summaryCards}>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total Spent</Text>
+              <Text style={styles.summaryLabel}>{tSafe('total_spent', 'Total Spent')}</Text>
               <Text style={styles.summaryAmount}>
                 {formatCurrency(calculateTotalSpent())}
               </Text>
-              <Text style={styles.summarySubtext}>Completed schedules</Text>
+              <Text style={styles.summarySubtext}>{tSafe('completed_schedules', 'Completed schedules')}</Text>
             </View>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total Bookings</Text>
+              <Text style={styles.summaryLabel}>{tSafe('total_bookings', 'Total Bookings')}</Text>
               <Text style={styles.summaryAmount}>{schedules.length}</Text>
-              <Text style={styles.summarySubtext}>All schedules</Text>
+              <Text style={styles.summarySubtext}>{tSafe('all_schedules', 'All schedules')}</Text>
             </View>
           </View>
 
@@ -1711,11 +2443,11 @@ const PaymentHistory = () => {
                           color="#666" 
                         />
                         <Text style={styles.scheduleApartment}>
-                          {schedule.schedule?.apartment_name || 'Unnamed Apartment'}
+                          {schedule.schedule?.apartment_name || tSafe('unnamed_apartment', 'Unnamed Apartment')}
                         </Text>
                       </View>
                       <Text style={styles.scheduleAddress} numberOfLines={1}>
-                        {schedule.schedule?.address || 'No address provided'}
+                        {schedule.schedule?.address || tSafe('no_address_provided', 'No address provided')}
                       </Text>
                       <View style={styles.scheduleMeta}>
                         <View style={styles.metaItem}>
@@ -1736,7 +2468,7 @@ const PaymentHistory = () => {
                               color="#8E8E93" 
                             />
                             <Text style={styles.metaText}>
-                              {schedule.assignedTo.length} cleaner{schedule.assignedTo.length > 1 ? 's' : ''}
+                              {schedule.assignedTo.length} {tSafe('cleaner_plural', 'cleaners')}
                             </Text>
                           </View>
                         )}
@@ -1766,19 +2498,19 @@ const PaymentHistory = () => {
 
                   <View style={styles.scheduleDetails}>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Booking ID:</Text>
+                      <Text style={styles.detailLabel}>{tSafe('booking_id', 'Booking ID:')}</Text>
                       <Text style={[styles.bookingId, { color: COLORS.primary }]}>
                         {schedule._id?.substring(0, 8)}...
                       </Text>
                     </View>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Created:</Text>
+                      <Text style={styles.detailLabel}>{tSafe('created', 'Created:')}</Text>
                       <Text style={styles.detailValue}>
                         {formatDate(schedule.created_at?.$date || schedule.created_at)}
                       </Text>
                     </View>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Duration:</Text>
+                      <Text style={styles.detailLabel}>{tSafe('duration', 'Duration:')}</Text>
                       <Text style={styles.detailValue}>
                         {minutesToDuration(schedule.schedule?.total_cleaning_time)}
                       </Text>
@@ -1792,7 +2524,7 @@ const PaymentHistory = () => {
                     >
                       <MaterialCommunityIcons name="eye" size={16} color={COLORS.primary} />
                       <Text style={[styles.viewButtonText, { color: COLORS.primary }]}>
-                        View Details
+                        {tSafe('view_details', 'View Details')}
                       </Text>
                     </TouchableOpacity>
                     
@@ -1802,14 +2534,14 @@ const PaymentHistory = () => {
                         onPress={() => handleViewReceipt(schedule)}
                       >
                         <MaterialCommunityIcons name="file-document" size={16} color="#34C759" />
-                        <Text style={styles.receiptButtonText}>Receipt</Text>
+                        <Text style={styles.receiptButtonText}>{tSafe('receipt', 'Receipt')}</Text>
                       </TouchableOpacity>
                     )}
                     
                     {schedule.status === 'pending_payment' && (
                       <TouchableOpacity onPress={()=> navigation.navigate(ROUTES.host_schedule_request, {scheduleId:schedule?._id})} style={[styles.payButton, { backgroundColor: COLORS.primary }]}>
                         <MaterialCommunityIcons name="credit-card" size={16} color="#FFFFFF" />
-                        <Text style={styles.payButtonText}>Pay Now</Text>
+                        <Text style={styles.payButtonText}>{tSafe('pay_now', 'Pay Now')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1822,11 +2554,11 @@ const PaymentHistory = () => {
                   size={64} 
                   color="#CCCCCC" 
                 />
-                <Text style={styles.emptyStateText}>No schedules found</Text>
+                <Text style={styles.emptyStateText}>{tSafe('no_schedules_found', 'No schedules found')}</Text>
                 <Text style={styles.emptyStateSubtext}>
                   {selectedFilter === 'all' 
-                    ? 'You haven\'t booked any cleaning schedules yet' 
-                    : `No ${getStatusLabel(selectedFilter).toLowerCase()} schedules`
+                    ? tSafe('empty_all_schedules', 'You haven\'t booked any cleaning schedules yet')
+                    : tSafe('empty_filtered_schedules', 'No {status} schedules', { status: getStatusLabel(selectedFilter).toLowerCase() })
                   }
                 </Text>
               </View>
@@ -1837,16 +2569,15 @@ const PaymentHistory = () => {
           <View style={[styles.helpSection, { backgroundColor: COLORS.primary }]}>
             <View style={styles.helpHeader}>
               <MaterialCommunityIcons name="help-circle" size={24} color="#FFFFFF" />
-              <Text style={styles.helpTitle}>Need help with a booking?</Text>
+              <Text style={styles.helpTitle}>{tSafe('need_help', 'Need help with a booking?')}</Text>
             </View>
             <Text style={styles.helpText}>
-              If you have questions about a schedule or need to make changes, 
-              our support team is available 24/7.
+              {tSafe('help_support_text', 'If you have questions about a schedule or need to make changes, our support team is available 24/7.')}
             </Text>
             <TouchableOpacity style={styles.contactSupportButton}>
               <MaterialCommunityIcons name="headset" size={20} color={COLORS.primary} />
               <Text style={[styles.contactSupportText, { color: COLORS.primary }]}>
-                Contact Support
+                {tSafe('contact_support', 'Contact Support')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1954,7 +2685,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   filterTabActive: {
-    backgroundColor: COLORS.primary, // Use primary color
+    backgroundColor: COLORS.primary,
   },
   filterTabText: {
     fontSize: 13,

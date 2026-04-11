@@ -5,29 +5,31 @@ import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 import { minutesToDuration } from '../../utils/minuteToDuration';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
   if (!earningsData || earningsData.breakdown.length === 0) {
     return null;
   }
 
-  // Helper function to format status
+  // Helper function to format status – now translated
   const formatStatus = (status) => {
     const statusMap = {
-      'payment_confirmed': 'Payment Confirmed',
-      'in_progress': 'In Progress',
-      'upcoming': 'Upcoming',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled',
-      'pending': 'Pending'
+      'payment_confirmed': tSafe('status_payment_confirmed', 'Payment Confirmed'),
+      'in_progress': tSafe('status_in_progress', 'In Progress'),
+      'upcoming': tSafe('status_upcoming', 'Upcoming'),
+      'completed': tSafe('status_completed', 'Completed'),
+      'cancelled': tSafe('status_cancelled', 'Cancelled'),
+      'pending': tSafe('status_pending', 'Pending')
     };
     return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Helper function to format group
+  // Helper function to format group – now translated
   const formatGroup = (group) => {
-    if (!group) return 'Ungrouped';
-    return group.replace('group_', 'Group ');
+    if (!group) return tSafe('ungrouped', 'Ungrouped');
+    const groupNumber = group.replace('group_', '');
+    return `${tSafe('group', 'Group')} ${groupNumber}`;
   };
 
   // Helper function to get status color
@@ -45,16 +47,19 @@ const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
 
   const { totalEarnings, cleanerEarnings, breakdown } = earningsData;
 
+  // Find current cleaner's data for details section
+  const currentCleanerData = breakdown.find(c => c.cleanerId === currentCleanerId);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <MaterialCommunityIcons name="cash-multiple" size={20} color={COLORS.primary} />
-        <Text style={styles.title}>Earnings Breakdown</Text>
+        <Text style={styles.title}>{tSafe('earnings_breakdown', 'Earnings Breakdown')}</Text>
       </View>
 
       {/* Total Earnings */}
       <View style={styles.totalSection}>
-        <Text style={styles.totalLabel}>Total Job Value</Text>
+        <Text style={styles.totalLabel}>{tSafe('total_job_value', 'Total Job Value')}</Text>
         <Text style={styles.totalAmount}>${totalEarnings.toFixed(2)}</Text>
       </View>
 
@@ -63,7 +68,7 @@ const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
         <View style={styles.yourEarningsSection}>
           <View style={styles.yourEarningsHeader}>
             <MaterialCommunityIcons name="account" size={16} color={COLORS.primary} />
-            <Text style={styles.yourEarningsLabel}>Your Share</Text>
+            <Text style={styles.yourEarningsLabel}>{tSafe('your_share', 'Your Share')}</Text>
           </View>
           <Text style={styles.yourEarningsAmount}>${cleanerEarnings.toFixed(2)}</Text>
         </View>
@@ -71,7 +76,7 @@ const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
 
       {/* Breakdown by Cleaner */}
       <View style={styles.breakdownSection}>
-        <Text style={styles.breakdownTitle}>Distribution by Cleaner</Text>
+        <Text style={styles.breakdownTitle}>{tSafe('distribution_by_cleaner', 'Distribution by Cleaner')}</Text>
         {breakdown.map((cleaner, index) => (
           <View 
             key={cleaner.cleanerId} 
@@ -84,7 +89,7 @@ const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
               <Text style={styles.cleanerName} numberOfLines={1}>
                 {cleaner.name}
                 {cleaner.cleanerId === currentCleanerId && (
-                  <Text style={styles.youLabel}> (You)</Text>
+                  <Text style={styles.youLabel}> ({tSafe('you', 'You')})</Text>
                 )}
               </Text>
               <View style={styles.cleanerDetails}>
@@ -108,63 +113,63 @@ const EarningsBreakdownCard = ({ earningsData, currentCleanerId }) => {
         ))}
       </View>
 
-      {/* Status Legend */}
-      {/* <View style={styles.legendSection}>
-        <Text style={styles.legendTitle}>Status Legend</Text>
+      {/* Status Legend – uncommented and translated */}
+      <View style={styles.legendSection}>
+        <Text style={styles.legendTitle}>{tSafe('status_legend', 'Status Legend')}</Text>
         <View style={styles.legendGrid}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#34C759' }]} />
-            <Text style={styles.legendText}>Payment Confirmed</Text>
+            <Text style={styles.legendText}>{tSafe('status_payment_confirmed', 'Payment Confirmed')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: COLORS.primary }]} />
-            <Text style={styles.legendText}>In Progress</Text>
+            <Text style={styles.legendText}>{tSafe('status_in_progress', 'In Progress')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#FF9500' }]} />
-            <Text style={styles.legendText}>Upcoming</Text>
+            <Text style={styles.legendText}>{tSafe('status_upcoming', 'Upcoming')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#DC3545' }]} />
-            <Text style={styles.legendText}>Cancelled</Text>
+            <Text style={styles.legendText}>{tSafe('status_cancelled', 'Cancelled')}</Text>
           </View>
         </View>
-      </View> */}
+      </View>
 
       {/* Room and Extra Details for Current Cleaner */}
-      {cleanerEarnings > 0 && (
+      {cleanerEarnings > 0 && currentCleanerData && (
         <View style={styles.detailsSection}>
-          <Text style={styles.detailsTitle}>Your Assignment Details</Text>
+          <Text style={styles.detailsTitle}>{tSafe('your_assignment_details', 'Your Assignment Details')}</Text>
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <MaterialCommunityIcons name="door-open" size={16} color="#666" />
-              <Text style={styles.detailLabel}>Rooms</Text>
+              <Text style={styles.detailLabel}>{tSafe('rooms', 'Rooms')}</Text>
               <Text style={styles.detailValue}>
-                {breakdown.find(c => c.cleanerId === currentCleanerId)?.rooms.length || 0}
+                {currentCleanerData.rooms?.length || 0}
               </Text>
             </View>
             
             <View style={styles.detailItem}>
               <MaterialCommunityIcons name="star" size={16} color="#666" />
-              <Text style={styles.detailLabel}>Extras</Text>
+              <Text style={styles.detailLabel}>{tSafe('extras', 'Extras')}</Text>
               <Text style={styles.detailValue}>
-                {breakdown.find(c => c.cleanerId === currentCleanerId)?.extras.length || 0}
+                {currentCleanerData.extras?.length || 0}
               </Text>
             </View>
             
             <View style={styles.detailItem}>
               <MaterialCommunityIcons name="timer" size={16} color="#666" />
-              <Text style={styles.detailLabel}>Time</Text>
+              <Text style={styles.detailLabel}>{tSafe('time', 'Time')}</Text>
               <Text style={styles.detailValue}>
-                {minutesToDuration(breakdown.find(c => c.cleanerId === currentCleanerId)?.totalTime || 0)}
+                {minutesToDuration(currentCleanerData.totalTime || 0)}
               </Text>
             </View>
 
             <View style={styles.detailItem}>
               <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-              <Text style={styles.detailLabel}>Group</Text>
+              <Text style={styles.detailLabel}>{tSafe('group', 'Group')}</Text>
               <Text style={styles.detailValue}>
-                {formatGroup(breakdown.find(c => c.cleanerId === currentCleanerId)?.group)}
+                {formatGroup(currentCleanerData.group)}
               </Text>
             </View>
           </View>

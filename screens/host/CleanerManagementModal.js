@@ -19,18 +19,12 @@
 // const { width, height } = Dimensions.get('window');
 
 // const CleanerManagementModal = ({
-//   // visible,
-//   // onClose,
-//   // platformCleaners = [],
-//   // preferredCleaners,
-//   // setPreferredCleaners,
-
 //   visible,
 //   onClose,
 //   platformCleaners = [],
-//   preferredCleaners,
+//   preferredCleaners,        // array of { id, type } – only ids stored in parent
 //   setPreferredCleaners,
-//   invitedCleaners,          // (optional – might be used for future features)
+//   invitedCleaners,          // array of { tempId, email, phone }
 //   setInvitedCleaners,
 // }) => {
 //   const [inviteEmail, setInviteEmail] = useState('');
@@ -46,6 +40,7 @@
 //     return regex.test(email);
 //   };
 
+//   // Auto‑select platform cleaner when email matches
 //   useEffect(() => {
 //     if (searchTimeout.current) clearTimeout(searchTimeout.current);
 
@@ -61,10 +56,12 @@
 //       );
 
 //       if (matchedCleaner) {
-//         if (!preferredCleaners.some((c) => c.id === matchedCleaner.id)) {
+//         const alreadySelected = preferredCleaners.some((c) => c.id === matchedCleaner.id);
+//         if (!alreadySelected) {
+//           // Store only id and type in parent
 //           setPreferredCleaners([
 //             ...preferredCleaners,
-//             { ...matchedCleaner, type: 'platform' },
+//             { id: matchedCleaner.id, type: 'platform' },
 //           ]);
 //           setAutoSelectMessage(`${matchedCleaner.name} added.`);
 //         } else {
@@ -77,58 +74,25 @@
 //     }, 400);
 
 //     return () => clearTimeout(searchTimeout.current);
-//   }, [inviteEmail]);
+//   }, [inviteEmail, platformCleaners, preferredCleaners, setPreferredCleaners]);
 
+//   // Add a platform cleaner manually (via card tap)
 //   const addPlatformCleaner = (cleaner) => {
 //     if (!preferredCleaners.some((c) => c.id === cleaner.id)) {
 //       setPreferredCleaners([
 //         ...preferredCleaners,
-//         { ...cleaner, type: 'platform' },
+//         { id: cleaner.id, type: 'platform' },
 //       ]);
 //     }
 //   };
 
-//   // const removeCleaner = (id) => {
-//   //   setPreferredCleaners(preferredCleaners.filter((c) => c.id !== id));
-//   // };
-
+//   // Remove cleaner – works for both platform and invited
 //   const removeCleaner = (id) => {
-//     // Remove from preferredCleaners
 //     setPreferredCleaners(prev => prev.filter(c => c.id !== id));
-//     // Also remove from invitedCleaners (if it's an invited cleaner)
 //     setInvitedCleaners(prev => prev.filter(c => c.tempId !== id));
 //   };
 
-//   // const addInvitedCleaner = () => {
-//   //   if (!inviteEmail && !invitePhone) {
-//   //     setEmailError('Provide email or phone');
-//   //     return;
-//   //   }
-
-//   //   if (inviteEmail && !validateEmail(inviteEmail)) {
-//   //     setEmailError('Invalid email');
-//   //     return;
-//   //   }
-
-//   //   setEmailError('');
-
-//   //   const tempId = uuidv4();
-//   //   setPreferredCleaners([
-//   //     ...preferredCleaners,
-//   //     {
-//   //       id: tempId,
-//   //       type: 'invited',
-//   //       email: inviteEmail || null,
-//   //       phone: invitePhone || null,
-//   //       status: 'pending',
-//   //     },
-//   //   ]);
-
-//   //   setInviteEmail('');
-//   //   setInvitePhone('');
-//   // };
-
-
+//   // Add an invited cleaner (by email/phone)
 //   const addInvitedCleaner = () => {
 //     if (!inviteEmail && !invitePhone) {
 //       setEmailError('Provide email or phone');
@@ -142,19 +106,13 @@
 
 //     const tempId = uuidv4();
 
-//     // 1. Add to preferredCleaners
+//     // Store in preferredCleaners (only id & type)
 //     setPreferredCleaners(prev => [
 //       ...prev,
-//       {
-//         id: tempId,
-//         type: 'invited',
-//         email: inviteEmail || null,
-//         phone: invitePhone || null,
-//         status: 'pending',
-//       },
+//       { id: tempId, type: 'invited' },
 //     ]);
 
-//     // 2. Add to invitedCleaners (with contact info)
+//     // Store contact details separately
 //     setInvitedCleaners(prev => [
 //       ...prev,
 //       {
@@ -167,7 +125,17 @@
 //     setInviteEmail('');
 //     setInvitePhone('');
 //   };
-  
+
+//   // Helper to get display name for a selected cleaner
+//   const getDisplayName = (item) => {
+//     if (item.type === 'platform') {
+//       const cleaner = platformCleaners.find(c => c.id === item.id);
+//       return cleaner ? cleaner.name : 'Unknown';
+//     } else {
+//       const invited = invitedCleaners.find(c => c.tempId === item.id);
+//       return invited ? (invited.email || invited.phone || 'Pending') : 'Pending';
+//     }
+//   };
 
 //   return (
 //     <Modal
@@ -284,7 +252,6 @@
 //               autoCapitalize="none"
 //               outlineColor="#CCC"
 //               activeOutlineColor={COLORS.primary}
-//               iconName="email-outline"
 //               style={{marginBottom:0, marginTop:5, fontSize:14, backgroundColor:"#fff"}}
 //               value={inviteEmail}
 //               onChangeText={(text) => {
@@ -310,7 +277,6 @@
 //               placeholderTextColor={COLORS.darkGray}
 //               outlineColor="#CCC"
 //               activeOutlineColor={COLORS.primary}
-//               iconName="email-outline"
 //               style={{marginBottom:20, marginTop:5, fontSize:14, backgroundColor:"#fff"}}
 //               value={invitePhone}
 //               onChangeText={setInvitePhone}
@@ -335,35 +301,35 @@
 //                   No cleaners selected yet.
 //                 </Text>
 //               ) : (
-//                 preferredCleaners.map((cleaner) => (
-//                   <View key={cleaner.id} style={styles.chip}>
-//                     <Text
-//                       style={styles.chipText}
-//                       numberOfLines={1}
-//                     >
-//                       {cleaner.type === 'platform'
-//                         ? cleaner.name
-//                         : cleaner.email || cleaner.phone}
-//                     </Text>
-//                     <TouchableOpacity
-//                       onPress={() => removeCleaner(cleaner.id)}
-//                       style={styles.chipRemove}
-//                     >
-//                       <Icon
-//                         source="close"
-//                         size={16}
-//                         color={COLORS.white}
-//                       />
-//                     </TouchableOpacity>
-//                   </View>
-//                 ))
+//                 preferredCleaners.map((item) => {
+//                   const displayName = getDisplayName(item);
+//                   return (
+//                     <View key={item.id} style={styles.chip}>
+//                       <Text
+//                         style={styles.chipText}
+//                         numberOfLines={1}
+//                       >
+//                         {displayName}
+//                       </Text>
+//                       <TouchableOpacity
+//                         onPress={() => removeCleaner(item.id)}
+//                         style={styles.chipRemove}
+//                       >
+//                         <Icon
+//                           source="close"
+//                           size={16}
+//                           color={COLORS.white}
+//                         />
+//                       </TouchableOpacity>
+//                     </View>
+//                   );
+//                 })
 //               )}
 //             </View>
 //           </View>
 
 //           {/* STICKY FOOTER */}
 //           <View style={styles.footer}>
-            
 //             <Button
 //               mode="contained"
 //               onPress={onClose}
@@ -379,6 +345,7 @@
 //   );
 // };
 
+// // Styles remain exactly as you had them – no changes needed.
 // const styles = StyleSheet.create({
 //   safeArea: {
 //     flex: 1,
@@ -414,13 +381,10 @@
 //     paddingHorizontal: 4,
 //     marginBottom: 8,
 
-//     // iOS shadow
 //     shadowColor: '#000',
 //     shadowOffset: { width: 0, height: 4 },
 //     shadowOpacity: 0.08,
 //     shadowRadius: 10,
-
-//     // Android shadow
 //     elevation: 6,
 //   },
 //   cleanerCard: {
@@ -532,14 +496,11 @@
 //     bottom: 0,
 //     left: 0,
 //     right: 0,
-  
 //     paddingVertical: 2,
 //     paddingHorizontal: 20,
 //     backgroundColor: COLORS.white,
-  
 //     borderTopWidth: 1,
 //     borderTopColor: 'rgba(0,0,0,0.06)',
-  
 //     shadowColor: '#000',
 //     shadowOffset: { width: 0, height: -3 },
 //     shadowOpacity: 0.05,
@@ -579,6 +540,7 @@ import {
 import { Button, TextInput, Icon } from 'react-native-paper';
 import COLORS from '../../constants/colors';
 import { v4 as uuidv4 } from 'uuid';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const { width, height } = Dimensions.get('window');
 
@@ -627,9 +589,13 @@ const CleanerManagementModal = ({
             ...preferredCleaners,
             { id: matchedCleaner.id, type: 'platform' },
           ]);
-          setAutoSelectMessage(`${matchedCleaner.name} added.`);
+          setAutoSelectMessage(
+            tSafe('cleaner_added_message', '{name} added.', { name: matchedCleaner.name })
+          );
         } else {
-          setAutoSelectMessage(`${matchedCleaner.name} already selected.`);
+          setAutoSelectMessage(
+            tSafe('cleaner_already_selected', '{name} already selected.', { name: matchedCleaner.name })
+          );
         }
         setInviteEmail('');
       } else {
@@ -659,11 +625,11 @@ const CleanerManagementModal = ({
   // Add an invited cleaner (by email/phone)
   const addInvitedCleaner = () => {
     if (!inviteEmail && !invitePhone) {
-      setEmailError('Provide email or phone');
+      setEmailError(tSafe('provide_email_or_phone', 'Provide email or phone'));
       return;
     }
     if (inviteEmail && !validateEmail(inviteEmail)) {
-      setEmailError('Invalid email');
+      setEmailError(tSafe('invalid_email', 'Invalid email'));
       return;
     }
     setEmailError('');
@@ -694,10 +660,10 @@ const CleanerManagementModal = ({
   const getDisplayName = (item) => {
     if (item.type === 'platform') {
       const cleaner = platformCleaners.find(c => c.id === item.id);
-      return cleaner ? cleaner.name : 'Unknown';
+      return cleaner ? cleaner.name : tSafe('unknown', 'Unknown');
     } else {
       const invited = invitedCleaners.find(c => c.tempId === item.id);
-      return invited ? (invited.email || invited.phone || 'Pending') : 'Pending';
+      return invited ? (invited.email || invited.phone || tSafe('pending', 'Pending')) : tSafe('pending', 'Pending');
     }
   };
 
@@ -715,7 +681,7 @@ const CleanerManagementModal = ({
         >
           {/* HEADER */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Manage Cleaners</Text>
+            <Text style={styles.headerTitle}>{tSafe('manage_cleaners_title', 'Manage Cleaners')}</Text>
             <TouchableOpacity onPress={onClose}>
               <Icon source="close" size={24} color={COLORS.darkGray} />
             </TouchableOpacity>
@@ -724,7 +690,7 @@ const CleanerManagementModal = ({
           {/* CONTENT */}
           <View style={{ flex: 1, paddingBottom: 100 }}>
             {/* PLATFORM CLEANERS */}
-            <Text style={styles.sectionTitle}>Platform Cleaners</Text>
+            <Text style={styles.sectionTitle}>{tSafe('platform_cleaners', 'Platform Cleaners')}</Text>
 
             <View style={styles.cleanerListContainer}>
               <ScrollView
@@ -733,7 +699,7 @@ const CleanerManagementModal = ({
               >
                 {platformCleaners.length === 0 ? (
                   <Text style={styles.emptyText}>
-                    No platform cleaners available nearby.
+                    {tSafe('no_platform_cleaners', 'No platform cleaners available nearby.')}
                   </Text>
                 ) : (
                   platformCleaners.map((cleaner) => {
@@ -775,7 +741,7 @@ const CleanerManagementModal = ({
                             </Text>
                             {cleaner.distance && (
                               <Text style={styles.cleanerDistance}>
-                                {cleaner.distance} miles away
+                                {cleaner.distance} {tSafe('miles_away', 'miles away')}
                               </Text>
                             )}
                           </View>
@@ -806,12 +772,12 @@ const CleanerManagementModal = ({
             </View>
 
             {/* INVITE SECTION */}
-            <Text style={styles.sectionTitle}>Invite New Cleaner</Text>
+            <Text style={styles.sectionTitle}>{tSafe('invite_new_cleaner', 'Invite New Cleaner')}</Text>
             
             <TextInput
               mode="outlined"
-              label="Email"
-              placeholder="Enter cleaner email"
+              label={tSafe('email_label', 'Email')}
+              placeholder={tSafe('email_placeholder', 'Enter cleaner email')}
               placeholderTextColor={COLORS.darkGray}
               autoCapitalize="none"
               outlineColor="#CCC"
@@ -836,8 +802,8 @@ const CleanerManagementModal = ({
 
             <TextInput
               mode="outlined"
-              label="Phone"
-              placeholder="Enter cleaner phone"
+              label={tSafe('phone_label', 'Phone')}
+              placeholder={tSafe('phone_placeholder', 'Enter cleaner phone')}
               placeholderTextColor={COLORS.darkGray}
               outlineColor="#CCC"
               activeOutlineColor={COLORS.primary}
@@ -853,16 +819,16 @@ const CleanerManagementModal = ({
               style={styles.inviteButton}
               disabled={!inviteEmail && !invitePhone}
             >
-              Send Invite
+              {tSafe('send_invite', 'Send Invite')}
             </Button>
 
             {/* SELECTED CLEANERS */}
-            <Text style={styles.sectionTitle}>Selected Cleaners</Text>
+            <Text style={styles.sectionTitle}>{tSafe('selected_cleaners', 'Selected Cleaners')}</Text>
 
             <View style={styles.chipContainer}>
               {preferredCleaners.length === 0 ? (
                 <Text style={styles.emptyText}>
-                  No cleaners selected yet.
+                  {tSafe('no_cleaners_selected', 'No cleaners selected yet.')}
                 </Text>
               ) : (
                 preferredCleaners.map((item) => {
@@ -900,7 +866,7 @@ const CleanerManagementModal = ({
               style={styles.doneButton}
               contentStyle={{ height: 50 }}
             >
-              Done
+              {tSafe('done', 'Done')}
             </Button>
           </View>
         </KeyboardAvoidingView>
@@ -909,7 +875,7 @@ const CleanerManagementModal = ({
   );
 };
 
-// Styles remain exactly as you had them – no changes needed.
+// Styles remain unchanged
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -937,14 +903,12 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 10,
   },
-
   cleanerListContainer: {
     height: height * 0.28,
     borderRadius: 16,
     backgroundColor: COLORS.white,
     paddingHorizontal: 4,
     marginBottom: 8,
-
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,

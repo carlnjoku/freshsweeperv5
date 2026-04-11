@@ -482,7 +482,10 @@ import AboutMe from '../../components/cleaner/AboutMe';
 import AboutMeDisplay from './AboutMeDisplay';
 import { get, ref, update } from 'firebase/database';
 import { db } from '../../services/firebase/config';
+import { LinearGradient } from 'expo-linear-gradient';
 import { format } from 'date-fns';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 // Helper: safely convert any input to a Date object
 const toSafeDate = (dateValue, fallback = new Date()) => {
@@ -556,7 +559,10 @@ export default function Profile() {
       setAvailability(formatted);
     } catch (err) {
       console.error('Error fetching availability:', err);
-      Alert.alert('Error', 'Failed to load availability');
+      Alert.alert(
+        tSafe('error_title', 'Error'),
+        tSafe('failed_load_availability', 'Failed to load availability')
+      );
     }
   };
 
@@ -625,10 +631,19 @@ export default function Profile() {
   const handleUpdateAbout = (text) => setAboutMe(text);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
+    // <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
+      <View style={styles.container}>
       <ScrollView>
-        <View style={styles.header}>
-          <View style={styles.avatar_background}>
+      <LinearGradient
+        colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>{tSafe('my_profile', 'My Profile')}</Text>
+        </View>
+        <View style={styles.avatar_background}>
             <AvatarUploader
               userId={currentUserId}
               default_photo={avatar}
@@ -638,6 +653,21 @@ export default function Profile() {
             <Text style={styles.name}>{currentUser.firstname} {currentUser.lastname}</Text>
             <Text style={styles.location}>{currentUser?.location?.city}, {currentUser?.location?.region}</Text>
           </View>
+      </LinearGradient>
+
+
+
+        <View style={styles.header}>
+          {/* <View style={styles.avatar_background}>
+            <AvatarUploader
+              userId={currentUserId}
+              default_photo={avatar}
+              image_type="avatar"
+              get_uploaded_photo={getUploadedPhoto}
+            />
+            <Text style={styles.name}>{currentUser.firstname} {currentUser.lastname}</Text>
+            <Text style={styles.location}>{currentUser?.location?.city}, {currentUser?.location?.region}</Text>
+          </View> */}
 
           <View style={styles.container}>
             <ContactDisplay
@@ -707,7 +737,8 @@ export default function Profile() {
           />
         </Modal>
       </ScrollView>
-    </SafeAreaView>
+      </View>
+   
   );
 }
 
@@ -715,7 +746,10 @@ const styles = StyleSheet.create({
   header: { margin: 0 },
   name: { color: COLORS.white, fontSize: 18 },
   location: { color: COLORS.white },
-  container: { margin: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
   avatar_background: {
     paddingTop: 80,
     paddingBottom: 10,
@@ -724,50 +758,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
-  
-    header:{
-    margin:0
+  line: {
+    borderBottomWidth: 0.8,
+    borderColor: COLORS.light_gray_1,
+    marginVertical: 5,
+    height: 4,
   },
-  name:{
-    color:COLORS.white,
-    fontSize:18,
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 0,
   },
-  location:{
-    color:COLORS.white
+  title: {
+    fontSize: 18,
   },
-  container:{
-    margin:10
+  content: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 5,
   },
-  avatar_background:{
-    paddingTop:80,
-    paddingBottom:10,
-    minHeighteight:200,
-    backgroundColor:COLORS.primary,
-    justifyContent:'center',
-    alignItems:'center'
+  actions: {
+    flexDirection: 'row',
   },
-  line:{
-    borderBottomWidth:0.8,
-    borderColor:COLORS.light_gray_1,
-    marginVertical:5,
-    height:4
+  headerGradient: {
+    paddingTop: 0,
+    paddingBottom: 4,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  titleContainer:{
-    flexDirection:'row',
-    justifyContent:'space-between',
-    alignItems:'center',
-    marginTop:0
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  title:{
-    fontSize:18,
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginLeft: 12,
   },
-  content:{
-    flexDirection:'row',
-    justifyContent:'space-between',
-    marginVertical:5
-  },
-  actions:{
-    flexDirection:'row',
-  }
 });

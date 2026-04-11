@@ -5,10 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView
 } from 'react-native';
 import { Modal, Portal, Button, TextInput, Icon } from 'react-native-paper';
 import COLORS from '../../constants/colors'; // adjust path as needed
 import { v4 as uuidv4 } from 'uuid';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const CleanerManagementModal = ({
   visible,
@@ -53,11 +55,17 @@ const CleanerManagementModal = ({
         visible={visible}
         onDismiss={onClose}
         contentContainerStyle={modalStyles.modalContent}
+        presentationStyle="fullScreen"
       >
-        <Text style={modalStyles.modalTitle}>Manage Preferred Cleaners</Text>
+  
+        <Text style={modalStyles.modalTitle}>
+          {tSafe('invite_your_own_cleaner', 'Invite your own Cleaners')}
+        </Text>
 
         {/* Platform cleaners list */}
-        <Text style={modalStyles.sectionTitle}>Platform Cleaners</Text>
+        <Text style={modalStyles.sectionTitle}>
+          {tSafe('platform_cleaners', 'Platform Cleaners')}
+        </Text>
         <ScrollView style={{ maxHeight: 150 }} nestedScrollEnabled>
           {platformCleaners.map((cleaner) => (
             <TouchableOpacity
@@ -74,32 +82,38 @@ const CleanerManagementModal = ({
         </ScrollView>
 
         {/* Invite new cleaner */}
-        <Text style={modalStyles.sectionTitle}>Invite New Cleaner</Text>
+        <Text style={modalStyles.sectionTitle}>
+          {tSafe('invite_new_cleaner', 'Invite New Cleaner')}
+        </Text>
+        
         <TextInput
-          mode="outlined"
-          label="Email"
-          value={inviteEmail}
-          onChangeText={setInviteEmail}
-          style={modalStyles.inputSpacing}
-        />
-        <TextInput
-          mode="outlined"
-          label="Phone"
-          value={invitePhone}
-          onChangeText={setInvitePhone}
-          style={modalStyles.inputSpacing}
-        />
+            mode="outlined"
+            label={tSafe('cleaner_email', 'Cleaner Email')}
+            autoCapitalize="none"
+            placeholder={tSafe('enter_cleaner_email', 'Enter cleaner email')}
+            placeholderTextColor={COLORS.gray}
+            outlineColor="#D8D8D8"
+            value={inviteEmail}
+            onChangeText={setInviteEmail}
+            activeOutlineColor={COLORS.primary}
+            style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
+            left={<TextInput.Icon icon="email" style={{ marginTop: 10 }} fontSize="small" />}
+          />
+        
+       
         <Button
           mode="contained"
           onPress={addInvitedCleaner}
           style={modalStyles.buttonSpacing}
           disabled={!inviteEmail && !invitePhone}
         >
-          Add Invite
+          {tSafe('add_invite', 'Add Invite')}
         </Button>
 
         {/* Current selections */}
-        <Text style={modalStyles.sectionTitle}>Selected Cleaners</Text>
+        <Text style={modalStyles.sectionTitle}>
+          {tSafe('selected_cleaners', 'Selected Cleaners')}
+        </Text>
         <View style={modalStyles.chipContainer}>
           {preferredCleaners.map((cleaner) => (
             <View key={cleaner.id} style={modalStyles.chip}>
@@ -123,18 +137,22 @@ const CleanerManagementModal = ({
           onPress={onClose}
           style={[modalStyles.buttonSpacing, { marginTop: 16 }]}
         >
-          Done
+          {tSafe('done', 'Done')}
         </Button>
+  
       </Modal>
     </Portal>
   );
 };
 
 const modalStyles = StyleSheet.create({
+  // safeArea: {
+  //   flex: 1,
+  //   backgroundColor: COLORS.white,
+  // },
   modalContent: {
     backgroundColor: COLORS.white,
     padding: 20,
-    marginHorizontal: 20,
     borderRadius: 12,
     maxHeight: '80%',
   },

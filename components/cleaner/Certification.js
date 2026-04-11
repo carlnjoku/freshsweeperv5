@@ -710,6 +710,7 @@ import { TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DatePicker from 'react-native-date-picker';
 import userService from '../../services/connection/userService';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const Certification = ({ userId, certification, close_modal, onUpdate }) => {
   const [inputs, setInputs] = useState({
@@ -741,11 +742,11 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
   const validate = () => {
     let isValid = true;
     if (!inputs.name) {
-      handleError('Enter certification name', 'name');
+      handleError(tSafe('enter_certification_name', 'Enter certification name'), 'name');
       isValid = false;
     }
     if (!inputs.institution_name) {
-      handleError('Enter institution name', 'institution_name');
+      handleError(tSafe('enter_institution_name', 'Enter institution name'), 'institution_name');
       isValid = false;
     }
     if (isValid) onSubmit();
@@ -761,14 +762,14 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
       };
       const response = await userService.updateCleanerCertification(payload);
       if (response.status === 200) {
-        Alert.alert('Success', response.data.message);
+        Alert.alert(tSafe('success_title', 'Success'), response.data.message);
         if (onUpdate) onUpdate(response.data.certification || payload);
         onClose();
       } else {
-        Alert.alert('Oops! Something went wrong, try again');
+        Alert.alert(tSafe('error_title', 'Oops!'), tSafe('something_went_wrong', 'Something went wrong, try again'));
       }
     } catch (e) {
-      Alert.alert('Oops! Something went wrong, try again');
+      Alert.alert(tSafe('error_title', 'Oops!'), tSafe('something_went_wrong', 'Something went wrong, try again'));
     }
   };
 
@@ -790,13 +791,15 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
               </View>
 
               <Text style={styles.heading}>
-                {certification ? 'Edit Certification' : 'Add Certification'}
+                {certification
+                  ? tSafe('edit_certification', 'Edit Certification')
+                  : tSafe('add_certification', 'Add Certification')}
               </Text>
 
               <TextInput
                 mode="outlined"
-                label="Certification/ License Name"
-                placeholder="Certification/ License Name"
+                label={tSafe('certification_name_label', 'Certification/ License Name')}
+                placeholder={tSafe('certification_name_placeholder', 'Certification/ License Name')}
                 placeholderTextColor={COLORS.gray}
                 outlineColor="#D8D8D8"
                 value={inputs.name}
@@ -810,8 +813,8 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
 
               <TextInput
                 mode="outlined"
-                label="Institution Name"
-                placeholder="Institution Name"
+                label={tSafe('institution_name_label', 'Institution Name')}
+                placeholder={tSafe('institution_name_placeholder', 'Institution Name')}
                 placeholderTextColor={COLORS.gray}
                 outlineColor="#D8D8D8"
                 value={inputs.institution_name}
@@ -827,7 +830,7 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
               <View>
                 <TextInput
                   mode="outlined"
-                  label="Start Date"
+                  label={tSafe('start_date_label', 'Start Date')}
                   value={inputs.startDate.toDateString()}
                   onFocus={() => setShowStartDatePicker(true)}
                   editable={false}
@@ -846,6 +849,9 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
                     setInputs(prev => ({ ...prev, startDate: date }));
                   }}
                   onCancel={() => setShowStartDatePicker(false)}
+                  title={tSafe('select_start_date', 'Select Start Date')}
+                  confirmText={tSafe('done', 'Done')}
+                  cancelText={tSafe('cancel', 'Cancel')}
                 />
               </View>
 
@@ -853,7 +859,7 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
               <View>
                 <TextInput
                   mode="outlined"
-                  label="End Date"
+                  label={tSafe('end_date_label', 'End Date')}
                   value={inputs.endDate.toDateString()}
                   onFocus={() => setShowEndDatePicker(true)}
                   editable={false}
@@ -872,6 +878,9 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
                     setInputs(prev => ({ ...prev, endDate: date }));
                   }}
                   onCancel={() => setShowEndDatePicker(false)}
+                  title={tSafe('select_end_date', 'Select End Date')}
+                  confirmText={tSafe('done', 'Done')}
+                  cancelText={tSafe('cancel', 'Cancel')}
                 />
               </View>
 
@@ -879,7 +888,7 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
               <View>
                 <TextInput
                   mode="outlined"
-                  label="Expiry Date"
+                  label={tSafe('expiry_date_label', 'Expiry Date')}
                   value={inputs.expiryDate.toDateString()}
                   onFocus={() => setShowExpiryDatePicker(true)}
                   editable={false}
@@ -898,13 +907,16 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
                     setInputs(prev => ({ ...prev, expiryDate: date }));
                   }}
                   onCancel={() => setShowExpiryDatePicker(false)}
+                  title={tSafe('select_expiry_date', 'Select Expiry Date')}
+                  confirmText={tSafe('done', 'Done')}
+                  cancelText={tSafe('cancel', 'Cancel')}
                 />
               </View>
 
               <TextInput
                 mode="outlined"
-                label="Credential URL"
-                placeholder="https://..."
+                label={tSafe('credential_url_label', 'Credential URL')}
+                placeholder={tSafe('credential_url_placeholder', 'https://...')}
                 placeholderTextColor={COLORS.gray}
                 outlineColor="#D8D8D8"
                 autoCapitalize="none"
@@ -915,7 +927,7 @@ const Certification = ({ userId, certification, close_modal, onUpdate }) => {
               />
 
               <TouchableOpacity onPress={validate} style={styles.button}>
-                <Text style={styles.button_text}>Confirm</Text>
+                <Text style={styles.button_text}>{tSafe('confirm', 'Confirm')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -930,7 +942,7 @@ const windowHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)', // semi-transparent background
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   keyboardAvoid: {

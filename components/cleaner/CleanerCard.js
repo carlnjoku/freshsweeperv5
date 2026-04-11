@@ -190,7 +190,7 @@
 
 // export default CleanerCard;
 
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import moment from 'moment';
@@ -199,6 +199,7 @@ import { calculateOverallRating } from '../../utils/calculate_overall_rating';
 import userService from '../../services/connection/userService';
 import COLORS from '../../constants/colors';
 import CleanerBadges from './CleanerBadges';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, cleanerId }) => {
     // Normalize the item structure - item could be a cleaner object or have a nested cleaner
@@ -232,12 +233,12 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
   
     // Safe access to location with fallbacks
     const location = cleaner?.location || {};
-    const city = location.city || 'Location unknown';
+    const city = location.city || tSafe('location_unknown', 'Location unknown');
     const region_code = location.region_code || '';
     const distance = cleaner?.distanceFromApartment || cleaner?.distance || 'N/A';
     
     // Safe access to other properties
-    const firstname = cleaner?.firstname || 'Unknown';
+    const firstname = cleaner?.firstname || tSafe('unknown', 'Unknown');
     const lastname = cleaner?.lastname || '';
     const created_at = cleaner?.created_at;
     const certification = cleaner?.certification;
@@ -245,7 +246,8 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
     const completed_jobs = cleaner?.completed_jobs || 0;
     const avatar = cleaner?.avatar;
 
-    const badges = {"badges": ["Fast Responder", "100% Reliable"]}
+    // Example badges – in reality, these would come from props or API
+    const badges = { "badges": ["Fast Responder", "100% Reliable"] };
     
     return (
         <TouchableOpacity
@@ -256,7 +258,7 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
             onPress={onSelect || onPress}
             activeOpacity={0.8}
         >
-        {/*Checkmark if selected */}
+        {/* Checkmark if selected */}
         {selected && (
           <MaterialIcons
             name="check-circle"
@@ -286,7 +288,7 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
               {firstname} {formatName(lastname)}
             </Text>
             <Text style={styles.subInfo}>
-              {city}{region_code ? `, ${region_code}` : ''} • {distance} miles away
+              {city}{region_code ? `, ${region_code}` : ''} • {distance} {tSafe('miles_away', 'miles away')}
             </Text>
           </View>
         </View>
@@ -301,10 +303,10 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
           <View style={styles.badge}>
             <Feather name="calendar" size={16} color="#4CAF50" />
             <Text style={styles.metaText}>
-              Member since{' '}
+              {tSafe('member_since', 'Member since')}{' '}
               {created_at ? 
                 moment(created_at, 'DD-MM-YYYY HH:mm:ss').format('MMM YYYY') : 
-                'Unknown'
+                tSafe('unknown', 'Unknown')
               }
             </Text>
           </View>
@@ -315,7 +317,7 @@ const CleanerCard = ({ item, onPress, onSelect, selected = false, preview_mode, 
             <Feather name="check-circle" size={18} color="#4CAF50" />
           )}
           <Text style={styles.jobsText}>
-            {completed_jobs} jobs
+            {completed_jobs} {tSafe('jobs', 'jobs')}
           </Text>
         </View>
         <CleanerBadges badges={badges?.badges} />

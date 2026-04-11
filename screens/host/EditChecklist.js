@@ -3510,6 +3510,810 @@
 
 
 
+// import React, { useState, useEffect, useContext, useRef } from 'react';
+// import {
+//   View,
+//   StyleSheet,
+//   ScrollView,
+//   ActivityIndicator,
+//   TouchableOpacity,
+//   Alert,
+//   Modal,
+//   Platform
+// } from 'react-native';
+// import { Text, Button, TextInput } from 'react-native-paper';
+// import { useNavigation, useRoute } from '@react-navigation/native';
+// import { AuthContext } from '../../context/AuthContext';
+// import COLORS from '../../constants/colors';
+// import RoomAssignmentPicker from './CreateBookingContents/RoomAssignmentPicker';
+// import userService from '../../services/connection/userService';
+// import Toast from 'react-native-toast-message';
+// import { MaterialCommunityIcons, Feather, AntDesign } from '@expo/vector-icons';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import ROUTES from '../../constants/routes';
+
+// export default function EditChecklist() {
+//   const { currentUserId, currency, userToken, logout } = useContext(AuthContext); // Added logout
+//   const navigation = useNavigation();
+//   const route = useRoute();
+//   const { checklistId, onChecklistUpdated } = route.params || {};
+
+//   const [selectedApartment, setSelectedApartment] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isSaving, setIsSaving] = useState(false);
+//   const [checklistName, setChecklistName] = useState('');
+//   const [totalFee, setTotalFee] = useState(0);
+//   const [totalTime, setTotalTime] = useState(0);
+//   const [checklistData, setChecklistData] = useState(null);
+//   const [showTooltip, setShowTooltip] = useState(false);
+//   const [hasLoadedData, setHasLoadedData] = useState(false);
+//   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+//   // State for group summary
+//   const [groupSummary, setGroupSummary] = useState(null);
+
+//   // Refs to prevent loops
+//   const hasFetchedData = useRef(false);
+//   const isFetching = useRef(false);
+
+//   console.log('EditChecklist - Loading checklist:', checklistId);
+
+//   useEffect(() => {
+//     // Only fetch data if we haven't already fetched it
+//     if (checklistId && !hasFetchedData.current && !isFetching.current) {
+//       fetchChecklistData();
+//     }
+
+//     return () => {
+//       // Reset refs when component unmounts
+//       hasFetchedData.current = false;
+//       isFetching.current = false;
+//     };
+//   }, [checklistId]);
+
+//   const getToken = async () => {
+//     try {
+//       const stored = await AsyncStorage.getItem('@storage_Key');
+//       if (!stored) return null;
+    
+//       const parsed = JSON.parse(stored);
+//       return parsed?.resp?.token || parsed?.token || null;
+//     } catch (error) {
+//       console.error('Error getting token:', error);
+//       return null;
+//     }
+//   };
+
+//   const showToast = (type, text1, text2) => {
+//     console.log(`Showing toast: ${type} - ${text1} - ${text2}`);
+//     Toast.show({
+//       type,
+//       text1,
+//       text2,
+//       position: 'top',
+//       visibilityTime: 6000,
+//       autoHide: true,
+//       topOffset: Platform.OS === 'ios' ? 50 : 30,
+//       bottomOffset: 40,
+//     });
+//   };
+
+//   const handleUnauthorized = () => {
+//     // showToast('error', 'Session Expired', 'Please log in again.');
+//     navigation.navigate(ROUTES.host_checklist,{
+//       mode:"delete",
+//       status:"success",
+//       message:"Session Expired', 'Please log in again."
+//     })
+    
+//     // Clear local storage and context
+//     logout();
+    
+//     // Reset navigation and navigate to Signin
+//     navigation.reset({
+//       index: 0,
+//       routes: [{ name: 'Signin' }],
+//     });
+//   };
+
+//   const fetchChecklistData = async () => {
+//     // Prevent multiple simultaneous fetches
+//     if (isFetching.current) {
+//       console.log('Already fetching, skipping...');
+//       return;
+//     }
+
+//     console.log('Starting fetch...');
+//     isFetching.current = true;
+//     setIsLoading(true);
+//     setHasLoadedData(false);
+
+//     try {
+//       console.log('Fetching checklist data for ID:', checklistId);
+      
+//       // Get token for this request
+//       const token = await getToken();
+//       if (!token) {
+//         handleUnauthorized();
+//         return;
+//       }
+      
+//       // Fetch checklist data
+//       const res = await userService.getChecklistById(checklistId, {
+//         headers: {
+//           'Authorization': `Bearer ${token}`,
+//           'Content-Type': 'application/json',
+//         },
+//       });
+      
+//       if (!res || !res.data) {
+//         throw new Error('No data returned from server');
+//       }
+      
+//       const data = res.data;
+//       console.log('Fetched checklist data successfully');
+      
+//       if (!data) {
+//         throw new Error('No checklist data found');
+//       }
+      
+//       setChecklistData(data);
+      
+//       // Set checklist name
+//       setChecklistName(data.checklistName || '');
+      
+//       // Set totals
+//       setTotalFee(data.totalFee || 0);
+//       setTotalTime(data.totalTime || 0);
+      
+//       // Set group summary
+//       if (data.checklist) {
+//         console.log('Setting group summary from fetched data');
+//         setGroupSummary(data.checklist);
+//       }
+      
+//       // Fetch apartment details
+//       if (data.propertyId) {
+//         console.log('Fetching apartment data for propertyId:', data.propertyId);
+        
+//         try {
+//           const apartmentRes = await userService.getApartmentById(data.propertyId, {
+//             headers: {
+//               'Authorization': `Bearer ${token}`,
+//               'Content-Type': 'application/json',
+//             },
+//           });
+          
+//           if (!apartmentRes || !apartmentRes.data) {
+//             throw new Error('No apartment data returned');
+//           }
+          
+//           const apartmentData = apartmentRes.data;
+          
+//           if (apartmentData) {
+//             setSelectedApartment(apartmentData);
+//           } else {
+//             console.warn('No apartment data returned');
+//             // Create fallback apartment
+//             setSelectedApartment({
+//               _id: data.propertyId,
+//               apt_name: 'Unknown Property',
+//               rooms: [],
+//               roomDetails: []
+//             });
+//           }
+//         } catch (apartmentError) {
+//           console.error('Error fetching apartment:', apartmentError);
+//           // Create fallback apartment
+//           setSelectedApartment({
+//             _id: data.propertyId,
+//             apt_name: data.propertyName || 'Property',
+//             rooms: [],
+//             roomDetails: []
+//           });
+//         }
+//       } else {
+//         console.log('No propertyId in checklist data');
+//         // Create a minimal apartment object
+//         setSelectedApartment({
+//           _id: 'temp_id',
+//           apt_name: 'No Property',
+//           rooms: [],
+//           roomDetails: []
+//         });
+//       }
+      
+//       hasFetchedData.current = true;
+//       setHasLoadedData(true);
+//       setIsInitialLoad(false);
+      
+//     } catch (err) {
+//       console.error('Error fetching checklist:', err);
+      
+//       if (err.response?.status === 401) {
+//         handleUnauthorized();
+//       } else {
+//         showToast('error', 'Failed to load checklist', err.message || 'Please try again');
+//       }
+      
+//       // Even on error, set loaded data to true so UI can render
+//       setHasLoadedData(true);
+//       setIsInitialLoad(false);
+//     } finally {
+//       setIsLoading(false);
+//       isFetching.current = false;
+//     }
+//   };
+
+//   const handleUpdateChecklist = async () => {
+//     if (!checklistName.trim()) {
+//       showToast('error', 'Checklist Name Required', 'Please enter a name for this checklist.');
+//       return;
+//     }
+
+//     if (!groupSummary) {
+//       showToast('error', 'No Tasks', 'Please assign at least one task');
+//       return;
+//     }
+
+//     const payload = {
+//       checklistName: checklistName.trim(),
+//       checklist: groupSummary,
+//       apt_name: selectedApartment?.apt_name || checklistData?.propertyName || 'Property',
+//       totalFee,
+//       totalTime,
+//       propertyId: selectedApartment?._id || checklistData?.propertyId,
+//       hostId: currentUserId,
+//     };
+
+    
+
+//     // const payload = {
+//     //   propertyId: selectedPropertyId,
+//     //   hostId: currentUserId,
+//     //   checklistName: checklistName.trim(),
+//     //   apt_name: selectedPropertyName,
+//     //   checklist: groupSummary,
+//     //   totalFee,
+//     //   totalTime,
+//     //   isDefault: true // Make it default for this property
+//     // };
+
+//     console.log('Update payload:', payload);
+
+//     setIsSaving(true);
+//     try {
+//       const token = await getToken();
+//       if (!token) {
+//         handleUnauthorized();
+//         setIsSaving(false);
+//         return;
+//       }
+
+//       const res = await userService.editChecklist(checklistId, payload, {
+//         headers: {
+//           'Authorization': `Bearer ${token}`,
+//           'Content-Type': 'application/json',
+//         },
+//       });
+
+//       if (res.status === 200) {
+//         showToast('success', 'Checklist updated', 'Your changes have been saved');
+        
+//         if (onChecklistUpdated) {
+//           onChecklistUpdated();
+//         }
+        
+//         navigation.navigate(ROUTES.host_checklist,{
+//           mode:"edit",
+//           status:"success",
+//           message:"Checklist successfully updated"
+//         })
+//         // navigation.goBack();
+//       } else {
+//         throw new Error(`Server returned status: ${res.status}`);
+//       }
+//     } catch (err) {
+//       console.error('Checklist update failed', err);
+      
+//       if (err.response?.status === 401) {
+//         handleUnauthorized();
+//       } else {
+//         showToast('error', 'Failed to update checklist', err.response?.data?.message || 'Please try again later');
+//       }
+//     } finally {
+//       setIsSaving(false);
+//     }
+//   };
+  
+//   const handleDeleteChecklist = () => {
+//     Alert.alert(
+//       'Delete Checklist',
+//       `Are you sure you want to delete "${checklistName}"? This action cannot be undone.`,
+//       [
+//         {
+//           text: 'Cancel',
+//           style: 'cancel',
+//         },
+//         {
+//           text: 'Delete',
+//           style: 'destructive',
+//           onPress: async () => {
+//             try {
+//               console.log(`🗑️ Deleting checklist ${checklistId}...`);
+              
+//               // Get token
+//               const token = await getToken();
+              
+//               if (!token) {
+//                 handleUnauthorized();
+//                 return;
+//               }
+              
+//               console.log('Using token for delete');
+              
+//               // Make the delete request with proper headers
+//               const res = await userService.deleteChecklist(checklistId, token);
+              
+//               console.log('Delete response:', res);
+              
+//               if (res.status === 200 || res.data?.status === 'success') {
+//                 showToast('success', 'Checklist deleted', 'The checklist has been removed');
+                
+//                 // Callback to refresh parent component
+//                 if (onChecklistUpdated) {
+//                   onChecklistUpdated();
+//                 }
+//                 navigation.navigate(ROUTES.host_checklist,{
+//                   mode:"delete",
+//                   status:"success",
+//                   message:"Checklist successfully removed"
+//                 })
+             
+//               } else {
+//                 throw new Error(`Server returned status: ${res.status}`);
+//               }
+//             } catch (err) {
+//               console.error('❌ Delete error:', {
+//                 message: err.message,
+//                 response: err.response?.data,
+//                 status: err.response?.status,
+//               });
+              
+//               if (err.response?.status === 401) {
+//                 handleUnauthorized();
+//               } else {
+//                 let errorMessage = 'Please try again';
+                
+//                 if (err.response) {
+//                   const { status, data } = err.response;
+                  
+//                   if (status === 404) {
+//                     errorMessage = 'Checklist not found. It may have already been deleted.';
+//                   } else if (status === 403) {
+//                     errorMessage = 'You are not authorized to delete this checklist.';
+//                   } else if (data?.detail) {
+//                     errorMessage = data.detail;
+//                   } else if (data?.message) {
+//                     errorMessage = data.message;
+//                   }
+//                 } else if (err.request) {
+//                   errorMessage = 'Network error. Please check your connection.';
+//                 } else {
+//                   errorMessage = err.message || 'Unknown error occurred.';
+//                 }
+                
+//                 showToast('error', 'Failed to delete checklist', errorMessage);
+//               }
+//             }
+//           },
+//         },
+//       ]
+//     );
+//   };
+
+//   // Handle group summary change from RoomAssignmentPicker
+//   const handleGroupSummaryChange = (summary) => {
+//     console.log('Group summary updated in parent:', {
+//       keys: Object.keys(summary || {}),
+//       summary
+//     });
+    
+//     setGroupSummary(summary);
+//   };
+
+//   // Handle total fee change
+//   const handleTotalFeeChange = (fee) => {
+//     setTotalFee(fee);
+//   };
+
+//   // Handle total time change
+//   const handleTotalTimeChange = (time) => {
+//     setTotalTime(time);
+//   };
+
+//   // Calculate group count from groupSummary
+//   const groupCount = groupSummary ? Object.keys(groupSummary).length : 0;
+
+//   if (isLoading && isInitialLoad) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//         <Text style={styles.loadingText}>Loading checklist details...</Text>
+//       </View>
+//     );
+//   }
+
+//   if (!checklistData && !isLoading) {
+//     return (
+//       <View style={styles.errorContainer}>
+//         <MaterialCommunityIcons name="alert-circle" size={48} color="#FF6B6B" />
+//         <Text style={styles.errorText}>Checklist not found</Text>
+//         <Button 
+//           mode="contained" 
+//           onPress={() => navigation.goBack()}
+//           style={styles.backButton}
+//         >
+//           Go Back
+//         </Button>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View style={styles.container}>
+//       {/* Header */}
+//       <View style={styles.header}>
+//         <TouchableOpacity 
+//           style={styles.backButton} 
+//           onPress={() => navigation.goBack()}
+//         >
+//           <Feather name="arrow-left" size={24} color={COLORS.dark} />
+//         </TouchableOpacity>
+//         <View style={styles.headerTitleContainer}>
+//           <Text style={styles.headerTitle}>Edit Checklist</Text>
+//           <Text style={styles.headerSubtitle}>
+//             {selectedApartment?.apt_name || checklistData?.propertyName || 'Property'}
+//           </Text>
+//         </View>
+//         <TouchableOpacity 
+//           style={styles.deleteButton}
+//           onPress={handleDeleteChecklist}
+//         >
+//           <Feather name="trash-2" size={20} color="#FF6B6B" />
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView 
+//         showsVerticalScrollIndicator={false} 
+//         style={styles.scrollContainer}
+//       >
+//         <View style={styles.content}>
+//           <View style={styles.inputContainer}>
+//             <Text style={styles.label}>Checklist Name</Text>
+//             <TextInput
+//               mode="outlined"
+//               value={checklistName}
+//               onChangeText={setChecklistName}
+//               placeholder="Enter checklist name"
+//               style={styles.nameInput}
+//               outlineColor="#e0e0e0"
+//               activeOutlineColor={COLORS.primary}
+//             />
+//           </View>
+
+//           {hasLoadedData && selectedApartment && (
+//             <RoomAssignmentPicker
+//               selectedApartment={selectedApartment}
+//               onGroupSummaryChange={handleGroupSummaryChange}
+//               onTotalFeeChange={handleTotalFeeChange}
+//               onTotalTimeChange={handleTotalTimeChange}
+//               checklistName={checklistName}
+//               setChecklistName={setChecklistName}
+//               onInfoPress={() => setShowTooltip(true)}
+//               isEditing={true}
+//               existingChecklistData={checklistData?.checklist || null}
+//               key={`room-picker-${checklistId}-${hasLoadedData}`}
+//             />
+//           )}
+
+//           {/* Show message if data isn't fully loaded */}
+//           {hasLoadedData && !selectedApartment && (
+//             <View style={styles.warningContainer}>
+//               <MaterialCommunityIcons name="alert-outline" size={32} color="#FFA500" />
+//               <Text style={styles.warningText}>
+//                 Unable to load property data. Some features may be limited.
+//               </Text>
+//               <Button
+//                 mode="outlined"
+//                 onPress={fetchChecklistData}
+//                 style={styles.retryButton}
+//                 icon="refresh"
+//               >
+//                 Retry Loading
+//               </Button>
+//             </View>
+//           )}
+
+//           <View style={styles.summarySection}>
+//             <Text style={styles.summaryTitle}>Summary</Text>
+//             <View style={styles.summaryRow}>
+//               <View style={styles.summaryItem}>
+//                 <Text style={styles.summaryLabel}>Total Fee</Text>
+//                 <Text style={styles.summaryValue}>{currency}{totalFee.toFixed(2)}</Text>
+//               </View>
+//               <View style={styles.summaryDivider} />
+//               <View style={styles.summaryItem}>
+//                 <Text style={styles.summaryLabel}>Total Time</Text>
+//                 <Text style={styles.summaryValue}>{totalTime} mins</Text>
+//               </View>
+//               <View style={styles.summaryDivider} />
+//               <View style={styles.summaryItem}>
+//                 <Text style={styles.summaryLabel}>Groups</Text>
+//                 <Text style={styles.summaryValue}>{groupCount}</Text>
+//               </View>
+//             </View>
+//           </View>
+
+//           <View style={styles.buttonContainer}>
+//             <Button
+//               mode="outlined"
+//               onPress={() => navigation.goBack()}
+//               style={[styles.button, styles.cancelButton]}
+//               contentStyle={styles.buttonContent}
+//             >
+//               Cancel
+//             </Button>
+            
+//             <Button
+//               mode="contained"
+//               onPress={handleUpdateChecklist}
+//               disabled={!groupSummary || isSaving || !checklistName.trim()}
+//               loading={isSaving}
+//               style={[styles.button, styles.saveButton]}
+//               contentStyle={styles.buttonContent}
+//             >
+//               Save Changes
+//             </Button>
+//           </View>
+//         </View>
+//       </ScrollView>
+
+//       {/* Tooltip Modal */}
+//       <Modal
+//         visible={showTooltip}
+//         transparent={true}
+//         animationType="fade"
+//         onRequestClose={() => setShowTooltip(false)}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalContainer}>
+//             <View style={styles.modalHeader}>
+//               <AntDesign name="infocirlce" size={24} color={COLORS.primary} />
+//               <Text style={styles.modalTitle}>Checklist Information</Text>
+//             </View>
+            
+//             <Text style={styles.modalText}>
+//               This helps us understand how many cleaners will work on the apartment.
+//               {"\n\n"}
+//               If it's just one cleaner, we'll assign all tasks to one group.
+//               If it's two or more, you'll be able to split tasks across groups for faster cleaning.
+//               {"\n\n"}
+//               <Text style={{ fontWeight: 'bold' }}>Editing Mode:</Text> You can modify existing task assignments, add new tasks, or adjust pricing.
+//             </Text>
+            
+//             <TouchableOpacity
+//               style={styles.modalCloseButton}
+//               onPress={() => setShowTooltip(false)}
+//             >
+//               <Text style={styles.modalCloseText}>Got it</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       </Modal>
+      
+//       {/* Toast Component must be rendered at root level */}
+//       <Toast />
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     paddingHorizontal: 16,
+//     paddingVertical: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#e0e0e0',
+//     backgroundColor: '#fff',
+//   },
+//   backButton: {
+//     padding: 8,
+//   },
+//   headerTitleContainer: {
+//     flex: 1,
+//     alignItems: 'center',
+//   },
+//   headerTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     color: COLORS.dark,
+//   },
+//   headerSubtitle: {
+//     fontSize: 14,
+//     color: COLORS.gray,
+//     marginTop: 2,
+//   },
+//   deleteButton: {
+//     padding: 8,
+//   },
+//   scrollContainer: {
+//     flex: 1,
+//   },
+//   content: {
+//     padding: 20,
+//   },
+//   inputContainer: {
+//     marginBottom: 24,
+//   },
+//   label: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//     marginBottom: 8,
+//   },
+//   nameInput: {
+//     backgroundColor: '#fff',
+//   },
+//   summarySection: {
+//     marginTop: 24,
+//     padding: 16,
+//     backgroundColor: '#f8f9fe',
+//     borderRadius: 12,
+//   },
+//   summaryTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//     marginBottom: 12,
+//   },
+//   summaryRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//   },
+//   summaryItem: {
+//     flex: 1,
+//     alignItems: 'center',
+//   },
+//   summaryLabel: {
+//     fontSize: 12,
+//     color: COLORS.gray,
+//     marginBottom: 4,
+//   },
+//   summaryValue: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: COLORS.primary,
+//   },
+//   summaryDivider: {
+//     width: 1,
+//     height: 40,
+//     backgroundColor: '#e0e7ff',
+//   },
+//   buttonContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginTop: 32,
+//     gap: 12,
+//   },
+//   button: {
+//     flex: 1,
+//     borderRadius: 8,
+//   },
+//   cancelButton: {
+//     borderColor: COLORS.gray,
+//   },
+//   saveButton: {
+//     backgroundColor: COLORS.primary,
+//   },
+//   buttonContent: {
+//     paddingVertical: 8,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: '#fff',
+//   },
+//   loadingText: {
+//     marginTop: 12,
+//     fontSize: 16,
+//     color: COLORS.gray,
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: '#fff',
+//     padding: 20,
+//   },
+//   errorText: {
+//     fontSize: 18,
+//     color: COLORS.dark,
+//     marginTop: 16,
+//     marginBottom: 24,
+//   },
+//   warningContainer: {
+//     padding: 16,
+//     backgroundColor: '#FFF9E6',
+//     borderRadius: 8,
+//     alignItems: 'center',
+//     marginVertical: 16,
+//   },
+//   warningText: {
+//     fontSize: 14,
+//     color: '#D48806',
+//     textAlign: 'center',
+//     marginVertical: 8,
+//   },
+//   retryButton: {
+//     marginTop: 8,
+//     borderColor: '#D48806',
+//   },
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   modalContainer: {
+//     backgroundColor: '#fff',
+//     borderRadius: 16,
+//     padding: 24,
+//     width: '100%',
+//     maxWidth: 400,
+//   },
+//   modalHeader: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   modalTitle: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: COLORS.dark,
+//     marginLeft: 12,
+//   },
+//   modalText: {
+//     fontSize: 16,
+//     color: COLORS.gray,
+//     lineHeight: 22,
+//     marginBottom: 24,
+//   },
+//   modalCloseButton: {
+//     backgroundColor: COLORS.primary,
+//     paddingVertical: 12,
+//     paddingHorizontal: 24,
+//     borderRadius: 8,
+//     alignSelf: 'flex-end',
+//   },
+//   modalCloseText: {
+//     color: '#fff',
+//     fontWeight: '600',
+//     fontSize: 14,
+//   },
+// });
+
+
+
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
@@ -3531,9 +4335,10 @@ import Toast from 'react-native-toast-message';
 import { MaterialCommunityIcons, Feather, AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ROUTES from '../../constants/routes';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 export default function EditChecklist() {
-  const { currentUserId, currency, userToken, logout } = useContext(AuthContext); // Added logout
+  const { currentUserId, currency, userToken, logout } = useContext(AuthContext);
   const navigation = useNavigation();
   const route = useRoute();
   const { checklistId, onChecklistUpdated } = route.params || {};
@@ -3599,17 +4404,12 @@ export default function EditChecklist() {
   };
 
   const handleUnauthorized = () => {
-    // showToast('error', 'Session Expired', 'Please log in again.');
     navigation.navigate(ROUTES.host_checklist,{
       mode:"delete",
       status:"success",
-      message:"Session Expired', 'Please log in again."
-    })
-    
-    // Clear local storage and context
+      message:tSafe('session_expired_message', 'Session Expired, Please log in again.')
+    });
     logout();
-    
-    // Reset navigation and navigate to Signin
     navigation.reset({
       index: 0,
       routes: [{ name: 'Signin' }],
@@ -3617,7 +4417,6 @@ export default function EditChecklist() {
   };
 
   const fetchChecklistData = async () => {
-    // Prevent multiple simultaneous fetches
     if (isFetching.current) {
       console.log('Already fetching, skipping...');
       return;
@@ -3631,14 +4430,12 @@ export default function EditChecklist() {
     try {
       console.log('Fetching checklist data for ID:', checklistId);
       
-      // Get token for this request
       const token = await getToken();
       if (!token) {
         handleUnauthorized();
         return;
       }
       
-      // Fetch checklist data
       const res = await userService.getChecklistById(checklistId, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3658,21 +4455,15 @@ export default function EditChecklist() {
       }
       
       setChecklistData(data);
-      
-      // Set checklist name
       setChecklistName(data.checklistName || '');
-      
-      // Set totals
       setTotalFee(data.totalFee || 0);
       setTotalTime(data.totalTime || 0);
       
-      // Set group summary
       if (data.checklist) {
         console.log('Setting group summary from fetched data');
         setGroupSummary(data.checklist);
       }
       
-      // Fetch apartment details
       if (data.propertyId) {
         console.log('Fetching apartment data for propertyId:', data.propertyId);
         
@@ -3694,30 +4485,27 @@ export default function EditChecklist() {
             setSelectedApartment(apartmentData);
           } else {
             console.warn('No apartment data returned');
-            // Create fallback apartment
             setSelectedApartment({
               _id: data.propertyId,
-              apt_name: 'Unknown Property',
+              apt_name: tSafe('unknown_property', 'Unknown Property'),
               rooms: [],
               roomDetails: []
             });
           }
         } catch (apartmentError) {
           console.error('Error fetching apartment:', apartmentError);
-          // Create fallback apartment
           setSelectedApartment({
             _id: data.propertyId,
-            apt_name: data.propertyName || 'Property',
+            apt_name: tSafe('property', 'Property'),
             rooms: [],
             roomDetails: []
           });
         }
       } else {
         console.log('No propertyId in checklist data');
-        // Create a minimal apartment object
         setSelectedApartment({
           _id: 'temp_id',
-          apt_name: 'No Property',
+          apt_name: tSafe('no_property', 'No Property'),
           rooms: [],
           roomDetails: []
         });
@@ -3733,10 +4521,9 @@ export default function EditChecklist() {
       if (err.response?.status === 401) {
         handleUnauthorized();
       } else {
-        showToast('error', 'Failed to load checklist', err.message || 'Please try again');
+        showToast('error', tSafe('failed_load_checklist', 'Failed to load checklist'), err.message || tSafe('please_try_again', 'Please try again'));
       }
       
-      // Even on error, set loaded data to true so UI can render
       setHasLoadedData(true);
       setIsInitialLoad(false);
     } finally {
@@ -3747,37 +4534,24 @@ export default function EditChecklist() {
 
   const handleUpdateChecklist = async () => {
     if (!checklistName.trim()) {
-      showToast('error', 'Checklist Name Required', 'Please enter a name for this checklist.');
+      showToast('error', tSafe('checklist_name_required', 'Checklist Name Required'), tSafe('enter_checklist_name', 'Please enter a name for this checklist.'));
       return;
     }
 
     if (!groupSummary) {
-      showToast('error', 'No Tasks', 'Please assign at least one task');
+      showToast('error', tSafe('no_tasks_error', 'No Tasks'), tSafe('assign_tasks', 'Please assign at least one task'));
       return;
     }
 
     const payload = {
       checklistName: checklistName.trim(),
       checklist: groupSummary,
-      apt_name: selectedApartment?.apt_name || checklistData?.propertyName || 'Property',
+      apt_name: selectedApartment?.apt_name || checklistData?.propertyName || tSafe('property', 'Property'),
       totalFee,
       totalTime,
       propertyId: selectedApartment?._id || checklistData?.propertyId,
       hostId: currentUserId,
     };
-
-    
-
-    // const payload = {
-    //   propertyId: selectedPropertyId,
-    //   hostId: currentUserId,
-    //   checklistName: checklistName.trim(),
-    //   apt_name: selectedPropertyName,
-    //   checklist: groupSummary,
-    //   totalFee,
-    //   totalTime,
-    //   isDefault: true // Make it default for this property
-    // };
 
     console.log('Update payload:', payload);
 
@@ -3798,7 +4572,7 @@ export default function EditChecklist() {
       });
 
       if (res.status === 200) {
-        showToast('success', 'Checklist updated', 'Your changes have been saved');
+        showToast('success', tSafe('checklist_updated', 'Checklist updated'), tSafe('changes_saved', 'Your changes have been saved'));
         
         if (onChecklistUpdated) {
           onChecklistUpdated();
@@ -3807,9 +4581,8 @@ export default function EditChecklist() {
         navigation.navigate(ROUTES.host_checklist,{
           mode:"edit",
           status:"success",
-          message:"Checklist successfully updated"
+          message:tSafe('checklist_updated_success', 'Checklist successfully updated')
         })
-        // navigation.goBack();
       } else {
         throw new Error(`Server returned status: ${res.status}`);
       }
@@ -3819,7 +4592,7 @@ export default function EditChecklist() {
       if (err.response?.status === 401) {
         handleUnauthorized();
       } else {
-        showToast('error', 'Failed to update checklist', err.response?.data?.message || 'Please try again later');
+        showToast('error', tSafe('failed_update_checklist', 'Failed to update checklist'), err.response?.data?.message || tSafe('please_try_again_later', 'Please try again later'));
       }
     } finally {
       setIsSaving(false);
@@ -3828,82 +4601,73 @@ export default function EditChecklist() {
   
   const handleDeleteChecklist = () => {
     Alert.alert(
-      'Delete Checklist',
-      `Are you sure you want to delete "${checklistName}"? This action cannot be undone.`,
+      tSafe('delete_checklist_title', 'Delete Checklist'),
+      tSafe('delete_checklist_confirm', 'Are you sure you want to delete "{name}"? This action cannot be undone.', { name: checklistName }),
       [
         {
-          text: 'Cancel',
+          text: tSafe('cancel', 'Cancel'),
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: tSafe('delete', 'Delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               console.log(`🗑️ Deleting checklist ${checklistId}...`);
               
-              // Get token
               const token = await getToken();
-              
               if (!token) {
                 handleUnauthorized();
                 return;
               }
               
               console.log('Using token for delete');
-              
-              // Make the delete request with proper headers
               const res = await userService.deleteChecklist(checklistId, token);
               
               console.log('Delete response:', res);
               
               if (res.status === 200 || res.data?.status === 'success') {
-                showToast('success', 'Checklist deleted', 'The checklist has been removed');
+                showToast('success', tSafe('checklist_deleted', 'Checklist deleted'), tSafe('checklist_removed', 'The checklist has been removed'));
                 
-                // Callback to refresh parent component
                 if (onChecklistUpdated) {
                   onChecklistUpdated();
                 }
                 navigation.navigate(ROUTES.host_checklist,{
                   mode:"delete",
                   status:"success",
-                  message:"Checklist successfully removed"
+                  message:tSafe('checklist_removed_success', 'Checklist successfully removed')
                 })
              
               } else {
                 throw new Error(`Server returned status: ${res.status}`);
               }
             } catch (err) {
-              console.error('❌ Delete error:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-              });
+              console.error('❌ Delete error:', err);
               
               if (err.response?.status === 401) {
                 handleUnauthorized();
               } else {
-                let errorMessage = 'Please try again';
+                let errorMessage = tSafe('please_try_again', 'Please try again');
                 
                 if (err.response) {
                   const { status, data } = err.response;
                   
                   if (status === 404) {
-                    errorMessage = 'Checklist not found. It may have already been deleted.';
+                    errorMessage = tSafe('checklist_not_found', 'Checklist not found. It may have already been deleted.');
                   } else if (status === 403) {
-                    errorMessage = 'You are not authorized to delete this checklist.';
+                    errorMessage = tSafe('not_authorized_delete', 'You are not authorized to delete this checklist.');
                   } else if (data?.detail) {
                     errorMessage = data.detail;
                   } else if (data?.message) {
                     errorMessage = data.message;
                   }
                 } else if (err.request) {
-                  errorMessage = 'Network error. Please check your connection.';
+                  errorMessage = tSafe('network_error', 'Network error. Please check your connection.');
                 } else {
-                  errorMessage = err.message || 'Unknown error occurred.';
+                  errorMessage = err.message || tSafe('unknown_error', 'Unknown error occurred.');
                 }
                 
-                showToast('error', 'Failed to delete checklist', errorMessage);
+                showToast('error', tSafe('failed_delete_checklist', 'Failed to delete checklist'), errorMessage);
               }
             }
           },
@@ -3912,34 +4676,29 @@ export default function EditChecklist() {
     );
   };
 
-  // Handle group summary change from RoomAssignmentPicker
   const handleGroupSummaryChange = (summary) => {
     console.log('Group summary updated in parent:', {
       keys: Object.keys(summary || {}),
       summary
     });
-    
     setGroupSummary(summary);
   };
 
-  // Handle total fee change
   const handleTotalFeeChange = (fee) => {
     setTotalFee(fee);
   };
 
-  // Handle total time change
   const handleTotalTimeChange = (time) => {
     setTotalTime(time);
   };
 
-  // Calculate group count from groupSummary
   const groupCount = groupSummary ? Object.keys(groupSummary).length : 0;
 
   if (isLoading && isInitialLoad) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading checklist details...</Text>
+        <Text style={styles.loadingText}>{tSafe('loading_checklist_details', 'Loading checklist details...')}</Text>
       </View>
     );
   }
@@ -3948,13 +4707,13 @@ export default function EditChecklist() {
     return (
       <View style={styles.errorContainer}>
         <MaterialCommunityIcons name="alert-circle" size={48} color="#FF6B6B" />
-        <Text style={styles.errorText}>Checklist not found</Text>
+        <Text style={styles.errorText}>{tSafe('checklist_not_found', 'Checklist not found')}</Text>
         <Button 
           mode="contained" 
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          Go Back
+          {tSafe('go_back', 'Go Back')}
         </Button>
       </View>
     );
@@ -3971,9 +4730,9 @@ export default function EditChecklist() {
           <Feather name="arrow-left" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Edit Checklist</Text>
+          <Text style={styles.headerTitle}>{tSafe('edit_checklist_title', 'Edit Checklist')}</Text>
           <Text style={styles.headerSubtitle}>
-            {selectedApartment?.apt_name || checklistData?.propertyName || 'Property'}
+            {selectedApartment?.apt_name || checklistData?.propertyName || tSafe('property', 'Property')}
           </Text>
         </View>
         <TouchableOpacity 
@@ -3990,12 +4749,12 @@ export default function EditChecklist() {
       >
         <View style={styles.content}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Checklist Name</Text>
+            <Text style={styles.label}>{tSafe('checklist_name_label', 'Checklist Name')}</Text>
             <TextInput
               mode="outlined"
               value={checklistName}
               onChangeText={setChecklistName}
-              placeholder="Enter checklist name"
+              placeholder={tSafe('enter_checklist_name_placeholder', 'Enter checklist name')}
               style={styles.nameInput}
               outlineColor="#e0e0e0"
               activeOutlineColor={COLORS.primary}
@@ -4017,12 +4776,11 @@ export default function EditChecklist() {
             />
           )}
 
-          {/* Show message if data isn't fully loaded */}
           {hasLoadedData && !selectedApartment && (
             <View style={styles.warningContainer}>
               <MaterialCommunityIcons name="alert-outline" size={32} color="#FFA500" />
               <Text style={styles.warningText}>
-                Unable to load property data. Some features may be limited.
+                {tSafe('unable_load_property_data', 'Unable to load property data. Some features may be limited.')}
               </Text>
               <Button
                 mode="outlined"
@@ -4030,26 +4788,26 @@ export default function EditChecklist() {
                 style={styles.retryButton}
                 icon="refresh"
               >
-                Retry Loading
+                {tSafe('retry_loading', 'Retry Loading')}
               </Button>
             </View>
           )}
 
           <View style={styles.summarySection}>
-            <Text style={styles.summaryTitle}>Summary</Text>
+            <Text style={styles.summaryTitle}>{tSafe('summary', 'Summary')}</Text>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Total Fee</Text>
+                <Text style={styles.summaryLabel}>{tSafe('total_fee', 'Total Fee')}</Text>
                 <Text style={styles.summaryValue}>{currency}{totalFee.toFixed(2)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Total Time</Text>
-                <Text style={styles.summaryValue}>{totalTime} mins</Text>
+                <Text style={styles.summaryLabel}>{tSafe('total_time', 'Total Time')}</Text>
+                <Text style={styles.summaryValue}>{totalTime} {tSafe('minutes', 'mins')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Groups</Text>
+                <Text style={styles.summaryLabel}>{tSafe('groups', 'Groups')}</Text>
                 <Text style={styles.summaryValue}>{groupCount}</Text>
               </View>
             </View>
@@ -4062,7 +4820,7 @@ export default function EditChecklist() {
               style={[styles.button, styles.cancelButton]}
               contentStyle={styles.buttonContent}
             >
-              Cancel
+              {tSafe('cancel', 'Cancel')}
             </Button>
             
             <Button
@@ -4073,7 +4831,7 @@ export default function EditChecklist() {
               style={[styles.button, styles.saveButton]}
               contentStyle={styles.buttonContent}
             >
-              Save Changes
+              {tSafe('save_changes', 'Save Changes')}
             </Button>
           </View>
         </View>
@@ -4090,23 +4848,18 @@ export default function EditChecklist() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <AntDesign name="infocirlce" size={24} color={COLORS.primary} />
-              <Text style={styles.modalTitle}>Checklist Information</Text>
+              <Text style={styles.modalTitle}>{tSafe('checklist_information', 'Checklist Information')}</Text>
             </View>
             
             <Text style={styles.modalText}>
-              This helps us understand how many cleaners will work on the apartment.
-              {"\n\n"}
-              If it's just one cleaner, we'll assign all tasks to one group.
-              If it's two or more, you'll be able to split tasks across groups for faster cleaning.
-              {"\n\n"}
-              <Text style={{ fontWeight: 'bold' }}>Editing Mode:</Text> You can modify existing task assignments, add new tasks, or adjust pricing.
+              {tSafe('checklist_tooltip_text', 'This helps us understand how many cleaners will work on the apartment.\n\nIf it\'s just one cleaner, we\'ll assign all tasks to one group. If it\'s two or more, you\'ll be able to split tasks across groups for faster cleaning.\n\nEditing Mode: You can modify existing task assignments, add new tasks, or adjust pricing.')}
             </Text>
             
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowTooltip(false)}
             >
-              <Text style={styles.modalCloseText}>Got it</Text>
+              <Text style={styles.modalCloseText}>{tSafe('got_it', 'Got it')}</Text>
             </TouchableOpacity>
           </View>
         </View>

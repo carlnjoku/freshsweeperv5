@@ -9301,6 +9301,1277 @@
 
 
 
+// import React, { useEffect, useContext, useCallback, useState, useRef } from 'react';
+// import { 
+//   View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, 
+//   FlatList, ScrollView, Dimensions, Animated, PanResponder, SafeAreaView,
+//   Platform,
+//   Linking,
+// } from 'react-native';
+// import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; 
+// import COLORS from '../../../constants/colors';
+// import userService from '../../../services/connection/userService';
+// import { AuthContext } from '../../../context/AuthContext';
+// import { useFocusEffect } from '@react-navigation/native';
+// import CardNoPrimary from '../../../components/shared/CardNoPrimary';
+// import { Checkbox } from 'react-native-paper';
+// import ImageViewer from 'react-native-image-zoom-viewer';
+// import RNModal from 'react-native-modal'; // Changed from Modal to RNModal
+// import { sendPushNotifications } from '../../../utils/sendPushNotification';
+// import ROUTES from '../../../constants/routes';
+// import CircularProgress from 'react-native-circular-progress-indicator';
+// import { Image } from 'expo-image'; 
+// import CustomActivityIndicator from '../../../components/shared/CuustomActivityIndicator';
+// import formatRoomTitle from '../../../utils/formatRoomTitle';
+// import Constants from 'expo-constants';
+
+// // Import expo-camera
+// import { CameraView, useCameraPermissions } from 'expo-camera';
+// import * as ImagePicker from 'expo-image-picker';
+
+// const { width, height } = Dimensions.get('window');
+
+// // Base64 encoded 1x1 pixel transparent image for simulation
+// const SIMULATED_BASE64_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+// const ThumbnailItem = React.memo(({ 
+//   photo, 
+//   index, 
+//   openImageViewer, 
+//   taskTitle,
+//   invertPercentage, 
+//   getCleanlinessColor, 
+//   photosArray,
+//   onDelete
+// }) => {
+//   const photoScore = invertPercentage(photo.cleanliness?.individual_overall || 0);
+//   const isProblemPhoto = photoScore < 35;
+//   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+//   const handleDelete = () => {
+//     Alert.alert(
+//       "Delete Photo",
+//       "Are you sure you want to permanently delete this photo?",
+//       [
+//         { text: "Cancel", style: "cancel" },
+//         { 
+//           text: "Delete", 
+//           onPress: () => {
+//             Animated.timing(fadeAnim, {
+//               toValue: 0,
+//               duration: 300,
+//               useNativeDriver: true
+//             }).start(() => onDelete(index, taskTitle));
+//           }
+//         }
+//       ]
+//     );
+//   };
+
+//   return (
+//     <Animated.View style={{ opacity: fadeAnim }}>
+//       <TouchableOpacity
+//         onPress={() => openImageViewer(photosArray, index, taskTitle)}
+//         style={styles.thumbnailContainer}
+//       >
+//         <Image
+//           source={{ uri: photo.img_url }}
+//           style={styles.preview}
+//           cachePolicy="memory-disk"
+//           transition={300}
+//         />
+//         <TouchableOpacity 
+//           onPress={handleDelete}
+//           style={styles.deleteButton}
+//         >
+//           <Ionicons name="trash-outline" size={16} color="white" />
+//         </TouchableOpacity>
+//         {isProblemPhoto && (
+//           <View style={styles.warningBadge}>
+//             <MaterialIcons name="warning" size={14} color="#fff" />
+//           </View>
+//         )}
+//         <View style={styles.photoNumber}>
+//           <Text style={styles.photoNumberText}>{index + 1}</Text>
+//         </View>
+//       </TouchableOpacity>
+//     </Animated.View>
+//   );
+// });
+
+// const AfterPhoto = ({ scheduleId, hostId }) => {
+//   const { currentUserId, currentUser } = useContext(AuthContext);
+//   const cameraRef = useRef(null);
+//   const MAX_IMAGES_UPLOAD = 10;
+  
+//   const [tasks, setTasks] = useState([]);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [selectedImages, setSelectedImages] = useState({});
+//   const [isUploading, setIsUploading] = useState(false);
+//   const [photos, setPhotos] = useState([]);
+//   const [cleaning_fee, setFee] = useState(0);
+//   const [cameraVisible, setCameraVisible] = useState(false);
+//   const [isBeforeModalVisible, setBeforeModalVisible] = useState(false);
+//   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+//   const [currentImages, setCurrentImages] = useState([]);
+//   const [hostTokens, setHostPushToken] = useState([]);
+//   const [selectedTaskTitle, setSelectedTaskTitle] = useState('');
+//   const [selectedRoom, setSelectedRoom] = useState(null);
+//   const [rooms, setRooms] = useState([]);
+  
+//   // Camera states - EXACTLY LIKE BeforePhoto
+//   const [permission, requestPermission] = useCameraPermissions();
+//   const [facing, setFacing] = useState('back');
+//   const [isCameraReady, setIsCameraReady] = useState(false);
+//   const [isSimulator, setIsSimulator] = useState(false);
+  
+//   // Check if running on simulator - EXACTLY LIKE BeforePhoto
+//   useEffect(() => {
+//     // Simple check - you can enhance this if needed
+//     if (Platform.OS === 'ios' && Platform.isPad) {
+//       setIsSimulator(true);
+//     }
+//   }, []);
+
+//   const pan = useRef(new Animated.ValueXY()).current;
+//   const overlayOpacity = useRef(new Animated.Value(1)).current;
+
+//   const panResponder = useRef(
+//     PanResponder.create({
+//       onStartShouldSetPanResponder: () => true,
+//       onPanResponderMove: Animated.event([null, { dy: pan.y }], { useNativeDriver: false }),
+//       onPanResponderRelease: (e, gesture) => {
+//         if (gesture.dy > 50) {
+//           Animated.timing(pan, { toValue: { x: 0, y: 300 }, duration: 300, useNativeDriver: true }).start();
+//           Animated.timing(overlayOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+//         } else {
+//           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: true }).start();
+//           Animated.spring(overlayOpacity, { toValue: 1, useNativeDriver: true }).start();
+//         }
+//       }
+//     })
+//   ).current;
+
+//   // Request camera and media library permissions - EXACTLY LIKE BeforePhoto
+//   useEffect(() => {
+//     (async () => {
+//       // Request camera permissions
+//       if (permission && !permission.granted) {
+//         await requestPermission();
+//       }
+      
+//       // Request media library permissions for image picker
+//       const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//       if (mediaStatus !== 'granted') {
+//         console.log('Media library permission denied');
+//       }
+//     })();
+//   }, [permission, requestPermission]);
+
+//   const invertPercentage = (score) => 100 - (score * 10);
+
+//   const getCleanlinessLabel = (invertedScore) => {
+//     if (invertedScore <= 35) return 'Needs Deep Cleaning';
+//     if (invertedScore <= 40) return 'Requires Attention';
+//     return 'Very Clean';
+//   };
+  
+//   const getCleanlinessColor = (invertedScore) => {
+//     if (invertedScore <= 35) return '#e74c3c';
+//     if (invertedScore <= 40) return '#f1c40f';
+//     return '#2ecc71';
+//   };
+
+//   const fetchImages = useCallback(async () => {
+//     setIsLoading(true);
+//     try {
+//       const response = await userService.getUpdatedImageUrls(scheduleId);
+//       const res = response.data.data;
+//       const getCleanerById = (id) => res.assignedTo.find(cleaner => cleaner.cleanerId === id);
+//       const cl = getCleanerById(currentUserId);
+      
+//       if (cl?.checklist?.details) {
+//         const details = cl.checklist.details;
+//         setSelectedImages(details);
+        
+//         // Convert details object to rooms array - INCLUDING EXTRA ROOM
+//         const roomArray = Object.keys(details).map(key => {
+//           const roomData = details[key];
+//           const isExtraRoom = key === 'Extra';
+          
+//           return {
+//             id: key,
+//             name: isExtraRoom ? 'Extra Tasks' : formatRoomTitle(key),
+//             type: isExtraRoom ? 'extra' : key.split('_')[0],
+//             tasks: roomData.tasks || [],
+//             photos: roomData.photos || [],
+//             completed: isExtraRoom 
+//               ? (roomData.tasks || []).every(task => task.value === true) 
+//               : (roomData.tasks || []).every(task => task.value === true) && 
+//                 (roomData.photos || []).length >= 3,
+//             isExtra: isExtraRoom
+//           };
+//         }); // No filter - include all rooms
+        
+//         setRooms(roomArray);
+//         setTasks(details);
+//         setFee(cl.checklist.price || 0);
+//       }
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [scheduleId, currentUserId]);
+
+//   const fetchHostPushTokens = useCallback(async () => {
+//     const response = await userService.getUserPushTokens(hostId);
+//     setHostPushToken(response.data.tokens);
+//   }, [hostId]);
+
+//   useFocusEffect(
+//     useCallback(() => {
+//       let isActive = true;
+//       const fetchData = async () => {
+//         try {
+//           await fetchImages();
+//           await fetchHostPushTokens();
+//         } catch (error) {
+//           console.error("Error fetching data:", error);
+//         }
+//       };
+//       if (isActive) fetchData();
+//       return () => { isActive = false; };
+//     }, [fetchImages, fetchHostPushTokens])
+//   );
+
+//   useEffect(() => {
+//     if (currentImages[currentImageIndex]?.cleanliness) {
+//       pan.setValue({ x: 0, y: 0 });
+//       overlayOpacity.setValue(1);
+//     }
+//   }, [currentImageIndex]);
+
+//   const openImageViewer = useCallback((images, index, category) => {
+//     pan.setValue({ x: 0, y: 0 });
+//     overlayOpacity.setValue(1);
+
+//     const formattedImages = images.map(photo => {
+//       const score = invertPercentage(photo.cleanliness?.individual_overall || 0);
+//       const status = getCleanlinessLabel(score);
+      
+//       return {
+//         url: status === "Very Clean" ? photo.img_url : photo.cleanliness?.heatmap_url || photo.img_url,
+//         cleanliness: photo.cleanliness,
+//         props: { source: { uri: status === "Very Clean" ? photo.img_url : photo.cleanliness?.heatmap_url } },
+//         category: category
+//       };
+//     });
+  
+//     setCurrentImages(formattedImages);
+//     setCurrentImageIndex(index);
+//     setBeforeModalVisible(true);
+//   }, []);
+
+//   // Take picture with camera - EXACTLY LIKE BeforePhoto
+//   const takePicture = async () => {
+//     // On simulator or when camera fails, use image picker
+//     if (isSimulator || !permission?.granted) {
+//       await pickImageFromLibrary();
+//       return;
+//     }
+
+//     if (cameraRef.current && isCameraReady) {
+//       try {
+//         const photo = await cameraRef.current.takePictureAsync({
+//           quality: 0.8,
+//           base64: true,
+//           exif: false,
+//           skipProcessing: true
+//         });
+        
+//         const newPhoto = {
+//           uri: photo.uri,
+//           base64: photo.base64,
+//           filename: `photo_${Date.now()}.jpg`,
+//           file: `data:image/jpeg;base64,${photo.base64}`
+//         };
+        
+//         if (photos.length < MAX_IMAGES_UPLOAD) {
+//           setPhotos(prev => [...prev, newPhoto]);
+//         } else {
+//           Alert.alert('Limit reached', `Maximum ${MAX_IMAGES_UPLOAD} photos allowed`);
+//         }
+//       } catch (error) {
+//         console.error('Camera error:', error);
+//         Alert.alert('Error', 'Failed to capture image. Using photo library instead.');
+//         await pickImageFromLibrary();
+//       }
+//     } else {
+//       await pickImageFromLibrary();
+//     }
+//   };
+
+//   // Pick image from library - EXACTLY LIKE BeforePhoto
+//   const pickImageFromLibrary = async () => {
+//     try {
+//       const result = await ImagePicker.launchImageLibraryAsync({
+//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//         allowsEditing: false,
+//         aspect: [4, 3],
+//         quality: 0.8,
+//         base64: true,
+//         allowsMultipleSelection: true,
+//         selectionLimit: MAX_IMAGES_UPLOAD - photos.length
+//       });
+
+//       if (!result.canceled) {
+//         const newPhotos = result.assets.map((asset, index) => ({
+//           uri: asset.uri,
+//           base64: asset.base64,
+//           filename: `photo_${Date.now()}_${index}.jpg`,
+//           file: `data:image/jpeg;base64,${asset.base64}`
+//         }));
+
+//         if (photos.length + newPhotos.length <= MAX_IMAGES_UPLOAD) {
+//           setPhotos(prev => [...prev, ...newPhotos]);
+//         } else {
+//           Alert.alert('Limit reached', `Maximum ${MAX_IMAGES_UPLOAD} photos allowed`);
+//         }
+//       }
+//     } catch (error) {
+//       console.error('Image picker error:', error);
+//       Alert.alert('Error', 'Failed to pick image from library');
+//     }
+//   };
+
+//   // Flip camera - EXACTLY LIKE BeforePhoto
+//   const flipCamera = () => {
+//     setFacing(current => current === 'back' ? 'front' : 'back');
+//   };
+
+//   const openCamera = (taskTitle) => {
+//     setSelectedTaskTitle(taskTitle);
+//     setPhotos([]);
+//     setIsCameraReady(false);
+//     setCameraVisible(true);
+//   };
+
+//   const validateTasks = () => {
+//     if (!selectedImages || Object.keys(selectedImages).length === 0) {
+//       Alert.alert("Validation Error", "No tasks or images found for validation.");
+//       return false;
+//     }
+
+//     let invalidCategories = [];
+//     let insufficientImagesCategories = [];
+
+//     Object.keys(selectedImages).forEach((category) => {
+//       const categoryData = selectedImages[category];
+//       if (!categoryData || !categoryData.tasks || !Array.isArray(categoryData.tasks)) return;
+
+//       const { tasks, photos } = categoryData;
+//       const isExtraRoom = category === 'Extra';
+//       const allTasksCompleted = tasks.every((task) => task.value === true);
+      
+//       if (!allTasksCompleted) invalidCategories.push(category);
+      
+//       // Only check photos for non-extra rooms
+//       if (!isExtraRoom && (!photos || photos.length < 3)) {
+//         insufficientImagesCategories.push(category);
+//       }
+//     });
+
+//     if (invalidCategories.length > 0 || insufficientImagesCategories.length > 0) {
+//       let errorMessage = "";
+//       if (invalidCategories.length > 0) errorMessage += `Incomplete tasks in: ${invalidCategories.join(", ")}.\n`;
+//       if (insufficientImagesCategories.length > 0) errorMessage += `Insufficient images in: ${insufficientImagesCategories.join(", ")}.`;
+//       Alert.alert("Validation Error", errorMessage);
+//       return false;
+//     }
+
+//     return true;
+//   };
+
+//   const onSubmit = async () => {
+//     if (photos.length === 0) {
+//       Alert.alert('No Photos', 'Please take at least one photo before uploading.');
+//       return;
+//     }
+
+//     if (photos.length > MAX_IMAGES_UPLOAD) {
+//       Alert.alert('Upload Limit Exceeded', `You can only upload up to ${MAX_IMAGES_UPLOAD} images at a time.`);
+//       return;
+//     }
+  
+//     setIsUploading(true);
+    
+//     // Prepare images for upload - EXACTLY LIKE BeforePhoto
+//     const imagesToUpload = photos.map(photo => ({
+//       filename: photo.filename,
+//       file: photo.file
+//     }));
+
+//     const data = {
+//       photo_type: 'after_photos',
+//       scheduleId: scheduleId,
+//       images: imagesToUpload,
+//       currentUserId: currentUserId,
+//       task_title: selectedTaskTitle,
+//       updated_tasks: selectedImages,
+//     };
+
+//     try {
+//       const response = await userService.uploadTaskPhotos(data);
+//       if (response.status === 200) {
+//         Alert.alert('Upload Successful', `${photos.length} photos have been uploaded successfully!`);
+//         fetchImages();
+//         setPhotos([]);
+//         setCameraVisible(false);
+//       }
+//     } catch (err) {
+//       console.error('Error uploading photos:', err);
+//       Alert.alert('Upload Failed', 'An error occurred while uploading your photos.');
+//     } finally {
+//       setIsUploading(false);
+//     }
+//   };
+
+//   const updateTasksInBackend = async (category, updatedTasks) => {
+//     try {
+//       const data = { scheduleId, cleanerId: currentUserId, category, tasks: updatedTasks };
+//       await userService.updateChecklist(data);
+//     } catch (err) {
+//       console.error("Error updating tasks:", err);
+//     }
+//   };
+  
+//   const handleTaskToggle = (category, taskId) => {
+//     setSelectedImages((prevSelectedImages) => {
+//       const updatedImages = { ...prevSelectedImages };
+//       if (!updatedImages[category]) return prevSelectedImages;
+
+//       updatedImages[category].tasks = updatedImages[category].tasks.map((task) =>
+//         task.id === taskId ? { ...task, value: !task.value } : task
+//       );
+
+//       updateTasksInBackend(category, updatedImages[category].tasks);
+//       return updatedImages;
+//     });
+//   };
+
+//   const removePhoto = (index) => {
+//     setPhotos(prevPhotos => prevPhotos.filter((_, i) => i !== index));
+//   };
+
+//   const handleDeletePhoto = async (indexToDelete, category) => {
+//     try {
+//       const photoToDelete = selectedImages[category]?.photos[indexToDelete];
+//       if (!photoToDelete) {
+//         Alert.alert("Error", "Photo not found");
+//         return;
+//       }
+
+//       const originalFilename = photoToDelete.img_url.split('/').pop();
+//       const heatmapFilename = photoToDelete.cleanliness?.heatmap_url?.split('/').pop();
+
+//       setSelectedImages(prev => {
+//         const updated = {...prev};
+//         updated[category].photos = updated[category].photos.filter((_, i) => i !== indexToDelete);
+//         return updated;
+//       });
+
+//       const data = { originalFilename, heatmapFilename, category, scheduleId };
+//       await userService.deleteSpaceAfterPhoto(data);
+//       updateTasksInBackend(selectedImages);
+
+//     } catch (error) {
+//       console.error('Delete failed:', error);
+//       setSelectedImages(prev => ({...prev}));
+//       Alert.alert('Deletion Failed', error.response?.data?.detail || 'Could not delete photo');
+//     }
+//   };
+
+//   const submitCompletion = useCallback(async () => {
+//     if (!validateTasks()) return;
+//     setIsLoading(true);
+//     try {
+//       await userService.finishCleaning({
+//         scheduleId,
+//         cleanerId: currentUserId,
+//         completed_tasks: selectedImages,
+//         fee: parseFloat(cleaning_fee),
+//         completionTime: new Date()
+//       });
+//       sendPushNotifications(hostTokens, 
+//         `${currentUser.firstname} Completed Cleaning`,
+//         `${currentUser.firstname} ${currentUser.lastname} has completed the cleaning.`,
+//         { screen: ROUTES.host_task_progress, params: { scheduleId } }
+//       );
+//       Alert.alert("Success", "Cleaning completed successfully!");
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [selectedImages, hostTokens, scheduleId, currentUser]);
+
+//   const getRoomProgress = (room) => {
+//     if (!selectedImages[room.id]) return 0;
+//     const roomData = selectedImages[room.id];
+//     const isExtraRoom = room.id === 'Extra';
+    
+//     const taskProgress = roomData.tasks?.length > 0 
+//       ? (roomData.tasks.filter(t => t.value).length / roomData.tasks.length) * (isExtraRoom ? 100 : 50) 
+//       : 0;
+    
+//     // For extra rooms, don't require photos - only tasks matter
+//     const photoProgress = isExtraRoom ? 0 : Math.min((roomData.photos?.length || 0 / 3) * 50, 50);
+    
+//     return taskProgress + photoProgress;
+//   };
+
+//   const isRoomComplete = (room) => {
+//     if (!selectedImages[room.id]) return false;
+//     const roomData = selectedImages[room.id];
+    
+//     const isExtraRoom = room.id === 'Extra';
+//     const tasksComplete = roomData.tasks?.every(task => task.value === true) || false;
+//     // For extra rooms, we don't require photos
+//     const photosComplete = isExtraRoom ? true : (roomData.photos?.length || 0) >= 3;
+    
+//     return tasksComplete && photosComplete;
+//   };
+
+//   const allRoomsComplete = rooms.every(room => isRoomComplete(room));
+
+//   const markRoomComplete = (roomId) => {
+//     Alert.alert(
+//       "Mark Room Complete",
+//       "Are you sure this room is fully cleaned and all photos are taken?",
+//       [
+//         { text: "Cancel", style: "cancel" },
+//         { 
+//           text: "Mark Complete", 
+//           onPress: () => {
+//             setRooms(prev => prev.map(room => 
+//               room.id === roomId ? { ...room, completed: true } : room
+//             ));
+//             Alert.alert("Success", "Room marked as complete!");
+//           }
+//         }
+//       ]
+//     );
+//   };
+
+//   const getRoomIcon = (type) => {
+//     switch(type.toLowerCase()) {
+//       case 'bedroom': return 'bed';
+//       case 'bathroom': return 'shower';
+//       case 'kitchen': return 'silverware-fork-knife';
+//       case 'livingroom': return 'sofa';
+//       case 'extra': return 'plus-circle';
+//       default: return 'home';
+//     }
+//   };
+
+//   const onCloseCamera = () => {
+//     setCameraVisible(false);
+//     setPhotos([]);
+//   };
+
+//   const RoomCard = ({ room }) => {
+//     const progress = getRoomProgress(room);
+//     const isComplete = isRoomComplete(room);
+//     const roomData = selectedImages[room.id] || {};
+    
+//     return (
+//       <TouchableOpacity 
+//         style={[
+//           styles.roomCard,
+//           selectedRoom?.id === room.id && styles.selectedRoomCard,
+//           isComplete && styles.completedRoomCard
+//         ]}
+//         onPress={() => setSelectedRoom(room)}
+//       >
+//         <View style={styles.roomCardHeader}>
+//           <View style={[
+//             styles.roomIcon,
+//             isComplete && styles.completedRoomIcon
+//           ]}>
+//             <MaterialCommunityIcons 
+//               name={getRoomIcon(room.type)} 
+//               size={24} 
+//               color={isComplete ? "#4CAF50" : COLORS.primary} 
+//             />
+//           </View>
+//           <View style={styles.roomInfo}>
+//             <Text style={styles.roomName}>{room.name}</Text>
+//             <Text style={styles.roomStatus}>
+//               {isComplete ? "✓ Complete" : "In Progress"}
+//             </Text>
+//           </View>
+//           <View style={styles.roomStats}>
+//             <Text style={styles.roomStat}>
+//               📸 {roomData.photos?.length || 0}/{room.isExtra ? 'Optional' : '3'}
+//             </Text>
+//             <Text style={styles.roomStat}>
+//               ✅ {roomData.tasks?.filter(t => t.value).length || 0}/{roomData.tasks?.length || 0}
+//             </Text>
+//           </View>
+//         </View>
+        
+//         <View style={styles.progressContainer}>
+//           <View style={styles.progressBar}>
+//             <View 
+//               style={[
+//                 styles.progressFill, 
+//                 { 
+//                   width: `${progress}%`, 
+//                   backgroundColor: isComplete ? '#4CAF50' : COLORS.primary 
+//                 }
+//               ]} 
+//             />
+//           </View>
+//           <Text style={styles.progressText}>{Math.round(progress)}% complete</Text>
+//         </View>
+        
+//         <TouchableOpacity 
+//           style={[
+//             styles.roomActionButton,
+//             isComplete ? styles.reviewButton : styles.startButton
+//           ]}
+//           onPress={() => setSelectedRoom(room)}
+//         >
+//           <Text style={styles.roomActionButtonText}>
+//             {isComplete ? "Review" : "Continue"}
+//           </Text>
+//           <Ionicons 
+//             name={isComplete ? "eye" : "arrow-forward"} 
+//             size={16} 
+//             color="white" 
+//           />
+//         </TouchableOpacity>
+//       </TouchableOpacity>
+//     );
+//   };
+
+//   const RoomWorkspace = ({ room, onBack }) => {
+//     const roomData = selectedImages[room.id] || {};
+//     const isExtraRoom = room.id === 'Extra';
+    
+//     return (
+//       <View style={styles.workspace}>
+//         <View style={styles.workspaceHeader}>
+//           <TouchableOpacity onPress={onBack} style={styles.backButton}>
+//             <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+//           </TouchableOpacity>
+//           <View style={styles.roomTitleSection}>
+//             <Text style={styles.workspaceRoomTitle}>{room.name}</Text>
+//             <Text style={styles.workspaceRoomSubtitle}>
+//               {isRoomComplete(room) ? "Completed" : "In Progress"}
+//             </Text>
+//           </View>
+//           <CircularProgress
+//             value={getRoomProgress(room)}
+//             radius={24}
+//             duration={1000}
+//             progressValueColor={isRoomComplete(room) ? "#4CAF50" : COLORS.primary}
+//             activeStrokeColor={isRoomComplete(room) ? "#4CAF50" : COLORS.primary}
+//             activeStrokeWidth={4}
+//             inActiveStrokeWidth={4}
+//             inActiveStrokeColor="#e0e0e0"
+//             maxValue={100}
+//           />
+//         </View>
+        
+//         <ScrollView style={styles.workspaceContent} showsVerticalScrollIndicator={false}>
+//           {/* Photos Section (for all rooms, but optional for extra rooms) */}
+//           <View style={styles.section}>
+//             <View style={styles.sectionHeader}>
+//               <Ionicons name="camera" size={22} color={COLORS.primary} />
+//               <Text style={styles.sectionTitle}>
+//                 {isExtraRoom ? "Additional Photos (Optional)" : "After Photos"}
+//               </Text>
+//               {!isExtraRoom && (
+//                 <View style={styles.badge}>
+//                   <Text style={styles.badgeText}>
+//                     {roomData.photos?.length || 0}/3
+//                   </Text>
+//                 </View>
+//               )}
+//             </View>
+            
+//             <Text style={styles.sectionDescription}>
+//               {isExtraRoom 
+//                 ? "Take photos of any additional cleaning tasks if needed"
+//                 : "Take photos of the same areas as your before photos"}
+//             </Text>
+            
+//             {/* Photo Gallery */}
+//             <View style={styles.photoGallery}>
+//               <FlatList
+//                 data={roomData.photos || []}
+//                 horizontal
+//                 keyExtractor={(item, index) => `${item.id}_${index}`}
+//                 renderItem={({ item, index }) => (
+//                   <ThumbnailItem
+//                     photo={item}
+//                     index={index}
+//                     taskTitle={room.id}
+//                     photosArray={roomData.photos || []}
+//                     onDelete={handleDeletePhoto}
+//                     openImageViewer={openImageViewer}
+//                     invertPercentage={invertPercentage}
+//                     getCleanlinessColor={getCleanlinessColor}
+//                   />
+//                 )}
+//                 showsHorizontalScrollIndicator={false}
+//                 contentContainerStyle={styles.previewContainer}
+//                 ListEmptyComponent={
+//                   <View style={styles.emptyPhotos}>
+//                     <Ionicons name="camera-outline" size={40} color="#ddd" />
+//                     <Text style={styles.emptyPhotosText}>No photos yet</Text>
+//                     <Text style={styles.emptyPhotosSubtext}>
+//                       {isExtraRoom 
+//                         ? "Photos are optional for extra tasks"
+//                         : "Tap the button below to add photos"}
+//                     </Text>
+//                   </View>
+//                 }
+//               />
+//             </View>
+            
+//             {/* Add Photo Button */}
+//             <TouchableOpacity 
+//               style={styles.addPhotosButton}
+//               onPress={() => openCamera(room.id)}
+//             >
+//               <View style={styles.addButtonContent}>
+//                 <Ionicons name="add-circle" size={24} color="white" />
+//                 <View style={styles.addButtonTextContainer}>
+//                   <Text style={styles.addButtonMainText}>
+//                     {isExtraRoom 
+//                       ? "Add Optional Photos"
+//                       : roomData.photos?.length >= 3 ? "Add More Photos" : "Take Photos"}
+//                   </Text>
+//                   <Text style={styles.addButtonSubText}>
+//                     {isExtraRoom 
+//                       ? "Document any additional cleaning work"
+//                       : roomData.photos?.length >= 3 
+//                         ? "You can add more photos if needed" 
+//                         : `At least 3 photos recommended (${3 - (roomData.photos?.length || 0)} more needed)`}
+//                   </Text>
+//                 </View>
+//               </View>
+//             </TouchableOpacity>
+//           </View>
+          
+//           {/* Tasks Section */}
+//           <View style={[styles.section, isExtraRoom && styles.extraSection]}>
+//             <View style={styles.sectionHeader}>
+//               <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} />
+//               <Text style={styles.sectionTitle}>
+//                 {isExtraRoom ? "Additional Tasks" : "Cleaning Tasks"}
+//               </Text>
+//               <View style={styles.badge}>
+//                 <Text style={styles.badgeText}>
+//                   {roomData.tasks?.filter(t => t.value).length || 0}/{roomData.tasks?.length || 0}
+//                 </Text>
+//               </View>
+//             </View>
+            
+//             <View style={styles.taskProgress}>
+//               <View style={styles.taskProgressBar}>
+//                 <View style={[
+//                   styles.taskProgressFill, 
+//                   { 
+//                     width: `${roomData.tasks?.length > 0 
+//                       ? (roomData.tasks.filter(t => t.value).length / roomData.tasks.length) * 100 
+//                       : 0}%` 
+//                   }
+//                 ]} />
+//               </View>
+//               <Text style={styles.taskProgressText}>
+//                 {roomData.tasks?.filter(t => t.value).length || 0} of {roomData.tasks?.length || 0} tasks completed
+//               </Text>
+//             </View>
+            
+//             {/* Task List */}
+//             <View style={styles.taskList}>
+//               {roomData.tasks?.map((item, index) => (
+//                 <TouchableOpacity
+//                   key={`${item.id}_${index}`}
+//                   style={[
+//                     styles.taskItem,
+//                     item.value && styles.taskItemCompleted
+//                   ]}
+//                   onPress={() => handleTaskToggle(room.id, item.id)}
+//                 >
+//                   <View style={styles.taskItemLeft}>
+//                     <Checkbox.Android
+//                       status={item.value ? 'checked' : 'unchecked'}
+//                       onPress={() => {}}
+//                       color={COLORS.primary}
+//                       uncheckedColor="#000"
+//                     />
+//                     <View style={styles.taskTextContainer}>
+//                       <Text style={[
+//                         styles.taskLabel,
+//                         item.value && styles.taskLabelCompleted
+//                       ]}>
+//                         {item.label}
+//                       </Text>
+//                       {(item.time || item.price) && (
+//                         <View style={styles.taskMeta}>
+//                           {item.time && (
+//                             <View style={styles.taskMetaItem}>
+//                               <Ionicons name="time-outline" size={12} color="#666" />
+//                               <Text style={styles.taskMetaText}>
+//                                 {item.time} min{item.time > 1 ? 's' : ''}
+//                               </Text>
+//                             </View>
+//                           )}
+//                           {item.price && (
+//                             <View style={styles.taskMetaItem}>
+//                               <Ionicons name="cash-outline" size={12} color="#4CAF50" />
+//                               <Text style={styles.taskMetaText}>
+//                                 ${item.price}
+//                               </Text>
+//                             </View>
+//                           )}
+//                         </View>
+//                       )}
+//                     </View>
+                    
+//                     {item.value ? (
+//                     <View style={styles.completedIndicator}>
+//                       <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+//                     </View>
+//                     ) : (
+//                       <Ionicons name="ellipse-outline" size={20} color="#ddd" />
+//                     )}
+
+//                   </View>
+                  
+                  
+//                 </TouchableOpacity>
+//               ))}
+              
+//               {(!roomData.tasks || roomData.tasks.length === 0) && (
+//                 <View style={styles.noTasksContainer}>
+//                   <Ionicons name="list-outline" size={40} color="#ddd" />
+//                   <Text style={styles.noTasksText}>No tasks assigned</Text>
+//                 </View>
+//               )}
+//             </View>
+//           </View>
+          
+//           {/* Completion Requirements */}
+//           <View style={styles.requirementsSection}>
+//             <Text style={styles.requirementsTitle}>To complete this {isExtraRoom ? "section" : "room"}:</Text>
+            
+//             {!isExtraRoom && (
+//               <View style={styles.requirementItem}>
+//                 <Ionicons 
+//                   name={roomData.photos?.length >= 3 ? "checkmark-circle" : "ellipse-outline"} 
+//                   size={20} 
+//                   color={roomData.photos?.length >= 3 ? "#4CAF50" : "#666"} 
+//                 />
+//                 <Text style={[
+//                   styles.requirementText,
+//                   roomData.photos?.length >= 3 && styles.requirementTextCompleted
+//                 ]}>
+//                   Minimum 3 photos ({roomData.photos?.length || 0}/3)
+//                 </Text>
+//               </View>
+//             )}
+            
+//             <View style={styles.requirementItem}>
+//               <Ionicons 
+//                 name={roomData.tasks?.every(t => t.value) ? "checkmark-circle" : "ellipse-outline"} 
+//                 size={20} 
+//                 color={roomData.tasks?.every(t => t.value) ? "#4CAF50" : "#666"} 
+//               />
+//               <Text style={[
+//                 styles.requirementText,
+//                 roomData.tasks?.every(t => t.value) && styles.requirementTextCompleted
+//                 ]}>
+//                 All tasks completed ({roomData.tasks?.filter(t => t.value).length || 0}/{roomData.tasks?.length || 0})
+//               </Text>
+//             </View>
+//           </View>
+//         </ScrollView>
+        
+//         {/* Completion Button */}
+//         <View style={styles.completionSection}>
+//           {isRoomComplete(room) ? (
+//             room.completed ? (
+//               <View style={styles.alreadyCompleted}>
+//                 <Ionicons name="checkmark-done-circle" size={24} color="#4CAF50" />
+//                 <Text style={styles.alreadyCompletedText}>
+//                   {room.name} is already completed
+//                 </Text>
+//               </View>
+//             ) : (
+//               <TouchableOpacity 
+//                 style={styles.markCompleteButton}
+//                 onPress={() => markRoomComplete(room.id)}
+//               >
+//                 <Ionicons name="checkmark-done" size={24} color="white" />
+//                 <View style={styles.markCompleteButtonTexts}>
+//                   <Text style={styles.markCompleteButtonMain}>
+//                     Mark {room.name} Complete
+//                   </Text>
+//                   <Text style={styles.markCompleteButtonSub}>
+//                     All requirements are met ✓
+//                   </Text>
+//                 </View>
+//               </TouchableOpacity>
+//             )
+//           ) : (
+//             <View style={styles.incompleteRequirements}>
+//               <Ionicons name="alert-circle" size={24} color="#FF9800" />
+//               <View style={styles.incompleteRequirementsTexts}>
+//                 <Text style={styles.incompleteRequirementsMain}>
+//                   Complete requirements to finish
+//                 </Text>
+//                 <Text style={styles.incompleteRequirementsSub}>
+//                   {!isExtraRoom && roomData.photos?.length < 3 && `${3 - (roomData.photos?.length || 0)} more photos, `}
+//                   {roomData.tasks?.filter(t => !t.value).length} more tasks
+//                 </Text>
+//               </View>
+//             </View>
+//           )}
+//         </View>
+//       </View>
+//     );
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       {/* Before Photos Viewer Modal - CHANGED TO RNModal */}
+//       <RNModal
+//         isVisible={isBeforeModalVisible}
+//         style={styles.fullScreenModal}
+//         onBackdropPress={() => setBeforeModalVisible(false)}
+//       >
+//         <View style={styles.modalContainer}>
+//           <ImageViewer
+//             imageUrls={currentImages}
+//             index={currentImageIndex}
+//             backgroundColor="black"
+//             enableSwipeDown
+//             enableImageZoom
+//             onSwipeDown={() => setBeforeModalVisible(false)}
+//             renderImage={(props) => (
+//               <Image source={props.source} style={styles.fullSizeImage} contentFit="contain" />
+//             )}
+//           />
+          
+//           {currentImages[currentImageIndex]?.cleanliness && (
+//             <Animated.View style={[styles.analysisPanel, { transform: [{ translateY: pan.y }] }]} {...panResponder.panHandlers}>
+//               <View style={styles.dragHandle} />
+//               <View style={styles.analysisContent}>
+//                 <Text style={styles.analysisTitle}>CLEANLINESS ANALYSIS</Text>
+                
+//                 <View style={styles.scoreSection}>
+//                   <Text style={styles.sectionTitle}>THIS PHOTO</Text>
+//                   <View style={styles.scoreRow}>
+//                     <View style={styles.scoreText}>
+//                       <Text style={styles.scorePercentage}>
+//                         {invertPercentage(currentImages[currentImageIndex].cleanliness.individual_overall || 0).toFixed(0)}%
+//                       </Text>
+//                       <Text style={styles.scoreLabel}>
+//                         {getCleanlinessLabel(invertPercentage(currentImages[currentImageIndex].cleanliness.individual_overall || 0))}
+//                       </Text>
+//                     </View>
+//                     <CircularProgress
+//                       value={invertPercentage(currentImages[currentImageIndex].cleanliness.individual_overall || 0)}
+//                       radius={35}
+//                       activeStrokeColor={getCleanlinessColor(invertPercentage(currentImages[currentImageIndex].cleanliness.individual_overall || 0))}
+//                       inActiveStrokeColor="#2d2d2d"
+//                       maxValue={100}
+//                     />
+//                   </View>
+//                 </View>
+
+//                 <Text style={styles.sectionTitle}>MAIN ISSUES</Text>
+//                 <View style={styles.issuesList}>
+//                   {Object.entries(currentImages[currentImageIndex].cleanliness.scores || {})
+//                     .sort(([,a], [,b]) => b - a)
+//                     .slice(0, 3)
+//                     .map(([factor, score]) => (
+//                       <View key={factor} style={styles.issueItem}>
+//                         <Text style={styles.issueName}>{factor.replace(/_/g, ' ').toUpperCase()}</Text>
+//                         <Text style={[styles.issueScore, { color: getCleanlinessColor(100 - (score * 10)) }]}>
+//                           {(100 - (score * 10)).toFixed(0)}%
+//                         </Text>
+//                       </View>
+//                     ))}
+//                 </View>
+//               </View>
+//             </Animated.View>
+//           )}
+
+//           <TouchableOpacity style={styles.modalCloseButton} onPress={() => setBeforeModalVisible(false)}>
+//             <Ionicons name="close" size={24} color="white" />
+//           </TouchableOpacity>
+//         </View>
+//       </RNModal>
+
+//       {/* Camera Modal - EXACTLY LIKE BeforePhoto */}
+//       <RNModal
+//         isVisible={cameraVisible}
+//         style={styles.fullScreenModal}
+//         onBackdropPress={() => setCameraVisible(false)}
+//       >
+//         <View style={styles.cameraModalContainer}>
+//           {/* Camera Header */}
+//           <View style={styles.cameraHeader}>
+//             <TouchableOpacity 
+//               style={styles.cameraCloseButton}
+//               onPress={onCloseCamera}
+//             >
+//               <Ionicons name="chevron-down" size={28} color="white" />
+//             </TouchableOpacity>
+            
+//             {!isSimulator && permission?.granted && (
+//               <TouchableOpacity 
+//                 style={styles.flipButton}
+//                 onPress={flipCamera}
+//               >
+//                 <Ionicons name="camera-reverse" size={24} color="white" />
+//               </TouchableOpacity>
+//             )}
+//           </View>
+
+//           {/* Camera Preview */}
+//           {isSimulator ? (
+//             <View style={styles.simulatorContainer}>
+//               <Ionicons name="images-outline" size={64} color="white" />
+//               <Text style={styles.simulatorText}>Camera not available in simulator</Text>
+//               <Text style={styles.simulatorSubtext}>
+//                 Use "Pick from Library" button below to add photos
+//               </Text>
+//             </View>
+//           ) : !permission ? (
+//             <View style={styles.permissionContainer}>
+//               <ActivityIndicator size="large" color="white" />
+//               <Text style={styles.permissionText}>Requesting camera permission...</Text>
+//             </View>
+//           ) : !permission.granted ? (
+//             <View style={styles.permissionContainer}>
+//               <Ionicons name="camera-off" size={48} color="white" />
+//               <Text style={styles.permissionText}>No access to camera</Text>
+//               <TouchableOpacity 
+//                 style={styles.permissionButton}
+//                 onPress={() => {
+//                   setCameraVisible(false);
+//                   Alert.alert(
+//                     'Permission Required',
+//                     'Please enable camera permissions in your device settings.',
+//                     [{ text: 'OK' }]
+//                   );
+//                 }}
+//               >
+//                 <Text style={styles.permissionButtonText}>OK</Text>
+//               </TouchableOpacity>
+//             </View>
+//           ) : (
+//             <CameraView 
+//               style={styles.camera}
+//               facing={facing}
+//               ref={cameraRef}
+//               onCameraReady={() => setIsCameraReady(true)}
+//             >
+//               {/* Photo Counter */}
+//               <View style={styles.photoCounter}>
+//                 <Ionicons name="images-outline" size={16} color="white" />
+//                 <Text style={styles.photoCounterText}>
+//                   {photos.length}/{MAX_IMAGES_UPLOAD}
+//                 </Text>
+//               </View>
+              
+//               {/* Camera Controls */}
+//               <View style={styles.cameraControls}>
+//                 <TouchableOpacity 
+//                   style={styles.captureButton}
+//                   onPress={takePicture}
+//                   disabled={photos.length >= MAX_IMAGES_UPLOAD}
+//                 >
+//                   <View style={styles.captureButtonInner}>
+//                     <Ionicons name="camera" size={32} color="white" />
+//                   </View>
+//                 </TouchableOpacity>
+//               </View>
+//             </CameraView>
+//           )}
+
+//           {/* Bottom Section with Thumbnails and Upload Button */}
+//           <View style={styles.bottomSection}>
+//             {/* Library button when no photos */}
+//             {photos.length === 0 && permission?.granted && !isSimulator && (
+//               <TouchableOpacity 
+//                 style={styles.libraryButtonBottom}
+//                 onPress={pickImageFromLibrary}
+//               >
+//                 <Ionicons name="images" size={20} color="white" />
+//                 <Text style={styles.libraryButtonBottomText}>Pick from Library</Text>
+//               </TouchableOpacity>
+//             )}
+
+//             {/* Thumbnail preview when photos exist */}
+//             {photos.length > 0 && (
+//               <>
+//                 <View style={styles.thumbnailSection}>
+//                   <Text style={styles.thumbnailTitle}>Selected Photos</Text>
+//                   <FlatList
+//                     data={photos}
+//                     horizontal
+//                     keyExtractor={(item, index) => index.toString()}
+//                     renderItem={({ item, index }) => (
+//                       <View style={styles.thumbnailWrapper}>
+//                         <Image 
+//                           source={{ uri: item.uri || item.file }} 
+//                           style={styles.preview} 
+//                         />
+//                         <TouchableOpacity 
+//                           onPress={() => removePhoto(index)} 
+//                           style={styles.removeButton}
+//                         >
+//                           <Ionicons name="close-circle" size={20} color="white" />
+//                         </TouchableOpacity>
+//                         <View style={styles.previewNumber}>
+//                           <Text style={styles.previewNumberText}>{index + 1}</Text>
+//                         </View>
+//                       </View>
+//                     )}
+//                     contentContainerStyle={styles.previewContainer}
+//                     showsHorizontalScrollIndicator={false}
+//                   />
+//                 </View>
+                
+//                 {/* Upload Button - Always at the bottom */}
+//                 <TouchableOpacity 
+//                   style={[
+//                     styles.uploadButton,
+//                     isUploading && styles.uploadButtonDisabled
+//                   ]}
+//                   onPress={onSubmit}
+//                   disabled={isUploading}
+//                 >
+//                   {isUploading ? (
+//                     <ActivityIndicator size="small" color="white" />
+//                   ) : (
+//                     <>
+//                       <Ionicons name="cloud-upload-outline" size={22} color="white" />
+//                       <Text style={styles.uploadButtonText}>
+//                         Upload {photos.length} Photo{photos.length !== 1 ? 's' : ''}
+//                       </Text>
+//                     </>
+//                   )}
+//                 </TouchableOpacity>
+//               </>
+//             )}
+
+//             {/* Camera instructions when no photos */}
+//             {photos.length === 0 && permission?.granted && !isSimulator && (
+//               <Text style={styles.cameraInstructions}>
+//                 Tap the camera button to capture photos
+//               </Text>
+//             )}
+//           </View>
+//         </View>
+//       </RNModal>
+
+//       {cameraVisible ? null : (
+//         <View style={{ flex: 1 }}>
+//           {isLoading ? (
+//             <View style={styles.loadingContainer}>
+//               <CustomActivityIndicator size={40} />
+//             </View>
+//           ) : selectedRoom ? (
+//             <RoomWorkspace 
+//               room={selectedRoom}
+//               onBack={() => setSelectedRoom(null)}
+//             />
+//           ) : (
+//             <>
+//               <View style={styles.header}>
+//                 <Text style={styles.headline}>After Photos & Tasks</Text>
+//                 <Text style={styles.subtitle}>
+//                   Complete rooms in any order. Each room needs 3+ photos (except Extra Tasks) and all tasks checked.
+//                 </Text>
+
+//                 <View style={styles.minimalProgressRow}>
+//                   <View style={styles.minimalProgressLeft}>
+//                     <Text style={styles.minimalProgressTitle}>Progress</Text>
+//                     <View style={styles.minimalProgressBar}>
+//                       <View 
+//                         style={[
+//                           styles.minimalProgressFill, 
+//                           { 
+//                             width: `${(rooms.filter(r => isRoomComplete(r)).length / Math.max(rooms.length, 1)) * 100}%`,
+//                             backgroundColor: COLORS.primary
+//                           }
+//                         ]} 
+//                       />
+//                     </View>
+//                   </View>
+                  
+//                   <View style={styles.minimalProgressRight}>
+//                     <Text style={styles.minimalProgressPercentage}>
+//                       {Math.round((rooms.filter(r => isRoomComplete(r)).length / Math.max(rooms.length, 1)) * 100)}%
+//                     </Text>
+//                     <Text style={styles.minimalProgressText}>
+//                       {rooms.filter(r => isRoomComplete(r)).length}/{rooms.length} rooms
+//                     </Text>
+//                   </View>
+//                 </View>
+//               </View>
+              
+//               <Text style={styles.sectionTitle}>All Rooms</Text>
+//               <ScrollView style={styles.roomsContainer}>
+//                 {rooms.length > 0 ? (
+//                   rooms.map(room => (
+//                     <RoomCard key={room.id} room={room} />
+//                   ))
+//                 ) : (
+//                   <View style={styles.noRoomsContainer}>
+//                     <Ionicons name="home-outline" size={48} color={COLORS.gray} />
+//                     <Text style={styles.noRoomsText}>No rooms assigned</Text>
+//                   </View>
+//                 )}
+//               </ScrollView>
+              
+//               <TouchableOpacity 
+//                 style={[
+//                   styles.finishButton,
+//                   !allRoomsComplete && styles.disabledFinishButton
+//                 ]}
+//                 onPress={submitCompletion}
+//                 disabled={!allRoomsComplete}
+//               >
+//                 <Ionicons name="checkmark-done-circle" size={24} color="white" />
+//                 <View style={styles.finishButtonTexts}>
+//                   <Text style={styles.finishButtonMain}>
+//                     {allRoomsComplete ? "Finish Cleaning" : "Complete All Rooms First"}
+//                   </Text>
+//                   <Text style={styles.finishButtonSub}>
+//                     {allRoomsComplete 
+//                       ? "All rooms are complete!" 
+//                       : `${rooms.filter(r => !isRoomComplete(r)).length} room(s) remaining`}
+//                   </Text>
+//                 </View>
+//                 <Ionicons name="chevron-forward" size={20} color="white" />
+//               </TouchableOpacity>
+//             </>
+//           )}
+//         </View>
+//       )}
+//     </SafeAreaView>
+//   );
+// };
+
+
+
 import React, { useEffect, useContext, useCallback, useState, useRef } from 'react';
 import { 
   View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, 
@@ -9316,7 +10587,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import CardNoPrimary from '../../../components/shared/CardNoPrimary';
 import { Checkbox } from 'react-native-paper';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import RNModal from 'react-native-modal'; // Changed from Modal to RNModal
+import RNModal from 'react-native-modal';
 import { sendPushNotifications } from '../../../utils/sendPushNotification';
 import ROUTES from '../../../constants/routes';
 import CircularProgress from 'react-native-circular-progress-indicator';
@@ -9324,10 +10595,9 @@ import { Image } from 'expo-image';
 import CustomActivityIndicator from '../../../components/shared/CuustomActivityIndicator';
 import formatRoomTitle from '../../../utils/formatRoomTitle';
 import Constants from 'expo-constants';
-
-// Import expo-camera
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { tSafe } from '../../../utils/tSafe'; // added import
 
 const { width, height } = Dimensions.get('window');
 
@@ -9350,12 +10620,12 @@ const ThumbnailItem = React.memo(({
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete Photo",
-      "Are you sure you want to permanently delete this photo?",
+      tSafe('delete_photo_title', 'Delete Photo'),
+      tSafe('delete_photo_confirmation', 'Are you sure you want to permanently delete this photo?'),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
         { 
-          text: "Delete", 
+          text: tSafe('delete', 'Delete'), 
           onPress: () => {
             Animated.timing(fadeAnim, {
               toValue: 0,
@@ -9455,12 +10725,9 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
   // Request camera and media library permissions - EXACTLY LIKE BeforePhoto
   useEffect(() => {
     (async () => {
-      // Request camera permissions
       if (permission && !permission.granted) {
         await requestPermission();
       }
-      
-      // Request media library permissions for image picker
       const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (mediaStatus !== 'granted') {
         console.log('Media library permission denied');
@@ -9471,9 +10738,9 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
   const invertPercentage = (score) => 100 - (score * 10);
 
   const getCleanlinessLabel = (invertedScore) => {
-    if (invertedScore <= 35) return 'Needs Deep Cleaning';
-    if (invertedScore <= 40) return 'Requires Attention';
-    return 'Very Clean';
+    if (invertedScore <= 35) return tSafe('needs_deep_cleaning', 'Needs Deep Cleaning');
+    if (invertedScore <= 40) return tSafe('requires_attention', 'Requires Attention');
+    return tSafe('very_clean', 'Very Clean');
   };
   
   const getCleanlinessColor = (invertedScore) => {
@@ -9501,7 +10768,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           
           return {
             id: key,
-            name: isExtraRoom ? 'Extra Tasks' : formatRoomTitle(key),
+            name: isExtraRoom ? tSafe('extra_tasks', 'Extra Tasks') : formatRoomTitle(key),
             type: isExtraRoom ? 'extra' : key.split('_')[0],
             tasks: roomData.tasks || [],
             photos: roomData.photos || [],
@@ -9573,7 +10840,6 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
 
   // Take picture with camera - EXACTLY LIKE BeforePhoto
   const takePicture = async () => {
-    // On simulator or when camera fails, use image picker
     if (isSimulator || !permission?.granted) {
       await pickImageFromLibrary();
       return;
@@ -9598,11 +10864,17 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
         if (photos.length < MAX_IMAGES_UPLOAD) {
           setPhotos(prev => [...prev, newPhoto]);
         } else {
-          Alert.alert('Limit reached', `Maximum ${MAX_IMAGES_UPLOAD} photos allowed`);
+          Alert.alert(
+            tSafe('limit_reached_title', 'Limit reached'),
+            tSafe('max_photos_allowed', 'Maximum {count} photos allowed', { count: MAX_IMAGES_UPLOAD })
+          );
         }
       } catch (error) {
         console.error('Camera error:', error);
-        Alert.alert('Error', 'Failed to capture image. Using photo library instead.');
+        Alert.alert(
+          tSafe('error_title', 'Error'),
+          tSafe('failed_capture_image', 'Failed to capture image. Using photo library instead.')
+        );
         await pickImageFromLibrary();
       }
     } else {
@@ -9634,12 +10906,18 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
         if (photos.length + newPhotos.length <= MAX_IMAGES_UPLOAD) {
           setPhotos(prev => [...prev, ...newPhotos]);
         } else {
-          Alert.alert('Limit reached', `Maximum ${MAX_IMAGES_UPLOAD} photos allowed`);
+          Alert.alert(
+            tSafe('limit_reached_title', 'Limit reached'),
+            tSafe('max_photos_allowed', 'Maximum {count} photos allowed', { count: MAX_IMAGES_UPLOAD })
+          );
         }
       }
     } catch (error) {
       console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image from library');
+      Alert.alert(
+        tSafe('error_title', 'Error'),
+        tSafe('failed_pick_image', 'Failed to pick image from library')
+      );
     }
   };
 
@@ -9657,7 +10935,10 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
 
   const validateTasks = () => {
     if (!selectedImages || Object.keys(selectedImages).length === 0) {
-      Alert.alert("Validation Error", "No tasks or images found for validation.");
+      Alert.alert(
+        tSafe('validation_error_title', 'Validation Error'),
+        tSafe('no_tasks_or_images', 'No tasks or images found for validation.')
+      );
       return false;
     }
 
@@ -9682,9 +10963,9 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
 
     if (invalidCategories.length > 0 || insufficientImagesCategories.length > 0) {
       let errorMessage = "";
-      if (invalidCategories.length > 0) errorMessage += `Incomplete tasks in: ${invalidCategories.join(", ")}.\n`;
-      if (insufficientImagesCategories.length > 0) errorMessage += `Insufficient images in: ${insufficientImagesCategories.join(", ")}.`;
-      Alert.alert("Validation Error", errorMessage);
+      if (invalidCategories.length > 0) errorMessage += tSafe('incomplete_tasks', 'Incomplete tasks in: {categories}.\n', { categories: invalidCategories.join(", ") });
+      if (insufficientImagesCategories.length > 0) errorMessage += tSafe('insufficient_images', 'Insufficient images in: {categories}.', { categories: insufficientImagesCategories.join(", ") });
+      Alert.alert(tSafe('validation_error_title', 'Validation Error'), errorMessage);
       return false;
     }
 
@@ -9693,18 +10974,23 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
 
   const onSubmit = async () => {
     if (photos.length === 0) {
-      Alert.alert('No Photos', 'Please take at least one photo before uploading.');
+      Alert.alert(
+        tSafe('no_photos_title', 'No Photos'),
+        tSafe('take_photo_before_upload', 'Please take at least one photo before uploading.')
+      );
       return;
     }
 
     if (photos.length > MAX_IMAGES_UPLOAD) {
-      Alert.alert('Upload Limit Exceeded', `You can only upload up to ${MAX_IMAGES_UPLOAD} images at a time.`);
+      Alert.alert(
+        tSafe('upload_limit_exceeded_title', 'Upload Limit Exceeded'),
+        tSafe('max_photos_allowed_upload', 'You can only upload up to {count} images at a time.', { count: MAX_IMAGES_UPLOAD })
+      );
       return;
     }
   
     setIsUploading(true);
     
-    // Prepare images for upload - EXACTLY LIKE BeforePhoto
     const imagesToUpload = photos.map(photo => ({
       filename: photo.filename,
       file: photo.file
@@ -9722,14 +11008,20 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
     try {
       const response = await userService.uploadTaskPhotos(data);
       if (response.status === 200) {
-        Alert.alert('Upload Successful', `${photos.length} photos have been uploaded successfully!`);
+        Alert.alert(
+          tSafe('upload_successful_title', 'Upload Successful'),
+          tSafe('photos_uploaded_count', '{count} photos have been uploaded successfully!', { count: photos.length })
+        );
         fetchImages();
         setPhotos([]);
         setCameraVisible(false);
       }
     } catch (err) {
       console.error('Error uploading photos:', err);
-      Alert.alert('Upload Failed', 'An error occurred while uploading your photos.');
+      Alert.alert(
+        tSafe('upload_failed_title', 'Upload Failed'),
+        tSafe('upload_error_message', 'An error occurred while uploading your photos.')
+      );
     } finally {
       setIsUploading(false);
     }
@@ -9766,7 +11058,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
     try {
       const photoToDelete = selectedImages[category]?.photos[indexToDelete];
       if (!photoToDelete) {
-        Alert.alert("Error", "Photo not found");
+        Alert.alert(tSafe('error_title', 'Error'), tSafe('photo_not_found', 'Photo not found'));
         return;
       }
 
@@ -9786,7 +11078,10 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
     } catch (error) {
       console.error('Delete failed:', error);
       setSelectedImages(prev => ({...prev}));
-      Alert.alert('Deletion Failed', error.response?.data?.detail || 'Could not delete photo');
+      Alert.alert(
+        tSafe('deletion_failed_title', 'Deletion Failed'),
+        error.response?.data?.detail || tSafe('could_not_delete_photo', 'Could not delete photo')
+      );
     }
   };
 
@@ -9802,11 +11097,11 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
         completionTime: new Date()
       });
       sendPushNotifications(hostTokens, 
-        `${currentUser.firstname} Completed Cleaning`,
-        `${currentUser.firstname} ${currentUser.lastname} has completed the cleaning.`,
+        tSafe('cleaner_completed_cleaning_title', '{name} Completed Cleaning', { name: currentUser.firstname }),
+        tSafe('cleaner_completed_cleaning_message', '{firstname} {lastname} has completed the cleaning.', { firstname: currentUser.firstname, lastname: currentUser.lastname }),
         { screen: ROUTES.host_task_progress, params: { scheduleId } }
       );
-      Alert.alert("Success", "Cleaning completed successfully!");
+      Alert.alert(tSafe('success_title', 'Success'), tSafe('cleaning_completed', 'Cleaning completed successfully!'));
     } finally {
       setIsLoading(false);
     }
@@ -9821,7 +11116,6 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
       ? (roomData.tasks.filter(t => t.value).length / roomData.tasks.length) * (isExtraRoom ? 100 : 50) 
       : 0;
     
-    // For extra rooms, don't require photos - only tasks matter
     const photoProgress = isExtraRoom ? 0 : Math.min((roomData.photos?.length || 0 / 3) * 50, 50);
     
     return taskProgress + photoProgress;
@@ -9833,7 +11127,6 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
     
     const isExtraRoom = room.id === 'Extra';
     const tasksComplete = roomData.tasks?.every(task => task.value === true) || false;
-    // For extra rooms, we don't require photos
     const photosComplete = isExtraRoom ? true : (roomData.photos?.length || 0) >= 3;
     
     return tasksComplete && photosComplete;
@@ -9843,17 +11136,17 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
 
   const markRoomComplete = (roomId) => {
     Alert.alert(
-      "Mark Room Complete",
-      "Are you sure this room is fully cleaned and all photos are taken?",
+      tSafe('mark_room_complete_title', 'Mark Room Complete'),
+      tSafe('mark_room_complete_confirmation', 'Are you sure this room is fully cleaned and all photos are taken?'),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
         { 
-          text: "Mark Complete", 
+          text: tSafe('mark_complete', 'Mark Complete'), 
           onPress: () => {
             setRooms(prev => prev.map(room => 
               room.id === roomId ? { ...room, completed: true } : room
             ));
-            Alert.alert("Success", "Room marked as complete!");
+            Alert.alert(tSafe('success_title', 'Success'), tSafe('room_marked_complete', 'Room marked as complete!'));
           }
         }
       ]
@@ -9904,12 +11197,12 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           <View style={styles.roomInfo}>
             <Text style={styles.roomName}>{room.name}</Text>
             <Text style={styles.roomStatus}>
-              {isComplete ? "✓ Complete" : "In Progress"}
+              {isComplete ? tSafe('complete_status', '✓ Complete') : tSafe('in_progress_status', 'In Progress')}
             </Text>
           </View>
           <View style={styles.roomStats}>
             <Text style={styles.roomStat}>
-              📸 {roomData.photos?.length || 0}/{room.isExtra ? 'Optional' : '3'}
+              📸 {roomData.photos?.length || 0}/{room.isExtra ? tSafe('optional', 'Optional') : '3'}
             </Text>
             <Text style={styles.roomStat}>
               ✅ {roomData.tasks?.filter(t => t.value).length || 0}/{roomData.tasks?.length || 0}
@@ -9929,7 +11222,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
               ]} 
             />
           </View>
-          <Text style={styles.progressText}>{Math.round(progress)}% complete</Text>
+          <Text style={styles.progressText}>{Math.round(progress)}% {tSafe('complete_percent', 'complete')}</Text>
         </View>
         
         <TouchableOpacity 
@@ -9940,7 +11233,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           onPress={() => setSelectedRoom(room)}
         >
           <Text style={styles.roomActionButtonText}>
-            {isComplete ? "Review" : "Continue"}
+            {isComplete ? tSafe('review', 'Review') : tSafe('continue', 'Continue')}
           </Text>
           <Ionicons 
             name={isComplete ? "eye" : "arrow-forward"} 
@@ -9965,7 +11258,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           <View style={styles.roomTitleSection}>
             <Text style={styles.workspaceRoomTitle}>{room.name}</Text>
             <Text style={styles.workspaceRoomSubtitle}>
-              {isRoomComplete(room) ? "Completed" : "In Progress"}
+              {isRoomComplete(room) ? tSafe('completed', 'Completed') : tSafe('in_progress', 'In Progress')}
             </Text>
           </View>
           <CircularProgress
@@ -9987,7 +11280,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             <View style={styles.sectionHeader}>
               <Ionicons name="camera" size={22} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>
-                {isExtraRoom ? "Additional Photos (Optional)" : "After Photos"}
+                {isExtraRoom ? tSafe('additional_photos_optional', 'Additional Photos (Optional)') : tSafe('after_photos', 'After Photos')}
               </Text>
               {!isExtraRoom && (
                 <View style={styles.badge}>
@@ -10000,8 +11293,8 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             
             <Text style={styles.sectionDescription}>
               {isExtraRoom 
-                ? "Take photos of any additional cleaning tasks if needed"
-                : "Take photos of the same areas as your before photos"}
+                ? tSafe('extra_photos_description', 'Take photos of any additional cleaning tasks if needed')
+                : tSafe('after_photos_description', 'Take photos of the same areas as your before photos')}
             </Text>
             
             {/* Photo Gallery */}
@@ -10027,11 +11320,11 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 ListEmptyComponent={
                   <View style={styles.emptyPhotos}>
                     <Ionicons name="camera-outline" size={40} color="#ddd" />
-                    <Text style={styles.emptyPhotosText}>No photos yet</Text>
+                    <Text style={styles.emptyPhotosText}>{tSafe('no_photos_yet', 'No photos yet')}</Text>
                     <Text style={styles.emptyPhotosSubtext}>
                       {isExtraRoom 
-                        ? "Photos are optional for extra tasks"
-                        : "Tap the button below to add photos"}
+                        ? tSafe('photos_optional_message', 'Photos are optional for extra tasks')
+                        : tSafe('tap_to_add_photos', 'Tap the button below to add photos')}
                     </Text>
                   </View>
                 }
@@ -10048,15 +11341,15 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 <View style={styles.addButtonTextContainer}>
                   <Text style={styles.addButtonMainText}>
                     {isExtraRoom 
-                      ? "Add Optional Photos"
-                      : roomData.photos?.length >= 3 ? "Add More Photos" : "Take Photos"}
+                      ? tSafe('add_optional_photos', 'Add Optional Photos')
+                      : roomData.photos?.length >= 3 ? tSafe('add_more_photos', 'Add More Photos') : tSafe('take_photos', 'Take Photos')}
                   </Text>
                   <Text style={styles.addButtonSubText}>
                     {isExtraRoom 
-                      ? "Document any additional cleaning work"
+                      ? tSafe('document_additional_work', 'Document any additional cleaning work')
                       : roomData.photos?.length >= 3 
-                        ? "You can add more photos if needed" 
-                        : `At least 3 photos recommended (${3 - (roomData.photos?.length || 0)} more needed)`}
+                        ? tSafe('can_add_more_photos', 'You can add more photos if needed') 
+                        : tSafe('photos_needed', '{count} more needed', { count: 3 - (roomData.photos?.length || 0) })}
                   </Text>
                 </View>
               </View>
@@ -10068,7 +11361,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             <View style={styles.sectionHeader}>
               <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>
-                {isExtraRoom ? "Additional Tasks" : "Cleaning Tasks"}
+                {isExtraRoom ? tSafe('additional_tasks', 'Additional Tasks') : tSafe('cleaning_tasks', 'Cleaning Tasks')}
               </Text>
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -10089,7 +11382,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 ]} />
               </View>
               <Text style={styles.taskProgressText}>
-                {roomData.tasks?.filter(t => t.value).length || 0} of {roomData.tasks?.length || 0} tasks completed
+                {roomData.tasks?.filter(t => t.value).length || 0} {tSafe('of', 'of')} {roomData.tasks?.length || 0} {tSafe('tasks_completed', 'tasks completed')}
               </Text>
             </View>
             
@@ -10124,7 +11417,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                             <View style={styles.taskMetaItem}>
                               <Ionicons name="time-outline" size={12} color="#666" />
                               <Text style={styles.taskMetaText}>
-                                {item.time} min{item.time > 1 ? 's' : ''}
+                                {item.time} {tSafe('min', 'min')}{item.time > 1 ? 's' : ''}
                               </Text>
                             </View>
                           )}
@@ -10141,23 +11434,20 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                     </View>
                     
                     {item.value ? (
-                    <View style={styles.completedIndicator}>
-                      <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                    </View>
+                      <View style={styles.completedIndicator}>
+                        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                      </View>
                     ) : (
                       <Ionicons name="ellipse-outline" size={20} color="#ddd" />
                     )}
-
                   </View>
-                  
-                  
                 </TouchableOpacity>
               ))}
               
               {(!roomData.tasks || roomData.tasks.length === 0) && (
                 <View style={styles.noTasksContainer}>
                   <Ionicons name="list-outline" size={40} color="#ddd" />
-                  <Text style={styles.noTasksText}>No tasks assigned</Text>
+                  <Text style={styles.noTasksText}>{tSafe('no_tasks_assigned', 'No tasks assigned')}</Text>
                 </View>
               )}
             </View>
@@ -10165,7 +11455,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           
           {/* Completion Requirements */}
           <View style={styles.requirementsSection}>
-            <Text style={styles.requirementsTitle}>To complete this {isExtraRoom ? "section" : "room"}:</Text>
+            <Text style={styles.requirementsTitle}>{tSafe('to_complete', 'To complete this {type}:', { type: isExtraRoom ? tSafe('section', 'section') : tSafe('room', 'room') })}</Text>
             
             {!isExtraRoom && (
               <View style={styles.requirementItem}>
@@ -10178,7 +11468,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                   styles.requirementText,
                   roomData.photos?.length >= 3 && styles.requirementTextCompleted
                 ]}>
-                  Minimum 3 photos ({roomData.photos?.length || 0}/3)
+                  {tSafe('minimum_photos', 'Minimum 3 photos ({count}/{total})', { count: roomData.photos?.length || 0, total: 3 })}
                 </Text>
               </View>
             )}
@@ -10193,7 +11483,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 styles.requirementText,
                 roomData.tasks?.every(t => t.value) && styles.requirementTextCompleted
                 ]}>
-                All tasks completed ({roomData.tasks?.filter(t => t.value).length || 0}/{roomData.tasks?.length || 0})
+                {tSafe('all_tasks_completed', 'All tasks completed ({count}/{total})', { count: roomData.tasks?.filter(t => t.value).length || 0, total: roomData.tasks?.length || 0 })}
               </Text>
             </View>
           </View>
@@ -10206,7 +11496,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
               <View style={styles.alreadyCompleted}>
                 <Ionicons name="checkmark-done-circle" size={24} color="#4CAF50" />
                 <Text style={styles.alreadyCompletedText}>
-                  {room.name} is already completed
+                  {room.name} {tSafe('already_completed', 'is already completed')}
                 </Text>
               </View>
             ) : (
@@ -10217,10 +11507,10 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 <Ionicons name="checkmark-done" size={24} color="white" />
                 <View style={styles.markCompleteButtonTexts}>
                   <Text style={styles.markCompleteButtonMain}>
-                    Mark {room.name} Complete
+                    {tSafe('mark_room_complete', 'Mark {room} Complete', { room: room.name })}
                   </Text>
                   <Text style={styles.markCompleteButtonSub}>
-                    All requirements are met ✓
+                    {tSafe('all_requirements_met', 'All requirements are met ✓')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -10230,11 +11520,12 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
               <Ionicons name="alert-circle" size={24} color="#FF9800" />
               <View style={styles.incompleteRequirementsTexts}>
                 <Text style={styles.incompleteRequirementsMain}>
-                  Complete requirements to finish
+                  {tSafe('complete_requirements_to_finish', 'Complete requirements to finish')}
                 </Text>
                 <Text style={styles.incompleteRequirementsSub}>
-                  {!isExtraRoom && roomData.photos?.length < 3 && `${3 - (roomData.photos?.length || 0)} more photos, `}
-                  {roomData.tasks?.filter(t => !t.value).length} more tasks
+                  {!isExtraRoom && roomData.photos?.length < 3 && 
+                    tSafe('more_photos_needed', '{count} more photos, ', { count: 3 - (roomData.photos?.length || 0) })}
+                  {roomData.tasks?.filter(t => !t.value).length} {tSafe('more_tasks', 'more tasks')}
                 </Text>
               </View>
             </View>
@@ -10269,10 +11560,10 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             <Animated.View style={[styles.analysisPanel, { transform: [{ translateY: pan.y }] }]} {...panResponder.panHandlers}>
               <View style={styles.dragHandle} />
               <View style={styles.analysisContent}>
-                <Text style={styles.analysisTitle}>CLEANLINESS ANALYSIS</Text>
+                <Text style={styles.analysisTitle}>{tSafe('cleanliness_analysis', 'CLEANLINESS ANALYSIS')}</Text>
                 
                 <View style={styles.scoreSection}>
-                  <Text style={styles.sectionTitle}>THIS PHOTO</Text>
+                  <Text style={styles.sectionTitle}>{tSafe('this_photo', 'THIS PHOTO')}</Text>
                   <View style={styles.scoreRow}>
                     <View style={styles.scoreText}>
                       <Text style={styles.scorePercentage}>
@@ -10292,7 +11583,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                   </View>
                 </View>
 
-                <Text style={styles.sectionTitle}>MAIN ISSUES</Text>
+                <Text style={styles.sectionTitle}>{tSafe('main_issues', 'MAIN ISSUES')}</Text>
                 <View style={styles.issuesList}>
                   {Object.entries(currentImages[currentImageIndex].cleanliness.scores || {})
                     .sort(([,a], [,b]) => b - a)
@@ -10346,32 +11637,32 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           {isSimulator ? (
             <View style={styles.simulatorContainer}>
               <Ionicons name="images-outline" size={64} color="white" />
-              <Text style={styles.simulatorText}>Camera not available in simulator</Text>
+              <Text style={styles.simulatorText}>{tSafe('camera_not_available_simulator', 'Camera not available in simulator')}</Text>
               <Text style={styles.simulatorSubtext}>
-                Use "Pick from Library" button below to add photos
+                {tSafe('use_pick_from_library', 'Use "Pick from Library" button below to add photos')}
               </Text>
             </View>
           ) : !permission ? (
             <View style={styles.permissionContainer}>
               <ActivityIndicator size="large" color="white" />
-              <Text style={styles.permissionText}>Requesting camera permission...</Text>
+              <Text style={styles.permissionText}>{tSafe('requesting_camera_permission', 'Requesting camera permission...')}</Text>
             </View>
           ) : !permission.granted ? (
             <View style={styles.permissionContainer}>
               <Ionicons name="camera-off" size={48} color="white" />
-              <Text style={styles.permissionText}>No access to camera</Text>
+              <Text style={styles.permissionText}>{tSafe('no_access_camera', 'No access to camera')}</Text>
               <TouchableOpacity 
                 style={styles.permissionButton}
                 onPress={() => {
                   setCameraVisible(false);
                   Alert.alert(
-                    'Permission Required',
-                    'Please enable camera permissions in your device settings.',
-                    [{ text: 'OK' }]
+                    tSafe('permission_required_title', 'Permission Required'),
+                    tSafe('enable_camera_permissions', 'Please enable camera permissions in your device settings.'),
+                    [{ text: tSafe('ok', 'OK') }]
                   );
                 }}
               >
-                <Text style={styles.permissionButtonText}>OK</Text>
+                <Text style={styles.permissionButtonText}>{tSafe('ok', 'OK')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -10413,7 +11704,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 onPress={pickImageFromLibrary}
               >
                 <Ionicons name="images" size={20} color="white" />
-                <Text style={styles.libraryButtonBottomText}>Pick from Library</Text>
+                <Text style={styles.libraryButtonBottomText}>{tSafe('pick_from_library', 'Pick from Library')}</Text>
               </TouchableOpacity>
             )}
 
@@ -10421,7 +11712,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             {photos.length > 0 && (
               <>
                 <View style={styles.thumbnailSection}>
-                  <Text style={styles.thumbnailTitle}>Selected Photos</Text>
+                  <Text style={styles.thumbnailTitle}>{tSafe('selected_photos', 'Selected Photos')}</Text>
                   <FlatList
                     data={photos}
                     horizontal
@@ -10463,7 +11754,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                     <>
                       <Ionicons name="cloud-upload-outline" size={22} color="white" />
                       <Text style={styles.uploadButtonText}>
-                        Upload {photos.length} Photo{photos.length !== 1 ? 's' : ''}
+                        {tSafe('upload_photos', 'Upload {count} photo{plural}', { count: photos.length, plural: photos.length !== 1 ? 's' : '' })}
                       </Text>
                     </>
                   )}
@@ -10474,7 +11765,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
             {/* Camera instructions when no photos */}
             {photos.length === 0 && permission?.granted && !isSimulator && (
               <Text style={styles.cameraInstructions}>
-                Tap the camera button to capture photos
+                {tSafe('camera_instructions', 'Tap the camera button to capture photos')}
               </Text>
             )}
           </View>
@@ -10495,14 +11786,14 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
           ) : (
             <>
               <View style={styles.header}>
-                <Text style={styles.headline}>After Photos & Tasks</Text>
+                <Text style={styles.headline}>{tSafe('after_photos_tasks', 'After Photos & Tasks')}</Text>
                 <Text style={styles.subtitle}>
-                  Complete rooms in any order. Each room needs 3+ photos (except Extra Tasks) and all tasks checked.
+                  {tSafe('complete_rooms_order', 'Complete rooms in any order. Each room needs 3+ photos (except Extra Tasks) and all tasks checked.')}
                 </Text>
 
                 <View style={styles.minimalProgressRow}>
                   <View style={styles.minimalProgressLeft}>
-                    <Text style={styles.minimalProgressTitle}>Progress</Text>
+                    <Text style={styles.minimalProgressTitle}>{tSafe('progress', 'Progress')}</Text>
                     <View style={styles.minimalProgressBar}>
                       <View 
                         style={[
@@ -10521,13 +11812,13 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                       {Math.round((rooms.filter(r => isRoomComplete(r)).length / Math.max(rooms.length, 1)) * 100)}%
                     </Text>
                     <Text style={styles.minimalProgressText}>
-                      {rooms.filter(r => isRoomComplete(r)).length}/{rooms.length} rooms
+                      {rooms.filter(r => isRoomComplete(r)).length}/{rooms.length} {tSafe('rooms', 'rooms')}
                     </Text>
                   </View>
                 </View>
               </View>
               
-              <Text style={styles.sectionTitle}>All Rooms</Text>
+              <Text style={styles.sectionTitle}>{tSafe('all_rooms', 'All Rooms')}</Text>
               <ScrollView style={styles.roomsContainer}>
                 {rooms.length > 0 ? (
                   rooms.map(room => (
@@ -10536,7 +11827,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 ) : (
                   <View style={styles.noRoomsContainer}>
                     <Ionicons name="home-outline" size={48} color={COLORS.gray} />
-                    <Text style={styles.noRoomsText}>No rooms assigned</Text>
+                    <Text style={styles.noRoomsText}>{tSafe('no_rooms_assigned', 'No rooms assigned')}</Text>
                   </View>
                 )}
               </ScrollView>
@@ -10552,12 +11843,12 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
                 <Ionicons name="checkmark-done-circle" size={24} color="white" />
                 <View style={styles.finishButtonTexts}>
                   <Text style={styles.finishButtonMain}>
-                    {allRoomsComplete ? "Finish Cleaning" : "Complete All Rooms First"}
+                    {allRoomsComplete ? tSafe('finish_cleaning', 'Finish Cleaning') : tSafe('complete_all_rooms_first', 'Complete All Rooms First')}
                   </Text>
                   <Text style={styles.finishButtonSub}>
                     {allRoomsComplete 
-                      ? "All rooms are complete!" 
-                      : `${rooms.filter(r => !isRoomComplete(r)).length} room(s) remaining`}
+                      ? tSafe('all_rooms_complete', 'All rooms are complete!') 
+                      : tSafe('rooms_remaining', '{count} room(s) remaining', { count: rooms.filter(r => !isRoomComplete(r)).length })}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="white" />
@@ -10569,6 +11860,7 @@ const AfterPhoto = ({ scheduleId, hostId }) => {
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: { 

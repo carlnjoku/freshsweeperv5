@@ -19,6 +19,10 @@ import { GoogleAuthService } from '../services/google/googleAuth';
 import axios from 'axios';
 import userService from '../services/connection/userService';
 
+import { setTokens, clearTokens } from '../utils/tokenManager';
+import { getConversations } from '../services/connection/chatApi';
+import { AppState } from 'react-native';
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({children}) => {
@@ -58,6 +62,14 @@ export const AuthProvider = ({children}) => {
         setCurrentUser(loginResp.resp);
         setCurrentUserId(loginResp.resp._id);
         setFbaseUser(loginResp.fbUser);
+
+        const accessToken = loginResp.resp?.token;
+        const refreshToken = loginResp.resp?.refresh_token;
+        
+        
+        if (accessToken && refreshToken) {
+            setTokens(accessToken, refreshToken);
+        }
         
         const { identity_verified, onboarding_completed, avatar } = loginResp.resp;
         const verified = identity_verified && onboarding_completed && !!avatar;
@@ -86,17 +98,31 @@ export const AuthProvider = ({children}) => {
           
           console.log("✅ Login response:", response);
           
-          if (response.data && response.data.data) {
-            // Create login response
-            // const loginResp = {
-            //   resp: response.data.data,
-            //   fbUser: null, // Will be fetched in fetchUserFirebaseData
-            // };
-            console.log("Show Login Response", response.data.data)
-            return { 
-              success: true, 
-              data: response.data.data 
-            };
+        //   if (response.data && response.data.data) {
+        //     // Create login response
+        //     // const loginResp = {
+        //     //   resp: response.data.data,
+        //     //   fbUser: null, // Will be fetched in fetchUserFirebaseData
+        //     // };
+        //     console.log("Show Login Response", response.data.data)
+        //     return { 
+        //       success: true, 
+        //       data: response.data.data 
+        //     };
+
+
+
+            if (response.data && response.data.data) {
+                // Create loginResp structure expected by login()
+                const loginResp = {
+                  resp: response.data.data,   // contains token, refresh_token, user info
+                //   fbUser: null,               // or fetch Firebase user if needed
+                };
+                // Call login to set state and store tokens
+                login(loginResp);
+                return { success: true, data: response.data.data };
+              
+              
           } else {
             throw new Error('Invalid response from server');
           }
@@ -182,6 +208,7 @@ export const AuthProvider = ({children}) => {
     }
 
     const logout = async() => {
+        await clearTokens(); // clear tokens from storage
         setUserToken(null);
         setCurrentUser("");
         setCurrentUserId("");
@@ -496,6 +523,73 @@ export const AuthProvider = ({children}) => {
             updateFriendsListWithLastMessagesAndUnreadCounts(currentUserId);
         }
     }, [currentUserId]);
+
+    // Inside the AuthProvider, add this useEffect (after currentUserId is defined)
+// useEffect(() => {
+//     if (!currentUserId) return;
+    
+//     const fetchTotalUnread = async () => {
+//       try {
+//         const data = await getConversations(currentUserId, 'en'); // or use the user's language
+//         if (Array.isArray(data)) {
+//           const total = data.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+//           setTotalUnreadCount(total);
+//         }
+//       } catch (error) {
+//         console.error('Polling error:', error);
+//       }
+//     };
+    
+//     // Fetch immediately
+//     fetchTotalUnread();
+    
+//     // Then every 5 seconds
+//     const interval = setInterval(fetchTotalUnread, 5000);
+    
+//     return () => clearInterval(interval);
+//   }, [currentUserId]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    let interval = null;
+    let isActive = true;
+    
+    const fetchTotalUnread = async () => {
+      if (!isActive) return;
+      try {
+        const data = await getConversations(currentUserId, 'en'); // adjust language if needed
+        if (Array.isArray(data)) {
+          const total = data.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+          setTotalUnreadCount(total);
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    };
+    
+    fetchTotalUnread();
+    interval = setInterval(fetchTotalUnread, 5000);
+    
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        isActive = true;
+        fetchTotalUnread();
+        if (!interval) interval = setInterval(fetchTotalUnread, 5000);
+      } else {
+        isActive = false;
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      }
+    });
+    
+    return () => {
+      if (interval) clearInterval(interval);
+      subscription.remove();
+    };
+  }, [currentUserId]);
 
     useEffect(() => {
         // Any logic you want to run when friendsWithLastMessagesUnreadCount updates

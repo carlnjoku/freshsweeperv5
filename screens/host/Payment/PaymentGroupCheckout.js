@@ -1,3 +1,277 @@
+// import React, { useState, useEffect, useContext } from 'react';
+// import { View, Text, Alert, StyleSheet } from 'react-native';
+// import StripeGroupPaymentButton from '../../../components/shared/StripeGroupPaymentButton';
+// import userService from '../../../services/connection/userService';
+// import COLORS from '../../../constants/colors';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import { AuthContext } from '../../../context/AuthContext';
+// import { ScrollView } from 'react-native-gesture-handler';
+// import PaymentDetails from './PaymentDetails';
+// import ROUTES from '../../../constants/routes';
+// import moment from 'moment';
+// import Toast from 'react-native-toast-message';
+// import onAddFriend from '../../../utils/createNewChatFriend';
+
+// const API_BASE_URL = 'http://your-api-url.com'; // Replace with your actual API URL
+
+// const PaymentGroupCheckout = ({ route, navigation }) => {
+//   const { currentUser, currentUserId, fbaseUser } = useContext(AuthContext);
+  
+//   const {
+//     requestId,
+//     cleaning_fee,
+//     scheduleId,
+//     schedule,
+//     selected_cleaners,
+//     cleanerIds,
+//     cleanersWithFee,
+//     cleaner_stripe_account_id
+//   } = route.params;
+  
+//   console.log("cleanersIds", selected_cleaners)
+//   console.log('🧾 Cleaners with fees:', cleanersWithFee);
+
+//   // Compute total fee from individual cleaner fees
+//   const totalCleanersFee = cleanersWithFee?.reduce((sum, c) => sum + (Number(c.fee) || 0), 0);
+//   const serviceFee = totalCleanersFee * 0.1; // 10% service fee
+//   const totalAmount = totalCleanersFee + serviceFee;
+ 
+
+//   const [clientSecret, setClientSecret] = useState(null);
+//   const [paymentIntentId, setPaymentIntentId] = useState(null);
+//   const [savedCards, setSavedCards] = useState([]);
+//   const [paymentStatus, setPaymentStatus] = useState(null);
+
+//   const [cleaning_date, setCleaningDate] = useState(schedule.cleaning_date);
+//   const [cleaning_time, setCleaningTime] = useState(schedule.cleaning_time);
+//   const [cleaning_end_time, setCleaningEndTime] = useState(schedule.cleaning_end_time);
+
+  
+//   let cleaning_end_time1 = cleaning_end_time;
+//   let end_time = moment(cleaning_end_time1, "HH:mm:ss").add(2, 'hours').format("HH:mm");
+//   let start_time = moment(cleaning_time, "HH:mm:ss").format("HH:mm")
+//   const selectedCleanerIds = selected_cleaners.map(selected_cleaner => selected_cleaner._id);
+//   let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
+
+
+//   useEffect(() => {
+//     const fetchClientSecret = async () => {
+//       if (serviceFee > 0) {
+//         try {
+//           const data = {
+//             amount: totalAmount,
+//             customerId: currentUser.stripe_customer?.stripe_customer_id,
+//             cleaner_stripe_account_id,
+//             metadata: {
+//               scheduleId,
+//               requestId,
+//               cleaning_date,
+//               start_time,
+//               end_time,
+//               dayName,
+//               cleaners: JSON.stringify(cleanersWithFee),
+//               paymentIntentId
+//             },
+//             platformFeeAmount: serviceFee,
+//             receiptEmail: currentUser.email,
+//             currency:currentUser.location?.currency?.code
+//           };
+
+//           const response = await userService.fetchGroupPaymentIntentClientSecret(data);
+//           const { clientSecret, paymentIntentId, status } = response.data;
+//           console.log("Payment intent", response.data)
+//           setClientSecret(clientSecret);
+//           setPaymentIntentId(paymentIntentId);
+//           setPaymentStatus(status);
+//         } catch (error) {
+//           Alert.alert('Error', 'Failed to create a payment intent.');
+//         }
+//       }
+//     };
+
+//     const fetchSavedCards = async () => {
+//       try {
+//         const custData = { customerId: currentUser.stripe_customer?.stripe_customer_id };
+//         const response = await userService.fetchCustomerPaymentMethods(custData);
+//         setSavedCards(response.data.payment_methods);
+//       } catch (error) {
+//         console.error('Failed to fetch saved cards:', error);
+//       }
+//     };
+
+//     fetchSavedCards();
+//     fetchClientSecret();
+//   }, [cleaning_fee]);
+
+//   const handlePaymentSuccess = async (result) => {
+//     // Compute total fee dynamically (from cleanersWithFee)
+//     const totalCleanersFee = cleanersWithFee?.reduce(
+//       (sum, c) => sum + (Number(c.fee) || 0),
+//       0
+//     );
+//     const serviceFee = totalCleanersFee * 0.1; // 10% service fee
+//     const totalAmount = totalCleanersFee + serviceFee;
+  
+//     setPaymentStatus(result.status);
+  
+//     Toast.show({
+//       type: 'success',
+//       text1: 'Payment Successful 💸',
+//       text2: `Payment of $${totalAmount.toFixed(2)} (including service fee) was successful!`,
+//       position: 'bottom',
+//     });
+    
+   
+//     try {
+//       // ✅ 1️⃣ Create chatrooms for each cleaner (and pass fee)
+//       await Promise.all(
+//         cleanersWithFee.map(({ cleanerId, fee }) =>
+        
+//           onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
+//         )
+//       );
+//       console.log("✅ All chatrooms created successfully!");
+  
+//       // ✅ 2️⃣ Call backend payment success endpoint (all notifications handled here)
+//       await callBackendPaymentSuccess(totalAmount);
+  
+//       console.log("✅ Payment success flow completed.");
+//     } catch (error) {
+//       console.error("❌ Error during payment success flow:", error);
+//       // Just log the error - no fallback needed since RQ will retry
+//     }
+  
+//     // ✅ 3️⃣ Redirect to dashboard
+//     navigation.navigate(ROUTES.host_home_tab);
+//   };
+
+//   const callBackendPaymentSuccess = async (totalAmount) => {
+//     try {
+
+//       const payload = {
+//         scheduleId: scheduleId,
+//         hostId: currentUserId,
+//         cleanerIds: selectedCleanerIds,
+//         totalAmount: totalAmount,
+//         hostName: currentUser.firstname + ' ' + currentUser.lastname,
+//         hostEmail: currentUser.email,
+//         cleanersWithFee: cleanersWithFee, // Include individual fees for cleaner notifications
+//         paymentIntentId: paymentIntentId
+//       }
+//       const response = await userService.sendChatMessagePushNotification(payload)
+      
+//       // const response = await fetch(`${API_BASE_URL}/payment_success`, {
+//       //   method: 'POST',
+//       //   headers: {
+//       //     'Content-Type': 'application/json',
+//       //   },
+//       //   body: JSON.stringify({
+//       //     scheduleId: scheduleId,
+//       //     hostId: currentUserId,
+//       //     cleanerIds: selectedCleanerIds,
+//       //     totalAmount: totalAmount,
+//       //     hostName: currentUser.firstname + ' ' + currentUser.lastname,
+//       //     hostEmail: currentUser.email,
+//       //     cleanersWithFee: cleanersWithFee // Include individual fees for cleaner notifications
+//       //   }),
+//       // });
+
+//       // const result = await response.json();
+//       // alert(response.status)
+//       console.log("The response coming back...", response)
+//       if (response.status === 'success') {
+//         console.log('✅ Payment success notifications queued:', response.job_id);
+//       } else {
+//         console.error('❌ Backend notification failed:', response.error);
+//         // RQ will handle retries, so no need for fallback
+//       }
+//     } catch (error) {
+//       console.error('❌ Error calling payment success endpoint:', error);
+//       // RQ will handle retries, so no need for fallback
+//     }
+//   };
+
+//   const handlePaymentError = (error) => {
+//     setPaymentStatus(error.status);
+  
+//     Toast.show({
+//       type: 'error',
+//       text1: 'Payment Failed',
+//       text2: error.message || 'An unexpected error occurred.',
+//       position: 'bottom',
+//     });
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <ScrollView showsVerticalScrollIndicator={false}>
+//         <View style={{justifyContent:'center', alignItems:'center', marginTop:40, marginBottom:10}}>
+//         <View style={styles.circle}>
+//           <MaterialCommunityIcons name="cart" size={40} color="#ffffff" />
+//         </View>
+//         </View>
+//         <Text style={styles.header}>Payment Checkout</Text>
+
+//         <PaymentDetails 
+//           cleaningServiceFee={serviceFee} 
+//           cleanersWithFee={cleanersWithFee} 
+//         />
+
+//         {clientSecret && totalCleanersFee > 0 ? (
+//           <StripeGroupPaymentButton 
+//             clientSecret={clientSecret} 
+//             totalAmount={totalAmount} 
+//             onSuccess={handlePaymentSuccess}
+//             onError={handlePaymentError}
+//             fbaseUser={fbaseUser} 
+//             scheduleId={scheduleId}
+//             schedule={schedule}
+//             cleanersId={selectedCleanerIds}
+//             hostId={currentUserId}
+//             hostName={currentUser.firstname + ' ' + currentUser.lastname}
+//             hostEMail={currentUser.email}
+//           />
+//         ) : (
+//           <Text style={{ textAlign: 'center', fontSize: 12 }}>
+//             Loading payment information...
+//           </Text>
+//         )}
+//       </ScrollView>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: 10,
+//     justifyContent: 'center',
+//     alignItems: 'stretch',
+//   },
+//   icon: {
+//     marginBottom: 20,
+//     textAlign: 'center',
+//   },
+//   header: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   circle: {
+//     width: 60,
+//     height: 60,
+//     borderRadius: 30,
+//     backgroundColor: COLORS.primary,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+// export default PaymentGroupCheckout;
+
+
+
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import StripeGroupPaymentButton from '../../../components/shared/StripeGroupPaymentButton';
@@ -11,8 +285,8 @@ import ROUTES from '../../../constants/routes';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import onAddFriend from '../../../utils/createNewChatFriend';
+import { tSafe } from '../../../utils/tSafe'; // added import
 
-const API_BASE_URL = 'http://your-api-url.com'; // Replace with your actual API URL
 
 const PaymentGroupCheckout = ({ route, navigation }) => {
   const { currentUser, currentUserId, fbaseUser } = useContext(AuthContext);
@@ -84,7 +358,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
           setPaymentIntentId(paymentIntentId);
           setPaymentStatus(status);
         } catch (error) {
-          Alert.alert('Error', 'Failed to create a payment intent.');
+          Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_create_payment_intent', 'Failed to create a payment intent.'));
         }
       }
     };
@@ -104,6 +378,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
   }, [cleaning_fee]);
 
   const handlePaymentSuccess = async (result) => {
+    alert("Start payment")
     // Compute total fee dynamically (from cleanersWithFee)
     const totalCleanersFee = cleanersWithFee?.reduce(
       (sum, c) => sum + (Number(c.fee) || 0),
@@ -116,8 +391,8 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
   
     Toast.show({
       type: 'success',
-      text1: 'Payment Successful 💸',
-      text2: `Payment of $${totalAmount.toFixed(2)} (including service fee) was successful!`,
+      text1: tSafe('payment_successful_title', 'Payment Successful 💸'),
+      text2: tSafe('payment_successful_message', 'Payment of ${amount} (including service fee) was successful!', { amount: `$${totalAmount.toFixed(2)}` }),
       position: 'bottom',
     });
     
@@ -126,7 +401,6 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
       // ✅ 1️⃣ Create chatrooms for each cleaner (and pass fee)
       await Promise.all(
         cleanersWithFee.map(({ cleanerId, fee }) =>
-        
           onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
         )
       );
@@ -147,7 +421,6 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
 
   const callBackendPaymentSuccess = async (totalAmount) => {
     try {
-
       const payload = {
         scheduleId: scheduleId,
         hostId: currentUserId,
@@ -160,34 +433,13 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
       }
       const response = await userService.sendChatMessagePushNotification(payload)
       
-      // const response = await fetch(`${API_BASE_URL}/payment_success`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     scheduleId: scheduleId,
-      //     hostId: currentUserId,
-      //     cleanerIds: selectedCleanerIds,
-      //     totalAmount: totalAmount,
-      //     hostName: currentUser.firstname + ' ' + currentUser.lastname,
-      //     hostEmail: currentUser.email,
-      //     cleanersWithFee: cleanersWithFee // Include individual fees for cleaner notifications
-      //   }),
-      // });
-
-      // const result = await response.json();
-      // alert(response.status)
-      console.log("The response coming back...", response)
       if (response.status === 'success') {
         console.log('✅ Payment success notifications queued:', response.job_id);
       } else {
         console.error('❌ Backend notification failed:', response.error);
-        // RQ will handle retries, so no need for fallback
       }
     } catch (error) {
       console.error('❌ Error calling payment success endpoint:', error);
-      // RQ will handle retries, so no need for fallback
     }
   };
 
@@ -196,8 +448,8 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
   
     Toast.show({
       type: 'error',
-      text1: 'Payment Failed',
-      text2: error.message || 'An unexpected error occurred.',
+      text1: tSafe('payment_failed_title', 'Payment Failed'),
+      text2: error.message || tSafe('unexpected_error', 'An unexpected error occurred.'),
       position: 'bottom',
     });
   };
@@ -210,7 +462,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
           <MaterialCommunityIcons name="cart" size={40} color="#ffffff" />
         </View>
         </View>
-        <Text style={styles.header}>Payment Checkout</Text>
+        <Text style={styles.header}>{tSafe('payment_checkout_title', 'Payment Checkout')}</Text>
 
         <PaymentDetails 
           cleaningServiceFee={serviceFee} 
@@ -233,7 +485,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
           />
         ) : (
           <Text style={{ textAlign: 'center', fontSize: 12 }}>
-            Loading payment information...
+            {tSafe('loading_payment_info', 'Loading payment information...')}
           </Text>
         )}
       </ScrollView>
@@ -269,7 +521,6 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentGroupCheckout;
-
 
 
 

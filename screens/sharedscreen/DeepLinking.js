@@ -314,9 +314,7 @@ export const hostLinking = {
       Notification: 'notification',
       'Task Progress': 'task-progress',
       'Cancellation Details': 'cancellation-details',
-      // 'Change Password': 'change-password',
-      // 'Change Language': 'change-language',
-      // Add more host screens if needed
+      'Chat Conversation': 'chat/:conversationId',
     },
   },
 };
@@ -335,7 +333,9 @@ export const cleanerLinking = {
       'My Schedules': 'my-schedules',
       Messages: 'messages',
       More: 'more',
-      PropertyDetails: 'property-details'
+      PropertyDetails: 'property-details',
+      "CleanChat Conversation": 'chat/:conversationId',
+      
       
       // Add more cleaner screens if needed
       // "Sign Up": 'register-cleaner',

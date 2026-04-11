@@ -1,187 +1,3 @@
-// import React, { useState } from "react";
-// import { ScrollView, StyleSheet, View } from "react-native";
-// import { Appbar, List, Button, Text } from "react-native-paper";
-// import COLORS from "../../constants/colors";
-
-// const Support = () => {
-//   const [expanded, setExpanded] = useState(false);
-
-//   const handlePress = () => setExpanded(!expanded);
-
-//   return (
-//     <View style={styles.container}>
-     
-//       {/* Content */}
-//       <ScrollView style={styles.content}>
-//         <Text style={styles.title}>How can we help you?</Text>
-
-//         {/* FAQ Section */}
-//         <List.Section title="FAQs" style={styles.faqSection}>
-//           <List.Accordion
-//             title="How do I create a cleaning schedule?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="calendar-plus" color={COLORS.darkBlue} />}
-//           >
-//             <List.Item 
-//               description="Go to your dashboard, select a property, and tap 'Create Schedule'. Fill out the necessary details and submit." 
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="Can I select a preferred cleaner?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="account-check" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Yes. After choosing a schedule, you can view available cleaners nearby and send a request to your preferred one." 
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How do cleaners accept or decline a task?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="check-decagram" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Cleaners receive a notification for new requests. They can view task details and accept or decline within the app." 
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How can I reset my password?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="lock-reset" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Go to your profile, select 'Change Password', and follow the prompts to reset your credentials."
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How do I update my property details?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="home-edit" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Navigate to the 'Properties' tab, select a property, then tap 'Edit' to update room details, address, or notes."
-//               descriptionNumberOfLines={10} 
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="What happens if a cleaner doesn’t show up?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="account-alert" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="You can contact support immediately. We’ll try to reassign a cleaner or issue a refund if necessary."
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How can I view before and after photos?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="image-multiple" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Once a cleaning is completed, go to the schedule history and tap on the task to view all uploaded photos."
-//               descriptionNumberOfLines={10} 
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How do I get paid as a cleaner?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="cash" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Payouts are processed weekly via your linked payment method. Ensure your profile is up to date."
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How do I report an issue or incident?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400', color: COLORS.darkBlue }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="alert-circle-outline" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item 
-//               description="Open the related task, scroll to the Incident tab, and submit a report with photos or notes." 
-//               descriptionNumberOfLines={10}
-//             />
-
-//           </List.Accordion>
-
-//           <List.Accordion
-//             title="How do I contact support?"
-//             titleStyle={{ fontSize: 14, fontWeight: '400' }}
-//             style={{ backgroundColor: COLORS.primary_light_3, borderRadius: 8, marginBottom: 0 }}
-//             left={(props) => <List.Icon {...props} icon="help-circle-outline" color={COLORS.darkBlue}/>}
-//           >
-//             <List.Item
-//               title=""
-//               description="Tap 'Contact Us' below to send us a message. You can also email us at support@freshsweeper.com." 
-//               descriptionNumberOfLines={10}
-//             />
-//           </List.Accordion>
-//         </List.Section>
-
-//         {/* Contact Us Button */}
-//         <Button
-//           icon="email-outline"
-//           mode="contained"
-//           onPress={() => console.log("Contact support")}
-//           style={styles.contactButton}
-//         >
-//           Contact Us
-//         </Button>
-//       </ScrollView>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#fff",
-//   },
-//   content: {
-//     padding: 16,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: "bold",
-//     marginBottom: 16,
-//   },
-//   faqSection: {
-//     marginBottom: 24,
-//   },
-//   contactButton: {
-//     marginTop: 16,
-//     backgroundColor:COLORS.primary
-//   },
-// });
-
-// export default Support;
-
-
-
-
-
 import React, { useState, useRef } from "react";
 import {
   ScrollView,
@@ -205,6 +21,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import COLORS from "../../constants/colors";
 import { MaterialCommunityIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { tSafe } from "../../utils/tSafe";
 
 const HostFAQItem = ({ question, answer, icon, category, index }) => {
   const [expanded, setExpanded] = useState(false);
@@ -344,97 +161,97 @@ const HostSupport = ({ navigation }) => {
   const hostFAQs = [
     {
       id: 1,
-      question: "How do I create a cleaning schedule?",
-      answer: "Navigate to your Dashboard → Properties → Select a property → 'Create Schedule'. Set date, time, frequency, and special instructions. Review and confirm to publish.",
+      question: tSafe("faq_host_create_schedule_q", "How do I create a cleaning schedule?"),
+      answer: tSafe("faq_host_create_schedule_a", "Navigate to your Dashboard → Properties → Select a property → 'Create Schedule'. Set date, time, frequency, and special instructions. Review and confirm to publish."),
       icon: "calendar-plus",
       category: "scheduling",
     },
     {
       id: 2,
-      question: "Can I select a specific cleaner?",
-      answer: "Yes! After creating a schedule, you'll see 'Choose Cleaner' option. Browse profiles, ratings, and reviews to select your preferred professional.",
+      question: tSafe("faq_host_select_cleaner_q", "Can I select a specific cleaner?"),
+      answer: tSafe("faq_host_select_cleaner_a", "Yes! After creating a schedule, you'll see 'Choose Cleaner' option. Browse profiles, ratings, and reviews to select your preferred professional."),
       icon: "account-check",
       category: "cleaner",
     },
     {
       id: 3,
-      question: "How does payment work?",
-      answer: "Payments are processed securely via Stripe. You'll be charged after cleaning completion. View receipts in Payment History. Cancelations within 24hrs are fully refunded.",
+      question: tSafe("faq_host_payment_q", "How does payment work?"),
+      answer: tSafe("faq_host_payment_a", "Payments are processed securely via Stripe. You'll be charged after cleaning completion. View receipts in Payment History. Cancelations within 24hrs are fully refunded."),
       icon: "credit-card-outline",
       category: "payment",
     },
     {
       id: 4,
-      question: "What if my cleaner cancels last minute?",
-      answer: "We automatically notify backup cleaners. If no replacement found, you get 100% refund plus 20% off next booking. Contact support for immediate assistance.",
+      question: tSafe("faq_host_cancellation_cleaner_q", "What if my cleaner cancels last minute?"),
+      answer: tSafe("faq_host_cancellation_cleaner_a", "We automatically notify backup cleaners. If no replacement found, you get 100% refund plus 20% off next booking. Contact support for immediate assistance."),
       icon: "account-alert",
       category: "emergency",
     },
     {
       id: 5,
-      question: "How do I modify or cancel a booking?",
-      answer: "Go to Upcoming Schedules → Select booking → 'Modify' or 'Cancel'. Changes within 24hrs may incur fees. View cancellation policy in Terms.",
+      question: tSafe("faq_host_modify_booking_q", "How do I modify or cancel a booking?"),
+      answer: tSafe("faq_host_modify_booking_a", "Go to Upcoming Schedules → Select booking → 'Modify' or 'Cancel'. Changes within 24hrs may incur fees. View cancellation policy in Terms."),
       icon: "calendar-edit",
       category: "scheduling",
     },
     {
       id: 6,
-      question: "Can I add special instructions for cleaners?",
-      answer: "Absolutely. When creating/editing a schedule, use 'Special Instructions' field. Also add property-specific notes in Property Details section.",
+      question: tSafe("faq_host_special_instructions_q", "Can I add special instructions for cleaners?"),
+      answer: tSafe("faq_host_special_instructions_a", "Absolutely. When creating/editing a schedule, use 'Special Instructions' field. Also add property-specific notes in Property Details section."),
       icon: "note-text-outline",
       category: "property",
     },
     {
       id: 7,
-      question: "How do I review my cleaner?",
-      answer: "After cleaning completion, you'll receive a review prompt. Rate 1-5 stars and add comments. Reviews are anonymous to cleaners.",
+      question: tSafe("faq_host_review_cleaner_q", "How do I review my cleaner?"),
+      answer: tSafe("faq_host_review_cleaner_a", "After cleaning completion, you'll receive a review prompt. Rate 1-5 stars and add comments. Reviews are anonymous to cleaners."),
       icon: "star-outline",
       category: "cleaner",
     },
     {
       id: 8,
-      question: "What's included in standard cleaning?",
-      answer: "Dusting, vacuuming, mopping, bathroom sanitization, kitchen cleaning, trash removal. See Services menu for detailed checklist.",
+      question: tSafe("faq_host_standard_cleaning_q", "What's included in standard cleaning?"),
+      answer: tSafe("faq_host_standard_cleaning_a", "Dusting, vacuuming, mopping, bathroom sanitization, kitchen cleaning, trash removal. See Services menu for detailed checklist."),
       icon: "checkbox-marked-outline",
       category: "property",
     },
     {
       id: 9,
-      question: "How do I report damage or issues?",
-      answer: "Within 24hrs of cleaning, go to Schedule Details → 'Report Issue' → Upload photos/description. Our team investigates within 48hrs.",
+      question: tSafe("faq_host_report_damage_q", "How do I report damage or issues?"),
+      answer: tSafe("faq_host_report_damage_a", "Within 24hrs of cleaning, go to Schedule Details → 'Report Issue' → Upload photos/description. Our team investigates within 48hrs."),
       icon: "alert-circle-outline",
       category: "emergency",
     },
     {
       id: 10,
-      question: "Can I schedule recurring cleanings?",
-      answer: "Yes! Choose 'Recurring' when creating schedule. Set frequency (weekly, bi-weekly, monthly). Easily manage in Recurring Schedules tab.",
+      question: tSafe("faq_host_recurring_cleanings_q", "Can I schedule recurring cleanings?"),
+      answer: tSafe("faq_host_recurring_cleanings_a", "Yes! Choose 'Recurring' when creating schedule. Set frequency (weekly, bi-weekly, monthly). Easily manage in Recurring Schedules tab."),
       icon: "repeat",
       category: "scheduling",
     },
     {
       id: 11,
-      question: "How do I update my property details?",
-      answer: "Properties → Select property → 'Edit' → Update rooms, access instructions, parking info, or upload new photos.",
+      question: tSafe("faq_host_update_property_q", "How do I update my property details?"),
+      answer: tSafe("faq_host_update_property_a", "Properties → Select property → 'Edit' → Update rooms, access instructions, parking info, or upload new photos."),
       icon: "home-edit",
       category: "property",
     },
     {
       id: 12,
-      question: "What payment methods are accepted?",
-      answer: "All major credit/debit cards, Apple Pay, Google Pay. We don't store payment info - processed securely via Stripe.",
+      question: tSafe("faq_host_payment_methods_q", "What payment methods are accepted?"),
+      answer: tSafe("faq_host_payment_methods_a", "All major credit/debit cards, Apple Pay, Google Pay. We don't store payment info - processed securely via Stripe."),
       icon: "wallet-outline",
       category: "payment",
     },
   ];
 
   const categories = [
-    { id: "all", label: "All Questions", icon: "format-list-bulleted" },
-    { id: "scheduling", label: "Scheduling", icon: "calendar" },
-    { id: "payment", label: "Payment", icon: "credit-card" },
-    { id: "cleaner", label: "Cleaners", icon: "account-group" },
-    { id: "property", label: "Property", icon: "home" },
-    { id: "emergency", label: "Emergency", icon: "alert" },
+    { id: "all", label: tSafe("category_all", "All Questions"), icon: "format-list-bulleted" },
+    { id: "scheduling", label: tSafe("category_scheduling", "Scheduling"), icon: "calendar" },
+    { id: "payment", label: tSafe("category_payment", "Payment"), icon: "credit-card" },
+    { id: "cleaner", label: tSafe("category_cleaner", "Cleaners"), icon: "account-group" },
+    { id: "property", label: tSafe("category_property", "Property"), icon: "home" },
+    { id: "emergency", label: tSafe("category_emergency", "Emergency"), icon: "alert" },
   ];
 
   const filteredFAQs = hostFAQs.filter(item => {
@@ -447,16 +264,16 @@ const HostSupport = ({ navigation }) => {
   const contactMethods = [
     {
       id: 1,
-      title: "Priority Support",
-      subtitle: "Host-dedicated line",
+      title: tSafe("contact_priority_support", "Priority Support"),
+      subtitle: tSafe("contact_priority_subtitle", "Host-dedicated line"),
       icon: "headset",
       color: COLORS.primary,
       action: () => Linking.openURL("tel:+18001234567"),
-      badge: "VIP",
+      badge: tSafe("badge_vip", "VIP"),
     },
     {
       id: 2,
-      title: "Email Team",
+      title: tSafe("contact_email_team", "Email Team"),
       subtitle: "hosts@freshsweeper.com",
       icon: "email-fast",
       color: COLORS.success,
@@ -464,16 +281,16 @@ const HostSupport = ({ navigation }) => {
     },
     {
       id: 3,
-      title: "Live Chat",
-      subtitle: "Instant response",
+      title: tSafe("contact_live_chat", "Live Chat"),
+      subtitle: tSafe("contact_live_chat_sub", "Instant response"),
       icon: "message-text",
       color: COLORS.warning,
       action: () => navigation.navigate("HostLiveChat"),
     },
     {
       id: 4,
-      title: "Help Articles",
-      subtitle: "Host guides & tips",
+      title: tSafe("contact_help_articles", "Help Articles"),
+      subtitle: tSafe("contact_help_articles_sub", "Host guides & tips"),
       icon: "book-open-variant",
       color: COLORS.info,
       action: () => navigation.navigate("HostGuides"),
@@ -483,28 +300,28 @@ const HostSupport = ({ navigation }) => {
   const quickActions = [
     {
       id: 1,
-      title: "Report Issue",
+      title: tSafe("quick_action_report_issue", "Report Issue"),
       icon: "alert-circle",
       color: COLORS.error,
       screen: "ReportIssue",
     },
     {
       id: 2,
-      title: "Cancel Booking",
+      title: tSafe("quick_action_cancel_booking", "Cancel Booking"),
       icon: "calendar-remove",
       color: COLORS.warning,
       screen: "CancelBooking",
     },
     {
       id: 3,
-      title: "Modify Schedule",
+      title: tSafe("quick_action_modify_schedule", "Modify Schedule"),
       icon: "calendar-edit",
       color: COLORS.info,
       screen: "ModifySchedule",
     },
     {
       id: 4,
-      title: "Payment Help",
+      title: tSafe("quick_action_payment_help", "Payment Help"),
       icon: "credit-card-refresh",
       color: COLORS.success,
       screen: "PaymentSupport",
@@ -528,8 +345,8 @@ const HostSupport = ({ navigation }) => {
           <Appbar.Content
             title={
               <View>
-                <Text style={styles.headerTitle}>Host Support</Text>
-                <Text style={styles.headerSubtitle}>Premium assistance for hosts</Text>
+                <Text style={styles.headerTitle}>{tSafe("host_support_title", "Host Support")}</Text>
+                <Text style={styles.headerSubtitle}>{tSafe("host_support_subtitle", "Premium assistance for hosts")}</Text>
               </View>
             }
           />
@@ -551,7 +368,7 @@ const HostSupport = ({ navigation }) => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search help articles..."
+              placeholder={tSafe("search_placeholder", "Search help articles...")}
               placeholderTextColor={COLORS.gray}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -575,7 +392,7 @@ const HostSupport = ({ navigation }) => {
         contentContainerStyle={styles.contentContainer}
       >
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{tSafe("quick_actions_title", "Quick Actions")}</Text>
         <View style={styles.quickActionsGrid}>
           {quickActions.map((action) => (
             <TouchableOpacity
@@ -602,8 +419,8 @@ const HostSupport = ({ navigation }) => {
         {/* Contact Cards */}
         <View style={styles.contactSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Contact Support</Text>
-            <Text style={styles.sectionSubtitle}>Dedicated host team</Text>
+            <Text style={styles.sectionTitle}>{tSafe("contact_support_title", "Contact Support")}</Text>
+            <Text style={styles.sectionSubtitle}>{tSafe("contact_support_subtitle", "Dedicated host team")}</Text>
           </View>
           <View style={styles.contactGrid}>
             {contactMethods.map((method) => (
@@ -670,9 +487,9 @@ const HostSupport = ({ navigation }) => {
         {/* FAQ Section */}
         <View style={styles.faqSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+            <Text style={styles.sectionTitle}>{tSafe("faq_title", "Frequently Asked Questions")}</Text>
             <Text style={styles.sectionSubtitle}>
-              {filteredFAQs.length} questions • {activeCategory === 'all' ? 'All categories' : activeCategory}
+              {filteredFAQs.length} {tSafe("questions_count", "questions")} • {activeCategory === 'all' ? tSafe("all_categories", "All categories") : activeCategory}
             </Text>
           </View>
 
@@ -694,9 +511,9 @@ const HostSupport = ({ navigation }) => {
                 size={60}
                 color={COLORS.lightGray}
               />
-              <Text style={styles.noResultsTitle}>No matches found</Text>
+              <Text style={styles.noResultsTitle}>{tSafe("no_results_title", "No matches found")}</Text>
               <Text style={styles.noResultsText}>
-                Try different keywords or select another category
+                {tSafe("no_results_message", "Try different keywords or select another category")}
               </Text>
             </Surface>
           )}
@@ -716,16 +533,16 @@ const HostSupport = ({ navigation }) => {
               color="gold"
             />
             <View style={styles.premiumText}>
-              <Text style={styles.premiumTitle}>Premium Host Support</Text>
+              <Text style={styles.premiumTitle}>{tSafe("premium_title", "Premium Host Support")}</Text>
               <Text style={styles.premiumSubtitle}>
-                24/7 priority access • Dedicated account manager • Faster response times
+                {tSafe("premium_subtitle", "24/7 priority access • Dedicated account manager • Faster response times")}
               </Text>
             </View>
             <TouchableOpacity
               style={styles.premiumButton}
               onPress={() => navigation.navigate("PremiumSupport")}
             >
-              <Text style={styles.premiumButtonText}>Upgrade</Text>
+              <Text style={styles.premiumButtonText}>{tSafe("premium_button", "Upgrade")}</Text>
               <Ionicons name="arrow-forward" size={16} color="white" />
             </TouchableOpacity>
           </View>
@@ -738,7 +555,7 @@ const HostSupport = ({ navigation }) => {
         icon="phone"
         color="white"
         onPress={() => Linking.openURL("tel:+19733804757")}
-        label="Emergency Call"
+        label={tSafe("emergency_fab_label", "Emergency Call")}
       />
     </View>
   );

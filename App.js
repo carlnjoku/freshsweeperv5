@@ -23,22 +23,92 @@ import DevMenu from './components/fallback/DevMenu';
 // import linking from './screens/sharedscreen/DeepLinking';
 
 import { rootLinking } from './screens/sharedscreen/DeepLinking';
+import i18n, { loadTranslations } from './i18n';
+import userService from './services/connection/userService';
+import { WebSocketProvider } from './context/WebsocketContext';
 
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
 export default function App() {
 
   const [showTestUI, setShowTestUI] = useState(false);
+  const [ready, setReady] = useState(false); // ✅ ADD THIS
+
+  useEffect(() => {
+    fetchTranslations();
+  }, []);
+
+
+//   const clearAllTokens = async () => {
+//     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+//     console.log('Tokens cleared');
+//   };
+
+// useEffect(() => {
+//   AsyncStorage.clear().then(() => console.log('Storage cleared'));
+//   clearAllTokens()
+// }, []);
+
+
+  // const fetchTranslations = async () => {
+  //   try {
+  //     const res = await userService.getFullCopies(0, 500); // limit
+  //     const data = res.data;
+  
+  //     console.log("My copies", data);
+  
+  //     loadTranslations(data);
+  
+  //     // 🔥 force UI refresh
+  //     i18n.reloadResources();
+  //     i18n.changeLanguage(i18n.language);
+  
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
+  const fetchTranslations = async () => {
+    try {
+      const res = await userService.getFullCopies();
+      const data = res.data;
+
+      if (!data || !data.length) {
+        console.warn("No translations loaded");
+        setReady(true); // ⚠️ IMPORTANT so app doesn't hang
+        return;
+      }
+
+      console.log("My copies", data);
+
+      loadTranslations(data); // 🔥 inject into i18n
+
+      setReady(true); // ✅ IMPORTANT
+    } catch (err) {
+      console.error(err);
+      // fallback to local translations
+      loadTranslations([]);
+      setReady(true); // still allow app to load
+    }
+  };
+
+  // ✅ BLOCK APP UNTIL TRANSLATIONS ARE READY
+  if (!ready) {
+    return <Text>Loading translations...</Text>;
+  }
    
    return (
    
     <SafeAreaProvider>
+      <AuthProvider>
       <ErrorProvider>
         <ErrorBoundary>
           <LanguageProvider>
-            <AuthProvider>
+            
+            <WebSocketProvider>
               <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
               <BookingProvider>
                 <PaperProvider>
@@ -49,10 +119,12 @@ export default function App() {
                 </PaperProvider>
               </BookingProvider>
               </StripeProvider>
-            </AuthProvider>
+              </WebSocketProvider>
+         
           </LanguageProvider>
         </ErrorBoundary>
       </ErrorProvider>
+      </AuthProvider> 
     </SafeAreaProvider>
          
    );

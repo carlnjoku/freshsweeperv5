@@ -1,568 +1,410 @@
-// import { useEffect, useState, useCallback, useContext, useRef } from 'react';
-// import { SafeAreaView, StyleSheet, StatusBar, Text, RefreshControl, Linking, FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator } from 'react-native';
+// screens/Messages.js
+// import React, { useEffect, useState, useCallback, useContext, useRef } from 'react';
 // import {
-//   get,
-//   ref,
-//   set,
-//   off,
-//   onValue,
-//   push,
-//   update,
-//   onChildAdded
-// } from 'firebase/database';
-// import { db } from '../../services/firebase/config';
-// import COLORS from '../../constants/colors';
-// import { AuthContext } from '../../context/AuthContext';
-// import ROUTES from '../../constants/routes';
+//   SafeAreaView, StyleSheet, StatusBar, Text, RefreshControl,
+//   FlatList, View, TouchableOpacity, ActivityIndicator,
+//   Animated, TextInput, Image
+// } from 'react-native';
+// import { useFocusEffect } from '@react-navigation/native';
 // import moment from 'moment';
-// import { MaterialCommunityIcons, Ionicons, AntDesign } from '@expo/vector-icons';
+// import { Ionicons, MaterialIcons, Feather, Entypo } from '@expo/vector-icons';
+// import { AuthContext } from '../../context/AuthContext';
+// import { useWebSocket } from '../../context/WebsocketContext';
+// import { getConversations, markConversationRead } from '../../services/connection/chatApi';
+// import COLORS from '../../constants/colors';
+// import ROUTES from '../../constants/routes';
+// import { tSafe } from '../../utils/tSafe';
+// import { LanguageContext } from '../../context/LanguageContext';
 
-// const Messages = ({navigation}) => {
-//   const {
-//     currentUserId,
-//     fbaseUser,
-//     setTotalUnreadCount,
-//     totalUnreadCount
-//   } = useContext(AuthContext);
+// export default function Messages({ navigation }) {
+//   const { currentUserId, fbaseUser, setTotalUnreadCount } = useContext(AuthContext);
+ 
+//   const { language } = useContext(LanguageContext);
+//   const { isConnected, addMessageHandler, removeMessageHandler } = useWebSocket();
 
-//   const [friendsWithLastMessagesUnread, setFriendsWithLastMessagesUnreadCount] = useState([]);
+//   const [conversations, setConversations] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [refreshing, setRefreshing] = useState(false);
-  
-//   // Use refs to track values without causing re-renders
-//   const friendsRef = useRef([]);
-//   const unsubscribeRefs = useRef([]);
+//   const [searchQuery, setSearchQuery] = useState('');
+//   const [selectedFilter, setSelectedFilter] = useState('all');
+//   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-//   // Function to remove duplicate conversations
-//   const getUniqueConversations = (conversations) => {
-//     const seen = new Set();
-//     return conversations.filter(conversation => {
-//       // Use chatroomId as the unique identifier since it's unique per conversation
-//       const key = conversation.chatroomId;
-//       if (seen.has(key)) {
-//         console.log('Removing duplicate conversation with chatroomId:', key);
-//         return false;
-//       }
-//       seen.add(key);
-//       return true;
-//     });
-//   };
+//   const searchAnim = useRef(new Animated.Value(0)).current;
+//   const filtersAnim = useRef(new Animated.Value(0)).current;
 
-//   console.log("Greatness..........host");
-//   console.log("Total unread count:", totalUnreadCount);
+//   // Animate search bar
+//   useEffect(() => {
+//     Animated.timing(searchAnim, {
+//       toValue: isSearchFocused ? 1 : 0,
+//       duration: 200,
+//       useNativeDriver: true,
+//     }).start();
+//   }, [isSearchFocused]);
 
-//   // Reset unread count when entering a chat
-//   const resetUnreadCountForChat = useCallback(async (chatroomId, friendUserId) => {
+//   useEffect(() => {
+//     Animated.spring(filtersAnim, {
+//       toValue: 1,
+//       tension: 50,
+//       friction: 7,
+//       useNativeDriver: true,
+//     }).start();
+//   }, []);
+
+//   // Fetch conversations from backend
+//   // const fetchConversations = async () => {
+//   //   setLoading(true);
+//   //   try {
+//   //     const data = await getConversations(currentUserId, language);
+//   //     // data is assumed to be an array of conversation objects with fields:
+//   //     // id, otherUser: { id, name, avatar }, lastMessage, unreadCount, updatedAt, schedule, etc.
+//   //     const sorted = data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+//   //     setConversations(sorted);
+//   //     const totalUnread = sorted.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+//   //     setTotalUnreadCount(totalUnread);
+//   //   } catch (error) {
+//   //     console.error('Failed to fetch conversations', error);
+//   //   } finally {
+//   //     setLoading(false);
+//   //     setRefreshing(false);
+//   //   }
+//   // };
+
+//   const fetchConversations = async () => {
+//     if (!currentUserId) return;
+//     setLoading(true);
 //     try {
-//       const unreadRef = ref(db, `unreadMessages/${chatroomId}/${currentUserId}/${friendUserId}`);
-//       await set(unreadRef, 0);
-      
-//       // Update local state immediately for better UX
-//       setFriendsWithLastMessagesUnreadCount(prev => 
-//         prev.map(friend => 
-//           friend.userId === friendUserId 
-//             ? { ...friend, unreadCount: 0 }
-//             : friend
-//         )
-//       );
-
-//     } catch (error) {
-//       console.error("Error resetting unread count:", error);
-//     }
-//   }, [currentUserId]);
-
-//   const fetchData = async () => {
-//     setRefreshing(true);
-//     const friendsRef = ref(db, `users/${currentUserId}/friends`);
-    
-//     const handleFriendsUpdate = async (snapshot) => {
-//       console.log("🔥 handleFriendsUpdate triggered:", snapshot.exists());
-//       setLoading(true);
-     
-//       if (!snapshot.exists()) {
-//         console.log("⚠️ No friends data found for user:", currentUserId);
-//         setFriendsWithLastMessagesUnreadCount([]);
+//       const data = await getConversations(currentUserId, language);
+//       // ✅ Check if data is an array
+//       if (!data || !Array.isArray(data)) {
+//         console.error('Expected array, received:', data);
+//         setConversations([]);
 //         setTotalUnreadCount(0);
-//         setLoading(false);
-//         setRefreshing(false);
 //         return;
 //       }
+//       const sorted = data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+//       setConversations(sorted);
+//       const totalUnread = sorted.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+//       setTotalUnreadCount(totalUnread);
+//     } catch (error) {
+//       console.error('Failed to fetch conversations', error);
+//       setConversations([]);
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   };
 
-//       try {
-//         const friendsData = snapshot.val();
-//         const friendsArray = Object.values(friendsData) || [];
-//         const updatedFriendsWithMessages = [];
-//         let totalUnread = 0;
+//   // Refresh on focus
+//   useFocusEffect(
+//     useCallback(() => {
+//       fetchConversations();
+//     }, [])
+//   );
 
-//         // Process friends in parallel for better performance
-//         const friendPromises = friendsArray.map(async (friend) => {
-//           const chatroomId = friend.chatroomId;
-//           const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
-//           const chatroomSnapshot = await get(chatroomRef);
-//           const chatroomData = chatroomSnapshot.val();
-
-//           if (chatroomData && chatroomData.messages) {
-//             const messages = chatroomData.messages;
-//             const lastMsg = messages[messages.length - 1];
-            
-//             const lastmessage = {
-//               text: lastMsg?.text || null,
-//               sender: lastMsg?.sender || null,
-//               createdAt: lastMsg?.createdAt || null,
-//               image: lastMsg?.image || null,
-//             };
-
-//             // Get unread count
-//             const unreadRef = ref(db, `unreadMessages/${chatroomId}/${currentUserId}/${friend.userId}`);
-//             const unreadSnapshot = await get(unreadRef);
-//             const unreadCount = unreadSnapshot.val() || 0;
-            
-//             totalUnread += unreadCount;
-
-//             return {
-//               ...friend,
-//               lastmessage,
-//               unreadCount,
-//               chatroomId,
-//               lastMessageTime: lastMsg?.createdAt ? new Date(lastMsg.createdAt).getTime() : 0
-//             };
-//           }
-//           return null;
+//   // WebSocket handler to update conversations in real time
+//   useEffect(() => {
+//     const handleWebSocketMessage = (data) => {
+//       // Assume data is a new message object (e.g., { sender_id, text, image, conversation_id, created_at, ... })
+//       if (data.conversation_id) {
+//         setConversations(prev => {
+//           const updated = prev.map(conv => {
+//             if (conv.id === data.conversation_id) {
+//               // Update last message
+//               const newLastMessage = {
+//                 text: data.text || (data.image ? '📷 Image' : ''),
+//                 sender: data.sender_id,
+//                 createdAt: data.created_at,
+//                 image: data.image,
+//               };
+//               const unreadIncrement = (data.sender_id !== currentUserId && !inCurrentConversation(data.conversation_id))
+//                 ? 1 : 0;
+//               return {
+//                 ...conv,
+//                 lastMessage: newLastMessage,
+//                 updatedAt: data.created_at,
+//                 unreadCount: (conv.unreadCount || 0) + unreadIncrement,
+//               };
+//             }
+//             return conv;
+//           });
+//           // Re-sort by updatedAt
+//           updated.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+//           // Update total unread count
+//           const totalUnread = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+//           setTotalUnreadCount(totalUnread);
+//           return updated;
 //         });
-
-//         const results = await Promise.all(friendPromises);
-//         const validFriends = results.filter(friend => friend !== null);
-
-//         // Remove duplicates before setting state
-//         const uniqueFriends = getUniqueConversations(validFriends);
-
-//         // Sort by last message time (newest first)
-//         uniqueFriends.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-
-//         setFriendsWithLastMessagesUnreadCount(uniqueFriends);
-//         setTotalUnreadCount(totalUnread);
-        
-//         // Update the ref with current friends for real-time updates
-//         friendsRef.current = uniqueFriends;
-
-//       } catch (error) {
-//         console.error("Error processing friends data:", error);
-//       } finally {
-//         setLoading(false);
-//         setRefreshing(false);
 //       }
 //     };
 
-//     const unsubscribe = onValue(friendsRef, handleFriendsUpdate);
-//     return () => unsubscribe();
+//     // Helper to know if this conversation is currently open
+//     const inCurrentConversation = (convId) => {
+//       const route = navigation.getState().routes.find(r => r.name === ROUTES.chat_conversation);
+//       return route && route.params?.conversation?.id === convId;
+//     };
+//     addMessageHandler(handleWebSocketMessage);
+//     return () => removeMessageHandler(handleWebSocketMessage);
+//   }, [addMessageHandler, removeMessageHandler, currentUserId, navigation, setTotalUnreadCount]);
+
+//   const onRefresh = () => {
+//     setRefreshing(true);
+//     fetchConversations();
 //   };
 
-//   useEffect(() => {
-//     fetchData();
-//   }, [currentUserId, setTotalUnreadCount]);
-
-//   // Real-time listener for new messages - FIXED VERSION
-//   useEffect(() => {
-//     // Clean up previous listeners
-//     unsubscribeRefs.current.forEach(unsub => unsub && unsub());
-//     unsubscribeRefs.current = [];
-
-//     if (friendsWithLastMessagesUnread.length === 0) return;
-
-//     // Set up listeners for each chatroom
-//     const newUnsubscribes = friendsWithLastMessagesUnread.map(friend => {
-//       const messagesRef = ref(db, `chatrooms/${friend.chatroomId}/messages`);
-      
-//       return onChildAdded(messagesRef, (snapshot) => {
-//         const newMessage = snapshot.val();
-//         if (!newMessage) return;
-
-//         // Update the state with the new message
-//         setFriendsWithLastMessagesUnreadCount(prev => {
-//           const updated = prev.map(f => {
-//             if (f.chatroomId === friend.chatroomId) {
-//               return {
-//                 ...f,
-//                 lastmessage: {
-//                   text: newMessage.text,
-//                   sender: newMessage.sender,
-//                   createdAt: newMessage.createdAt,
-//                   image: newMessage.image
-//                 },
-//                 lastMessageTime: new Date(newMessage.createdAt).getTime()
-//               };
-//             }
-//             return f;
-//           });
-          
-//           // Sort by last message time
-//           return updated.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-//         });
-//       });
+//   const handleChatPress = async (conversation) => {
+//     // Mark as read on backend (optional, can be done when conversation screen loads)
+//     await markConversationRead(conversation.id, currentUserId);
+//     navigation.navigate(ROUTES.chat_conversation, { 
+//       conversation
 //     });
-
-//     unsubscribeRefs.current = newUnsubscribes;
-
-//     // Cleanup function
-//     return () => {
-//       unsubscribeRefs.current.forEach(unsub => unsub && unsub());
-//       unsubscribeRefs.current = [];
-//     };
-//   }, [friendsWithLastMessagesUnread.length]); // Only depend on length, not the full array
-
-//   // Separate useEffect to calculate total unread count
-//   useEffect(() => {
-//     const totalUnread = friendsWithLastMessagesUnread.reduce(
-//       (total, friend) => total + (friend.unreadCount || 0), 
-//       0
-//     );
-//     setTotalUnreadCount(totalUnread);
-//   }, [friendsWithLastMessagesUnread, setTotalUnreadCount]);
-
-//   const handleChatPress = async (item, index) => {
-//     // Reset unread count for this chat
-//     await resetUnreadCountForChat(item.chatroomId, item.userId);
-    
-//     // Navigate to chat
-//     navigation.navigate(ROUTES.chat_conversation, {
-//       selectedUser: item,
-//       fbaseUser: fbaseUser,
-//       schedule: item,
-//       friendIndex: index
-//     });
+//     // navigation.navigate(ROUTES.chat_conversation, { 
+//     //   selectedUser: conversation,
+//     //   // fbaseUser: fbaseUser,
+//     //   schedule: conversation.schedule,
+//     //   friendIndex: index
+//     // });
 //   };
 
 //   const truncateString = (str) => {
 //     if (!str) return '';
-//     const maxLength = 40;
+//     const maxLength = 30;
 //     return str.length > maxLength ? str.slice(0, maxLength - 3) + '...' : str;
 //   };
 
 //   const getMessagePreview = (item) => {
-//     if (item.lastmessage?.image) {
-//       return '📷 Image';
-//     }
-//     return truncateString(item.lastmessage?.text || '');
+//     if (item.lastMessage?.image) return '📷 Image';
+//     return truncateString(item.lastMessage?.text || '');
 //   };
 
-//   const singleItem = (item, index) => (
-//     <TouchableOpacity 
-//       style={styles.categoryBtn} 
-//       onPress={() => handleChatPress(item, index)}
+//   const filteredConversations = conversations.filter(conv => {
+//     const name = `${conv.otherUser.firstname} ${conv.otherUser.lastname}`;
+//     const matchesSearch = searchQuery === '' ||
+//       name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       (conv.schedule?.apartment_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+//     let matchesFilter = true;
+//     if (selectedFilter === 'unread') matchesFilter = conv.unreadCount > 0;
+//     else if (selectedFilter === 'scheduled') matchesFilter = !!conv.schedule?.cleaning_date;
+
+//     return matchesSearch && matchesFilter;
+//   });
+
+//   const getInitials = (firstName, lastName) => {
+//     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+//   };
+
+//   const formatTime = (timestamp) => {
+//     if (!timestamp) return '';
+//     const now = moment();
+//     const msgTime = moment(timestamp);
+//     if (now.diff(msgTime, 'days') < 1) return msgTime.format('h:mm A');
+//     if (now.diff(msgTime, 'days') < 7) return msgTime.format('ddd');
+//     return msgTime.format('MMM D');
+//   };
+
+//   const renderItem = ({ item }) => (
+//     <TouchableOpacity
+//       style={[styles.chatItemContainer, item.unreadCount > 0 && styles.unreadChatItem]}
+//       onPress={() => handleChatPress(item)}
+//       activeOpacity={0.7}
 //     >
-//       <View style={styles.chatItemContainer}>
-//         <View style={styles.avatarContainer}>
-//           {item.avatar ? 
-//             <Image 
-//               source={{uri: item.avatar}}
-//               style={styles.avatar} 
-//             />
-//             :
-//             <Image
-//               source={require('../../assets/images/default_avatar.png')}
-//               style={styles.avatar} 
-//             />
-//           }
+//       <View style={styles.avatarContainer}>
+//         {item.otherUser.avatar ? (
+//           <Image source={{ uri: item.otherUser.avatar }} style={styles.avatar} />
+//         ) : (
+//           <View style={[styles.avatar, styles.avatarFallback]}>
+//             <Text style={styles.avatarText}>
+//               {getInitials(item.otherUser.firstname, item.otherUser.lastname)}
+//             </Text>
+//           </View>
+//         )}
+//         {item.unreadCount > 0 && <View style={styles.unreadIndicator} />}
+//       </View>
+
+//       <View style={styles.chatContent}>
+//         <View style={styles.chatHeader}>
+//           <Text style={[styles.userName, item.unreadCount > 0 && styles.unreadUserName]}>
+//             {item.otherUser.firstname} {item.otherUser.lastname}
+//           </Text>
+//           <Text style={styles.timeText}>{formatTime(item.lastMessage?.createdAt)}</Text>
 //         </View>
-        
-//         <View style={styles.messageContent}>
-//           <Text style={styles.userName}>{item.firstname} {item.lastname}</Text>
-//           <Text style={styles.scheduleText}>
-//             <AntDesign name="home" size={14} color={COLORS.gray}/> 
-//             {item.schedule?.apartment_name}
-//           </Text>
-//           <Text style={styles.scheduleText}>
-//             <MaterialCommunityIcons name="calendar" size={14} color={COLORS.gray} /> 
-//             {moment(item.schedule?.cleaning_date).format('ddd MMM D')}  
-//             {moment(item.schedule?.cleaning_time, 'h:mm:ss A').format('h:mm A')}
-//           </Text>
-          
-//           {item.lastmessage && (
-//             <View style={styles.messagePreview}>
-//               {item.lastmessage.sender === currentUserId && (
-//                 <Ionicons 
-//                   name="checkmark-done" 
-//                   size={16} 
-//                   color={item.unreadCount < 1 ? COLORS.primary : COLORS.gray} 
-//                 />
-//               )}
-//               <Text 
-//                 style={[
-//                   styles.messageText,
-//                   item.unreadCount > 0 && styles.unreadMessageText
-//                 ]}
-//                 numberOfLines={1}
-//               >
-//                 {getMessagePreview(item)}
-//               </Text>
-//             </View>
-//           )}
+
+//         <View style={styles.chatDetails}>
+//           <View style={styles.propertyInfo}>
+//             <MaterialIcons name="location-on" size={14} color="#6B7280" />
+//             <Text style={styles.propertyText} numberOfLines={1}>
+//               {item.schedule?.apartment_name || 'No property assigned'}
+//             </Text>
+//           </View>
+//           <View style={styles.scheduleInfo}>
+//             <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+//             <Text style={styles.scheduleText}>
+//               {item.schedule?.cleaning_date
+//                 ? `${moment(item.schedule.cleaning_date).format('MMM D')} • ${moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}`
+//                 : 'No schedule'}
+//             </Text>
+//           </View>
 //         </View>
-    
-//         <View style={styles.timeAndBadge}>
-//           <Text style={styles.timeText}>
-//             {moment(item.lastmessage?.createdAt).format('h:mm A')}
-//           </Text>
+
+//         <View style={styles.messagePreview}>
+//           <View style={styles.messageTextContainer}>
+//             {item.lastMessage?.sender === currentUserId && (
+//               <Ionicons name="checkmark-done" size={16} color="#10B981" style={styles.readIndicator} />
+//             )}
+//             <Text style={[styles.messageText, item.unreadCount > 0 && styles.unreadMessageText]} numberOfLines={1}>
+//               {getMessagePreview(item)}
+//             </Text>
+//           </View>
 //           {item.unreadCount > 0 && (
-//             <View style={[
-//               styles.unreadBadge,
-//               item.unreadCount > 9 && styles.largeUnreadBadge
-//             ]}>
-//               <Text style={styles.unreadCount}>
-//                 {item.unreadCount > 99 ? '99+' : item.unreadCount}
-//               </Text>
+//             <View style={styles.unreadBadge}>
+//               <Text style={styles.unreadCount}>{item.unreadCount > 99 ? '99+' : item.unreadCount}</Text>
 //             </View>
 //           )}
 //         </View>
 //       </View>
+//       <Entypo name="chevron-right" size={20} color="#D1D5DB" style={styles.chevron} />
 //     </TouchableOpacity>
 //   );
 
-//   const itemSeparator = () => (
-//     <View style={styles.item_separator}></View>
+//   const renderHeader = () => (
+//     <View style={styles.header}>
+//       <View style={styles.headerTop}>
+//         <View>
+//           <Text style={styles.headerTitle}>Messages</Text>
+//           <Text style={styles.headerSubtitle}>
+//             {conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0) > 0
+//               ? `${conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)} unread message(s)`
+//               : 'All caught up!'}
+//           </Text>
+//         </View>
+//         <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate(ROUTES.notification)}>
+//           <Ionicons name="notifications-outline" size={24} color="#1C1C1E" />
+//           {/* optionally show notification badge */}
+//         </TouchableOpacity>
+//       </View>
+
+//       <Animated.View style={[styles.searchContainer, { transform: [{ scale: searchAnim }] }]}>
+//         <Feather name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+//         <TextInput
+//           style={styles.searchInput}
+//           placeholder="Search conversations..."
+//           placeholderTextColor="#9CA3AF"
+//           value={searchQuery}
+//           onChangeText={setSearchQuery}
+//           onFocus={() => setIsSearchFocused(true)}
+//           onBlur={() => setIsSearchFocused(false)}
+//         />
+//         {searchQuery.length > 0 && (
+//           <TouchableOpacity onPress={() => setSearchQuery('')}>
+//             <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+//           </TouchableOpacity>
+//         )}
+//       </Animated.View>
+
+//       <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filtersContainer, { opacity: filtersAnim, transform: [{ translateY: filtersAnim.interpolate({ inputRange: [0,1], outputRange: [20,0] }) }] }]}>
+//         <TouchableOpacity style={[styles.filterButton, selectedFilter === 'all' && styles.filterButtonActive]} onPress={() => setSelectedFilter('all')}>
+//           <Text style={[styles.filterText, selectedFilter === 'all' && styles.filterTextActive]}>All</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity style={[styles.filterButton, selectedFilter === 'unread' && styles.filterButtonActive]} onPress={() => setSelectedFilter('unread')}>
+//           <View style={styles.filterBadge}>
+//             <Text style={[styles.filterText, selectedFilter === 'unread' && styles.filterTextActive]}>Unread</Text>
+//             {conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0) > 0 && (
+//               <View style={styles.filterNotification}>
+//                 <Text style={styles.filterNotificationText}>{conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)}</Text>
+//               </View>
+//             )}
+//           </View>
+//         </TouchableOpacity>
+//         <TouchableOpacity style={[styles.filterButton, selectedFilter === 'scheduled' && styles.filterButtonActive]} onPress={() => setSelectedFilter('scheduled')}>
+//           <Text style={[styles.filterText, selectedFilter === 'scheduled' && styles.filterTextActive]}>Scheduled</Text>
+//         </TouchableOpacity>
+//       </Animated.ScrollView>
+//     </View>
 //   );
 
-//   const emptyListing = () => (
+//   const emptyList = () => (
 //     <View style={styles.emptyContainer}>
-//       <MaterialCommunityIcons 
-//         name="email-outline"
-//         size={54}
-//         color="#ccc"
-//         style={styles.emptyIcon}
-//       />
-//       <Text style={styles.emptyMessage}>
-//         You have no messages yet. Please check back later or refresh to load the latest messages.
+//       <View style={styles.emptyIllustration}>
+//         <Ionicons name="chatbubbles-outline" size={80} color="#E5E7EB" />
+//       </View>
+//       <Text style={styles.emptyTitle}>
+//         {searchQuery ? 'No conversations found' : 'No messages yet'}
 //       </Text>
+//       <Text style={styles.emptyMessage}>
+//         {searchQuery
+//           ? 'Try adjusting your search or filter to find what you\'re looking for.'
+//           : 'When you start chatting with cleaners or hosts, your conversations will appear here.'}
+//       </Text>
+//       {!searchQuery && (
+//         <TouchableOpacity style={styles.emptyButton} onPress={() => navigation.navigate(ROUTES.cleaner_dashboard)}>
+//           <Text style={styles.emptyButtonText}>Find Cleaners</Text>
+//         </TouchableOpacity>
+//       )}
 //     </View>
 //   );
 
 //   return (
-//     <View style={{ flex: 1, padding:10 }}>
-//       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+//       {renderHeader()}
 //       {loading ? (
 //         <View style={styles.loaderContainer}>
 //           <ActivityIndicator size="large" color={COLORS.primary} />
-//           <Text style={styles.loadingText}>Loading messages...</Text>
+//           <Text style={styles.loadingText}>Loading your conversations...</Text>
 //         </View>
 //       ) : (
 //         <FlatList
-//           data={friendsWithLastMessagesUnread}
-//           renderItem={({ item, index }) => singleItem(item, index)}
-//           ListEmptyComponent={emptyListing}
-//           ItemSeparatorComponent={itemSeparator}
-//           keyExtractor={(item) => item.chatroomId} // Use chatroomId as it's unique
-//           numColumns={1}
+//           data={filteredConversations}
+//           renderItem={renderItem}
+//           ListEmptyComponent={emptyList}
+//           keyExtractor={(item) => item.id}
 //           showsVerticalScrollIndicator={false}
+//           contentContainerStyle={styles.listContent}
 //           refreshControl={
-//             <RefreshControl
-//               refreshing={refreshing}
-//               onRefresh={fetchData}
-//               colors={[COLORS.primary]}
-//               tintColor={COLORS.primary}
-//             />
+//             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} tintColor={COLORS.primary} />
 //           }
 //         />
 //       )}
-//     </View>
+//     </SafeAreaView>
 //   );
-// };
-
-// export default Messages;
-
-// // ... your styles remain the same
-
-// const styles = StyleSheet.create({
-//   container: {
-//     margin: 15
-//   },
-//   loaderContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   loadingText: {
-//     marginTop: 10,
-//     color: COLORS.gray,
-//     fontSize: 16,
-//   },
-//   chatItemContainer: {
-//     flexDirection: 'row',
-//     paddingVertical: 10,
-//     paddingHorizontal: 10,
-//     alignItems: 'center'
-//   },
-//   avatarContainer: {
-//     position: 'relative',
-//     marginRight: 12,
-//   },
-//   avatar: {
-//     height: 50,
-//     width: 50,
-//     borderRadius: 25,
-//     borderWidth: 2,
-//     borderColor: COLORS.light_gray_1,
-//   },
-//   messageContent: {
-//     flex: 1,
-//   },
-//   userName: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     color: COLORS.secondary,
-//     marginBottom: 2,
-//   },
-//   scheduleText: {
-//     fontSize: 13,
-//     color: COLORS.gray,
-//     marginBottom: 2,
-//   },
-//   messagePreview: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginTop: 4,
-//   },
-//   messageText: {
-//     fontSize: 14,
-//     color: COLORS.gray,
-//     marginLeft: 4,
-//     flex: 1,
-//   },
-//   unreadMessageText: {
-//     color: COLORS.secondary,
-//     fontWeight: '500',
-//   },
-//   timeAndBadge: {
-//     alignItems: 'flex-end',
-//     justifyContent: 'space-between',
-//     minHeight: 50,
-//   },
-//   timeText: {
-//     fontSize: 11,
-//     color: COLORS.gray,
-//     marginBottom: 4,
-//   },
-//   unreadBadge: {
-//     backgroundColor: COLORS.primary,
-//     borderRadius: 12,
-//     minWidth: 20,
-//     height: 20,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     paddingHorizontal: 6,
-//   },
-//   largeUnreadBadge: {
-//     minWidth: 24,
-//     height: 20,
-//   },
-//   unreadCount: {
-//     fontSize: 11,
-//     color: 'white',
-//     fontWeight: 'bold',
-//   },
-//   item_separator: {
-//     marginTop: 5,
-//     marginBottom: 5,
-//     height: 1,
-//     width: "100%",
-//     backgroundColor: "#E4E4E4",
-//   },
-//   emptyContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginTop: '65%',
-//     marginHorizontal: 20
-//   },
-//   emptyIcon: {
-//     marginBottom: 12,
-//   },
-//   emptyMessage: {
-//     fontSize: 16,
-//     color: '#555',
-//     textAlign: 'center',
-//     lineHeight: 24,
-//   },
-//   categoryBtn: {
-//     backgroundColor: 'white',
-//     marginHorizontal: 8,
-//     borderRadius: 8,
-//     shadowColor: '#000',
-//     shadowOffset: {
-//       width: 0,
-//       height: 1,
-//     },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//     elevation: 2,
-//   },
-// });
+// }
 
 
-
-import { useEffect, useState, useCallback, useContext, useRef } from 'react';
-import { 
-  SafeAreaView, 
-  StyleSheet, 
-  StatusBar, 
-  Text, 
-  RefreshControl, 
-  Linking, 
-  FlatList, 
-  ScrollView, 
-  Modal, 
-  Image, 
-  View, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  Animated,
-  TextInput
-} from 'react-native';
+import React, { useEffect, useState, useCallback, useContext, useRef } from 'react';
 import {
-  get,
-  ref,
-  set,
-  off,
-  onValue,
-  push,
-  update,
-  onChildAdded
-} from 'firebase/database';
-import { db } from '../../services/firebase/config';
-import COLORS from '../../constants/colors';
-import { AuthContext } from '../../context/AuthContext';
-import ROUTES from '../../constants/routes';
+  SafeAreaView, StyleSheet, StatusBar, Text, RefreshControl,
+  FlatList, View, TouchableOpacity, ActivityIndicator,
+  Animated, TextInput, Image
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
-import { 
-  MaterialCommunityIcons, 
-  Ionicons, 
-  AntDesign, 
-  Feather, 
-  FontAwesome5,
-  MaterialIcons,
-  Entypo 
-} from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, Feather, Entypo } from '@expo/vector-icons';
+import { AuthContext } from '../../context/AuthContext';
+import { useWebSocket } from '../../context/WebsocketContext';
+import { getConversations, markConversationRead } from '../../services/connection/chatApi';
+import COLORS from '../../constants/colors';
+import ROUTES from '../../constants/routes';
+import { LanguageContext } from '../../context/LanguageContext';
 
-const Messages = ({navigation}) => {
-  const {
-    currentUserId,
-    fbaseUser,
-    setTotalUnreadCount,
-    totalUnreadCount,
-    notificationUnreadCount
-  } = useContext(AuthContext);
+export default function Messages({ navigation }) {
+  const { currentUserId, fbaseUser, setTotalUnreadCount } = useContext(AuthContext);
+  const { language } = useContext(LanguageContext);
+  const { isConnected, addMessageHandler, removeMessageHandler } = useWebSocket();
 
-  const [friendsWithLastMessagesUnread, setFriendsWithLastMessagesUnreadCount] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'unread', 'scheduled'
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  
+
   const searchAnim = useRef(new Animated.Value(0)).current;
   const filtersAnim = useRef(new Animated.Value(0)).current;
-  
-  const friendsRef = useRef([]);
-  const unsubscribeRefs = useRef([]);
+  const conversationsRef = useRef(conversations);
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   // Animate search bar
   useEffect(() => {
@@ -573,7 +415,6 @@ const Messages = ({navigation}) => {
     }).start();
   }, [isSearchFocused]);
 
-  // Animate filters
   useEffect(() => {
     Animated.spring(filtersAnim, {
       toValue: 1,
@@ -583,173 +424,115 @@ const Messages = ({navigation}) => {
     }).start();
   }, []);
 
-  const getUniqueConversations = (conversations) => {
-    const seen = new Set();
-    return conversations.filter(conversation => {
-      const key = conversation.chatroomId;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  };
-
-  const resetUnreadCountForChat = useCallback(async (chatroomId, friendUserId) => {
+  // Fetch conversations from backend
+  const fetchConversations = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoading(true);
     try {
-      const unreadRef = ref(db, `unreadMessages/${chatroomId}/${currentUserId}/${friendUserId}`);
-      await set(unreadRef, 0);
-      
-      setFriendsWithLastMessagesUnreadCount(prev => 
-        prev.map(friend => 
-          friend.userId === friendUserId 
-            ? { ...friend, unreadCount: 0 }
-            : friend
-        )
-      );
-    } catch (error) {
-      console.error("Error resetting unread count:", error);
-    }
-  }, [currentUserId]);
-
-  const fetchData = async () => {
-    setRefreshing(true);
-    const friendsRef = ref(db, `users/${currentUserId}/friends`);
-    
-    const handleFriendsUpdate = async (snapshot) => {
-      setLoading(true);
-     
-      if (!snapshot.exists()) {
-        setFriendsWithLastMessagesUnreadCount([]);
+      const data = await getConversations(currentUserId, language);
+      if (!data || !Array.isArray(data)) {
+        console.error('Expected array, received:', data);
+        setConversations([]);
         setTotalUnreadCount(0);
-        setLoading(false);
-        setRefreshing(false);
         return;
       }
+      const sorted = data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      setConversations(sorted);
+      const totalUnread = sorted.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      setTotalUnreadCount(totalUnread);
+    } catch (error) {
+      console.error('Failed to fetch conversations', error);
+      setConversations([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [currentUserId, language, setTotalUnreadCount]);
 
-      try {
-        const friendsData = snapshot.val();
-        const friendsArray = Object.values(friendsData) || [];
-        let totalUnread = 0;
+  // Refresh on focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchConversations();
+    }, [fetchConversations])
+  );
 
-        const friendPromises = friendsArray.map(async (friend) => {
-          const chatroomId = friend.chatroomId;
-          const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
-          const chatroomSnapshot = await get(chatroomRef);
-          const chatroomData = chatroomSnapshot.val();
+  // Refetch when language changes (to update last message translation)
+  useEffect(() => {
+    fetchConversations();
+  }, [language]);
 
-          if (chatroomData && chatroomData.messages) {
-            const messages = chatroomData.messages;
-            const lastMsg = messages[messages.length - 1];
-            
-            const lastmessage = {
-              text: lastMsg?.text || null,
-              sender: lastMsg?.sender || null,
-              createdAt: lastMsg?.createdAt || null,
-              image: lastMsg?.image || null,
+  // WebSocket handler to update conversations in real time
+  useEffect(() => {
+    const handleWebSocketMessage = (data) => {
+      if (!data.conversation_id) return;
+
+      setConversations(prev => {
+        let updated = [...prev];
+        let found = false;
+
+        for (let i = 0; i < updated.length; i++) {
+          if (updated[i].id === data.conversation_id) {
+            found = true;
+            // Determine display text (translated if available)
+            let displayText = data.text || (data.image ? '📷 Image' : '');
+            if (data.translations && data.translations[language]) {
+              displayText = data.translations[language];
+            }
+            const newLastMessage = {
+              text: displayText,
+              originalText: data.text,
+              sender: data.sender_id,
+              createdAt: data.created_at,
+              image: data.image,
             };
-
-            const unreadRef = ref(db, `unreadMessages/${chatroomId}/${currentUserId}/${friend.userId}`);
-            const unreadSnapshot = await get(unreadRef);
-            const unreadCount = unreadSnapshot.val() || 0;
-            
-            totalUnread += unreadCount;
-
-            return {
-              ...friend,
-              lastmessage,
-              unreadCount,
-              chatroomId,
-              lastMessageTime: lastMsg?.createdAt ? new Date(lastMsg.createdAt).getTime() : 0
+            const isFromOther = data.sender_id !== currentUserId;
+            // On the list screen, no conversation is open, so always increment if from other
+            const unreadIncrement = isFromOther ? 1 : 0;
+            updated[i] = {
+              ...updated[i],
+              lastMessage: newLastMessage,
+              updatedAt: data.created_at,
+              unreadCount: (updated[i].unreadCount || 0) + unreadIncrement,
             };
+            break;
           }
-          return null;
-        });
+        }
 
-        const results = await Promise.all(friendPromises);
-        const validFriends = results.filter(friend => friend !== null);
-        const uniqueFriends = getUniqueConversations(validFriends);
-        uniqueFriends.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+        if (!found) {
+          console.log('Conversation not found, refetching conversations');
+          fetchConversations(); // async, will update state
+          return prev;
+        }
 
-        setFriendsWithLastMessagesUnreadCount(uniqueFriends);
+        // Resort by updatedAt
+        updated.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        const totalUnread = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
         setTotalUnreadCount(totalUnread);
-        friendsRef.current = uniqueFriends;
-
-      } catch (error) {
-        console.error("Error processing friends data:", error);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
+        return updated;
+      });
     };
 
-    const unsubscribe = onValue(friendsRef, handleFriendsUpdate);
-    return () => unsubscribe();
+    addMessageHandler(handleWebSocketMessage);
+    return () => removeMessageHandler(handleWebSocketMessage);
+  }, [addMessageHandler, removeMessageHandler, currentUserId, language, setTotalUnreadCount, fetchConversations]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchConversations();
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [currentUserId, setTotalUnreadCount]);
-
-  // Real-time listener for new messages
-  useEffect(() => {
-    unsubscribeRefs.current.forEach(unsub => unsub && unsub());
-    unsubscribeRefs.current = [];
-
-    if (friendsWithLastMessagesUnread.length === 0) return;
-
-    const newUnsubscribes = friendsWithLastMessagesUnread.map(friend => {
-      const messagesRef = ref(db, `chatrooms/${friend.chatroomId}/messages`);
-      
-      return onChildAdded(messagesRef, (snapshot) => {
-        const newMessage = snapshot.val();
-        if (!newMessage) return;
-
-        setFriendsWithLastMessagesUnreadCount(prev => {
-          const updated = prev.map(f => {
-            if (f.chatroomId === friend.chatroomId) {
-              return {
-                ...f,
-                lastmessage: {
-                  text: newMessage.text,
-                  sender: newMessage.sender,
-                  createdAt: newMessage.createdAt,
-                  image: newMessage.image
-                },
-                lastMessageTime: new Date(newMessage.createdAt).getTime()
-              };
-            }
-            return f;
-          });
-          
-          return updated.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-        });
-      });
-    });
-
-    unsubscribeRefs.current = newUnsubscribes;
-
-    return () => {
-      unsubscribeRefs.current.forEach(unsub => unsub && unsub());
-      unsubscribeRefs.current = [];
-    };
-  }, [friendsWithLastMessagesUnread.length]);
-
-  useEffect(() => {
-    const totalUnread = friendsWithLastMessagesUnread.reduce(
-      (total, friend) => total + (friend.unreadCount || 0), 
-      0
+  const handleChatPress = async (conversation) => {
+    // Optimistically set unreadCount to 0 for this conversation
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversation.id ? { ...conv, unreadCount: 0 } : conv
+      )
     );
-    setTotalUnreadCount(totalUnread);
-  }, [friendsWithLastMessagesUnread, setTotalUnreadCount]);
+    // Recalculate total unread count
+    setTotalUnreadCount(prevTotal => Math.max(0, prevTotal - (conversation.unreadCount || 0)));
 
-  const handleChatPress = async (item, index) => {
-    await resetUnreadCountForChat(item.chatroomId, item.userId);
-    
-    navigation.navigate(ROUTES.chat_conversation, {
-      selectedUser: item,
-      fbaseUser: fbaseUser,
-      schedule: item,
-      friendIndex: index
-    });
+    await markConversationRead(conversation.id, currentUserId);
+    navigation.navigate(ROUTES.chat_conversation, { conversation });
   };
 
   const truncateString = (str) => {
@@ -759,27 +542,20 @@ const Messages = ({navigation}) => {
   };
 
   const getMessagePreview = (item) => {
-    if (item.lastmessage?.image) {
-      return '📷 Image';
-    }
-    return truncateString(item.lastmessage?.text || '');
+    if (item.lastMessage?.image) return '📷 Image';
+    return truncateString(item.lastMessage?.text || '');
   };
 
-  // Filter conversations based on search and filter
-  const filteredConversations = friendsWithLastMessagesUnread.filter(friend => {
-    // Search filter
-    const matchesSearch = searchQuery === '' || 
-      `${friend.firstname} ${friend.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.schedule?.apartment_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Category filter
+  const filteredConversations = conversations.filter(conv => {
+    const name = `${conv.otherUser.firstname} ${conv.otherUser.lastname}`;
+    const matchesSearch = searchQuery === '' ||
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (conv.schedule?.apartment_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+
     let matchesFilter = true;
-    if (selectedFilter === 'unread') {
-      matchesFilter = friend.unreadCount > 0;
-    } else if (selectedFilter === 'scheduled') {
-      matchesFilter = friend.schedule && friend.schedule.cleaning_date;
-    }
-    
+    if (selectedFilter === 'unread') matchesFilter = conv.unreadCount > 0;
+    else if (selectedFilter === 'scheduled') matchesFilter = !!conv.schedule?.cleaning_date;
+
     return matchesSearch && matchesFilter;
   });
 
@@ -789,59 +565,40 @@ const Messages = ({navigation}) => {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    
     const now = moment();
-    const messageTime = moment(timestamp);
-    
-    if (now.diff(messageTime, 'days') < 1) {
-      return messageTime.format('h:mm A');
-    } else if (now.diff(messageTime, 'days') < 7) {
-      return messageTime.format('ddd');
-    } else {
-      return messageTime.format('MMM D');
-    }
+    const msgTime = moment(timestamp);
+    if (now.diff(msgTime, 'days') < 1) return msgTime.format('h:mm A');
+    if (now.diff(msgTime, 'days') < 7) return msgTime.format('ddd');
+    return msgTime.format('MMM D');
   };
 
-  const singleItem = ({ item, index }) => (
-    <TouchableOpacity 
-      style={[
-        styles.chatItemContainer,
-        item.unreadCount > 0 && styles.unreadChatItem
-      ]}
-      onPress={() => handleChatPress(item, index)}
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.chatItemContainer, item.unreadCount > 0 && styles.unreadChatItem]}
+      onPress={() => handleChatPress(item)}
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
-        {item.avatar ? 
-          <Image 
-            source={{uri: item.avatar}}
-            style={styles.avatar} 
-          />
-          :
+        {item.otherUser.avatar ? (
+          <Image source={{ uri: item.otherUser.avatar }} style={styles.avatar} />
+        ) : (
           <View style={[styles.avatar, styles.avatarFallback]}>
             <Text style={styles.avatarText}>
-              {getInitials(item.firstname, item.lastname)}
+              {getInitials(item.otherUser.firstname, item.otherUser.lastname)}
             </Text>
           </View>
-        }
-        {item.unreadCount > 0 && (
-          <View style={styles.unreadIndicator} />
         )}
+        {item.unreadCount > 0 && <View style={styles.unreadIndicator} />}
       </View>
-      
+
       <View style={styles.chatContent}>
         <View style={styles.chatHeader}>
-          <Text style={[
-            styles.userName,
-            item.unreadCount > 0 && styles.unreadUserName
-          ]}>
-            {item.firstname} {item.lastname}
+          <Text style={[styles.userName, item.unreadCount > 0 && styles.unreadUserName]}>
+            {item.otherUser.firstname} {item.otherUser.lastname}
           </Text>
-          <Text style={styles.timeText}>
-            {formatTime(item.lastmessage?.createdAt)}
-          </Text>
+          <Text style={styles.timeText}>{formatTime(item.lastMessage?.createdAt)}</Text>
         </View>
-        
+
         <View style={styles.chatDetails}>
           <View style={styles.propertyInfo}>
             <MaterialIcons name="location-on" size={14} color="#6B7280" />
@@ -849,56 +606,33 @@ const Messages = ({navigation}) => {
               {item.schedule?.apartment_name || 'No property assigned'}
             </Text>
           </View>
-          
           <View style={styles.scheduleInfo}>
-            <MaterialCommunityIcons name="calendar-clock" size={14} color="#6B7280" />
+            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
             <Text style={styles.scheduleText}>
-              {item.schedule?.cleaning_date ? 
-                moment(item.schedule.cleaning_date).format('MMM D') + ' • ' + 
-                moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')
-                : 'No schedule'
-              }
+              {item.schedule?.cleaning_date
+                ? `${moment(item.schedule.cleaning_date).format('MMM D')} • ${moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}`
+                : 'No schedule'}
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.messagePreview}>
           <View style={styles.messageTextContainer}>
-            {item.lastmessage?.sender === currentUserId && (
-              <Ionicons 
-                name="checkmark-done" 
-                size={16} 
-                color={item.lastmessage?.read ? '#10B981' : '#9CA3AF'} 
-                style={styles.readIndicator}
-              />
+            {item.lastMessage?.sender === currentUserId && (
+              <Ionicons name="checkmark-done" size={16} color="#10B981" style={styles.readIndicator} />
             )}
-            <Text 
-              style={[
-                styles.messageText,
-                item.unreadCount > 0 && styles.unreadMessageText
-              ]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.messageText, item.unreadCount > 0 && styles.unreadMessageText]} numberOfLines={1}>
               {getMessagePreview(item)}
             </Text>
           </View>
-          
           {item.unreadCount > 0 && (
             <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>
-                {item.unreadCount > 99 ? '99+' : item.unreadCount}
-              </Text>
+              <Text style={styles.unreadCount}>{item.unreadCount > 99 ? '99+' : item.unreadCount}</Text>
             </View>
           )}
         </View>
       </View>
-      
-      <Entypo 
-        name="chevron-right" 
-        size={20} 
-        color="#D1D5DB" 
-        style={styles.chevron}
-      />
+      <Entypo name="chevron-right" size={20} color="#D1D5DB" style={styles.chevron} />
     </TouchableOpacity>
   );
 
@@ -908,49 +642,18 @@ const Messages = ({navigation}) => {
         <View>
           <Text style={styles.headerTitle}>Messages</Text>
           <Text style={styles.headerSubtitle}>
-            {totalUnreadCount > 0 
-              ? `${totalUnreadCount} unread message${totalUnreadCount > 1 ? 's' : ''}`
-              : 'All caught up!'
-            }
+            {conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0) > 0
+              ? `${conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)} unread message(s)`
+              : 'All caught up!'}
           </Text>
         </View>
-        {/* <TouchableOpacity style={styles.newChatButton}>
-          <Feather name="edit-3" size={20} color="#FFF" />
-        </TouchableOpacity> */}
-
-        <TouchableOpacity 
-          style={styles.notificationButton}
-          onPress={() => navigation.navigate(ROUTES.notification)}
-        >
-          <MaterialCommunityIcons name="bell-outline" size={24} color="#1C1C1E" />
-          {notificationUnreadCount > 0 && (
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>{notificationUnreadCount}</Text>
-            </View>
-          )}
+        <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate(ROUTES.notification)}>
+          <Ionicons name="notifications-outline" size={24} color="#1C1C1E" />
         </TouchableOpacity>
-
       </View>
-      
-      <Animated.View 
-        style={[
-          styles.searchContainer,
-          {
-            transform: [{
-              scale: searchAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [1, 1.02]
-              })
-            }]
-          }
-        ]}
-      >
-        <Feather 
-          name="search" 
-          size={20} 
-          color="#9CA3AF" 
-          style={styles.searchIcon}
-        />
+
+      <Animated.View style={[styles.searchContainer, { transform: [{ scale: searchAnim }] }]}>
+        <Feather name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search conversations..."
@@ -966,103 +669,43 @@ const Messages = ({navigation}) => {
           </TouchableOpacity>
         )}
       </Animated.View>
-      
-      <Animated.ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={[
-          styles.filtersContainer,
-          {
-            opacity: filtersAnim,
-            transform: [{
-              translateY: filtersAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 0]
-              })
-            }]
-          }
-        ]}
-      >
-        <TouchableOpacity 
-          style={[
-            styles.filterButton,
-            selectedFilter === 'all' && styles.filterButtonActive
-          ]}
-          onPress={() => setSelectedFilter('all')}
-        >
-          <Text style={[
-            styles.filterText,
-            selectedFilter === 'all' && styles.filterTextActive
-          ]}>
-            All
-          </Text>
+
+      <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filtersContainer, { opacity: filtersAnim, transform: [{ translateY: filtersAnim.interpolate({ inputRange: [0,1], outputRange: [20,0] }) }] }]}>
+        <TouchableOpacity style={[styles.filterButton, selectedFilter === 'all' && styles.filterButtonActive]} onPress={() => setSelectedFilter('all')}>
+          <Text style={[styles.filterText, selectedFilter === 'all' && styles.filterTextActive]}>All</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.filterButton,
-            selectedFilter === 'unread' && styles.filterButtonActive
-          ]}
-          onPress={() => setSelectedFilter('unread')}
-        >
+        <TouchableOpacity style={[styles.filterButton, selectedFilter === 'unread' && styles.filterButtonActive]} onPress={() => setSelectedFilter('unread')}>
           <View style={styles.filterBadge}>
-            <Text style={[
-              styles.filterText,
-              selectedFilter === 'unread' && styles.filterTextActive
-            ]}>
-              Unread
-            </Text>
-            {totalUnreadCount > 0 && (
+            <Text style={[styles.filterText, selectedFilter === 'unread' && styles.filterTextActive]}>Unread</Text>
+            {conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0) > 0 && (
               <View style={styles.filterNotification}>
-                <Text style={styles.filterNotificationText}>
-                  {totalUnreadCount}
-                </Text>
+                <Text style={styles.filterNotificationText}>{conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)}</Text>
               </View>
             )}
           </View>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.filterButton,
-            selectedFilter === 'scheduled' && styles.filterButtonActive
-          ]}
-          onPress={() => setSelectedFilter('scheduled')}
-        >
-          <Text style={[
-            styles.filterText,
-            selectedFilter === 'scheduled' && styles.filterTextActive
-          ]}>
-            Scheduled
-          </Text>
+        <TouchableOpacity style={[styles.filterButton, selectedFilter === 'scheduled' && styles.filterButtonActive]} onPress={() => setSelectedFilter('scheduled')}>
+          <Text style={[styles.filterText, selectedFilter === 'scheduled' && styles.filterTextActive]}>Scheduled</Text>
         </TouchableOpacity>
       </Animated.ScrollView>
     </View>
   );
 
-  const emptyListing = () => (
+  const emptyList = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIllustration}>
-        <MaterialCommunityIcons 
-          name="chat-outline"
-          size={80}
-          color="#E5E7EB"
-        />
+        <Ionicons name="chatbubbles-outline" size={80} color="#E5E7EB" />
       </View>
       <Text style={styles.emptyTitle}>
         {searchQuery ? 'No conversations found' : 'No messages yet'}
       </Text>
       <Text style={styles.emptyMessage}>
-        {searchQuery 
+        {searchQuery
           ? 'Try adjusting your search or filter to find what you\'re looking for.'
-          : 'When you start chatting with cleaners or hosts, your conversations will appear here.'
-        }
+          : 'When you start chatting with cleaners or hosts, your conversations will appear here.'}
       </Text>
       {!searchQuery && (
-        <TouchableOpacity 
-          style={styles.emptyButton}
-          onPress={() => navigation.navigate(ROUTES.cleaner_dashboard)}
-        >
+        <TouchableOpacity style={styles.emptyButton} onPress={() => navigation.navigate(ROUTES.cleaner_dashboard)}>
           <Text style={styles.emptyButtonText}>Find Cleaners</Text>
         </TouchableOpacity>
       )}
@@ -1072,9 +715,7 @@ const Messages = ({navigation}) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-      
       {renderHeader()}
-      
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
@@ -1083,28 +724,21 @@ const Messages = ({navigation}) => {
       ) : (
         <FlatList
           data={filteredConversations}
-          renderItem={singleItem}
-          ListEmptyComponent={emptyListing}
-          keyExtractor={(item) => item.chatroomId}
+          renderItem={renderItem}
+          ListEmptyComponent={emptyList}
+          keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={fetchData}
-              colors={[COLORS.primary]}
-              tintColor={COLORS.primary}
-              progressBackgroundColor="#F9FAFB"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} tintColor={COLORS.primary} />
           }
         />
       )}
     </SafeAreaView>
   );
-};
+}
 
-export default Messages;
-
+// Styles remain exactly as in your original Messages.js (just copy them)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import COLORS from "../../constants/colors";
+import { tSafe } from "../../utils/tSafe"; // added import
 
 const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
   const isSelected = status === "selected";
@@ -9,7 +10,7 @@ const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
     <View style={styles.actionsRow}>
       {/* Left Side - Details Button */}
       <TouchableOpacity style={[styles.button, styles.detailButton]} onPress={onDetails}>
-        <Text style={styles.detailText}>Details </Text>
+        <Text style={styles.detailText}>{tSafe("details", "Details")} </Text>
       </TouchableOpacity>
 
       {/* Right Side - Accept/Decline or Claimed */}
@@ -17,7 +18,7 @@ const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
         <View style={styles.rightWrapper}>
           <View style={styles.claimedBadgeContainer}>
             <Icon name="check-decagram" size={16} color="#28a745" style={{ marginRight: 4 }} />
-            <Text style={styles.claimedBadge}>Claimed</Text>
+            <Text style={styles.claimedBadge}>{tSafe("claimed", "Claimed")}</Text>
           </View>
 
           <TouchableOpacity
@@ -25,17 +26,17 @@ const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
             disabled={true}
           >
             <Icon name="lock-outline" size={16} color="#999" style={{ marginRight: 4 }} />
-            <Text style={styles.disabledText}>Decline</Text>
+            <Text style={styles.disabledText}>{tSafe("decline", "Decline")}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.rightWrapper}>
           <TouchableOpacity style={[styles.button, styles.acceptButton]} onPress={onAccept}>
-            <Text style={styles.buttonText}>Accept</Text>
+            <Text style={styles.buttonText}>{tSafe("accept", "Accept")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.button, styles.declineButton]} onPress={onDecline}>
-            <Text style={styles.buttonText}>Decline</Text>
+            <Text style={styles.buttonText}>{tSafe("decline", "Decline")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -46,7 +47,7 @@ const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
 const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
-    justifyContent: "space-between", // left vs right
+    justifyContent: "space-between",
     marginTop: 12,
     alignItems: "center",
   },
@@ -88,8 +89,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 20,
     backgroundColor: "#e6f4ea",
-    marginRight: 4, // space before decline button
-    marginLeft:7
+    marginRight: 4,
+    marginLeft: 7,
   },
   claimedBadge: {
     fontSize: 14,

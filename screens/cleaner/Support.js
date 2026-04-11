@@ -202,6 +202,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import COLORS from "../../constants/colors";
 import { MaterialCommunityIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { tSafe } from "../../utils/tSafe"; // added import
 
 const FAQItem = ({ question, answer, icon, index }) => {
   const [expanded, setExpanded] = useState(false);
@@ -278,62 +279,62 @@ const Support = ({ navigation }) => {
   const faqData = [
     {
       id: 1,
-      question: "How do I create a cleaning schedule?",
-      answer: "Go to your dashboard, select a property, and tap 'Create Schedule'. Fill out the necessary details like date, time, and cleaning requirements, then submit to publish your schedule.",
+      question: tSafe("faq_q1", "How do I create a cleaning schedule?"),
+      answer: tSafe("faq_a1", "Go to your dashboard, select a property, and tap 'Create Schedule'. Fill out the necessary details like date, time, and cleaning requirements, then submit to publish your schedule."),
       icon: "calendar-plus",
     },
     {
       id: 2,
-      question: "Can I select a preferred cleaner?",
-      answer: "Absolutely! After setting up a schedule, browse through nearby available cleaners, view their ratings and reviews, then send a personalized request to your preferred choice.",
+      question: tSafe("faq_q2", "Can I select a preferred cleaner?"),
+      answer: tSafe("faq_a2", "Absolutely! After setting up a schedule, browse through nearby available cleaners, view their ratings and reviews, then send a personalized request to your preferred choice."),
       icon: "account-check",
     },
     {
       id: 3,
-      question: "How do cleaners accept or decline tasks?",
-      answer: "Cleaners receive instant notifications for new requests. They can view complete task details including location, time, and payment before accepting or declining within the app.",
+      question: tSafe("faq_q3", "How do cleaners accept or decline tasks?"),
+      answer: tSafe("faq_a3", "Cleaners receive instant notifications for new requests. They can view complete task details including location, time, and payment before accepting or declining within the app."),
       icon: "check-decagram",
     },
     {
       id: 4,
-      question: "How can I reset my password?",
-      answer: "Navigate to Profile → Security Settings → Change Password. Follow the verification steps to securely reset your credentials.",
+      question: tSafe("faq_q4", "How can I reset my password?"),
+      answer: tSafe("faq_a4", "Navigate to Profile → Security Settings → Change Password. Follow the verification steps to securely reset your credentials."),
       icon: "lock-reset",
     },
     {
       id: 5,
-      question: "How do I update my property details?",
-      answer: "Visit the 'Properties' section, select the property, tap 'Edit' to update room details, address, special instructions, or upload new photos.",
+      question: tSafe("faq_q5", "How do I update my property details?"),
+      answer: tSafe("faq_a5", "Visit the 'Properties' section, select the property, tap 'Edit' to update room details, address, special instructions, or upload new photos."),
       icon: "home-edit",
     },
     {
       id: 6,
-      question: "What if a cleaner doesn't show up?",
-      answer: "Immediately report through the schedule details. We'll initiate our backup protocol to find a replacement or process a full refund.",
+      question: tSafe("faq_q6", "What if a cleaner doesn't show up?"),
+      answer: tSafe("faq_a6", "Immediately report through the schedule details. We'll initiate our backup protocol to find a replacement or process a full refund."),
       icon: "account-alert",
     },
     {
       id: 7,
-      question: "How can I view before/after photos?",
-      answer: "After completion, go to Schedule History, select the task, and navigate to the 'Gallery' tab to view all uploaded photos.",
+      question: tSafe("faq_q7", "How can I view before/after photos?"),
+      answer: tSafe("faq_a7", "After completion, go to Schedule History, select the task, and navigate to the 'Gallery' tab to view all uploaded photos."),
       icon: "image-multiple",
     },
     {
       id: 8,
-      question: "How do I get paid as a cleaner?",
-      answer: "Earnings are automatically processed every Monday to your linked payment method. View your payment history in the Earnings section.",
+      question: tSafe("faq_q8", "How do I get paid as a cleaner?"),
+      answer: tSafe("faq_a8", "Earnings are automatically processed every Monday to your linked payment method. View your payment history in the Earnings section."),
       icon: "cash",
     },
     {
       id: 9,
-      question: "How do I report an issue?",
-      answer: "Open the completed task, scroll to 'Report Issue', provide details with photos if needed. Our team will respond within 24 hours.",
+      question: tSafe("faq_q9", "How do I report an issue?"),
+      answer: tSafe("faq_a9", "Open the completed task, scroll to 'Report Issue', provide details with photos if needed. Our team will respond within 24 hours."),
       icon: "alert-circle-outline",
     },
     {
       id: 10,
-      question: "How do I contact support?",
-      answer: "Use any contact method below. For urgent matters, call our hotline. Email responses typically within 2-4 business hours.",
+      question: tSafe("faq_q10", "How do I contact support?"),
+      answer: tSafe("faq_a10", "Use any contact method below. For urgent matters, call our hotline. Email responses typically within 2-4 business hours."),
       icon: "help-circle-outline",
     },
   ];
@@ -347,7 +348,7 @@ const Support = ({ navigation }) => {
   const contactMethods = [
     {
       id: 1,
-      title: "Email Support",
+      title: tSafe("contact_email_title", "Email Support"),
       subtitle: "support@freshsweeper.com",
       icon: "email-outline",
       color: COLORS.primary,
@@ -355,15 +356,15 @@ const Support = ({ navigation }) => {
     },
     {
       id: 2,
-      title: "Live Chat",
-      subtitle: "Available 9AM-6PM EST",
+      title: tSafe("contact_chat_title", "Live Chat"),
+      subtitle: tSafe("contact_chat_subtitle", "Available 9AM-6PM EST"),
       icon: "chat-processing-outline",
       color: COLORS.secondary,
       action: () => navigation.navigate("LiveChat"),
     },
     {
       id: 3,
-      title: "Phone Support",
+      title: tSafe("contact_phone_title", "Phone Support"),
       subtitle: "+1 (800) 123-4567",
       icon: "phone-outline",
       color: COLORS.success,
@@ -371,8 +372,8 @@ const Support = ({ navigation }) => {
     },
     {
       id: 4,
-      title: "Help Center",
-      subtitle: "Articles & Tutorials",
+      title: tSafe("contact_help_center_title", "Help Center"),
+      subtitle: tSafe("contact_help_center_subtitle", "Articles & Tutorials"),
       icon: "book-open-outline",
       color: COLORS.warning,
       action: () => Linking.openURL("https://help.freshsweeper.com"),
@@ -392,14 +393,14 @@ const Support = ({ navigation }) => {
             onPress={() => navigation.goBack()}
           />
           <Appbar.Content
-            title="Help & Support"
+            title={tSafe("help_support_title", "Help & Support")}
             titleStyle={styles.headerTitle}
           />
         </Appbar.Header>
 
         <View style={styles.headerContent}>
           <Text style={styles.headerSubtitle}>
-            How can we help you today?
+            {tSafe("help_support_subtitle", "How can we help you today?")}
           </Text>
           
           {/* Search Bar */}
@@ -412,7 +413,7 @@ const Support = ({ navigation }) => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search for answers..."
+              placeholder={tSafe("search_placeholder", "Search for answers...")}
               placeholderTextColor={COLORS.gray}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -436,7 +437,7 @@ const Support = ({ navigation }) => {
         contentContainerStyle={styles.contentContainer}
       >
         {/* Contact Cards */}
-        <Text style={styles.sectionTitle}>Quick Contact</Text>
+        <Text style={styles.sectionTitle}>{tSafe("quick_contact", "Quick Contact")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -469,9 +470,9 @@ const Support = ({ navigation }) => {
         {/* FAQ Section */}
         <View style={styles.faqSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+            <Text style={styles.sectionTitle}>{tSafe("faq_section_title", "Frequently Asked Questions")}</Text>
             <Text style={styles.sectionSubtitle}>
-              {filteredFAQs.length} questions found
+              {tSafe("faq_count", "{count} questions found", { count: filteredFAQs.length })}
             </Text>
           </View>
 
@@ -492,9 +493,9 @@ const Support = ({ navigation }) => {
                 size={60}
                 color={COLORS.lightGray}
               />
-              <Text style={styles.noResultsTitle}>No matches found</Text>
+              <Text style={styles.noResultsTitle}>{tSafe("no_results_title", "No matches found")}</Text>
               <Text style={styles.noResultsText}>
-                Try different keywords or browse our FAQ categories
+                {tSafe("no_results_message", "Try different keywords or browse our FAQ categories")}
               </Text>
             </Surface>
           )}
@@ -508,16 +509,16 @@ const Support = ({ navigation }) => {
               size={24}
               color={COLORS.primary}
             />
-            <Text style={styles.helpTitle}>Still need help?</Text>
+            <Text style={styles.helpTitle}>{tSafe("still_need_help", "Still need help?")}</Text>
           </View>
           <Text style={styles.helpText}>
-            Our support team is available 7 days a week to assist you with any questions or concerns.
+            {tSafe("help_text", "Our support team is available 7 days a week to assist you with any questions or concerns.")}
           </Text>
           <TouchableOpacity
             style={styles.helpButton}
             onPress={() => navigation.navigate("ContactForm")}
           >
-            <Text style={styles.helpButtonText}>Submit a Request</Text>
+            <Text style={styles.helpButtonText}>{tSafe("submit_request", "Submit a Request")}</Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
         </Surface>
@@ -529,7 +530,7 @@ const Support = ({ navigation }) => {
         icon="alert-circle"
         color="white"
         onPress={() => Linking.openURL("tel:+19733804757")}
-        label="Emergency"
+        label={tSafe("emergency", "Emergency")}
       />
     </View>
   );
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,

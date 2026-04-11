@@ -654,4 +654,24 @@ export const countryCurrencyMap = {
       "value":"fr",
       "label":"Français"
     },
+    {
+      "id":4,
+      "value":"ar",
+      "label":"Arabic"
+    },
+    {
+      "id":5,
+      "value":"zh-Hans",
+      "label":"Chineese"
+    },
+    {
+      "id":6,
+      "value":"hi",
+      "label":"Hindu"
+    },
+    {
+      "id":6,
+      "value":"de",
+      "label":"German"
+    },
   ]

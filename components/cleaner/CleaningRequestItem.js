@@ -20,8 +20,6 @@
 //   const scheduleData = item.item ? item.item : item;
 //   const selected_schedule = scheduleData.schedule;
 
-//   // console.log(selected_schedule)
-  
 //   // State for location data
 //   const [locationData, setLocationData] = useState({
 //     city: '',
@@ -46,7 +44,6 @@
 //   useEffect(() => {
 //     const fetchLocationData = async () => {
 //       try {
-//         // Check if coordinates exist
 //         if (selected_schedule?.schedule?.apartment_latitude && 
 //             selected_schedule?.schedule?.apartment_longitude) {
           
@@ -66,7 +63,6 @@
 //         }
 //       } catch (error) {
 //         console.error('Error fetching location data:', error);
-//         // You can set default values or handle the error as needed
 //       }
 //     };
 
@@ -156,12 +152,11 @@
 //         }
 //       ]}
 //     >
-//       {/* Main Content - No Header Status */}
 //       <TouchableOpacity 
 //         onPress={footerAction.onPress}
 //         onPressIn={handlePressIn}
 //         onPressOut={handlePressOut}
-//         activeOpacity={0.9}
+//         activeOpacity={0.95}
 //         style={styles.content}
 //       >
 //         {/* Header Row */}
@@ -174,7 +169,7 @@
 //               <MaterialCommunityIcons 
 //                 name="map-marker-outline" 
 //                 size={14} 
-//                 color="#6B7280" 
+//                 color="#64748B" 
 //               />
 //               <Text style={styles.address} numberOfLines={1}>
 //                 {displayAddress}
@@ -182,8 +177,8 @@
 //             </View>
 //           </View>
           
-//           <View style={styles.priceContainer}>
-//             <Text style={styles.price}>
+//           <View style={styles.priceChip}>
+//             <Text style={styles.priceText}>
 //               {currency}{totalFee}
 //             </Text>
 //           </View>
@@ -195,7 +190,7 @@
 //             <MaterialCommunityIcons 
 //               name="calendar-outline" 
 //               size={16} 
-//               color="#6B7280" 
+//               color="#64748B" 
 //             />
 //             <Text style={styles.detailText}>
 //               {cleaningDate ? moment(cleaningDate).format('MMM D') : 'TBD'}
@@ -206,7 +201,7 @@
 //             <MaterialCommunityIcons 
 //               name="clock-outline" 
 //               size={16} 
-//               color="#6B7280" 
+//               color="#64748B" 
 //             />
 //             <Text style={styles.detailText}>
 //               {cleaningTime ? moment(cleaningTime, 'h:mm:ss A').format('h:mm A') : 'TBD'}
@@ -217,13 +212,13 @@
 //             <MaterialCommunityIcons 
 //               name="timer-outline" 
 //               size={16} 
-//               color="#6B7280" 
+//               color="#64748B" 
 //             />
 //             <Text style={styles.detailText}>{duration}</Text>
 //           </View>
 //         </View>
 
-//         {/* Host Info & Action */}
+//         {/* Footer with Host and Action */}
 //         <View style={styles.footerRow}>
 //           <View style={styles.hostInfo}>
 //             {hostInfo?.avatar ? 
@@ -236,7 +231,7 @@
 //                 <AntDesign 
 //                   name="user" 
 //                   size={14} 
-//                   color="#6B7280" 
+//                   color="#64748B" 
 //                 />
 //               </View>
 //             }
@@ -260,7 +255,7 @@
 //               {footerAction.label}
 //             </Text>
 //             <MaterialCommunityIcons 
-//               name="chevron-right" 
+//               name="arrow-right" 
 //               size={16} 
 //               color={footerAction.isPrimary ? '#FFF' : COLORS.primary} 
 //             />
@@ -271,41 +266,29 @@
 //   );
 // };
 
-// // ... keep your existing styles the same ...
 // const styles = StyleSheet.create({
 //   cardContainer: {
 //     backgroundColor: '#FFFFFF',
-//     borderRadius: 16,
-//     marginVertical: 6,
-//     marginHorizontal: 0,
-//     borderRadius: 16,
-//     borderWidth: 1,
-//     borderColor: '#F3F4F6',
+//     borderRadius: 20,
+//     marginVertical: 8,
+//     marginHorizontal: 5,
 //     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
+//     shadowOffset: { width: 0, height: 2 },
 //     shadowOpacity: 0.05,
-//     shadowRadius: 2,
+//     shadowRadius: 8,
 //     elevation: 1,
-//     // shadowColor: '#000',
-//     // shadowOffset: {
-//     //   width: 0,
-//     //   height: 1,
-//     // },
-//     // shadowOpacity: 0.05,
-//     // shadowRadius: 8,
-//     // elevation: 2,
-//     // borderWidth: 1,
-//     // borderColor: '#F3F4F6',
-//     // overflow: 'hidden',
+//     borderWidth: 1,
+//     borderColor: '#F1F5F9',
+//     overflow: 'hidden',
 //   },
 //   content: {
-//     padding: 20,
+//     padding: 16,
 //   },
 //   headerRow: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
-//     alignItems: 'flex-start',
-//     marginBottom: 16,
+//     alignItems: 'center',
+//     marginBottom: 12,
 //   },
 //   propertyInfo: {
 //     flex: 1,
@@ -314,9 +297,9 @@
 //   propertyName: {
 //     fontSize: 18,
 //     fontWeight: '600',
-//     color: '#111827',
+//     color: '#0F172A',
 //     marginBottom: 4,
-//     letterSpacing: -0.5,
+//     letterSpacing: -0.3,
 //   },
 //   addressRow: {
 //     flexDirection: 'row',
@@ -324,23 +307,29 @@
 //   },
 //   address: {
 //     fontSize: 14,
-//     color: '#6B7280',
+//     color: '#475569',
 //     marginLeft: 6,
 //     flex: 1,
 //   },
-//   priceContainer: {
-//     alignItems: 'flex-end',
+//   priceChip: {
+//     backgroundColor: '#F1F5F9',
+//     paddingHorizontal: 12,
+//     paddingVertical: 6,
+//     borderRadius: 30,
 //   },
-//   price: {
-//     fontSize: 20,
+//   priceText: {
+//     fontSize: 16,
 //     fontWeight: '700',
-//     color: '#111827',
+//     color: '#0F172A',
 //   },
 //   detailsRow: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
-//     marginBottom: 20,
-//     paddingHorizontal: 4,
+//     marginBottom: 16,
+//     backgroundColor: '#F8FAFC',
+//     paddingVertical: 10,
+//     paddingHorizontal: 12,
+//     borderRadius: 12,
 //   },
 //   detailItem: {
 //     flexDirection: 'row',
@@ -348,7 +337,7 @@
 //   },
 //   detailText: {
 //     fontSize: 13,
-//     color: '#374151',
+//     color: '#334155',
 //     fontWeight: '500',
 //     marginLeft: 6,
 //   },
@@ -356,32 +345,32 @@
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
 //     alignItems: 'center',
-//     paddingTop: 16,
+//     paddingTop: 12,
 //     borderTopWidth: 1,
-//     borderTopColor: '#F3F4F6',
+//     borderTopColor: '#F1F5F9',
 //   },
 //   hostInfo: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
 //   },
 //   avatar: {
-//     width: 24,
-//     height: 24,
-//     borderRadius: 12,
+//     width: 28,
+//     height: 28,
+//     borderRadius: 14,
 //     marginRight: 8,
 //   },
 //   defaultAvatar: {
-//     width: 24,
-//     height: 24,
-//     borderRadius: 12,
-//     backgroundColor: '#F3F4F6',
+//     width: 28,
+//     height: 28,
+//     borderRadius: 14,
+//     backgroundColor: '#F1F5F9',
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //     marginRight: 8,
 //   },
 //   hostName: {
 //     fontSize: 14,
-//     color: '#6B7280',
+//     color: '#475569',
 //     fontWeight: '500',
 //   },
 //   actionButton: {
@@ -390,7 +379,7 @@
 //     backgroundColor: '#F8FAFC',
 //     paddingHorizontal: 16,
 //     paddingVertical: 8,
-//     borderRadius: 18,
+//     borderRadius: 30,
 //     borderWidth: 1,
 //     borderColor: '#E2E8F0',
 //   },
@@ -402,7 +391,7 @@
 //     fontSize: 14,
 //     fontWeight: '600',
 //     color: COLORS.primary,
-//     marginRight: 4,
+//     marginRight: 6,
 //   },
 //   primaryActionText: {
 //     color: '#FFFFFF',
@@ -417,9 +406,6 @@
 // });
 
 // export default CleaningRequestItem;
-
-
-
 
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -437,6 +423,7 @@ import moment from 'moment';
 import ROUTES from '../../constants/routes';
 import { useNavigation } from '@react-navigation/native';
 import { getCityState } from '../../utils/getAddressFromCoordinates';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const CleaningRequestItem = ({ item, status, currency }) => {
   const navigation = useNavigation();
@@ -521,7 +508,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
   const getFooterAction = () => {
     if (status === "pending_acceptance") {
       return {
-        label: "Accept Request",
+        label: tSafe('accept_request', 'Accept Request'),
         onPress: () => navigation.navigate(ROUTES.cleaner_schedule_review, {
           item: { selected_schedule },
           requestId: getScheduleProperty('requestId'),
@@ -533,7 +520,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
       };
     } else {
       return {
-        label: "View Details",
+        label: tSafe('view_details', 'View Details'),
         onPress: () => navigation.navigate(ROUTES.cleaner_schedule_details, {
           item: scheduleData
         }),
@@ -545,8 +532,8 @@ const CleaningRequestItem = ({ item, status, currency }) => {
   const footerAction = getFooterAction();
 
   // Safe data access
-  const apartmentName = getScheduleProperty('schedule.schedule.apartment_name', 'Unknown Property');
-  const address = getScheduleProperty('schedule.schedule.address', 'Address not available');
+  const apartmentName = getScheduleProperty('schedule.schedule.apartment_name', tSafe('unknown_property', 'Unknown Property'));
+  const address = getScheduleProperty('schedule.schedule.address', tSafe('address_not_available', 'Address not available'));
   const cleaningDate = getScheduleProperty('schedule.schedule.cleaning_date');
   const cleaningTime = getScheduleProperty('schedule.schedule.cleaning_time');
   const totalFee = getScheduleProperty('schedule.schedule.total_cleaning_fee', '0');
@@ -561,7 +548,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
   if (!scheduleData || !scheduleData.schedule) {
     return (
       <View style={styles.cardContainer}>
-        <Text style={styles.errorText}>Invalid schedule data</Text>
+        <Text style={styles.errorText}>{tSafe('invalid_schedule_data', 'Invalid schedule data')}</Text>
       </View>
     );
   }
@@ -617,7 +604,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
               color="#64748B" 
             />
             <Text style={styles.detailText}>
-              {cleaningDate ? moment(cleaningDate).format('MMM D') : 'TBD'}
+              {cleaningDate ? moment(cleaningDate).format('MMM D') : tSafe('tbd', 'TBD')}
             </Text>
           </View>
 
@@ -628,7 +615,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
               color="#64748B" 
             />
             <Text style={styles.detailText}>
-              {cleaningTime ? moment(cleaningTime, 'h:mm:ss A').format('h:mm A') : 'TBD'}
+              {cleaningTime ? moment(cleaningTime, 'h:mm:ss A').format('h:mm A') : tSafe('tbd', 'TBD')}
             </Text>
           </View>
 
@@ -660,7 +647,7 @@ const CleaningRequestItem = ({ item, status, currency }) => {
               </View>
             }
             <Text style={styles.hostName}>
-              {hostInfo?.firstname || 'Host'}
+              {hostInfo?.firstname || tSafe('host', 'Host')}
             </Text>
           </View>
 

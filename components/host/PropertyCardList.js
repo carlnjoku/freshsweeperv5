@@ -15,6 +15,7 @@ import COLORS from '../../constants/colors';
 import ROUTES from '../../constants/routes';
 import CardNoPrimary from '../shared/CardNoPrimary';
 import CircleIconNoLabel from '../shared/CirecleIconNoLabel';
+import { tSafe } from '../../utils/tSafe';
 
 const { width } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ const PropertyCardList = ({ properties = [], handleHostPress, currentUserId, nav
     <View style={{ marginHorizontal: 0 }}>
       <CardNoPrimary>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>My Properties</Text>
+          <Text style={styles.title}>{tSafe("my_properties", "My Properties")}</Text>
           <CircleIconNoLabel
             iconName="plus"
             buttonSize={30}

@@ -422,6 +422,7 @@ import GoogleAutocomplete from '../shared/GooglePlacesAutocomplete';
 import AddressInput from '../shared/AddressInput';          // adjust path as needed
 import useLocationPermission from '../../components/shared/UseLocationPermission';
 import userService from '../../services/connection/userService';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const Contact = ({ contact, userId, close_modal }) => {
   // Address manual entry states
@@ -492,7 +493,7 @@ const Contact = ({ contact, userId, close_modal }) => {
     } catch (error) {
       console.error('Geocoding failed:', error);
       setCoordinates(null);
-      setAutocompleteError('Failed to verify address. Please enter manually.');
+      setAutocompleteError(tSafe('failed_verify_address', 'Failed to verify address. Please enter manually.'));
       setShowGoogleAutocomplete(false);
     }
   };
@@ -509,7 +510,7 @@ const Contact = ({ contact, userId, close_modal }) => {
   const handleManualVerification = (coords) => {
     console.log('Manual verification called with coords:', coords);
     if (!coords || !coords.latitude) {
-      Alert.alert('Error', 'Could not verify address. Please check the address and try again.');
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('could_not_verify_address', 'Could not verify address. Please check the address and try again.'));
       return;
     }
     setCoordinates(coords);
@@ -553,17 +554,17 @@ const Contact = ({ contact, userId, close_modal }) => {
     console.log('Coordinates:', coordinates);
 
     if (!inputs.phone) {
-      handleError('Phone number is required', 'phone');
+      handleError(tSafe('phone_required', 'Phone number is required'), 'phone');
       isValid = false;
     } else if (!phonePattern.test(inputs.phone)) {
-      handleError('Invalid phone number format (e.g., (123) 456-7890)', 'phone');
+      handleError(tSafe('invalid_phone_format', 'Invalid phone number format (e.g., (123) 456-7890)'), 'phone');
       isValid = false;
     }
     if (!inputs.address) {
-      handleError('Address is required', 'address');
+      handleError(tSafe('address_required', 'Address is required'), 'address');
       isValid = false;
     } else if (!coordinates) {
-      handleError('Please verify your address', 'address');
+      handleError(tSafe('address_verify_required', 'Please verify your address'), 'address');
       isValid = false;
     }
 
@@ -594,10 +595,10 @@ const Contact = ({ contact, userId, close_modal }) => {
         setIsBeforeSave(false);
         setResponseMessage(response.data.message);
       } else {
-        Alert.alert('Oops! Something went wrong, try again');
+        Alert.alert(tSafe('error_title', 'Oops!'), tSafe('something_went_wrong', 'Something went wrong, try again'));
       }
     } catch (e) {
-      Alert.alert('Oops! Something went wrong, try again');
+      Alert.alert(tSafe('error_title', 'Oops!'), tSafe('something_went_wrong', 'Something went wrong, try again'));
     }
   };
 
@@ -605,11 +606,11 @@ const Contact = ({ contact, userId, close_modal }) => {
     const hasUnsavedChanges = JSON.stringify(inputs) !== JSON.stringify(initialInputs);
     if (hasUnsavedChanges) {
       Alert.alert(
-        'Unsaved Changes',
-        'You have unsaved changes. Are you sure you want to discard them?',
+        tSafe('unsaved_changes_title', 'Unsaved Changes'),
+        tSafe('unsaved_changes_message', 'You have unsaved changes. Are you sure you want to discard them?'),
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Discard', onPress: () => close_modal(false) },
+          { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
+          { text: tSafe('discard', 'Discard'), onPress: () => close_modal(false) },
         ]
       );
     } else {
@@ -624,7 +625,7 @@ const Contact = ({ contact, userId, close_modal }) => {
     <>
       {showGoogleAutocomplete && (
         <GoogleAutocomplete
-          label="Property Address"
+          label={tSafe('property_address_label', 'Property Address')}
           apiKey={GOOGLE_MAPS_API_KEY}
           selected_address={handleSelectedAddress}
           handleError={handleAutocompleteError}
@@ -633,7 +634,7 @@ const Contact = ({ contact, userId, close_modal }) => {
 
       {!showGoogleAutocomplete && (
         <AddressInput
-          label="Property Address"
+          label={tSafe('property_address_label', 'Property Address')}
           value={inputs.address}
           onChange={handleManualAddressChange}
           onCoordinatesSet={handleManualVerification}
@@ -645,7 +646,7 @@ const Contact = ({ contact, userId, close_modal }) => {
         <View style={styles.permissionWarningContainer}>
           <Icon source="alert-circle-outline" size={16} color={COLORS.orange} />
           <Text style={styles.permissionWarningText}>
-            Location permission required for address verification
+            {tSafe('location_permission_required', 'Location permission required for address verification')}
           </Text>
         </View>
       )}
@@ -662,7 +663,7 @@ const Contact = ({ contact, userId, close_modal }) => {
   const handleAutocompleteError = (error) => {
     if (error === 'ZERO_RESULTS' || error === 'REQUEST_DENIED' ||
         error === 'INVALID_REQUEST' || error === 'UNKNOWN_ERROR') {
-      setAutocompleteError('Address service unavailable. Please enter manually.');
+      setAutocompleteError(tSafe('address_service_unavailable', 'Address service unavailable. Please enter manually.'));
       setShowGoogleAutocomplete(false);
     }
   };
@@ -681,15 +682,15 @@ const Contact = ({ contact, userId, close_modal }) => {
 
         {isBeforeSave && (
           <View>
-            <Text style={styles.heading}>Edit Your Contact Info</Text>
+            <Text style={styles.heading}>{tSafe('edit_contact_info', 'Edit Your Contact Info')}</Text>
 
             {/* Address Inputs with Autocomplete + Manual Fallback */}
             {renderAddressInputs()}
 
             {/* Phone Input */}
             <TextInput
-              label="Mobile Phone"
-              placeholder="Mobile Phone"
+              label={tSafe('mobile_phone_label', 'Mobile Phone')}
+              placeholder={tSafe('mobile_phone_placeholder', 'Mobile Phone')}
               mode="outlined"
               outlineColor="#D8D8D8"
               activeOutlineColor={COLORS.primary}
@@ -704,7 +705,7 @@ const Contact = ({ contact, userId, close_modal }) => {
 
             {/* Save Button */}
             <TouchableOpacity style={styles.button} onPress={validate}>
-              <Text style={styles.button_text}>Save</Text>
+              <Text style={styles.button_text}>{tSafe('save', 'Save')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -714,7 +715,7 @@ const Contact = ({ contact, userId, close_modal }) => {
             <MaterialCommunityIcons name="check-circle" size={56} color="green" />
             <Text style={{ fontSize: 19, fontWeight: '500', textAlign: 'center' }}>{responseMessage}</Text>
             <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.button_text}>Continue</Text>
+              <Text style={styles.button_text}>{tSafe('continue', 'Continue')}</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import CleaningRequestItem from '../../components/cleaner/CleaningRequestItem';
 import COLORS from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const { width } = Dimensions.get('window');
 
@@ -99,18 +100,18 @@ export default function AllRequests({ route }) {
     }
   };
 
-  // Get status display text
+  // Get status display text (translated)
   const getStatusDisplayText = (status) => {
     const category = categorizeStatus(status);
     
     if (category === 'accepted') {
-      if (status === 'pending_payment') return 'Accepted (Pending Payment)';
-      if (status === 'payment_confirmed') return 'Accepted (Payment Confirmed)';
-      return 'Accepted';
+      if (status === 'pending_payment') return tSafe('accepted_pending_payment', 'Accepted (Pending Payment)');
+      if (status === 'payment_confirmed') return tSafe('accepted_payment_confirmed', 'Accepted (Payment Confirmed)');
+      return tSafe('accepted', 'Accepted');
     } else if (category === 'pending') {
-      return 'Pending Acceptance';
+      return tSafe('pending_acceptance', 'Pending Acceptance');
     } else if (category === 'declined') {
-      return 'Declined';
+      return tSafe('declined', 'Declined');
     }
     return status; // fallback
   };
@@ -150,31 +151,31 @@ export default function AllRequests({ route }) {
   // List Header Component
   const ListHeaderComponent = () => (
     <View style={styles.headerContainer}>
-      <Text style={styles.title}>All Cleaning Requests</Text>
+      <Text style={styles.title}>{tSafe('all_cleaning_requests', 'All Cleaning Requests')}</Text>
       <Text style={styles.subtitle}>
-        Review and manage all cleaning requests you've received
+        {tSafe('review_manage_requests', 'Review and manage all cleaning requests you\'ve received')}
       </Text>
       
       {/* Status Summary Cards */}
       <View style={styles.summaryCards}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryCount}>{statusCounts.total}</Text>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={styles.summaryLabel}>{tSafe('total', 'Total')}</Text>
         </View>
         <View style={[styles.summaryCard, styles.pendingCard]}>
           <Text style={[styles.summaryCount, styles.pendingCount]}>{statusCounts.pending}</Text>
-          <Text style={[styles.summaryLabel, styles.pendingLabel]}>Pending</Text>
-          <Text style={styles.summarySubtext}>Awaiting response</Text>
+          <Text style={[styles.summaryLabel, styles.pendingLabel]}>{tSafe('pending', 'Pending')}</Text>
+          <Text style={styles.summarySubtext}>{tSafe('awaiting_response', 'Awaiting response')}</Text>
         </View>
         <View style={[styles.summaryCard, styles.acceptedCard]}>
           <Text style={[styles.summaryCount, styles.acceptedCount]}>{statusCounts.accepted}</Text>
-          <Text style={[styles.summaryLabel, styles.acceptedLabel]}>Accepted</Text>
-          <Text style={styles.summarySubtext}>In progress / Paid</Text>
+          <Text style={[styles.summaryLabel, styles.acceptedLabel]}>{tSafe('accepted', 'Accepted')}</Text>
+          <Text style={styles.summarySubtext}>{tSafe('in_progress_paid', 'In progress / Paid')}</Text>
         </View>
         <View style={[styles.summaryCard, styles.declinedCard]}>
           <Text style={[styles.summaryCount, styles.declinedCount]}>{statusCounts.declined}</Text>
-          <Text style={[styles.summaryLabel, styles.declinedLabel]}>Declined</Text>
-          <Text style={styles.summarySubtext}>Not available</Text>
+          <Text style={[styles.summaryLabel, styles.declinedLabel]}>{tSafe('declined', 'Declined')}</Text>
+          <Text style={styles.summarySubtext}>{tSafe('not_available', 'Not available')}</Text>
         </View>
       </View>
 
@@ -198,7 +199,7 @@ export default function AllRequests({ route }) {
                 selectedFilter === 'all' && styles.filterTabTextActive,
               ]}
             >
-              All
+              {tSafe('all', 'All')}
             </Text>
           </TouchableOpacity>
           
@@ -221,7 +222,7 @@ export default function AllRequests({ route }) {
                   selectedFilter === 'pending' && styles.filterTabTextActive,
                 ]}
               >
-                Pending ({statusCounts.pending})
+                {tSafe('pending_filter', 'Pending')} ({statusCounts.pending})
               </Text>
             </View>
           </TouchableOpacity>
@@ -245,7 +246,7 @@ export default function AllRequests({ route }) {
                   selectedFilter === 'accepted' && styles.filterTabTextActive,
                 ]}
               >
-                Accepted ({statusCounts.accepted})
+                {tSafe('accepted_filter', 'Accepted')} ({statusCounts.accepted})
               </Text>
             </View>
           </TouchableOpacity>
@@ -269,7 +270,7 @@ export default function AllRequests({ route }) {
                   selectedFilter === 'declined' && styles.filterTabTextActive,
                 ]}
               >
-                Declined ({statusCounts.declined})
+                {tSafe('declined_filter', 'Declined')} ({statusCounts.declined})
               </Text>
             </View>
           </TouchableOpacity>
@@ -280,7 +281,10 @@ export default function AllRequests({ route }) {
       <View style={styles.resultsContainer}>
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsText}>
-            Showing {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''}
+            {tSafe('showing_x_requests', 'Showing {count} request{s}', { 
+              count: filteredRequests.length,
+              s: filteredRequests.length !== 1 ? 's' : ''
+            })}
           </Text>
           {selectedFilter !== 'all' && (
             <View style={[styles.filterBadge, { backgroundColor: getStatusColor(selectedFilter) + '20' }]}>
@@ -290,9 +294,9 @@ export default function AllRequests({ route }) {
                 color={getStatusColor(selectedFilter)} 
               />
               <Text style={[styles.filterBadgeText, { color: getStatusColor(selectedFilter) }]}>
-                {selectedFilter === 'pending' ? 'Awaiting Response' : 
-                 selectedFilter === 'accepted' ? 'In Progress / Paid' : 
-                 'Not Available'}
+                {selectedFilter === 'pending' ? tSafe('awaiting_response', 'Awaiting Response') : 
+                 selectedFilter === 'accepted' ? tSafe('in_progress_paid', 'In Progress / Paid') : 
+                 tSafe('not_available', 'Not Available')}
               </Text>
             </View>
           )}
@@ -314,18 +318,18 @@ export default function AllRequests({ route }) {
       />
       <Text style={styles.emptyTitle}>
         {selectedFilter === 'all' 
-          ? 'No Cleaning Requests' 
-          : `No ${selectedFilter} requests`
+          ? tSafe('no_cleaning_requests', 'No Cleaning Requests')
+          : tSafe('no_filter_requests', 'No {filter} requests', { filter: tSafe(selectedFilter, selectedFilter) })
         }
       </Text>
       <Text style={styles.emptyText}>
         {selectedFilter === 'all' 
-          ? "You haven't received any cleaning requests yet." 
+          ? tSafe('no_requests_yet', "You haven't received any cleaning requests yet.")
           : selectedFilter === 'pending'
-          ? "You don't have any pending acceptance requests."
+          ? tSafe('no_pending_requests', "You don't have any pending acceptance requests.")
           : selectedFilter === 'accepted'
-          ? "You don't have any accepted requests."
-          : "You don't have any declined requests."
+          ? tSafe('no_accepted_requests', "You don't have any accepted requests.")
+          : tSafe('no_declined_requests', "You don't have any declined requests.")
         }
       </Text>
       {selectedFilter !== 'all' && (
@@ -333,7 +337,7 @@ export default function AllRequests({ route }) {
           style={styles.viewAllButton}
           onPress={() => setSelectedFilter('all')}
         >
-          <Text style={styles.viewAllButtonText}>View All Requests</Text>
+          <Text style={styles.viewAllButtonText}>{tSafe('view_all_requests', 'View All Requests')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -356,7 +360,6 @@ export default function AllRequests({ route }) {
         statusIcon={statusIcon}
         currency={currency}
       />
-
     );
   };
 

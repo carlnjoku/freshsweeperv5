@@ -163,8 +163,9 @@ import CardNoPrimary from '../../components/shared/CardNoPrimary';
 import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
 import EmptyPlaceholder from '../../components/shared/EmptyPlaceholder';
 import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe'; // added import
 
-const CertificationDisplay = ({ certification, handleOpenCertification, mode, onEditCertification , onUpdate}) => {
+const CertificationDisplay = ({ certification, handleOpenCertification, mode, onEditCertification}) => {
   const renderItem = ({ item }) => (
     <View style={styles.certCard}>
       <View style={styles.certHeader}>
@@ -194,11 +195,12 @@ const CertificationDisplay = ({ certification, handleOpenCertification, mode, on
           <View style={styles.iconWrapper}>
             <MaterialCommunityIcons name="certificate-outline" size={22} color={COLORS.white} />
           </View>
-          <Text style={styles.title}>Certifications & Licenses</Text>
+          <Text style={styles.title}>
+            {tSafe('certifications_licenses', 'Certifications & Licenses')}
+          </Text>
         </View>
         {mode === 'edit' && (
           <View style={styles.actionButtons}>
-            
             <TouchableOpacity onPress={handleOpenCertification} style={styles.editButton}>
               <CircleIconNoLabel
                 onPress={handleOpenCertification}
@@ -227,7 +229,7 @@ const CertificationDisplay = ({ certification, handleOpenCertification, mode, on
       ) : (
         <EmptyPlaceholder
           icon="certificate-outline"
-          message="No certifications or licenses added yet."
+          message={tSafe('no_certifications_added', 'No certifications or licenses added yet.')}
         />
       )}
     </CardNoPrimary>

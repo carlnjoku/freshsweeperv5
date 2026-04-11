@@ -61,6 +61,7 @@ const ROUTES = {
     host_apartments: "Apartments",
     host_add_apt: "Add Apartment",
     host_create_checklist: "Create Checklist",
+    host_link_icalendar: "Link ICalendar",
     host_connection: "Cconnection",
     host_checklist: "Checklist",
     host_edit_checklist: "Edit Checklist",
@@ -84,6 +85,7 @@ const ROUTES = {
     host_cancellation_details:"Cancellation Details",
     host_promotion:"Promotion",
     host_team:"TeamManagement",
+    host_invite_cleaners:"InviteACleaner",
 
 
     getting_started: "Getting Started",

@@ -1,154 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   ActivityIndicator,
-//   ScrollView,
-//   TouchableOpacity,
-// } from 'react-native';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import CardNoPrimary from '../../components/shared/CardNoPrimary';
-// import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
-// import COLORS from '../../constants/colors';
-// import CustomCalendar from '../../components/shared/CustomCalendar';
-// import userService from '../../services/connection/userService';
-
-// const AvailabilityDisplay = ({ handleOpenAvailability, cleanerId, mode }) => {
-//   const [availability, setAvailability] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     const fetchAvailability = async () => {
-//       try {
-//         const response = await userService.getCleanerAvailability(cleanerId);
-//         const res = response.data.data;
-//         setAvailability(res);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchAvailability();
-//   }, [cleanerId]);
-
-//   if (loading) {
-//     return <ActivityIndicator size="large" color={COLORS.primary} style={styles.centered} />;
-//   }
-
-//   if (error) {
-//     return <Text style={styles.errorText}>{error}</Text>;
-//   }
-
-//   return (
-//     <CardNoPrimary style={styles.card}>
-//       <View style={styles.header}>
-//         <View style={styles.titleContainer}>
-//           <MaterialCommunityIcons
-//             name="calendar-clock"
-//             size={24}
-//             color={COLORS.primary}
-//             style={styles.icon}
-//           />
-//           <Text style={styles.title}>Availability</Text>
-//         </View>
-//         {mode === 'edit' && (
-//           <TouchableOpacity onPress={handleOpenAvailability} style={styles.editButton}>
-//             <CircleIconNoLabel
-//               iconName="pencil"
-//               buttonSize={30}
-//               radiusSise={15}
-//               iconSize={16}
-//             />
-//           </TouchableOpacity>
-//         )}
-//       </View>
-
-//       <View style={styles.divider} />
-
-//       <View style={styles.content}>
-//         <ScrollView showsVerticalScrollIndicator={false}>
-//           <CustomCalendar
-//             availability={availability?.availability || []}
-//             bookedSchedules={availability?.booked_schedules || []}
-//           />
-//         </ScrollView>
-//       </View>
-//     </CardNoPrimary>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   card: {
-//     borderRadius: 16,
-//     backgroundColor: '#fff',
-//     padding: 16,
-//     marginBottom: 16,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 8,
-//     elevation: 3,
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 12,
-//   },
-//   titleContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   icon: {
-//     marginRight: 8,
-//   },
-//   title: {
-//     fontSize: 18,
-//     fontWeight: '600',
-//     color: '#333',
-//   },
-//   editButton: {
-//     padding: 4,
-//   },
-//   divider: {
-//     height: 1,
-//     backgroundColor: COLORS.light_gray_1,
-//     marginVertical: 8,
-//   },
-//   content: {
-//     marginTop: 8,
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   errorText: {
-//     color: COLORS.error,
-//     textAlign: 'center',
-//     fontSize: 14,
-//     marginTop: 20,
-//   },
-// });
-
-// export default AvailabilityDisplay;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -157,8 +6,7 @@ import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
 import EmptyPlaceholder from '../../components/shared/EmptyPlaceholder';
 import COLORS from '../../constants/colors';
 import CustomCalendar from '../../components/shared/CustomCalendar';
-
-
+import { tSafe } from '../../utils/tSafe'; // added import
 
 // Helper to format time from "HH:MM" to "h:mm AM/PM" – safe version
 const formatTime = (time) => {
@@ -187,7 +35,9 @@ const AvailabilityDisplay = ({ availability, handleOpenAvailability, mode }) => 
               color={COLORS.white}
             />
           </View>
-          <Text style={styles.title}>Availability</Text>
+          <Text style={styles.title}>
+            {tSafe('availability', 'Availability')}
+          </Text>
         </View>
         {mode === 'edit' && (
           <TouchableOpacity onPress={handleOpenAvailability} style={styles.editButton}>
@@ -208,31 +58,17 @@ const AvailabilityDisplay = ({ availability, handleOpenAvailability, mode }) => 
         {!hasAvailability ? (
           <EmptyPlaceholder
             icon="calendar-blank-outline"
-            message="No availability information provided."
+            message={tSafe('no_availability_info', 'No availability information provided.')}
           />
         ) : (
-          // availability.map((dayItem) => (
-          //   <View key={dayItem.day} style={styles.daySection}>
-          //     <Text style={styles.dayHeader}>{dayItem.day}</Text>
-          //     {dayItem.slots.map((slot, index) => (
-          //       <View key={index} style={styles.slotRow}>
-          //         <Text style={styles.slotTime}>
-          //           {formatTime(slot.start)} - {formatTime(slot.end)}
-          //         </Text>
-          //       </View>
-          //     ))}
-          //   </View>
-          // ))
-
           <View style={styles.content}>
-         <ScrollView showsVerticalScrollIndicator={false}>
-           <CustomCalendar
-             availability={availability?.availability || []}
-             bookedSchedules={availability?.booked_schedules || []}
-           />
-         </ScrollView>
-       </View>
-
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <CustomCalendar
+                availability={availability?.availability || []}
+                bookedSchedules={availability?.booked_schedules || []}
+              />
+            </ScrollView>
+          </View>
         )}
       </View>
     </CardNoPrimary>
@@ -324,6 +160,3 @@ const styles = StyleSheet.create({
 });
 
 export default AvailabilityDisplay;
-
-
-

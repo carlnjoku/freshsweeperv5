@@ -670,9 +670,15 @@ class UserService {
     }
 
     
-    // getJobs(){
-    //   return http.get('/jobs')
-    // }
+    // Copies
+    createCopy(payload){
+      return http.post('/api/admin/copies', payload)
+    }
+
+    // Get all the copies
+    getFullCopies() {
+      return http.get('/api/admin/copies');
+    }
   
   }
   

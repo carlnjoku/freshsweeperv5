@@ -1301,6 +1301,378 @@
 
 
 
+// import React from 'react';
+// import { 
+//   View, 
+//   Text, 
+//   StyleSheet, 
+//   TouchableOpacity, 
+//   Image 
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import COLORS from '../../constants/colors';
+// import { useNavigation } from '@react-navigation/native';
+// import ROUTES from '../../constants/routes';
+// import moment from 'moment';
+// import CompactProgressBar from '../shared/CompactProgressBar';
+
+// export default function OngoingWorkListItem({ item }) {
+//   const navigation = useNavigation();
+
+  
+//   const getStatusColor = (status) => {
+//     switch (status?.toLowerCase()) {
+//       case 'completed':
+//         return COLORS.success;
+//       case 'in_progress':
+//         return COLORS.warning;
+//       case 'pending':
+//         return COLORS.gray;
+//       default:
+//         return COLORS.primary;
+//     }
+//   };
+
+//   const getStatusText = (status) => {
+//     switch (status?.toLowerCase()) {
+//       case 'completed':
+//         return 'Completed';
+//       case 'in_progress':
+//         return 'In Progress';
+//       case 'pending':
+//         return 'Pending';
+//       default:
+//         return 'Scheduled';
+//     }
+//   };
+
+//   // Get first name and last name initial
+//   const getCleanerDisplayName = (cleaner) => {
+//     if (cleaner.firstname && cleaner.lastname) {
+//       return `${cleaner.firstname} ${cleaner.lastname.charAt(0)}.`;
+//     }
+//     if (cleaner.firstname) {
+//       return cleaner.firstname;
+//     }
+//     if (cleaner.group) {
+//       return cleaner.group.replace('_', ' ').toUpperCase();
+//     }
+//     return 'Cleaner';
+//   };
+
+//   return (
+//     <TouchableOpacity 
+//       style={styles.cardContainer}
+//       onPress={() => navigation.navigate(ROUTES.host_task_progress, {
+//         scheduleId: item._id,
+//         schedule: item,
+//         mode: "in_progress"
+//       })}
+//       activeOpacity={0.7}
+//     >
+//       {/* Header Section */}
+//       <View style={styles.header}>
+//         <View style={styles.propertyInfo}>
+//           <Text style={styles.propertyName} numberOfLines={1}>
+//             {item.schedule?.apartment_name || 'Unknown Property'}
+//           </Text>
+//           <View style={styles.statusBadge}>
+//             <View 
+//               style={[
+//                 styles.statusDot, 
+//                 { backgroundColor: getStatusColor(item.status) }
+//               ]} 
+//             />
+//             <Text style={styles.statusText}>
+//               {getStatusText(item.status)}
+//             </Text>
+//           </View>
+//         </View>
+        
+//         <View style={styles.dateTimeContainer}>
+//           <View style={styles.dateTimeItem}>
+//             <MaterialCommunityIcons 
+//               name="calendar-blank-outline" 
+//               size={14} 
+//               color={COLORS.gray} 
+//             />
+//             <Text style={styles.dateTimeText}>
+//               {moment(item.schedule?.cleaning_date).format('MMM DD')}
+//             </Text>
+//           </View>
+          
+//           <View style={styles.dateTimeItem}>
+//             <MaterialCommunityIcons 
+//               name="clock-outline" 
+//               size={14} 
+//               color={COLORS.gray} 
+//             />
+//             <Text style={styles.dateTimeText}>
+//               {moment(item.schedule?.cleaning_time, 'h:mm:ss A').format('h:mm A')}
+//             </Text>
+//           </View>
+//         </View>
+//       </View>
+
+//       {/* Cleaners List */}
+//       {item.assignedTo && item.assignedTo.length > 0 ? (
+//         <View style={styles.cleanersContainer}>
+//           {item.assignedTo.map((cleaner, index) => {
+//             const progress = cleaner.progress || { completedTasks: 0, totalTasks: 0, percentage: 0 };
+            
+//             return (
+//               <View key={cleaner.group || index} style={styles.cleanerItem}>
+                
+//                 {/* Cleaner Avatar and Name */}
+//                 <View style={styles.cleanerInfo}>
+//                   <View style={styles.avatarContainer}>
+//                     {cleaner.avatar ? (
+//                       <Image 
+//                         source={{ uri: cleaner.avatar }}
+//                         style={styles.avatar}
+//                       />
+//                     ) : (
+//                       <View style={styles.defaultAvatar}>
+//                         <MaterialCommunityIcons 
+//                           name="account" 
+//                           size={16} 
+//                           color={COLORS.gray} 
+//                         />
+//                       </View>
+//                     )}
+//                   </View>
+//                   <Text style={styles.cleanerName} numberOfLines={1}>
+//                     {getCleanerDisplayName(cleaner)}
+//                   </Text>
+//                 </View>
+
+//                 {/* Progress Bar and Percentage */}
+//                 <View style={styles.progressContainer}>
+//                   <View style={styles.progressHeader}>
+//                     <Text style={styles.progressPercentage}>
+//                       {progress.percentage}%
+//                     </Text>
+//                   </View>
+//                   <CompactProgressBar 
+//                     progress={progress} 
+//                     height={6}
+//                     showPercentage={false}
+//                   />
+//                 </View>
+//               </View>
+//             );
+//           })}
+//         </View>
+//       ) : (
+//         <View style={styles.noCleanerContainer}>
+//           <MaterialCommunityIcons 
+//             name="account-search" 
+//             size={24} 
+//             color={COLORS.light_gray} 
+//           />
+//           <Text style={styles.noCleanerText}>No cleaners assigned</Text>
+//         </View>
+//       )}
+
+//       {/* Footer with Action */}
+//       <View style={styles.footer}>
+//         <TouchableOpacity 
+//           style={styles.trackButton}
+//           onPress={() => navigation.navigate(ROUTES.host_task_progress, {
+//             scheduleId: item._id,
+//             schedule: item,
+//             mode:"in_progress"
+//           })}
+//         >
+//           <MaterialCommunityIcons 
+//             name="progress-clock" 
+//             size={16} 
+//             color={COLORS.primary} 
+//           />
+//           <Text style={styles.trackButtonText}>Track Progress</Text>
+//         </TouchableOpacity>
+        
+//         <TouchableOpacity style={styles.arrowButton}>
+//           <MaterialCommunityIcons 
+//             name="chevron-right" 
+//             size={20} 
+//             color={COLORS.gray} 
+//           />
+//         </TouchableOpacity>
+//       </View>
+//     </TouchableOpacity>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   cardContainer: {
+//     backgroundColor: COLORS.white,
+//     borderRadius: 12,
+//     padding: 16,
+//     marginVertical: 6,
+//     marginHorizontal: 16,
+//     shadowColor: '#000',
+//     shadowOffset: {
+//       width: 0,
+//       height: 2,
+//     },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 3.84,
+//     elevation: 5,
+//     borderWidth: 1,
+//     borderColor: COLORS.light_gray_1,
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'flex-start',
+//     marginBottom: 16,
+//   },
+//   propertyInfo: {
+//     flex: 1,
+//     marginRight: 12,
+//   },
+//   propertyName: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//     marginBottom: 8,
+//   },
+//   statusBadge: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     alignSelf: 'flex-start',
+//     backgroundColor: COLORS.light_gray_1,
+//     paddingHorizontal: 8,
+//     paddingVertical: 4,
+//     borderRadius: 6,
+//   },
+//   statusDot: {
+//     width: 6,
+//     height: 6,
+//     borderRadius: 3,
+//     marginRight: 6,
+//   },
+//   statusText: {
+//     fontSize: 12,
+//     fontWeight: '500',
+//     color: COLORS.dark,
+//     textTransform: 'capitalize',
+//   },
+//   dateTimeContainer: {
+//     alignItems: 'flex-end',
+//   },
+//   dateTimeItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 4,
+//   },
+//   dateTimeText: {
+//     fontSize: 12,
+//     color: COLORS.gray,
+//     marginLeft: 4,
+//     fontWeight: '500',
+//   },
+//   cleanersContainer: {
+//     marginBottom: 16,
+//   },
+//   cleanerItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     paddingVertical: 8,
+//     borderBottomWidth: 1,
+//     borderBottomColor: COLORS.light_gray_1,
+//   },
+//   cleanerInfo: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     flex: 1,
+//   },
+//   avatarContainer: {
+//     marginRight: 12,
+//   },
+//   avatar: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 18,
+//     borderWidth: 2,
+//     borderColor: COLORS.light_gray_1,
+//   },
+//   defaultAvatar: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 18,
+//     backgroundColor: COLORS.light_gray_1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     borderWidth: 2,
+//     borderColor: COLORS.light_gray,
+//   },
+//   cleanerName: {
+//     fontSize: 14,
+//     fontWeight: '500',
+//     color: COLORS.dark,
+//     flex: 1,
+//   },
+//   progressContainer: {
+//     width: 100,
+//     alignItems: 'flex-end',
+//   },
+//   progressHeader: {
+//     marginBottom: 6,
+//   },
+//   progressPercentage: {
+//     fontSize: 13,
+//     fontWeight: '700',
+//     color: COLORS.primary,
+//   },
+//   noCleanerContainer: {
+//     alignItems: 'center',
+//     paddingVertical: 20,
+//     marginBottom: 16,
+//   },
+//   noCleanerText: {
+//     fontSize: 14,
+//     color: COLORS.gray,
+//     marginTop: 8,
+//   },
+//   footer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     borderTopWidth: 0,
+//     borderTopColor: COLORS.light_gray_1,
+//     paddingTop: 12,
+//   },
+//   trackButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     backgroundColor: COLORS.primary_light_1,
+//     paddingHorizontal: 12,
+//     paddingVertical: 8,
+//     borderRadius: 8,
+//     flex: 1,
+//     marginRight: 12,
+//   },
+//   trackButtonText: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: COLORS.primary,
+//     marginLeft: 6,
+//   },
+//   arrowButton: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 18,
+//     backgroundColor: COLORS.light_gray_1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+
+
 import React from 'react';
 import { 
   View, 
@@ -1315,11 +1687,11 @@ import { useNavigation } from '@react-navigation/native';
 import ROUTES from '../../constants/routes';
 import moment from 'moment';
 import CompactProgressBar from '../shared/CompactProgressBar';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 export default function OngoingWorkListItem({ item }) {
   const navigation = useNavigation();
 
-  
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -1336,13 +1708,13 @@ export default function OngoingWorkListItem({ item }) {
   const getStatusText = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':
-        return 'Completed';
+        return tSafe('status_completed', 'Completed');
       case 'in_progress':
-        return 'In Progress';
+        return tSafe('status_in_progress', 'In Progress');
       case 'pending':
-        return 'Pending';
+        return tSafe('status_pending', 'Pending');
       default:
-        return 'Scheduled';
+        return tSafe('status_scheduled', 'Scheduled');
     }
   };
 
@@ -1357,7 +1729,7 @@ export default function OngoingWorkListItem({ item }) {
     if (cleaner.group) {
       return cleaner.group.replace('_', ' ').toUpperCase();
     }
-    return 'Cleaner';
+    return tSafe('cleaner', 'Cleaner');
   };
 
   return (
@@ -1374,7 +1746,7 @@ export default function OngoingWorkListItem({ item }) {
       <View style={styles.header}>
         <View style={styles.propertyInfo}>
           <Text style={styles.propertyName} numberOfLines={1}>
-            {item.schedule?.apartment_name || 'Unknown Property'}
+            {item.schedule?.apartment_name || tSafe('unknown_property', 'Unknown Property')}
           </Text>
           <View style={styles.statusBadge}>
             <View 
@@ -1470,7 +1842,7 @@ export default function OngoingWorkListItem({ item }) {
             size={24} 
             color={COLORS.light_gray} 
           />
-          <Text style={styles.noCleanerText}>No cleaners assigned</Text>
+          <Text style={styles.noCleanerText}>{tSafe('no_cleaners_assigned', 'No cleaners assigned')}</Text>
         </View>
       )}
 
@@ -1489,7 +1861,7 @@ export default function OngoingWorkListItem({ item }) {
             size={16} 
             color={COLORS.primary} 
           />
-          <Text style={styles.trackButtonText}>Track Progress</Text>
+          <Text style={styles.trackButtonText}>{tSafe('track_progress', 'Track Progress')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.arrowButton}>

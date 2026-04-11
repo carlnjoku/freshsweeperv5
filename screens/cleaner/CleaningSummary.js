@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import GroupActions from '../../components/cleaner/GroupActions';
 import { minutesToDuration } from '../../utils/minuteToDuration';
 import TermsConditions from './TermsConditions';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const { width } = Dimensions.get('window');
 
@@ -22,22 +23,22 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
   const getGroupLabel = (groupKey, totalGroups) => {
     // If there's only one group, label it as "Full Cleaning"
     if (totalGroups === 1) {
-      return 'Full Cleaning';
+      return tSafe('full_cleaning', 'Full Cleaning');
     }
     
     // For multiple groups, use Cleaner A, Cleaner B, etc.
     const groupNumber = groupKey.split('_')[1];
     switch (groupNumber) {
       case '1':
-        return 'Cleaner A';
+        return tSafe('cleaner_a', 'Cleaner A');
       case '2':
-        return 'Cleaner B';
+        return tSafe('cleaner_b', 'Cleaner B');
       case '3':
-        return 'Cleaner C';
+        return tSafe('cleaner_c', 'Cleaner C');
       case '4':
-        return 'Cleaner D';
+        return tSafe('cleaner_d', 'Cleaner D');
       default:
-        return `Cleaner ${groupNumber}`;
+        return `${tSafe('cleaner', 'Cleaner')} ${groupNumber}`;
     }
   };
 
@@ -162,7 +163,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
   );
 
   const formatRoomTypes = (roomTypes) => {
-    if (!roomTypes || typeof roomTypes !== 'object') return 'No rooms';
+    if (!roomTypes || typeof roomTypes !== 'object') return tSafe('no_rooms', 'No rooms');
     
     return Object.entries(roomTypes)
       .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
@@ -217,7 +218,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>
-            {selectedGroup.groupLabel} - Details
+            {selectedGroup.groupLabel} - {tSafe('details', 'Details')}
           </Text>
           <Button 
             icon="close" 
@@ -228,21 +229,21 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
         
         <ScrollView style={styles.modalContent}>
           <View style={styles.modalSection}>
-            <Text style={styles.sectionTitle}>Overview</Text>
+            <Text style={styles.sectionTitle}>{tSafe('overview', 'Overview')}</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Total Time:</Text>
+              <Text style={styles.infoLabel}>{tSafe('total_time', 'Total Time:')}</Text>
               <Text style={styles.infoValue}>
-                {selectedGroup.totalTime} minutes
+                {selectedGroup.totalTime} {tSafe('minutes', 'minutes')}
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Price:</Text>
+              <Text style={styles.infoLabel}>{tSafe('price', 'Price:')}</Text>
               <Text style={styles.totalFee}>
                 {currency}{selectedGroup.price.toFixed(2)}
               </Text>
             </View>
             
-            <Text style={styles.sectionTitle}>Rooms & Tasks</Text>
+            <Text style={styles.sectionTitle}>{tSafe('rooms_tasks', 'Rooms & Tasks')}</Text>
             
             <View style={styles.groupContainer}>
               <View style={styles.groupHeader}>
@@ -250,7 +251,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
                 <View style={styles.groupPriceTime}>
                   <View style={styles.timeBadge}>
                     <Text style={styles.timeText}>
-                      {selectedGroup.totalTime} mins
+                      {selectedGroup.totalTime} {tSafe('mins', 'mins')}
                     </Text>
                   </View>
                   <View style={styles.priceBadge}>
@@ -262,7 +263,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
               </View>
               
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Rooms:</Text>
+                <Text style={styles.infoLabel}>{tSafe('rooms', 'Rooms:')}</Text>
                 <Text style={styles.infoValue}>
                   {formatRoomCounts(selectedGroup.rooms)}
                 </Text>
@@ -270,7 +271,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
 
               {selectedGroup.extras && selectedGroup.extras.length > 0 && (
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Extras:</Text>
+                  <Text style={styles.infoLabel}>{tSafe('extras', 'Extras:')}</Text>
                   <Text style={styles.infoValue}>
                     {selectedGroup.extras.join(', ')}
                   </Text>
@@ -300,7 +301,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
             }}
             style={styles.modalActionButton}
           >
-            Accept This Task
+            {tSafe('accept_this_task', 'Accept This Task')}
           </Button>
         </View>
       </View>
@@ -311,18 +312,18 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
     return (
       <View style={styles.emptyState}>
         <MaterialIcons name="cleaning-services" size={48} color={COLORS.gray} />
-        <Text style={styles.emptyStateText}>No cleaning tasks available</Text>
+        <Text style={styles.emptyStateText}>{tSafe('no_cleaning_tasks', 'No cleaning tasks available')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Available Cleaning Tasks</Text>
+      <Text style={styles.header}>{tSafe('available_cleaning_tasks', 'Available Cleaning Tasks')}</Text>
       <Text style={styles.subheader}>
         {summaryData.length === 1 
-          ? "Complete cleaning assignment" 
-          : "Tasks have been assigned to different cleaners for efficiency"}
+          ? tSafe('complete_cleaning_assignment', 'Complete cleaning assignment')
+          : tSafe('tasks_assigned_to_different_cleaners', 'Tasks have been assigned to different cleaners for efficiency')}
       </Text>
       
       {summaryData.map((item) => (
@@ -336,21 +337,25 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
             <View style={styles.statsRow}>
               <View style={styles.stat}>
                 <MaterialIcons name="list" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>{item.taskCount} tasks</Text>
+                <Text style={styles.statText}>
+                  {item.taskCount} {tSafe('tasks', 'tasks')}
+                </Text>
               </View>
               <View style={styles.stat}>
                 <MaterialIcons name="home" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>{item.roomCount} rooms</Text>
+                <Text style={styles.statText}>
+                  {item.roomCount} {tSafe('rooms', 'rooms')}
+                </Text>
               </View>
               <View style={styles.stat}>
                 <MaterialIcons name="access-time" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>{minutesToDuration(item.totalTime)} </Text>
+                <Text style={styles.statText}>{minutesToDuration(item.totalTime)}</Text>
               </View>
             </View>
             
             <Text style={styles.description}>
-              Includes cleaning of {formatRoomTypes(item.roomTypes)}
-              {item.extras.length > 0 ? `, plus ${item.extras.join(', ')}` : ''}.
+              {tSafe('includes_cleaning_of', 'Includes cleaning of')} {formatRoomTypes(item.roomTypes)}
+              {item.extras.length > 0 ? `${tSafe('plus', ', plus ')}${item.extras.join(', ')}` : ''}.
             </Text>
             
             <View style={styles.buttonRow}>
@@ -374,9 +379,6 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
       >
         <View style={styles.modalOverlay}>
           {renderModalContent()}
-          
-
-
         </View>
       </Modal>
 
@@ -390,13 +392,13 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
         <View style={styles.modalOverlay}>
           <View style={styles.rulesModalContainer}>
             <View style={styles.rulesModalHeader}>
-              <Text style={styles.rulesModalTitle}>Accept Cleaning Task</Text>
+              <Text style={styles.rulesModalTitle}>{tSafe('accept_cleaning_task', 'Accept Cleaning Task')}</Text>
               <Button 
                 icon="close" 
                 onPress={() => setAcceptModalVisible(false)}
                 style={styles.closeButton}
               >
-                Close
+                {tSafe('close', 'Close')}
               </Button>
             </View>
             
@@ -409,7 +411,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
                 style={[styles.rulesButton, styles.cancelButton]}
                 labelStyle={styles.cancelButtonText}
               >
-                Cancel
+                {tSafe('cancel', 'Cancel')}
               </Button>
               <Button 
                 mode="contained" 
@@ -417,7 +419,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
                 style={[styles.rulesButton, styles.agreeButton]}
                 labelStyle={styles.agreeButtonText}
               >
-                I Agree & Accept
+                {tSafe('i_agree_and_accept', 'I Agree & Accept')}
               </Button>
             </View>
           </View>
@@ -773,5 +775,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
-

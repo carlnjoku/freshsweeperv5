@@ -5,6 +5,7 @@ import COLORS from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { minutesToDuration } from '../../utils/minuteToDuration';
+import { tSafe } from '../../utils/tSafe';
 
 export default function CleaningSummary({ checklist, assignedTo }) {
   const { currency, currentUserId } = useContext(AuthContext);
@@ -25,7 +26,9 @@ export default function CleaningSummary({ checklist, assignedTo }) {
     return (
       <View style={styles.emptyState}>
         <MaterialIcons name="cleaning-services" size={48} color={COLORS.gray} />
-        <Text style={styles.emptyStateText}>No cleaning assignment found for you</Text>
+        <Text style={styles.emptyStateText}>
+          {tSafe('no_cleaning_assignment_found', 'No cleaning assignment found for you')}
+        </Text>
       </View>
     );
   }
@@ -55,10 +58,25 @@ export default function CleaningSummary({ checklist, assignedTo }) {
     return (
       <View style={styles.emptyState}>
         <MaterialIcons name="cleaning-services" size={48} color={COLORS.gray} />
-        <Text style={styles.emptyStateText}>No checklist data available</Text>
+        <Text style={styles.emptyStateText}>
+          {tSafe('no_checklist_data_available', 'No checklist data available')}
+        </Text>
       </View>
     );
   }
+
+  // Helper to translate status
+  const getStatusText = (status) => {
+    const statusMap = {
+      'accepted': tSafe('status_accepted', 'Accepted'),
+      'in_progress': tSafe('status_in_progress', 'In Progress'),
+      'completed': tSafe('status_completed', 'Completed'),
+      'payment_confirmed': tSafe('status_payment_confirmed', 'Payment Confirmed'),
+      'cancelled': tSafe('status_cancelled', 'Cancelled'),
+      'pending': tSafe('status_pending', 'Pending'),
+    };
+    return statusMap[status] || (status ? status.charAt(0).toUpperCase() + status.slice(1) : tSafe('status_unknown', 'Unknown'));
+  };
 
   // Process the checklist data for display
   const processChecklistData = () => {
@@ -89,7 +107,7 @@ export default function CleaningSummary({ checklist, assignedTo }) {
     }
 
     return {
-      groupLabel: 'Your Cleaning Assignment',
+      groupLabel: tSafe('your_cleaning_assignment', 'Your Cleaning Assignment'),
       taskCount,
       roomCount: rooms.length,
       roomTypes,
@@ -107,7 +125,7 @@ export default function CleaningSummary({ checklist, assignedTo }) {
 
   const formatRoomTypes = (roomTypes) => {
     if (!roomTypes || typeof roomTypes !== 'object' || Object.keys(roomTypes).length === 0) {
-      return 'No rooms specified';
+      return tSafe('no_rooms_specified', 'No rooms specified');
     }
     
     return Object.entries(roomTypes)
@@ -126,22 +144,13 @@ export default function CleaningSummary({ checklist, assignedTo }) {
     }
   };
 
-  const getStatusText = () => {
-    switch(currentUserAssignment.status) {
-      case 'accepted': return 'Accepted';
-      case 'in_progress': return 'In Progress';
-      case 'completed': return 'Completed';
-      case 'payment_confirmed': return 'Payment Confirmed';
-      case 'cancelled': return 'Cancelled';
-      default: return 'Pending';
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Your Cleaning Assignment</Text>
+      <Text style={styles.header}>
+        {tSafe('your_cleaning_assignment_title', 'Your Cleaning Assignment')}
+      </Text>
       <Text style={styles.subheader}>
-        Tasks and requirements for your cleaning assignment
+        {tSafe('tasks_and_requirements', 'Tasks and requirements for your cleaning assignment')}
       </Text>
       
       <Card style={styles.card}>
@@ -157,7 +166,7 @@ export default function CleaningSummary({ checklist, assignedTo }) {
                   ]} 
                 />
                 <Text style={styles.statusText}>
-                  Status: {getStatusText()}
+                  {tSafe('status_label', 'Status:')} {getStatusText(currentUserAssignment.status)}
                 </Text>
               </View>
             </View>
@@ -167,11 +176,15 @@ export default function CleaningSummary({ checklist, assignedTo }) {
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <MaterialIcons name="list" size={16} color={COLORS.primary} />
-              <Text style={styles.statText}>{assignmentData.taskCount} tasks</Text>
+              <Text style={styles.statText}>
+                {assignmentData.taskCount} {tSafe('tasks', 'tasks')}
+              </Text>
             </View>
             <View style={styles.stat}>
               <MaterialIcons name="home" size={16} color={COLORS.primary} />
-              <Text style={styles.statText}>{assignmentData.roomCount} rooms</Text>
+              <Text style={styles.statText}>
+                {assignmentData.roomCount} {tSafe('rooms', 'rooms')}
+              </Text>
             </View>
             <View style={styles.stat}>
               <MaterialIcons name="access-time" size={16} color={COLORS.primary} />
@@ -180,34 +193,34 @@ export default function CleaningSummary({ checklist, assignedTo }) {
           </View>
           
           <Text style={styles.description}>
-            Includes cleaning of {formatRoomTypes(assignmentData.roomTypes)}
-            {assignmentData.extras.length > 0 ? `, plus ${assignmentData.extras.join(', ')}` : ''}.
+            {tSafe('includes_cleaning_of', 'Includes cleaning of')} {formatRoomTypes(assignmentData.roomTypes)}
+            {assignmentData.extras.length > 0 ? `${tSafe('plus', ', plus')} ${assignmentData.extras.join(', ')}` : ''}.
           </Text>
 
           {/* Additional details section */}
           <View style={styles.detailsSection}>
             <View style={styles.detailRow}>
               <MaterialIcons name="assignment" size={16} color={COLORS.gray} />
-              <Text style={styles.detailLabel}>Total Tasks:</Text>
+              <Text style={styles.detailLabel}>{tSafe('total_tasks', 'Total Tasks:')}</Text>
               <Text style={styles.detailValue}>{assignmentData.taskCount}</Text>
             </View>
             
             <View style={styles.detailRow}>
               <MaterialIcons name="location-on" size={16} color={COLORS.gray} />
-              <Text style={styles.detailLabel}>Rooms:</Text>
+              <Text style={styles.detailLabel}>{tSafe('rooms_label', 'Rooms:')}</Text>
               <Text style={styles.detailValue}>{assignmentData.roomCount}</Text>
             </View>
             
             <View style={styles.detailRow}>
               <MaterialIcons name="schedule" size={16} color={COLORS.gray} />
-              <Text style={styles.detailLabel}>Estimated Time:</Text>
+              <Text style={styles.detailLabel}>{tSafe('estimated_time', 'Estimated Time:')}</Text>
               <Text style={styles.detailValue}>{minutesToDuration(assignmentData.totalTime)}</Text>
             </View>
             
             {assignmentData.extras.length > 0 && (
               <View style={styles.detailRow}>
                 <MaterialIcons name="add-circle" size={16} color={COLORS.gray} />
-                <Text style={styles.detailLabel}>Extra Services:</Text>
+                <Text style={styles.detailLabel}>{tSafe('extra_services', 'Extra Services:')}</Text>
                 <Text style={styles.detailValue}>{assignmentData.extras.join(', ')}</Text>
               </View>
             )}
@@ -216,7 +229,7 @@ export default function CleaningSummary({ checklist, assignedTo }) {
           {/* Progress section */}
           {currentUserAssignment.progress && (
             <View style={styles.progressSection}>
-              <Text style={styles.progressTitle}>Progress</Text>
+              <Text style={styles.progressTitle}>{tSafe('progress', 'Progress')}</Text>
               <View style={styles.progressBar}>
                 <View 
                   style={[
@@ -226,7 +239,7 @@ export default function CleaningSummary({ checklist, assignedTo }) {
                 />
               </View>
               <Text style={styles.progressText}>
-                {currentUserAssignment.progress.completedTasks || 0} of {currentUserAssignment.progress.totalTasks || 0} tasks completed
+                {currentUserAssignment.progress.completedTasks || 0} {tSafe('of', 'of')} {currentUserAssignment.progress.totalTasks || 0} {tSafe('tasks_completed', 'tasks completed')}
               </Text>
             </View>
           )}

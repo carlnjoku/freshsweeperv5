@@ -1,3 +1,264 @@
+// import React, { useState, useEffect, useContext } from 'react';
+// import { View, Text, Alert, StyleSheet } from 'react-native';
+// import StripePaymentButton from '../../../components/shared/StripePaymentButton';
+// import userService from '../../../services/connection/userService';
+// import COLORS from '../../../constants/colors';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import { AuthContext } from '../../../context/AuthContext';
+// import { ScrollView } from 'react-native-gesture-handler';
+// import PaymentDetails from './PaymentDetails';
+// import ROUTES from '../../../constants/routes';
+// import moment from 'moment';
+// import Toast from 'react-native-toast-message';
+// import onAddFriend from '../../../utils/createNewChatFriend';
+
+
+
+
+// const PaymentSingleCheckout = ({ route, navigation }) => {
+//   const { currentUser, currentUserId, fbaseUser } = useContext(AuthContext);
+//   // const navigation = useNavigation()
+
+//   const {
+//     requestId,
+//     cleaning_fee,
+//     scheduleId,
+//     schedule,
+//     cleanerId,
+//     cleaner_firstname,
+//     cleaner_lastname,
+//     cleaner_phone,
+//     cleaner_latitude,
+//     cleaner_longitude,
+//     cleaner_avatar,
+//     cleaner_stripe_account_id,
+//     // host_expo_token, 
+//     // cleaner_expo_token 
+//   } = route.params;
+
+//   const serviceFee = cleaning_fee * 0.1; // 10% service fee
+//   // const serviceFee = cleaning_fee * 0.1; // 10% service fee
+//   // const total = cleaning_fee + serviceFee;
+
+//   const [clientSecret, setClientSecret] = useState(null);
+//   const [paymentIntentId, setPaymentIntentId] = useState(null);
+//   const [savedCards, setSavedCards] = useState([]);
+//   const [paymentStatus, setPaymentStatus] = useState(null);
+
+//   const [cleaning_date, setCleaningDate] = useState(schedule.cleaning_date);
+//   const [cleaning_time, setCleaningTime] = useState(schedule.cleaning_time);
+//   const [cleaning_end_time, setCleaningEndTime] = useState(schedule.cleaning_end_time);
+
+//   // alert(cleaning_end_time)
+//   // alert(scheduleId)
+//   // alert(moment("19:09:00", "HH:mm:ss").add(2, 'hours').format("h:mm A"))
+
+//   // console.log(typeof cleaning_end_time); // Should be 'object' if it's a Date
+//   // console.log(cleaning_end_time); // Check its actual value
+
+// let cleaning_end_time1 = cleaning_end_time;  // Example string
+// let end_time = moment(cleaning_end_time1, "HH:mm:ss").add(2, 'hours').format("HH:mm");
+ 
+// let start_time = moment(cleaning_time, "HH:mm:ss").format("HH:mm")
+// // let roko = moment(cleaning_end_time, "HH:mm:ss").format("HH:mm");
+// // console.log("Roko", roko)
+// // console.log(moment(cleaning_time, "HH:mm:ss").format("HH:mm"))
+// // console.log(cleaning_end_time)
+// // console.log("Formated",formattedEndTime); // Expected Output: 1:10 PM
+// // const newTime = moment(cleaning_end_time, "HH:mm:ss").add(2, 'hours').format("HH:mm");
+// // console.log("new", newTime)
+
+
+// let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
+// // console.log(moment(cleaning_date, "YYYY-MM-DD").format("dddd"))
+//   useEffect(() => {
+//     const fetchClientSecret = async () => {
+//       if (serviceFee > 0) {
+//         try {
+//           const data = {
+//             amount: cleaning_fee,
+//             customerId: currentUser.stripe_customer?.stripe_customer_id,
+//             cleaner_stripe_account_id,
+//             metadata: {
+//               scheduleId,
+//               cleaner_phone,
+//               cleaner_latitude,
+//               cleaner_longitude,
+//               cleaner_avatar,
+//               requestId,
+//               cleaning_date,
+//               start_time,
+//               end_time,
+//               dayName,
+
+//               cleaners: JSON.stringify([{
+//                 cleanerId,
+//                 fee: cleaning_fee,
+//                 firstname: cleaner_firstname,
+//                 lastname: cleaner_lastname
+//               }]),
+//               paymentIntentId
+              
+//             },
+            
+//             platformFeeAmount: serviceFee,
+//             receiptEmail: currentUser.email, // Ensure the receipt email is sent
+//             currency:currentUser.location?.currency?.code
+//           };
+
+//           // console.log("data", data)
+          
+
+//           const response = await userService.fetchSinglePaymentIntentClientSecret(data);
+//           const { clientSecret, paymentIntentId, status } = response.data;
+          
+//           // alert(currentUser.stripe_customer?.stripe_customer_id)
+//           setClientSecret(clientSecret);
+//           setPaymentIntentId(paymentIntentId);
+//           setPaymentStatus(status);
+//         } catch (error) {
+//           Alert.alert('Error', 'Failed to create a payment intent.');
+//         }
+//       }
+//     };
+
+//     const fetchSavedCards = async () => {
+//       try {
+//         const custData = { customerId: currentUser.stripe_customer?.stripe_customer_id };
+//         const response = await userService.fetchCustomerPaymentMethods(custData);
+//         setSavedCards(response.data.payment_methods);
+//       } catch (error) {
+//         console.error('Failed to fetch saved cards:', error);
+//       }
+//     };
+
+//     fetchSavedCards();
+//     fetchClientSecret();
+//   }, [cleaning_fee]);
+
+//   // const handlePaymentSuccess = (result) => {
+//   //   setPaymentStatus(result.status);
+    
+//   //   Alert.alert('Payment Success', `Payment of $${result.totalAmount} was successful!`);
+  
+//   // };
+
+//   // const handlePaymentError = (error) => {
+//   //   setPaymentStatus(error.status);
+//   //   Alert.alert('Payment Error', error.message);
+//   // };
+
+
+//   const handlePaymentSuccess = (result) => {
+//     setPaymentStatus(result.status);
+  
+//     Toast.show({
+//       type: 'success',
+//       text1: 'Payment Successful',
+//       text2: `Payment of $${result.totalAmount} was successful!`,
+//       position: 'bottom',
+//     });
+
+//     console.log("fbseUer---------User", fbaseUser)
+//     console.log("cleanerId---------User", cleanerId)
+//     console.log("Schedule---------User", schedule)
+//     console.log("scheduleId---------User", scheduleId)
+//     console.log("Cleaning fee---------User", cleaning_fee)
+//     // Create chat room and friend
+//     onAddFriend(
+//       cleanerId, 
+//       fbaseUser, 
+//       schedule, 
+//       scheduleId,
+//       cleaning_fee,
+//     )
+
+//     // onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
+
+    
+    
+//     // Redirect to dashboard
+//     navigation.navigate(ROUTES.host_home_tab); // Redirect
+//   };
+  
+//   const handlePaymentError = (error) => {
+//     setPaymentStatus(error.status);
+  
+//     Toast.show({
+//       type: 'error',
+//       text1: 'Payment Failed',
+//       text2: error.message || 'An unexpected error occurred.',
+//       position: 'bottom',
+//     });
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <ScrollView showsVerticalScrollIndicator={false}>
+//         <View style={{justifyContent:'center', alignItems:'center', marginTop:40, marginBottom:10}}>
+//         <View style={styles.circle}>
+//           <MaterialCommunityIcons name="cart" size={40} color="#ffffff" />
+//         </View>
+//         </View>
+//         <Text style={styles.header}>Payment Checkoutsss</Text>
+
+//         <PaymentDetails cleaningServiceFee={cleaning_fee} />
+
+//         {clientSecret && cleaning_fee > 0 ? (
+          
+//           <StripePaymentButton 
+//             clientSecret={clientSecret} 
+//             totalAmount={cleaning_fee} 
+//             onSuccess={handlePaymentSuccess}
+//             onError={handlePaymentError}
+//             fbaseUser={fbaseUser} 
+//             scheduleId = {scheduleId}
+//             schedule={schedule}
+//             cleanerId={cleanerId}
+//             hostId={currentUserId}
+//             hostName={currentUser.firstname + ' ' + currentUser.lastname}
+//             hostEMail={currentUser.email}
+//           />
+//         ) : (
+//           <Text style={{ textAlign: 'center', fontSize: 12 }}>Loading payment information...</Text>
+//         )}
+//       </ScrollView>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: 10,
+//     justifyContent: 'center',
+//     alignItems: 'stretch',
+//   },
+//   icon: {
+//     marginBottom: 20,
+//     textAlign: 'center',
+//   },
+//   header: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   circle: {
+//     width: 60,
+//     height: 60,
+//     borderRadius: 30, // Makes the view a perfect circle
+//     backgroundColor: COLORS.primary, // Set the circle's background color
+//     justifyContent: 'center', // Center the icon horizontally
+//     alignItems: 'center', // Center the icon vertically
+//   },
+// });
+
+// export default PaymentSingleCheckout;
+
+
+
+
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import StripePaymentButton from '../../../components/shared/StripePaymentButton';
@@ -11,9 +272,7 @@ import ROUTES from '../../../constants/routes';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import onAddFriend from '../../../utils/createNewChatFriend';
-
-
-
+import { tSafe } from '../../../utils/tSafe'; // added import
 
 const PaymentSingleCheckout = ({ route, navigation }) => {
   const { currentUser, currentUserId, fbaseUser } = useContext(AuthContext);
@@ -117,7 +376,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
           setPaymentIntentId(paymentIntentId);
           setPaymentStatus(status);
         } catch (error) {
-          Alert.alert('Error', 'Failed to create a payment intent.');
+          Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_create_payment_intent', 'Failed to create a payment intent.'));
         }
       }
     };
@@ -154,8 +413,8 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
   
     Toast.show({
       type: 'success',
-      text1: 'Payment Successful',
-      text2: `Payment of $${result.totalAmount} was successful!`,
+      text1: tSafe('payment_successful_title', 'Payment Successful'),
+      text2: tSafe('payment_successful_message', 'Payment of ${amount} was successful!', { amount: `$${result.totalAmount}` }),
       position: 'bottom',
     });
 
@@ -186,8 +445,8 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
   
     Toast.show({
       type: 'error',
-      text1: 'Payment Failed',
-      text2: error.message || 'An unexpected error occurred.',
+      text1: tSafe('payment_failed_title', 'Payment Failed'),
+      text2: error.message || tSafe('unexpected_error', 'An unexpected error occurred.'),
       position: 'bottom',
     });
   };
@@ -200,7 +459,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
           <MaterialCommunityIcons name="cart" size={40} color="#ffffff" />
         </View>
         </View>
-        <Text style={styles.header}>Payment Checkoutsss</Text>
+        <Text style={styles.header}>{tSafe('payment_checkout_title', 'Payment Checkout')}</Text>
 
         <PaymentDetails cleaningServiceFee={cleaning_fee} />
 
@@ -220,7 +479,9 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
             hostEMail={currentUser.email}
           />
         ) : (
-          <Text style={{ textAlign: 'center', fontSize: 12 }}>Loading payment information...</Text>
+          <Text style={{ textAlign: 'center', fontSize: 12 }}>
+            {tSafe('loading_payment_info', 'Loading payment information...')}
+          </Text>
         )}
       </ScrollView>
     </View>
@@ -255,7 +516,6 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentSingleCheckout;
-
 
 
 

@@ -232,11 +232,158 @@
 
 
 
+// import React, { useState, useEffect, useRef } from 'react';
+// import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+// import { TextInput } from 'react-native-paper';
+// import { geocodeAddress } from '../../utils/geocodeAddress';
+// import COLORS from '../../constants/colors';
+
+// const AddressInput = ({ 
+//     label, 
+//     value, 
+//     onChange, 
+//     onCoordinatesSet, 
+//     error,
+//     initialCoordinates 
+// }) => {
+//     const [coordinates, setCoordinates] = useState(null);
+//     const [isVerifying, setIsVerifying] = useState(false);
+//     const [verificationError, setVerificationError] = useState(null);
+//     const [lastVerifiedAddress, setLastVerifiedAddress] = useState(null);
+//     const initialLoad = useRef(true);
+
+//     // Initialize with existing coordinates
+//     useEffect(() => {
+//         if (initialCoordinates) {
+//             setCoordinates(initialCoordinates);
+//             setLastVerifiedAddress(value);
+//         }
+//     }, [initialCoordinates]);
+
+//     // Reset verification if address changes
+//     useEffect(() => {
+//         if (value !== lastVerifiedAddress) {
+//             setLastVerifiedAddress(null);
+//             setCoordinates(null);
+//         }
+//     }, [value]);
+
+//     const handleVerify = async () => {
+//         setIsVerifying(true);
+//         setVerificationError(null);
+//         try {
+//             const coords = await geocodeAddress(value);
+//             setCoordinates(coords);
+//             setLastVerifiedAddress(value);
+//             onCoordinatesSet(coords);
+//         } catch (err) {
+//             setVerificationError('Failed to verify address. Please check and try again.');
+//         } finally {
+//             setIsVerifying(false);
+//         }
+//     };
+
+//     return (
+//         <View style={styles.container}>
+            
+//             <TextInput
+//                 placeholder="Enter address manually"
+//                 outlineColor="#D8D8D8"
+//                 mode="outlined"
+//                 label={label}
+//                 activeOutlineColor={COLORS.primary}
+//                 style={{marginBottom:5, marginTop:5, color:COLORS.gray, fontSize:14, backgroundColor:"#fff"}}
+//                 value={value}
+//                 onChangeText={onChange}
+//                 editable={!isVerifying}
+//                 multiline
+//                 numberOfLines={2}
+//             />
+
+            
+//             {/* Verification Button */}
+//             <TouchableOpacity 
+//                 style={styles.verifyButton} 
+//                 onPress={handleVerify}
+//                 disabled={isVerifying}
+//             >
+//                 {isVerifying ? (
+//                     <ActivityIndicator color="white" />
+//                 ) : (
+//                     <Text style={styles.verifyButtonText}>
+//                         {coordinates ? 'Verified' : 'Verify Address'}
+//                     </Text>
+//                 )}
+//             </TouchableOpacity>
+
+//             {/* Verification Status */}
+//             {coordinates && (
+//                 <Text style={styles.verifiedText}>
+//                     Verified Location: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+//                 </Text>
+//             )}
+//             {verificationError && <Text style={styles.errorText}>{verificationError}</Text>}
+//             {error && <Text style={styles.errorText}>{error}</Text>}
+//         </View>
+//     );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//       marginBottom: 15,
+//   },
+//   label: {
+//       fontSize: 14,
+//       fontWeight: '500',
+//       marginBottom: 5,
+//       color: COLORS.dark,
+//   },
+//   input: {
+//       borderWidth: 1,
+//       borderColor: COLORS.lightGray,
+//       borderRadius: 5,
+//       padding: 10,
+//       fontSize: 14,
+//       backgroundColor: 'white',
+//   },
+//   errorInput: {
+//       borderColor: COLORS.red,
+//   },
+//   verifyButton: {
+//       backgroundColor: COLORS.primary,
+//       padding: 10,
+//       borderRadius: 5,
+//       alignItems: 'center',
+//       marginTop: 10,
+//   },
+//   verifyButtonText: {
+//       color: 'white',
+//       fontWeight: 'bold',
+//   },
+//   verifiedText: {
+//       marginTop: 5,
+//       color: COLORS.green,
+//       fontSize: 12,
+//       fontStyle: 'italic',
+//   },
+//   errorText: {
+//       marginTop: 5,
+//       color: COLORS.red,
+//       fontSize: 12,
+//   },
+// });
+
+// export default AddressInput;
+
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { geocodeAddress } from '../../utils/geocodeAddress';
 import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const AddressInput = ({ 
     label, 
@@ -277,7 +424,7 @@ const AddressInput = ({
             setLastVerifiedAddress(value);
             onCoordinatesSet(coords);
         } catch (err) {
-            setVerificationError('Failed to verify address. Please check and try again.');
+            setVerificationError(tSafe('address_verify_failed', 'Failed to verify address. Please check and try again.'));
         } finally {
             setIsVerifying(false);
         }
@@ -285,15 +432,13 @@ const AddressInput = ({
 
     return (
         <View style={styles.container}>
-            
             <TextInput
-                placeholder="Enter address manually"
-                // style={[styles.input, error ? styles.errorInput : null]}
+                placeholder={tSafe('enter_address_manually', 'Enter address manually')}
                 outlineColor="#D8D8D8"
                 mode="outlined"
                 label={label}
                 activeOutlineColor={COLORS.primary}
-                style={{marginBottom:5, marginTop:5, color:COLORS.gray, fontSize:14, backgroundColor:"#fff"}}
+                style={{ marginBottom: 5, marginTop: 5, color: COLORS.gray, fontSize: 14, backgroundColor: "#fff" }}
                 value={value}
                 onChangeText={onChange}
                 editable={!isVerifying}
@@ -301,7 +446,6 @@ const AddressInput = ({
                 numberOfLines={2}
             />
 
-            
             {/* Verification Button */}
             <TouchableOpacity 
                 style={styles.verifyButton} 
@@ -312,7 +456,7 @@ const AddressInput = ({
                     <ActivityIndicator color="white" />
                 ) : (
                     <Text style={styles.verifyButtonText}>
-                        {coordinates ? 'Verified' : 'Verify Address'}
+                        {coordinates ? tSafe('verified', 'Verified') : tSafe('verify_address', 'Verify Address')}
                     </Text>
                 )}
             </TouchableOpacity>
@@ -320,7 +464,7 @@ const AddressInput = ({
             {/* Verification Status */}
             {coordinates && (
                 <Text style={styles.verifiedText}>
-                    Verified Location: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+                    {tSafe('verified_location', 'Verified Location')}: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
                 </Text>
             )}
             {verificationError && <Text style={styles.errorText}>{verificationError}</Text>}
@@ -330,48 +474,48 @@ const AddressInput = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-      marginBottom: 15,
-  },
-  label: {
-      fontSize: 14,
-      fontWeight: '500',
-      marginBottom: 5,
-      color: COLORS.dark,
-  },
-  input: {
-      borderWidth: 1,
-      borderColor: COLORS.lightGray,
-      borderRadius: 5,
-      padding: 10,
-      fontSize: 14,
-      backgroundColor: 'white',
-  },
-  errorInput: {
-      borderColor: COLORS.red,
-  },
-  verifyButton: {
-      backgroundColor: COLORS.primary,
-      padding: 10,
-      borderRadius: 5,
-      alignItems: 'center',
-      marginTop: 10,
-  },
-  verifyButtonText: {
-      color: 'white',
-      fontWeight: 'bold',
-  },
-  verifiedText: {
-      marginTop: 5,
-      color: COLORS.green,
-      fontSize: 12,
-      fontStyle: 'italic',
-  },
-  errorText: {
-      marginTop: 5,
-      color: COLORS.red,
-      fontSize: 12,
-  },
+    container: {
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 5,
+        color: COLORS.dark,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: COLORS.lightGray,
+        borderRadius: 5,
+        padding: 10,
+        fontSize: 14,
+        backgroundColor: 'white',
+    },
+    errorInput: {
+        borderColor: COLORS.red,
+    },
+    verifyButton: {
+        backgroundColor: COLORS.primary,
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    verifyButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    verifiedText: {
+        marginTop: 5,
+        color: COLORS.green,
+        fontSize: 12,
+        fontStyle: 'italic',
+    },
+    errorText: {
+        marginTop: 5,
+        color: COLORS.red,
+        fontSize: 12,
+    },
 });
 
 export default AddressInput;

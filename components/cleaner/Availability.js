@@ -706,6 +706,7 @@ import DatePicker from 'react-native-date-picker';
 import COLORS from '../../constants/colors';
 import userService from '../../services/connection/userService';
 import { format } from 'date-fns';
+import { tSafe } from '../../utils/tSafe'; // added import
 
 // Helper: safely convert any input to a Date object
 const toSafeDate = (dateValue, fallback = new Date()) => {
@@ -744,7 +745,6 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
     try {
       const response = await userService.getCleanerAvailability(cleanerId);
       const data = response.data.data;
-      // Ensure availability is an array
       const rawAvailability = data?.availability || [];
       const formatted = rawAvailability.map((item) => ({
         day: item.day,
@@ -756,7 +756,7 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       setAvailability(formatted);
     } catch (err) {
       console.error('Error fetching availability:', err);
-      Alert.alert('Error', 'Failed to load availability');
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_availability', 'Failed to load availability'));
       setAvailability([]);
     } finally {
       setLoading(false);
@@ -765,11 +765,11 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
 
   const handleAddSlot = () => {
     if (!selectedDay) {
-      Alert.alert('Select Day', 'Please select a day first');
+      Alert.alert(tSafe('select_day_title', 'Select Day'), tSafe('please_select_day', 'Please select a day first'));
       return;
     }
     if (startTime >= endTime) {
-      Alert.alert('Invalid Time', 'End time must be after start time');
+      Alert.alert(tSafe('invalid_time_title', 'Invalid Time'), tSafe('end_time_after_start', 'End time must be after start time'));
       return;
     }
 
@@ -809,7 +809,6 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Defensive: ensure availability is an array
       if (!Array.isArray(availability)) {
         throw new Error(`Availability is not an array: ${typeof availability}`);
       }
@@ -825,12 +824,12 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       };
 
       await userService.updateCleanerAvailability(cleanerId, payload);
-      get_availability(payload); // Pass back to parent
-      Alert.alert('Success', 'Availability updated');
+      get_availability(payload);
+      Alert.alert(tSafe('success_title', 'Success'), tSafe('availability_updated', 'Availability updated'));
       close_avail_modal();
     } catch (err) {
       console.error('Error saving availability:', err);
-      Alert.alert('Error', 'Failed to save availability: ' + err.message);
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_save_availability', 'Failed to save availability: ') + err.message);
     } finally {
       setSaving(false);
     }
@@ -844,25 +843,40 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
     );
   }
 
+  // Helper to get translated day name
+  const getDayTranslation = (day) => {
+    const dayKey = day.toLowerCase();
+    switch (dayKey) {
+      case 'monday': return tSafe('monday', 'Monday');
+      case 'tuesday': return tSafe('tuesday', 'Tuesday');
+      case 'wednesday': return tSafe('wednesday', 'Wednesday');
+      case 'thursday': return tSafe('thursday', 'Thursday');
+      case 'friday': return tSafe('friday', 'Friday');
+      case 'saturday': return tSafe('saturday', 'Saturday');
+      case 'sunday': return tSafe('sunday', 'Sunday');
+      default: return day;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={close_avail_modal}>
           <MaterialCommunityIcons name="close" size={24} color={COLORS.gray} />
         </TouchableOpacity>
-        <Text style={styles.title}>Set Availability</Text>
+        <Text style={styles.title}>{tSafe('set_availability', 'Set Availability')}</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving}>
           {saving ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : (
-            <Text style={styles.saveText}>Save</Text>
+            <Text style={styles.saveText}>{tSafe('save', 'Save')}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
         {/* Day Selection */}
-        <Text style={styles.sectionTitle}>Select Day</Text>
+        <Text style={styles.sectionTitle}>{tSafe('select_day', 'Select Day')}</Text>
         <View style={styles.daysContainer}>
           {days.map((day) => (
             <TouchableOpacity
@@ -879,7 +893,7 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
                   selectedDay === day && styles.dayTextSelected,
                 ]}
               >
-                {day.slice(0, 3)}
+                {getDayTranslation(day).slice(0, 3)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -888,20 +902,20 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
         {/* Time Selection */}
         {selectedDay && (
           <>
-            <Text style={styles.sectionTitle}>Add Time Slot</Text>
+            <Text style={styles.sectionTitle}>{tSafe('add_time_slot', 'Add Time Slot')}</Text>
             <View style={styles.timeRow}>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setTimePickerVisible({ visible: true, type: 'start' })}
               >
-                <Text style={styles.timeLabel}>Start</Text>
+                <Text style={styles.timeLabel}>{tSafe('start', 'Start')}</Text>
                 <Text style={styles.timeValue}>{formatTime(startTime)}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setTimePickerVisible({ visible: true, type: 'end' })}
               >
-                <Text style={styles.timeLabel}>End</Text>
+                <Text style={styles.timeLabel}>{tSafe('end', 'End')}</Text>
                 <Text style={styles.timeValue}>{formatTime(endTime)}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.addButton} onPress={handleAddSlot}>
@@ -912,7 +926,7 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
         )}
 
         {/* Availability List */}
-        <Text style={styles.sectionTitle}>Your Availability</Text>
+        <Text style={styles.sectionTitle}>{tSafe('your_availability', 'Your Availability')}</Text>
         {availability.length === 0 ? (
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons
@@ -920,12 +934,12 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
               size={48}
               color={COLORS.gray}
             />
-            <Text style={styles.emptyText}>No availability set yet.</Text>
+            <Text style={styles.emptyText}>{tSafe('no_availability_set', 'No availability set yet.')}</Text>
           </View>
         ) : (
           availability.map((item) => (
             <View key={item.day} style={styles.daySection}>
-              <Text style={styles.dayHeader}>{item.day}</Text>
+              <Text style={styles.dayHeader}>{getDayTranslation(item.day)}</Text>
               {item.slots.map((slot, index) => (
                 <View key={index} style={styles.slotRow}>
                   <Text style={styles.slotTime}>
@@ -963,9 +977,9 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
           setTimePickerVisible({ ...timePickerVisible, visible: false });
         }}
         onCancel={() => setTimePickerVisible({ ...timePickerVisible, visible: false })}
-        title={timePickerVisible.type === 'start' ? 'Select Start Time' : 'Select End Time'}
-        confirmText="Done"
-        cancelText="Cancel"
+        title={timePickerVisible.type === 'start' ? tSafe('select_start_time', 'Select Start Time') : tSafe('select_end_time', 'Select End Time')}
+        confirmText={tSafe('done', 'Done')}
+        cancelText={tSafe('cancel', 'Cancel')}
         locale="en"
         minuteInterval={15}
         is24hourSource="locale"

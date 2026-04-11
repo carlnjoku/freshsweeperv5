@@ -649,6 +649,7 @@ import moment from 'moment';
 import COLORS from '../../constants/colors';
 import { useNavigation } from '@react-navigation/native';
 import ROUTES from '../../constants/routes';
+import { tSafe } from '../../utils/tSafe';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -685,27 +686,47 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
     
     // If payment has been released, show payment released status (highest priority)
     if (isPaymentReleased) {
-      return { type: 'payment_released', text: 'Payment Released', color: COLORS.success };
+      return { 
+        type: 'payment_released', 
+        text: tSafe('payment_released', 'Payment Released'), 
+        color: COLORS.success 
+      };
     }
     
     // If payment is approved but not yet released
     if (isPaymentApproved || currentCleanerStatus === 'payment_approved') {
-      return { type: 'payment_approved', text: 'Payment Approved', color: '#28a745' }; // Green color
+      return { 
+        type: 'payment_approved', 
+        text: tSafe('payment_approved', 'Payment Approved'), 
+        color: '#28a745' 
+      }; // Green color
     }
     
     // If status is payment_confirmed
     if (currentCleanerStatus === 'payment_confirmed') {
-      return { type: 'payment_confirmed', text: 'Payment Confirmed', color: '#17a2b8' }; // Teal color
+      return { 
+        type: 'payment_confirmed', 
+        text: tSafe('payment_confirmed', 'Payment Confirmed'), 
+        color: '#17a2b8' 
+      }; // Teal color
     }
     
     // If current cleaner is completed, show as completed
     if (currentCleanerStatus === 'completed') {
-      return { type: 'completed', text: 'Completed', color: COLORS.green };
+      return { 
+        type: 'completed', 
+        text: tSafe('completed', 'Completed'), 
+        color: COLORS.green 
+      };
     }
     
     // If current cleaner is uncompleted, show as uncompleted
     if (currentCleanerStatus === 'uncompleted') {
-      return { type: 'uncompleted', text: 'Uncompleted', color: COLORS.error };
+      return { 
+        type: 'uncompleted', 
+        text: tSafe('uncompleted', 'Uncompleted'), 
+        color: COLORS.error 
+      };
     }
     
     // Check if all cleaners are completed (for overall schedule status)
@@ -720,11 +741,23 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
   
     // Final fallback logic
     if (allCleanersCompleted) {
-      return { type: 'completed', text: 'Completed', color: COLORS.success };
+      return { 
+        type: 'completed', 
+        text: tSafe('completed', 'Completed'), 
+        color: COLORS.success 
+      };
     } else if (anyCleanerUncompleted) {
-      return { type: 'uncompleted', text: 'Uncompleted', color: COLORS.error };
+      return { 
+        type: 'uncompleted', 
+        text: tSafe('uncompleted', 'Uncompleted'), 
+        color: COLORS.error 
+      };
     } else {
-      return { type: 'in_progress', text: 'In Progress', color: COLORS.warning };
+      return { 
+        type: 'in_progress', 
+        text: tSafe('in_progress', 'In Progress'), 
+        color: COLORS.warning 
+      };
     }
   };
 
@@ -797,15 +830,25 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
     const scheduledDate = schedule?.schedule?.cleaning_date;
     
     if (completionStatus.type === 'payment_released' && currentCleaner.payout_date) {
-      return `Paid ${moment(currentCleaner.payout_date).format('MMM DD, YYYY')}`;
+      return tSafe('paid_on_date', 'Paid {date}', { 
+        date: moment(currentCleaner.payout_date).format('MMM DD, YYYY') 
+      });
     } else if (completionStatus.type === 'payment_approved') {
-      return `Approved ${moment(completionDate).format('MMM DD, YYYY')}`;
+      return tSafe('approved_on_date', 'Approved {date}', { 
+        date: moment(completionDate).format('MMM DD, YYYY') 
+      });
     } else if (completionStatus.type === 'payment_confirmed') {
-      return `Payment Confirmed ${moment(completionDate).format('MMM DD, YYYY')}`;
+      return tSafe('payment_confirmed_on_date', 'Payment Confirmed {date}', { 
+        date: moment(completionDate).format('MMM DD, YYYY') 
+      });
     } else if (completionStatus.type === 'completed') {
-      return `Completed ${moment(completionDate).format('MMM DD, YYYY [at] h:mm A')}`;
+      return tSafe('completed_on_date_time', 'Completed {dateTime}', { 
+        dateTime: moment(completionDate).format('MMM DD, YYYY [at] h:mm A') 
+      });
     } else {
-      return `Scheduled ${moment(scheduledDate).format('MMM DD, YYYY [at] h:mm A')}`;
+      return tSafe('scheduled_on_date_time', 'Scheduled {dateTime}', { 
+        dateTime: moment(scheduledDate).format('MMM DD, YYYY [at] h:mm A') 
+      });
     }
   };
 
@@ -828,8 +871,8 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
               </Text>
               <Text style={styles.cleanerGroup}>
                 {currentCleaner.group?.replace('_', ' ')} • ${fee.toFixed(2)}
-                {currentCleaner.payment_released && ' • Paid'}
-                {currentCleaner.payout_date && ` on ${moment(currentCleaner.payout_date).format('MMM DD')}`}
+                {currentCleaner.payment_released && ` • ${tSafe('paid', 'Paid')}`}
+                {currentCleaner.payout_date && ` ${tSafe('on', 'on')} ${moment(currentCleaner.payout_date).format('MMM DD')}`}
               </Text>
             </View>
           </View>
@@ -863,7 +906,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
               />
             </View>
             <Text style={styles.progressText}>
-              {progress.completed}/{progress.total} tasks
+              {progress.completed}/{progress.total} {tSafe('tasks', 'tasks')}
             </Text>
           </View>
         )}
@@ -897,15 +940,17 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
                 }
               ]}>
                 {completionStatus.type === 'payment_released' 
-                  ? `Payment released ${currentCleaner.payout_date ? moment(currentCleaner.payout_date).format('MMM DD, YYYY') : ''}`
+                  ? tSafe('payment_released_on_date', 'Payment released {date}', { 
+                      date: currentCleaner.payout_date ? moment(currentCleaner.payout_date).format('MMM DD, YYYY') : ''
+                    })
                   : completionStatus.type === 'approved'
-                  ? 'Payment approved - awaiting release'
-                  : 'Payment confirmed - under review'}
+                  ? tSafe('payment_approved_awaiting_release', 'Payment approved - awaiting release')
+                  : tSafe('payment_confirmed_under_review', 'Payment confirmed - under review')}
               </Text>
             </View>
             {currentCleaner.transfer_id && (
               <Text style={styles.transferId}>
-                Transfer ID: {currentCleaner.transfer_id}
+                {tSafe('transfer_id', 'Transfer ID')}: {currentCleaner.transfer_id}
               </Text>
             )}
           </View>
@@ -914,7 +959,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
         {/* Room Assignment */}
         {currentCleaner.checklist?.rooms && (
           <View style={styles.roomsContainer}>
-            <Text style={styles.roomsLabel}>Rooms:</Text>
+            <Text style={styles.roomsLabel}>{tSafe('rooms_label', 'Rooms:')}</Text>
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
@@ -934,7 +979,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
         {/* Extras */}
         {currentCleaner.checklist?.extras && currentCleaner.checklist.extras.length > 0 && (
           <View style={styles.extrasContainer}>
-            <Text style={styles.extrasLabel}>Extras:</Text>
+            <Text style={styles.extrasLabel}>{tSafe('extras_label', 'Extras:')}</Text>
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
@@ -962,7 +1007,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
             <View style={styles.titleRow}>
               <AntDesign name="home" size={20} color={COLORS.primary}/>
               <Text style={styles.title} numberOfLines={1}>
-                {schedule?.schedule?.apartment_name || 'Unknown Property'}
+                {schedule?.schedule?.apartment_name || tSafe('unknown_property', 'Unknown Property')}
               </Text>
             </View>
             
@@ -995,7 +1040,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
               />
             </View>
             <Text style={styles.cleanersPreviewText}>
-              Your assignment • {completionStatus.text}
+              {tSafe('your_assignment', 'Your assignment')} • {completionStatus.text}
             </Text>
           </View>
         </View>
@@ -1012,7 +1057,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
           activeOpacity={0.7}
         >
           <Text style={styles.viewDetailsText}>
-            {expanded ? "Hide Details" : "View Details"}
+            {expanded ? tSafe('hide_details', 'Hide Details') : tSafe('view_details', 'View Details')}
           </Text>
           <Animated.View style={{ transform: [{ rotate }] }}>
             <Ionicons name="chevron-down" size={20} color={COLORS.primary} />
@@ -1026,31 +1071,31 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
             
             {/* Cleaner Section */}
             <View style={styles.cleanerSection}>
-              <Text style={styles.sectionTitle}>Your Assignment</Text>
+              <Text style={styles.sectionTitle}>{tSafe('your_assignment_section', 'Your Assignment')}</Text>
               {renderCleanerDetails()}
             </View>
 
             {/* Property Details */}
             <View style={styles.propertySection}>
-              <Text style={styles.sectionTitle}>Property Details</Text>
+              <Text style={styles.sectionTitle}>{tSafe('property_details', 'Property Details')}</Text>
               <View style={styles.propertyStats}>
                 <View style={styles.statItem}>
                   <Ionicons name="time-outline" size={16} color={COLORS.gray} />
                   <Text style={styles.statText}>
-                    {schedule?.schedule?.total_cleaning_time || 0} min
+                    {schedule?.schedule?.total_cleaning_time || 0} {tSafe('minutes_abbr', 'min')}
                   </Text>
                 </View>
                 <View style={styles.statItem}>
                   <Ionicons name="cash-outline" size={16} color={COLORS.gray} />
                   <Text style={styles.statText}>
-                    ${fee.toFixed(2)} (Your fee)
-                    {currentCleaner.payment_released && ' • Paid'}
+                    ${fee.toFixed(2)} {tSafe('your_fee', '(Your fee)')}
+                    {currentCleaner.payment_released && ` • ${tSafe('paid', 'Paid')}`}
                   </Text>
                 </View>
                 <View style={styles.statItem}>
                   <Ionicons name="location-outline" size={16} color={COLORS.gray} />
                   <Text style={styles.statText} numberOfLines={1}>
-                    {schedule?.schedule?.address?.split(',')[0] || 'Unknown address'}
+                    {schedule?.schedule?.address?.split(',')[0] || tSafe('unknown_address', 'Unknown address')}
                   </Text>
                 </View>
               </View>
@@ -1058,7 +1103,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
 
             {/* Photo preview section - filtered for this cleaner if needed */}
             <View style={styles.photoSection}>
-              <Text style={styles.sectionTitle}>Your Cleaning Photos</Text>
+              <Text style={styles.sectionTitle}>{tSafe('your_cleaning_photos', 'Your Cleaning Photos')}</Text>
               <PhotoPreview 
                 checklist={currentCleaner.checklist || schedule.checklist} 
                 onImagePress={onImagePress}
@@ -1259,7 +1304,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  // Payment info styles
   paymentInfo: {
     padding: 12,
     borderRadius: 8,

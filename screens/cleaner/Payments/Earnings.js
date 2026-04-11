@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import COLORS from '../../../constants/colors';
 import ROUTES from '../../../constants/routes';
 import { formatAmountWithSymbol } from '../../../utils/formatAmountWithSymbol';
 import { minutesToDuration } from '../../../utils/minuteToDuration';
+import { tSafe } from '../../../utils/tSafe';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,12 +40,13 @@ const Earnings = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [slideAnim] = useState(new Animated.Value(height));
 
-  const periods = [
-    { id: 'week', label: 'This Week' },
-    { id: 'month', label: 'This Month' },
-    { id: 'quarter', label: 'This Quarter' },
-    { id: 'year', label: 'This Year' },
-  ];
+  // Define periods with translation keys
+  const periods = useMemo(() => [
+    { id: 'week', label: tSafe('this_week', 'This Week') },
+    { id: 'month', label: tSafe('this_month', 'This Month') },
+    { id: 'quarter', label: tSafe('this_quarter', 'This Quarter') },
+    { id: 'year', label: tSafe('this_year', 'This Year') },
+  ], []);
 
   // Fetch earnings data
   const fetchEarningsData = async () => {
@@ -126,7 +128,7 @@ const Earnings = () => {
   const getFallbackData = () => {
     const cleanerName = currentUser 
       ? `${currentUser.firstname || ''} ${currentUser.lastname || ''}`.trim()
-      : 'Cleaner';
+      : tSafe('cleaner', 'Cleaner');
     
     return {
       totalEarnings: 0,
@@ -164,12 +166,12 @@ const Earnings = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `$${amount?.toFixed(2) || '0.00'}`;
+    return `${currencySymbol}${amount?.toFixed(2) || '0.00'}`;
   };
 
   const formatDate = (dateString) => {
     try {
-      if (!dateString) return 'Date unknown';
+      if (!dateString) return tSafe('date_unknown', 'Date unknown');
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         month: 'short',
@@ -177,13 +179,13 @@ const Earnings = () => {
         year: 'numeric',
       });
     } catch (error) {
-      return 'Invalid date';
+      return tSafe('invalid_date', 'Invalid date');
     }
   };
 
   const formatDateTime = (dateString) => {
     try {
-      if (!dateString) return 'Date unknown';
+      if (!dateString) return tSafe('date_unknown', 'Date unknown');
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         month: 'long',
@@ -193,7 +195,7 @@ const Earnings = () => {
         minute: '2-digit',
       });
     } catch (error) {
-      return 'Invalid date';
+      return tSafe('invalid_date', 'Invalid date');
     }
   };
 
@@ -210,7 +212,9 @@ const Earnings = () => {
           </View>
         ))}
         {badges.length > 3 && (
-          <Text style={styles.moreBadgesText}>+{badges.length - 3} more</Text>
+          <Text style={styles.moreBadgesText}>
+            {tSafe('more_badges', '+{count} more', { count: badges.length - 3 })}
+          </Text>
         )}
       </View>
     );
@@ -220,7 +224,7 @@ const Earnings = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading earnings data...</Text>
+        <Text style={styles.loadingText}>{tSafe('loading_earnings', 'Loading earnings data...')}</Text>
       </View>
     );
   }
@@ -229,10 +233,13 @@ const Earnings = () => {
   const cleanerInfo = earningsData?.cleanerInfo || {
     name: currentUser 
       ? `${currentUser.firstname || ''} ${currentUser.lastname || ''}`.trim()
-      : 'Cleaner',
+      : tSafe('cleaner', 'Cleaner'),
     avatar: currentUser?.avatar || '',
     rankingScore: currentUser?.ranking_score || 0,
   };
+
+  // Helper to get current period label
+  const currentPeriodLabel = periods.find(p => p.id === selectedPeriod)?.label || '';
 
   return (
     <View style={styles.container}>
@@ -253,9 +260,9 @@ const Earnings = () => {
             </View>
           )}
           <View>
-            <Text style={styles.userName}>{cleanerInfo?.name || 'Cleaner'}</Text>
+            <Text style={styles.userName}>{cleanerInfo?.name || tSafe('cleaner', 'Cleaner')}</Text>
             <Text style={styles.userSubtitle}>
-              Ranking: {(cleanerInfo?.rankingScore || 0).toFixed(1)}
+              {tSafe('ranking_label', 'Ranking: {score}', { score: (cleanerInfo?.rankingScore || 0).toFixed(1) })}
             </Text>
           </View>
         </View>
@@ -298,7 +305,7 @@ const Earnings = () => {
           {/* Earnings Summary Card */}
           <View style={styles.earningsCard}>
             <Text style={styles.earningsLabel}>
-              Total Earnings ({periods.find(p => p.id === selectedPeriod)?.label})
+              {tSafe('total_earnings_label', 'Total Earnings ({period})', { period: currentPeriodLabel })}
             </Text>
             <Text style={styles.earningsAmount}>
               {formatCurrency(getPeriodEarnings())}
@@ -308,21 +315,21 @@ const Earnings = () => {
               <View style={styles.stat}>
                 <MaterialCommunityIcons name="check-circle" size={16} color="#34C759" />
                 <Text style={styles.statText}>
-                  {(earningsData?.completedJobs || 0)} jobs
+                  {tSafe('jobs_count', '{count} jobs', { count: earningsData?.completedJobs || 0 })}
                 </Text>
               </View>
               <View style={styles.stat}>
                 <MaterialCommunityIcons name="star" size={16} color="#FFCC00" />
                 <Text style={styles.statText}>
-                  {(earningsData?.averageRating || 0).toFixed(1)} rating
+                  {tSafe('rating_label', '{rating} rating', { rating: (earningsData?.averageRating || 0).toFixed(1) })}
                 </Text>
               </View>
               <View style={styles.stat}>
                 <MaterialCommunityIcons name="trending-up" size={16} color="#34C759" />
                 <Text style={styles.statText}>
                   {earningsData?.averageEarningsPerJob ? 
-                    formatCurrency(earningsData.averageEarningsPerJob) + '/job' : 
-                    '$0.00/job'}
+                    tSafe('per_job', '{amount}/job', { amount: formatCurrency(earningsData.averageEarningsPerJob) }) : 
+                    tSafe('zero_per_job', '$0.00/job')}
                 </Text>
               </View>
             </View>
@@ -336,7 +343,7 @@ const Earnings = () => {
             <View style={styles.payoutHeader}>
               <MaterialCommunityIcons name="cash-fast" size={24} color="#007AFF" />
               <View style={styles.payoutInfo}>
-                <Text style={styles.payoutLabel}>Next Payout</Text>
+                <Text style={styles.payoutLabel}>{tSafe('next_payout', 'Next Payout')}</Text>
                 <Text style={styles.payoutAmount}>
                   {formatCurrency(earningsData?.upcomingPayout || 0)}
                 </Text>
@@ -344,17 +351,17 @@ const Earnings = () => {
             </View>
             <View style={styles.payoutDetails}>
               <Text style={styles.payoutDate}>
-                Processing on {formatDate(earningsData?.payoutDate)}
+                {tSafe('processing_on', 'Processing on {date}', { date: formatDate(earningsData?.payoutDate) })}
               </Text>
               {earningsData?.monthlyGrowth > 0 ? (
                 <Text style={styles.growthText}>
                   <MaterialCommunityIcons name="trending-up" size={14} color="#34C759" />
-                  +{(earningsData.monthlyGrowth || 0).toFixed(1)}% this month
+                  {tSafe('growth_positive', '+{percent}% this month', { percent: (earningsData.monthlyGrowth || 0).toFixed(1) })}
                 </Text>
               ) : earningsData?.monthlyGrowth < 0 ? (
                 <Text style={styles.growthTextNegative}>
                   <MaterialCommunityIcons name="trending-down" size={14} color="#FF3B30" />
-                  {(earningsData.monthlyGrowth || 0).toFixed(1)}% this month
+                  {tSafe('growth_negative', '{percent}% this month', { percent: (earningsData.monthlyGrowth || 0).toFixed(1) })}
                 </Text>
               ) : null}
             </View>
@@ -362,37 +369,37 @@ const Earnings = () => {
 
           {/* Performance Metrics */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Performance Metrics</Text>
+            <Text style={styles.sectionTitle}>{tSafe('performance_metrics', 'Performance Metrics')}</Text>
             <View style={styles.metricsGrid}>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>
                   {earningsData?.performance?.jobsCompleted || 0}
                 </Text>
-                <Text style={styles.metricLabel}>Jobs Completed</Text>
+                <Text style={styles.metricLabel}>{tSafe('jobs_completed', 'Jobs Completed')}</Text>
               </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>
                   {earningsData?.performance?.repeatClients || 0}
                 </Text>
-                <Text style={styles.metricLabel}>Repeat Clients</Text>
+                <Text style={styles.metricLabel}>{tSafe('repeat_clients', 'Repeat Clients')}</Text>
               </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>
                   {((earningsData?.performance?.cancellationRate || 0) * 100).toFixed(1)}%
                 </Text>
-                <Text style={styles.metricLabel}>Cancellation Rate</Text>
+                <Text style={styles.metricLabel}>{tSafe('cancellation_rate', 'Cancellation Rate')}</Text>
               </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>
                   {earningsData?.performance?.responseTime || '0 min'}
                 </Text>
-                <Text style={styles.metricLabel}>Avg. Response</Text>
+                <Text style={styles.metricLabel}>{tSafe('avg_response', 'Avg. Response')}</Text>
               </View>
               <View style={[styles.metricCard, styles.fullWidthMetric]}>
                 <Text style={styles.metricValue}>
                   {((earningsData?.performance?.acceptanceRate || 0) * 100).toFixed(0)}%
                 </Text>
-                <Text style={styles.metricLabel}>Job Acceptance Rate</Text>
+                <Text style={styles.metricLabel}>{tSafe('job_acceptance_rate', 'Job Acceptance Rate')}</Text>
               </View>
             </View>
           </View>
@@ -400,12 +407,11 @@ const Earnings = () => {
           {/* Recent Payments */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Payments</Text>
+              <Text style={styles.sectionTitle}>{tSafe('recent_payments', 'Recent Payments')}</Text>
               <TouchableOpacity 
                 onPress={() => navigation.navigate(ROUTES.cleaner_payment_history, {item:"item"})}
               >
-                
-                <Text style={styles.seeAllText}>See All</Text>
+                <Text style={styles.seeAllText}>{tSafe('see_all', 'See All')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -425,10 +431,10 @@ const Earnings = () => {
                     />
                   </View>
                   <View style={styles.paymentDetails}>
-                    <Text style={styles.paymentService}>{payment.service || 'Cleaning Service'}</Text>
-                    <Text style={styles.paymentClient}>{payment.client || 'Client'}</Text>
+                    <Text style={styles.paymentService}>{payment.service || tSafe('cleaning_service', 'Cleaning Service')}</Text>
+                    <Text style={styles.paymentClient}>{payment.client || tSafe('client', 'Client')}</Text>
                     <Text style={styles.paymentDate}>
-                      {(payment.date)} • {payment.duration || 'N/A'}
+                      {payment.date ? formatDate(payment.date) : tSafe('date_unknown', 'Date unknown')} • {payment.duration || tSafe('duration_na', 'N/A')}
                     </Text>
                   </View>
                   <View style={styles.paymentAmountContainer}>
@@ -446,9 +452,9 @@ const Earnings = () => {
             ) : (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons name="cash-remove" size={48} color="#C7C7CC" />
-                <Text style={styles.emptyStateText}>No recent payments</Text>
+                <Text style={styles.emptyStateText}>{tSafe('no_recent_payments', 'No recent payments')}</Text>
                 <Text style={styles.emptyStateSubtext}>
-                  Complete jobs to see your earnings here
+                  {tSafe('complete_jobs_to_see_earnings', 'Complete jobs to see your earnings here')}
                 </Text>
               </View>
             )}
@@ -461,21 +467,21 @@ const Earnings = () => {
               onPress={() => navigation.navigate('EarningsReport')}
             >
               <MaterialCommunityIcons name="chart-box" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>Detailed Reports</Text>
+              <Text style={styles.actionText}>{tSafe('detailed_reports', 'Detailed Reports')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => navigation.navigate('PayoutSettings')}
             >
               <MaterialCommunityIcons name="bank-outline" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>Payout Settings</Text>
+              <Text style={styles.actionText}>{tSafe('payout_settings', 'Payout Settings')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => navigation.navigate('TaxDocuments')}
             >
               <MaterialCommunityIcons name="file-document" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>Tax Documents</Text>
+              <Text style={styles.actionText}>{tSafe('tax_documents', 'Tax Documents')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -483,13 +489,13 @@ const Earnings = () => {
           <View style={styles.lifetimeEarnings}>
             <View style={styles.lifetimeHeader}>
               <MaterialCommunityIcons name="trophy" size={20} color="#FFD700" />
-              <Text style={styles.lifetimeTitle}>Lifetime Earnings</Text>
+              <Text style={styles.lifetimeTitle}>{tSafe('lifetime_earnings', 'Lifetime Earnings')}</Text>
             </View>
             <Text style={styles.lifetimeAmount}>
               {formatCurrency(earningsData?.totalEarnings || 0)}
             </Text>
             <Text style={styles.lifetimeSubtitle}>
-              Total from all completed jobs
+              {tSafe('total_from_completed_jobs', 'Total from all completed jobs')}
             </Text>
           </View>
         </View>
@@ -540,7 +546,9 @@ const Earnings = () => {
                       {formatCurrency(selectedPayment.amount)}
                     </Text>
                     <Text style={styles.modalPaymentStatus}>
-                      {selectedPayment.approval_type === 'manual' ? 'Manually Approved' : 'Auto Approved'}
+                      {selectedPayment.approval_type === 'manual' 
+                        ? tSafe('manually_approved', 'Manually Approved')
+                        : tSafe('auto_approved', 'Auto Approved')}
                     </Text>
                   </View>
 
@@ -549,38 +557,38 @@ const Earnings = () => {
 
                   {/* Payment Details */}
                   <View style={styles.detailsSection}>
-                    <Text style={styles.sectionLabel}>Payment Details</Text>
+                    <Text style={styles.sectionLabel}>{tSafe('payment_details', 'Payment Details')}</Text>
                     
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="briefcase" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Service Type</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.service || 'Standard Cleaning'}</Text>
+                        <Text style={styles.detailLabel}>{tSafe('service_type', 'Service Type')}</Text>
+                        <Text style={styles.detailValue}>{selectedPayment.service || tSafe('standard_cleaning', 'Standard Cleaning')}</Text>
                       </View>
                     </View>
 
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="account" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Client</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.client || 'Anonymous'}</Text>
+                        <Text style={styles.detailLabel}>{tSafe('client', 'Client')}</Text>
+                        <Text style={styles.detailValue}>{selectedPayment.client || tSafe('anonymous', 'Anonymous')}</Text>
                       </View>
                     </View>
 
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="clock-outline" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Duration</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.duration || '2 hours'}</Text>
+                        <Text style={styles.detailLabel}>{tSafe('duration', 'Duration')}</Text>
+                        <Text style={styles.detailValue}>{selectedPayment.duration || tSafe('two_hours', '2 hours')}</Text>
                       </View>
                     </View>
 
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="calendar" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Date & Time</Text>
+                        <Text style={styles.detailLabel}>{tSafe('date_time', 'Date & Time')}</Text>
                         <Text style={styles.detailValue}>
-                          {formatDateTime(selectedPayment.date) || 'Date not available'}
+                          {formatDateTime(selectedPayment.date) || tSafe('date_not_available', 'Date not available')}
                         </Text>
                       </View>
                     </View>
@@ -588,9 +596,9 @@ const Earnings = () => {
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="check-circle" size={20} color="#34C759" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Status</Text>
+                        <Text style={styles.detailLabel}>{tSafe('status', 'Status')}</Text>
                         <Text style={[styles.detailValue, styles.statusCompleted]}>
-                          Completed
+                          {tSafe('completed', 'Completed')}
                         </Text>
                       </View>
                     </View>
@@ -598,12 +606,12 @@ const Earnings = () => {
 
                   {/* Payment ID Section */}
                   <View style={styles.detailsSection}>
-                    <Text style={styles.sectionLabel}>Payment Information</Text>
+                    <Text style={styles.sectionLabel}>{tSafe('payment_information', 'Payment Information')}</Text>
                     
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="identifier" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Payment ID</Text>
+                        <Text style={styles.detailLabel}>{tSafe('payment_id', 'Payment ID')}</Text>
                         <Text style={styles.detailValueSmall}>
                           {selectedPayment.id || 'N/A'}
                         </Text>
@@ -613,9 +621,11 @@ const Earnings = () => {
                     <View style={styles.detailRow}>
                       <MaterialCommunityIcons name="credit-card" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
-                        <Text style={styles.detailLabel}>Approval Type</Text>
+                        <Text style={styles.detailLabel}>{tSafe('approval_type', 'Approval Type')}</Text>
                         <Text style={styles.detailValue}>
-                          {selectedPayment.approval_type === 'manual' ? 'Manual Approval' : 'Automatic'}
+                          {selectedPayment.approval_type === 'manual' 
+                            ? tSafe('manual_approval', 'Manual Approval')
+                            : tSafe('automatic', 'Automatic')}
                         </Text>
                       </View>
                     </View>
@@ -624,7 +634,7 @@ const Earnings = () => {
                   {/* Notes Section (if available) */}
                   {selectedPayment.notes && (
                     <View style={styles.detailsSection}>
-                      <Text style={styles.sectionLabel}>Notes</Text>
+                      <Text style={styles.sectionLabel}>{tSafe('notes', 'Notes')}</Text>
                       <View style={styles.notesContainer}>
                         <Text style={styles.notesText}>{selectedPayment.notes}</Text>
                       </View>
@@ -642,14 +652,14 @@ const Earnings = () => {
                       }}
                     >
                       <MaterialCommunityIcons name="download" size={20} color="#FFFFFF" />
-                      <Text style={styles.primaryActionText}>Download Receipt</Text>
+                      <Text style={styles.primaryActionText}>{tSafe('download_receipt', 'Download Receipt')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
                       style={[styles.actionButton, styles.secondaryAction]}
                       onPress={closePaymentModal}
                     >
-                      <Text style={styles.secondaryActionText}>Close</Text>
+                      <Text style={styles.secondaryActionText}>{tSafe('close', 'Close')}</Text>
                     </TouchableOpacity>
                   </View>
                 </>

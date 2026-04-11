@@ -1622,7 +1622,1285 @@
 
 
 
-import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+// import React, { useState, useEffect, useLayoutEffect, useContext, useCallback } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   RefreshControl,
+//   TouchableOpacity,
+//   Image,
+//   Alert,
+//   FlatList,
+//   ActivityIndicator,
+//   Switch, // use native Switch
+// } from 'react-native';
+// import { IconButton, Avatar, Divider } from 'react-native-paper';
+// import { MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
+// import { useNavigation, useFocusEffect } from '@react-navigation/native';
+// import * as Animatable from 'react-native-animatable';
+
+// import COLORS from '../../constants/colors';
+// import ROUTES from '../../constants/routes';
+// import CircleIcon from '../../components/shared/CircleIcon';
+// import AddICalModal from '../../components/host/AddICalModal';
+// import userService from '../../services/connection/userService';
+// import { AuthContext } from '../../context/AuthContext';
+
+// export default function PropertyDashboard({ route }) {
+//   const { property } = route.params;
+//   const { currentUserId } = useContext(AuthContext);
+//   const navigation = useNavigation();
+
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [linkedCleaners, setLinkedCleaners] = useState([]);
+//   const [checklists, setChecklists] = useState([]);
+//   const [syncedCalendars, setSyncedCalendars] = useState([]);
+//   const [modalVisible, setModalVisible] = useState(false);
+//   const [selectedCalendar, setSelectedCalendar] = useState(null);
+//   const [selectedPlatform, setSelectedPlatform] = useState(null);
+//   const [loadingCleaners, setLoadingCleaners] = useState(false);
+//   const [loadingChecklists, setLoadingChecklists] = useState(false);
+
+//   // Room details
+//   const bedroomCount = property?.roomDetails?.find(r => r.type === "Bedroom")?.number || 0;
+//   const bathroomCount = property?.roomDetails?.find(r => r.type === "Bathroom")?.number || 0;
+//   const kitchen = property?.roomDetails?.find(r => r.type === "Kitchen")?.number || 0;
+//   const livingroomCount = property?.roomDetails?.find(r => r.type === "Livingroom")?.number || 0;
+//   const bedroomSize = property?.roomDetails?.find(r => r.type === "Bedroom")?.size || 0;
+//   const bathroomSize = property?.roomDetails?.find(r => r.type === "Bathroom")?.size || 0;
+//   const kitchenSize = property?.roomDetails?.find(r => r.type === "Kitchen")?.size || 0;
+//   const livingroomSize = property?.roomDetails?.find(r => r.type === "Livingroom")?.size || 0;
+
+  
+//   // Fetch linked cleaners (from preferredCleaners)
+//   const fetchLinkedCleaners = async () => {
+
+//     if (!property.preferredCleaners?.length) {
+//       setLinkedCleaners([]);
+//       return;
+//     }
+    
+//     setLoadingCleaners(true);
+//     try {
+      
+//       const cleanerIds = property.preferredCleaners.map(pc => pc.id);
+      
+//       const users = await Promise.all(
+//         cleanerIds.map(id => userService.getUser(id).catch(() => null))
+//       );
+//       const validCleaners = users
+//         .map(res => res?.data)
+//         .filter(c => c && c._id);
+//       setLinkedCleaners(validCleaners);
+//     } catch (error) {
+//       console.error('Error fetching linked cleaners:', error);
+//     } finally {
+//       setLoadingCleaners(false);
+//     }
+//   };
+
+//   // Fetch checklists
+//   const fetchChecklists = async () => {
+//     if (!property.checklists?.length) {
+//       setChecklists([]);
+//       return;
+//     }
+//     setLoadingChecklists(true);
+//     try {
+//       const response = await userService.getCustomChecklistsByProperty(property.checklists);
+//       setChecklists(response.data.data || []);
+//     } catch (error) {
+//       console.error('Error fetching checklists:', error);
+//     } finally {
+//       setLoadingChecklists(false);
+//     }
+//   };
+
+//   // Fetch synced calendars
+//   const fetchSyncedCalendars = async () => {
+//     try {
+//       const response = await userService.getSyncedCalsByApartmentIds(property._id);
+//       if (!response.data || response.data.length === 0) {
+//         setSyncedCalendars([]);
+//         return;
+//       }
+//       const calId = response.data[0]._id;
+//       const calendars = response.data[0].calendars
+//         ? response.data[0].calendars.map(calendar => ({
+//             ...calendar,
+//             propertyId: property._id,
+//             calId,
+//           }))
+//         : [];
+//       setSyncedCalendars(calendars);
+//     } catch (error) {
+//       console.error('Error fetching synced calendars:', error);
+//       setSyncedCalendars([]);
+//     }
+//   };
+
+//   const fetchAll = async () => {
+//     await Promise.all([
+//       fetchLinkedCleaners(),
+//       fetchChecklists(),
+//       fetchSyncedCalendars(),
+//     ]);
+//   };
+
+//   const onRefresh = async () => {
+//     setRefreshing(true);
+//     await fetchAll();
+//     setRefreshing(false);
+//   };
+
+//   useEffect(() => {
+//     fetchAll();
+//   }, []);
+
+//   useFocusEffect(
+//     useCallback(() => {
+//       fetchAll();
+//     }, [property._id])
+//   );
+
+//   // Remove global edit button from header
+//   useLayoutEffect(() => {
+//     navigation.setOptions({
+//       headerRight: () => null,
+//     });
+//   }, [navigation]);
+
+//   // Handlers
+//   const handleEditProperty = () => {
+//     navigation.navigate(ROUTES.host_edit_apt, { propertyId: property._id });
+//   };
+
+//   const handleAddCleaner = () => {
+//     navigation.navigate(ROUTES.host_invite_cleaners, { propertyId: property._id });
+//   };
+
+//   const handleAddChecklist = () => {
+//     navigation.navigate(ROUTES.host_create_checklist, { propertyId: property._id });
+//   };
+
+//   const handleLinkCalendar = () => {
+//     navigation.navigate(ROUTES.host_link_icalendar, { 
+//       property:property,
+//       hostId:currentUserId,
+//     });
+//   };
+//   const handleAddCalendar = () => {
+//     setSelectedCalendar(null);
+//     setSelectedPlatform(null);
+//     setModalVisible(true);
+//   };
+
+//   const handleEditCalendar = (calendar) => {
+//     setSelectedCalendar(calendar);
+//     setSelectedPlatform(calendar.platform);
+//     setModalVisible(true);
+//   };
+
+//   const handleSaveSync = async (data) => {
+//     try {
+//       if (selectedCalendar) {
+//         await userService.updateCalendar(data);
+//       } else {
+//         await userService.createSyncCalendar({
+//           aptId: data.aptId,
+//           calendar: data.calendar,
+//           selectedChecklist: data.selectedChecklist,
+//         });
+//       }
+//       await fetchSyncedCalendars();
+//       Alert.alert('Success', 'Calendar sync saved successfully');
+//     } catch (error) {
+//       console.error('Error saving calendar sync:', error);
+//       Alert.alert('Error', 'Failed to save calendar sync');
+//     }
+//   };
+
+//   const toggleSync = async (calendar) => {
+//     try {
+//       await userService.updateSyncCalendar(calendar._id, { enabled: !calendar.enabled });
+//       await fetchSyncedCalendars();
+//     } catch (error) {
+//       console.error('Error toggling sync:', error);
+//       Alert.alert('Error', 'Failed to update sync status');
+//     }
+//   };
+
+//   const getPlatformName = (platformId) => {
+//     const map = {
+//       airbnb: 'Airbnb',
+//       booking: 'Booking.com',
+//       vrbo: 'Vrbo',
+//       ical: 'Other Calendar',
+//     };
+//     return map[platformId] || platformId;
+//   };
+
+//   const renderCleaner = ({ item }) => (
+//     <View style={styles.cleanerItem}>
+//       <Avatar.Image
+//         size={40}
+//         source={{ uri: item.avatar || 'https://via.placeholder.com/40' }}
+//       />
+//       <View style={styles.cleanerInfo}>
+//         <Text style={styles.cleanerName}>{item.firstname} {item.lastname}</Text>
+//         <Text style={styles.cleanerContact}>{item.email}</Text>
+//       </View>
+//       <TouchableOpacity
+//         style={styles.unlinkButton}
+//         onPress={() => {
+//           Alert.alert(
+//             'Unlink Cleaner',
+//             `Remove ${item.firstname} from this property?`,
+//             [
+//               { text: 'Cancel', style: 'cancel' },
+//               {
+//                 text: 'Unlink',
+//                 style: 'destructive',
+//                 onPress: async () => {
+//                   try {
+//                     await userService.unlinkCleaner({ propertyId: property._id, cleanerId: item._id });
+//                     await fetchLinkedCleaners();
+//                   } catch (err) {
+//                     Alert.alert('Error', 'Failed to unlink cleaner');
+//                   }
+//                 },
+//               },
+//             ]
+//           );
+//         }}
+//       >
+//         <MaterialIcons name="link-off" size={20} color={COLORS.error} />
+//       </TouchableOpacity>
+//     </View>
+//   );
+
+//   const renderChecklist = ({ item }) => (
+//     <TouchableOpacity
+//       style={styles.checklistItem}
+//       onPress={() => navigation.navigate(ROUTES.host_create_checklist, { checklist: item })}
+//     >
+//       <View style={styles.checklistHeader}>
+//         <MaterialCommunityIcons name="clipboard-list-outline" size={24} color={COLORS.primary} />
+//         <Text style={styles.checklistName} numberOfLines={1}>{item.checklistName || 'Cleaning Checklist'}</Text>
+//       </View>
+//       <View style={styles.checklistMeta}>
+//         <Text style={styles.checklistMetaText}>⏱️ {item.totalTime} min</Text>
+//         <Text style={styles.checklistMetaText}>💰 ${item.totalFee?.toFixed(2)}</Text>
+//       </View>
+//       <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} style={styles.checklistArrow} />
+//     </TouchableOpacity>
+//   );
+
+//   const renderCalendar = ({ item }) => {
+//     const platformName = getPlatformName(item.platform);
+//     return (
+//       <View style={styles.calendarItem}>
+//         <View style={styles.calendarInfo}>
+//           <Text style={styles.calendarName}>{platformName}</Text>
+//           <Text style={styles.calendarUrl} numberOfLines={1}>
+//             {item.ical_url || item.calendar_url || 'No URL provided'}
+//           </Text>
+//           {item.last_synced && (
+//             <Text style={styles.calendarDate}>
+//               Last synced: {new Date(item.last_synced).toLocaleDateString()}
+//             </Text>
+//           )}
+//         </View>
+//         <Switch
+//           value={item.enabled !== false}
+//           onValueChange={() => toggleSync(item)}
+//           trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+//           thumbColor={COLORS.white}
+//         />
+//         <TouchableOpacity onPress={() => handleEditCalendar(item)} style={styles.editCalendarButton}>
+//           <MaterialIcons name="edit" size={20} color={COLORS.gray} />
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   };
+
+//   return (
+//     <ScrollView
+//       style={styles.container}
+//       contentContainerStyle={styles.contentContainer}
+//       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+//     >
+//       {/* Property Card */}
+//       <Animatable.View animation="fadeInUp" duration={500} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>Property Details</Text>
+//           <TouchableOpacity onPress={handleEditProperty} style={styles.cardButton}>
+//             <MaterialIcons name="edit" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         <View style={styles.propertyContent}>
+//           <Text style={styles.propertyName}>{property.apt_name}</Text>
+//           <View style={styles.addressRow}>
+//             <MaterialCommunityIcons name="map-marker-outline" size={16} color={COLORS.gray} />
+//             <Text style={styles.propertyAddress}>{property.address}</Text>
+//           </View>
+//           <View style={styles.roomStats}>
+//             <CircleIcon
+//               iconName="bed-empty"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={bedroomCount}
+//               roomSize={bedroomSize}
+//               type="Bedrooms"
+//             />
+//             <CircleIcon
+//               iconName="shower-head"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={bathroomCount}
+//               roomSize={bathroomSize}
+//               type="Bathrooms"
+//             />
+//             <CircleIcon
+//               iconName="silverware-fork-knife"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={kitchen}
+//               roomSize={kitchenSize}
+//               type="Kitchen"
+//             />
+//             <CircleIcon
+//               iconName="seat-legroom-extra"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={livingroomCount}
+//               roomSize={livingroomSize}
+//               type="Livingroom"
+//             />
+//           </View>
+//         </View>
+//       </Animatable.View>
+
+//       {/* Linked Cleaners Card */}
+//       <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>Linked Cleaners</Text>
+//           <TouchableOpacity onPress={handleAddCleaner} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {loadingCleaners ? (
+//           <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+//         ) : linkedCleaners.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="account-plus-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>No cleaners linked yet</Text>
+//             <TouchableOpacity onPress={handleAddCleaner}>
+//               <Text style={styles.emptyAction}>Invite cleaners</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={linkedCleaners}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderCleaner}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       {/* Checklists Card */}
+//       <Animatable.View animation="fadeInUp" delay={200} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>Cleaning Checklists</Text>
+//           <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {loadingChecklists ? (
+//           <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+//         ) : checklists.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="clipboard-list-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>No checklists yet</Text>
+//             <TouchableOpacity onPress={handleAddChecklist}>
+//               <Text style={styles.emptyAction}>Create checklist</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={checklists}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderChecklist}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       {/* Calendar Connections Card */}
+//       <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>Calendar Connections</Text>
+//           <TouchableOpacity onPress={handleLinkCalendar} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {syncedCalendars.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="calendar-sync-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>No calendars connected</Text>
+//             <TouchableOpacity onPress={handleLinkCalendar}>
+//               <Text style={styles.emptyAction}>Connect a calendar</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={syncedCalendars}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderCalendar}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       <AddICalModal
+//         visible={modalVisible}
+//         onClose={() => {
+//           setModalVisible(false);
+//           setSelectedCalendar(null);
+//           setSelectedPlatform(null);
+//         }}
+//         onSave={handleSaveSync}
+//         cleaners={[]} // Optionally pass cleaners if needed
+//         aptId={property._id}
+//         preselectedPlatform={selectedPlatform}
+//         existingCalendar={selectedCalendar}
+//         checklists={checklists}
+//       />
+//     </ScrollView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#F8F9FC',
+//   },
+//   contentContainer: {
+//     padding: 16,
+//     paddingBottom: 40,
+//   },
+//   card: {
+//     backgroundColor: '#fff',
+//     borderRadius: 20,
+//     padding: 16,
+//     marginBottom: 16,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 8,
+//     elevation: 3,
+//   },
+//   cardHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   cardTitle: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#1E1E2F',
+//   },
+//   cardButton: {
+//     padding: 4,
+//   },
+//   divider: {
+//     backgroundColor: '#E6E9F0',
+//     marginBottom: 16,
+//   },
+//   propertyContent: {
+//     marginTop: 4,
+//   },
+//   propertyName: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#1E1E2F',
+//     marginBottom: 8,
+//   },
+//   addressRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   propertyAddress: {
+//     fontSize: 14,
+//     color: '#6C6C80',
+//     marginLeft: 6,
+//   },
+//   roomStats: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginTop: 8,
+//   },
+//   cleanerItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   cleanerInfo: {
+//     flex: 1,
+//     marginLeft: 12,
+//   },
+//   cleanerName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 2,
+//   },
+//   cleanerContact: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//   },
+//   unlinkButton: {
+//     padding: 8,
+//   },
+//   checklistItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     marginBottom: 12,
+//     padding: 8,
+//     backgroundColor: '#F9F9FC',
+//     borderRadius: 12,
+//   },
+//   checklistHeader: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     flex: 1,
+//   },
+//   checklistName: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginLeft: 8,
+//     flex: 1,
+//   },
+//   checklistMeta: {
+//     flexDirection: 'row',
+//     marginRight: 8,
+//   },
+//   checklistMetaText: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//     marginLeft: 12,
+//   },
+//   checklistArrow: {
+//     marginLeft: 8,
+//   },
+//   calendarItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     marginBottom: 16,
+//   },
+//   calendarInfo: {
+//     flex: 1,
+//   },
+//   calendarName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 2,
+//   },
+//   calendarUrl: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//     marginBottom: 2,
+//   },
+//   calendarDate: {
+//     fontSize: 11,
+//     color: '#8E8E93',
+//   },
+//   editCalendarButton: {
+//     padding: 8,
+//     marginLeft: 8,
+//   },
+//   loader: {
+//     marginVertical: 20,
+//   },
+//   emptyState: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 32,
+//   },
+//   emptyText: {
+//     fontSize: 16,
+//     color: '#6C6C80',
+//     marginTop: 12,
+//     marginBottom: 8,
+//   },
+//   emptyAction: {
+//     fontSize: 14,
+//     color: COLORS.primary,
+//     fontWeight: '600',
+//   },
+// });
+
+
+
+// import React, { useState, useEffect, useLayoutEffect, useContext, useCallback } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   RefreshControl,
+//   TouchableOpacity,
+//   Image,
+//   Alert,
+//   FlatList,
+//   ActivityIndicator,
+//   Switch,
+// } from 'react-native';
+// import { IconButton, Avatar, Divider } from 'react-native-paper';
+// import { MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
+// import { useNavigation, useFocusEffect } from '@react-navigation/native';
+// import * as Animatable from 'react-native-animatable';
+
+// import COLORS from '../../constants/colors';
+// import ROUTES from '../../constants/routes';
+// import CircleIcon from '../../components/shared/CircleIcon';
+// import AddICalModal from '../../components/host/AddICalModal';
+// import userService from '../../services/connection/userService';
+// import { AuthContext } from '../../context/AuthContext';
+// import { tSafe } from '../../utils/tSafe'; // added import
+
+// export default function PropertyDashboard({ route }) {
+//   const { property } = route.params;
+//   const { currentUserId } = useContext(AuthContext);
+//   const navigation = useNavigation();
+
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [linkedCleaners, setLinkedCleaners] = useState([]);
+//   const [checklists, setChecklists] = useState([]);
+//   const [syncedCalendars, setSyncedCalendars] = useState([]);
+//   const [modalVisible, setModalVisible] = useState(false);
+//   const [selectedCalendar, setSelectedCalendar] = useState(null);
+//   const [selectedPlatform, setSelectedPlatform] = useState(null);
+//   const [loadingCleaners, setLoadingCleaners] = useState(false);
+//   const [loadingChecklists, setLoadingChecklists] = useState(false);
+
+//   // Room details
+//   const bedroomCount = property?.roomDetails?.find(r => r.type === "Bedroom")?.number || 0;
+//   const bathroomCount = property?.roomDetails?.find(r => r.type === "Bathroom")?.number || 0;
+//   const kitchen = property?.roomDetails?.find(r => r.type === "Kitchen")?.number || 0;
+//   const livingroomCount = property?.roomDetails?.find(r => r.type === "Livingroom")?.number || 0;
+//   const bedroomSize = property?.roomDetails?.find(r => r.type === "Bedroom")?.size || 0;
+//   const bathroomSize = property?.roomDetails?.find(r => r.type === "Bathroom")?.size || 0;
+//   const kitchenSize = property?.roomDetails?.find(r => r.type === "Kitchen")?.size || 0;
+//   const livingroomSize = property?.roomDetails?.find(r => r.type === "Livingroom")?.size || 0;
+
+//   // Fetch linked cleaners (from preferredCleaners)
+//   const fetchLinkedCleaners = async () => {
+//     if (!property.preferredCleaners?.length) {
+//       setLinkedCleaners([]);
+//       return;
+//     }
+//     setLoadingCleaners(true);
+//     try {
+//       const cleanerIds = property.preferredCleaners.map(pc => pc.id);
+//       const users = await Promise.all(
+//         cleanerIds.map(id => userService.getUser(id).catch(() => null))
+//       );
+//       const validCleaners = users
+//         .map(res => res?.data)
+//         .filter(c => c && c._id);
+//       setLinkedCleaners(validCleaners);
+//     } catch (error) {
+//       console.error('Error fetching linked cleaners:', error);
+//     } finally {
+//       setLoadingCleaners(false);
+//     }
+//   };
+
+//   // Fetch checklists
+//   const fetchChecklists = async () => {
+//     if (!property.checklists?.length) {
+//       setChecklists([]);
+//       return;
+//     }
+//     setLoadingChecklists(true);
+//     try {
+//       const response = await userService.getCustomChecklistsByProperty(property.checklists);
+//       setChecklists(response.data.data || []);
+//     } catch (error) {
+//       console.error('Error fetching checklists:', error);
+//     } finally {
+//       setLoadingChecklists(false);
+//     }
+//   };
+
+//   // Fetch synced calendars
+//   const fetchSyncedCalendars = async () => {
+//     try {
+//       const response = await userService.getSyncedCalsByApartmentIds(property._id);
+//       if (!response.data || response.data.length === 0) {
+//         setSyncedCalendars([]);
+//         return;
+//       }
+//       const calId = response.data[0]._id;
+//       const calendars = response.data[0].calendars
+//         ? response.data[0].calendars.map(calendar => ({
+//             ...calendar,
+//             propertyId: property._id,
+//             calId,
+//           }))
+//         : [];
+//       setSyncedCalendars(calendars);
+//     } catch (error) {
+//       console.error('Error fetching synced calendars:', error);
+//       setSyncedCalendars([]);
+//     }
+//   };
+
+//   const fetchAll = async () => {
+//     await Promise.all([
+//       fetchLinkedCleaners(),
+//       fetchChecklists(),
+//       fetchSyncedCalendars(),
+//     ]);
+//   };
+
+//   const onRefresh = async () => {
+//     setRefreshing(true);
+//     await fetchAll();
+//     setRefreshing(false);
+//   };
+
+//   useEffect(() => {
+//     fetchAll();
+//   }, []);
+
+//   useFocusEffect(
+//     useCallback(() => {
+//       fetchAll();
+//     }, [property._id])
+//   );
+
+//   // Remove global edit button from header
+//   useLayoutEffect(() => {
+//     navigation.setOptions({
+//       headerRight: () => null,
+//     });
+//   }, [navigation]);
+
+//   // Handlers
+//   const handleEditProperty = () => {
+//     navigation.navigate(ROUTES.host_edit_apt, { propertyId: property._id });
+//   };
+
+//   const handleAddCleaner = () => {
+//     navigation.navigate(ROUTES.host_invite_cleaners, { propertyId: property._id });
+//   };
+
+//   const handleAddChecklist = () => {
+//     navigation.navigate(ROUTES.host_create_checklist, { propertyId: property._id });
+//   };
+
+//   const handleLinkCalendar = () => {
+//     navigation.navigate(ROUTES.host_link_icalendar, { 
+//       property:property,
+//       hostId:currentUserId,
+//     });
+//   };
+//   const handleAddCalendar = () => {
+//     setSelectedCalendar(null);
+//     setSelectedPlatform(null);
+//     setModalVisible(true);
+//   };
+
+//   const handleEditCalendar = (calendar) => {
+//     setSelectedCalendar(calendar);
+//     setSelectedPlatform(calendar.platform);
+//     setModalVisible(true);
+//   };
+
+//   const handleSaveSync = async (data) => {
+//     try {
+//       if (selectedCalendar) {
+//         await userService.updateCalendar(data);
+//       } else {
+//         await userService.createSyncCalendar({
+//           aptId: data.aptId,
+//           calendar: data.calendar,
+//           selectedChecklist: data.selectedChecklist,
+//         });
+//       }
+//       await fetchSyncedCalendars();
+//       Alert.alert(tSafe('success_title', 'Success'), tSafe('calendar_sync_saved', 'Calendar sync saved successfully'));
+//     } catch (error) {
+//       console.error('Error saving calendar sync:', error);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_save_calendar', 'Failed to save calendar sync'));
+//     }
+//   };
+
+//   const toggleSync = async (calendar) => {
+//     try {
+//       await userService.updateSyncCalendar(calendar._id, { enabled: !calendar.enabled });
+//       await fetchSyncedCalendars();
+//     } catch (error) {
+//       console.error('Error toggling sync:', error);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_update_sync', 'Failed to update sync status'));
+//     }
+//   };
+
+//   const getPlatformName = (platformId) => {
+//     const map = {
+//       airbnb: tSafe('airbnb', 'Airbnb'),
+//       booking: tSafe('booking_com', 'Booking.com'),
+//       vrbo: tSafe('vrbo', 'Vrbo'),
+//       ical: tSafe('other_calendar', 'Other Calendar'),
+//     };
+//     return map[platformId] || platformId;
+//   };
+
+//   const renderCleaner = ({ item }) => (
+//     <View style={styles.cleanerItem}>
+//       <Avatar.Image
+//         size={40}
+//         source={{ uri: item.avatar || 'https://via.placeholder.com/40' }}
+//       />
+//       <View style={styles.cleanerInfo}>
+//         <Text style={styles.cleanerName}>{item.firstname} {item.lastname}</Text>
+//         <Text style={styles.cleanerContact}>{item.email}</Text>
+//       </View>
+//       <TouchableOpacity
+//         style={styles.unlinkButton}
+//         onPress={() => {
+//           Alert.alert(
+//             tSafe('unlink_cleaner_title', 'Unlink Cleaner'),
+//             tSafe('unlink_cleaner_confirm', 'Remove {name} from this property?', { name: item.firstname }),
+//             [
+//               { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
+//               {
+//                 text: tSafe('unlink', 'Unlink'),
+//                 style: 'destructive',
+//                 onPress: async () => {
+//                   try {
+//                     await userService.unlinkCleaner({ propertyId: property._id, cleanerId: item._id });
+//                     await fetchLinkedCleaners();
+//                   } catch (err) {
+//                     Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_unlink', 'Failed to unlink cleaner'));
+//                   }
+//                 },
+//               },
+//             ]
+//           );
+//         }}
+//       >
+//         <MaterialIcons name="link-off" size={20} color={COLORS.error} />
+//       </TouchableOpacity>
+//     </View>
+//   );
+
+//   const renderChecklist = ({ item }) => (
+//     <TouchableOpacity
+//       style={styles.checklistItem}
+//       onPress={() => navigation.navigate(ROUTES.host_create_checklist, { checklist: item })}
+//     >
+//       <View style={styles.checklistHeader}>
+//         <MaterialCommunityIcons name="clipboard-list-outline" size={24} color={COLORS.primary} />
+//         <Text style={styles.checklistName} numberOfLines={1}>
+//           {item.checklistName || tSafe('cleaning_checklist', 'Cleaning Checklist')}
+//         </Text>
+//       </View>
+//       <View style={styles.checklistMeta}>
+//         <Text style={styles.checklistMetaText}>⏱️ {item.totalTime} {tSafe('minutes_abbr', 'min')}</Text>
+//         <Text style={styles.checklistMetaText}>💰 ${item.totalFee?.toFixed(2)}</Text>
+//       </View>
+//       <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} style={styles.checklistArrow} />
+//     </TouchableOpacity>
+//   );
+
+//   const renderCalendar = ({ item }) => {
+//     const platformName = getPlatformName(item.platform);
+//     return (
+//       <View style={styles.calendarItem}>
+//         <View style={styles.calendarInfo}>
+//           <Text style={styles.calendarName}>{platformName}</Text>
+//           <Text style={styles.calendarUrl} numberOfLines={1}>
+//             {item.ical_url || item.calendar_url || tSafe('no_url_provided', 'No URL provided')}
+//           </Text>
+//           {item.last_synced && (
+//             <Text style={styles.calendarDate}>
+//               {tSafe('last_synced', 'Last synced:')} {new Date(item.last_synced).toLocaleDateString()}
+//             </Text>
+//           )}
+//         </View>
+//         <Switch
+//           value={item.enabled !== false}
+//           onValueChange={() => toggleSync(item)}
+//           trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+//           thumbColor={COLORS.white}
+//         />
+//         <TouchableOpacity onPress={() => handleEditCalendar(item)} style={styles.editCalendarButton}>
+//           <MaterialIcons name="edit" size={20} color={COLORS.gray} />
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   };
+
+//   return (
+//     <ScrollView
+//       style={styles.container}
+//       contentContainerStyle={styles.contentContainer}
+//       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+//     >
+//       {/* Property Card */}
+//       <Animatable.View animation="fadeInUp" duration={500} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>{tSafe('property_details', 'Property Details')}</Text>
+//           <TouchableOpacity onPress={handleEditProperty} style={styles.cardButton}>
+//             <MaterialIcons name="edit" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         <View style={styles.propertyContent}>
+//           <Text style={styles.propertyName}>{property.apt_name}</Text>
+//           <View style={styles.addressRow}>
+//             <MaterialCommunityIcons name="map-marker-outline" size={16} color={COLORS.gray} />
+//             <Text style={styles.propertyAddress}>{property.address}</Text>
+//           </View>
+//           <View style={styles.roomStats}>
+//             <CircleIcon
+//               iconName="bed-empty"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={bedroomCount}
+//               roomSize={bedroomSize}
+//               type={tSafe('bedrooms', 'Bedrooms')}
+//             />
+//             <CircleIcon
+//               iconName="shower-head"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={bathroomCount}
+//               roomSize={bathroomSize}
+//               type={tSafe('bathrooms', 'Bathrooms')}
+//             />
+//             <CircleIcon
+//               iconName="silverware-fork-knife"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={kitchen}
+//               roomSize={kitchenSize}
+//               type={tSafe('kitchen', 'Kitchen')}
+//             />
+//             <CircleIcon
+//               iconName="seat-legroom-extra"
+//               buttonSize={26}
+//               radiusSise={13}
+//               iconSize={16}
+//               title={livingroomCount}
+//               roomSize={livingroomSize}
+//               type={tSafe('livingroom', 'Livingroom')}
+//             />
+//           </View>
+//         </View>
+//       </Animatable.View>
+
+//       {/* Linked Cleaners Card */}
+//       <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>{tSafe('linked_cleaners', 'Linked Cleaners')}</Text>
+//           <TouchableOpacity onPress={handleAddCleaner} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {loadingCleaners ? (
+//           <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+//         ) : linkedCleaners.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="account-plus-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>{tSafe('no_cleaners_linked', 'No cleaners linked yet')}</Text>
+//             <TouchableOpacity onPress={handleAddCleaner}>
+//               <Text style={styles.emptyAction}>{tSafe('invite_cleaners', 'Invite cleaners')}</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={linkedCleaners}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderCleaner}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       {/* Checklists Card */}
+//       <Animatable.View animation="fadeInUp" delay={200} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>{tSafe('cleaning_checklists', 'Cleaning Checklists')}</Text>
+//           <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {loadingChecklists ? (
+//           <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+//         ) : checklists.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="clipboard-list-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>{tSafe('no_checklists', 'No checklists yet')}</Text>
+//             <TouchableOpacity onPress={handleAddChecklist}>
+//               <Text style={styles.emptyAction}>{tSafe('create_checklist', 'Create checklist')}</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={checklists}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderChecklist}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       {/* Calendar Connections Card */}
+//       <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
+//         <View style={styles.cardHeader}>
+//           <Text style={styles.cardTitle}>{tSafe('calendar_connections', 'Calendar Connections')}</Text>
+//           <TouchableOpacity onPress={handleLinkCalendar} style={styles.cardButton}>
+//             <MaterialIcons name="add" size={20} color={COLORS.primary} />
+//           </TouchableOpacity>
+//         </View>
+//         <Divider style={styles.divider} />
+//         {syncedCalendars.length === 0 ? (
+//           <View style={styles.emptyState}>
+//             <MaterialCommunityIcons name="calendar-sync-outline" size={48} color={COLORS.gray} />
+//             <Text style={styles.emptyText}>{tSafe('no_calendars_connected', 'No calendars connected')}</Text>
+//             <TouchableOpacity onPress={handleLinkCalendar}>
+//               <Text style={styles.emptyAction}>{tSafe('connect_calendar', 'Connect a calendar')}</Text>
+//             </TouchableOpacity>
+//           </View>
+//         ) : (
+//           <FlatList
+//             data={syncedCalendars}
+//             keyExtractor={(item) => item._id}
+//             renderItem={renderCalendar}
+//             scrollEnabled={false}
+//           />
+//         )}
+//       </Animatable.View>
+
+//       <AddICalModal
+//         visible={modalVisible}
+//         onClose={() => {
+//           setModalVisible(false);
+//           setSelectedCalendar(null);
+//           setSelectedPlatform(null);
+//         }}
+//         onSave={handleSaveSync}
+//         cleaners={[]}
+//         aptId={property._id}
+//         preselectedPlatform={selectedPlatform}
+//         existingCalendar={selectedCalendar}
+//         checklists={checklists}
+//       />
+//     </ScrollView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#F8F9FC',
+//   },
+//   contentContainer: {
+//     padding: 16,
+//     paddingBottom: 40,
+//   },
+//   card: {
+//     backgroundColor: '#fff',
+//     borderRadius: 20,
+//     padding: 16,
+//     marginBottom: 16,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 8,
+//     elevation: 3,
+//   },
+//   cardHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   cardTitle: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#1E1E2F',
+//   },
+//   cardButton: {
+//     padding: 4,
+//   },
+//   divider: {
+//     backgroundColor: '#E6E9F0',
+//     marginBottom: 16,
+//   },
+//   propertyContent: {
+//     marginTop: 4,
+//   },
+//   propertyName: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#1E1E2F',
+//     marginBottom: 8,
+//   },
+//   addressRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   propertyAddress: {
+//     fontSize: 14,
+//     color: '#6C6C80',
+//     marginLeft: 6,
+//   },
+//   roomStats: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginTop: 8,
+//   },
+//   cleanerItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   cleanerInfo: {
+//     flex: 1,
+//     marginLeft: 12,
+//   },
+//   cleanerName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 2,
+//   },
+//   cleanerContact: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//   },
+//   unlinkButton: {
+//     padding: 8,
+//   },
+//   checklistItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     marginBottom: 12,
+//     padding: 8,
+//     backgroundColor: '#F9F9FC',
+//     borderRadius: 12,
+//   },
+//   checklistHeader: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     flex: 1,
+//   },
+//   checklistName: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginLeft: 8,
+//     flex: 1,
+//   },
+//   checklistMeta: {
+//     flexDirection: 'row',
+//     marginRight: 8,
+//   },
+//   checklistMetaText: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//     marginLeft: 12,
+//   },
+//   checklistArrow: {
+//     marginLeft: 8,
+//   },
+//   calendarItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     marginBottom: 16,
+//   },
+//   calendarInfo: {
+//     flex: 1,
+//   },
+//   calendarName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 2,
+//   },
+//   calendarUrl: {
+//     fontSize: 12,
+//     color: '#6C6C80',
+//     marginBottom: 2,
+//     marginRight:10
+//   },
+//   calendarDate: {
+//     fontSize: 11,
+//     color: '#8E8E93',
+//   },
+//   editCalendarButton: {
+//     padding: 8,
+//     marginLeft: 8,
+//   },
+//   loader: {
+//     marginVertical: 20,
+//   },
+//   emptyState: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 32,
+//   },
+//   emptyText: {
+//     fontSize: 16,
+//     color: '#6C6C80',
+//     marginTop: 12,
+//     marginBottom: 8,
+//   },
+//   emptyAction: {
+//     fontSize: 14,
+//     color: COLORS.primary,
+//     fontWeight: '600',
+//   },
+// });
+
+
+
+
+
+
+
+
+import React, { useState, useEffect, useLayoutEffect, useContext, useCallback } from 'react';
 import {
   View,
   Text,
@@ -1634,7 +2912,7 @@ import {
   Alert,
   FlatList,
   ActivityIndicator,
-  Switch, // use native Switch
+  Switch,
 } from 'react-native';
 import { IconButton, Avatar, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
@@ -1645,10 +2923,15 @@ import COLORS from '../../constants/colors';
 import ROUTES from '../../constants/routes';
 import CircleIcon from '../../components/shared/CircleIcon';
 import AddICalModal from '../../components/host/AddICalModal';
+import CleanerManagementModal from '../../components/cleaner/CleanerManagementModal';
+
 import userService from '../../services/connection/userService';
+import { AuthContext } from '../../context/AuthContext';
+import { tSafe } from '../../utils/tSafe';
 
 export default function PropertyDashboard({ route }) {
   const { property } = route.params;
+  const { currentUserId } = useContext(AuthContext);
   const navigation = useNavigation();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -1661,7 +2944,13 @@ export default function PropertyDashboard({ route }) {
   const [loadingCleaners, setLoadingCleaners] = useState(false);
   const [loadingChecklists, setLoadingChecklists] = useState(false);
 
-  // Room details
+  // State for cleaner management modal
+  const [cleanerModalVisible, setCleanerModalVisible] = useState(false);
+  const [platformCleaners, setPlatformCleaners] = useState([]);
+  const [preferredCleaners, setPreferredCleaners] = useState([]);
+  const [invitedCleaners, setInvitedCleaners] = useState([]);
+
+  // Room details (unchanged)
   const bedroomCount = property?.roomDetails?.find(r => r.type === "Bedroom")?.number || 0;
   const bathroomCount = property?.roomDetails?.find(r => r.type === "Bathroom")?.number || 0;
   const kitchen = property?.roomDetails?.find(r => r.type === "Kitchen")?.number || 0;
@@ -1671,7 +2960,7 @@ export default function PropertyDashboard({ route }) {
   const kitchenSize = property?.roomDetails?.find(r => r.type === "Kitchen")?.size || 0;
   const livingroomSize = property?.roomDetails?.find(r => r.type === "Livingroom")?.size || 0;
 
-  // Fetch linked cleaners (from preferredCleaners)
+  // Fetch linked cleaners (platform + invited)
   const fetchLinkedCleaners = async () => {
     if (!property.preferredCleaners?.length) {
       setLinkedCleaners([]);
@@ -1694,7 +2983,7 @@ export default function PropertyDashboard({ route }) {
     }
   };
 
-  // Fetch checklists
+  // Fetch checklists (unchanged)
   const fetchChecklists = async () => {
     if (!property.checklists?.length) {
       setChecklists([]);
@@ -1711,7 +3000,7 @@ export default function PropertyDashboard({ route }) {
     }
   };
 
-  // Fetch synced calendars
+  // Fetch synced calendars (unchanged)
   const fetchSyncedCalendars = async () => {
     try {
       const response = await userService.getSyncedCalsByApartmentIds(property._id);
@@ -1734,31 +3023,74 @@ export default function PropertyDashboard({ route }) {
     }
   };
 
+  // Fetch platform cleaners near the property
+  const fetchPlatformCleanersNearby = async () => {
+    if (!property.latitude || !property.longitude) return;
+    try {
+      const response = await userService.getPlatformCleaners({
+        latitude: property.latitude,
+        longitude: property.longitude,
+        radius: 100, // miles, adjust as needed
+      });
+      setPlatformCleaners(response.data || []);
+    } catch (error) {
+      console.error('Error fetching platform cleaners:', error);
+    }
+  };
+
+  // Initialize local cleaner state from property
+  const initCleanerState = () => {
+    setPreferredCleaners(property.preferredCleaners || []);
+    setInvitedCleaners(property.invitedCleaners || []);
+  };
+
+  // Save changes to property cleaners (call backend)
+  const saveCleanersToProperty = async () => {
+    try {
+      await userService.updatePropertyCleaners(property._id, {
+        preferredCleaners,
+        invitedCleaners,
+      });
+      // Refresh property data (if needed)
+      const updatedProperty = await userService.getApartment(property._id);
+      // Update local property reference (optional)
+      // We'll rely on refetching linked cleaners
+      await fetchLinkedCleaners();
+      Alert.alert(tSafe('success_title', 'Success'), tSafe('cleaners_updated', 'Cleaners updated successfully'));
+    } catch (error) {
+      console.error('Error updating property cleaners:', error);
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_update_cleaners', 'Failed to update cleaners'));
+    }
+  };
+
   const fetchAll = async () => {
     await Promise.all([
       fetchLinkedCleaners(),
       fetchChecklists(),
       fetchSyncedCalendars(),
+      fetchPlatformCleanersNearby(),
     ]);
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchAll();
+    initCleanerState(); // re‑sync local state
     setRefreshing(false);
   };
 
   useEffect(() => {
     fetchAll();
+    initCleanerState();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchAll();
+      initCleanerState();
     }, [property._id])
   );
 
-  // Remove global edit button from header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => null,
@@ -1771,11 +3103,18 @@ export default function PropertyDashboard({ route }) {
   };
 
   const handleAddCleaner = () => {
-    navigation.navigate(ROUTES.host_invite_cleaners, { propertyId: property._id });
+    setCleanerModalVisible(true);
   };
 
   const handleAddChecklist = () => {
     navigation.navigate(ROUTES.host_create_checklist, { propertyId: property._id });
+  };
+
+  const handleLinkCalendar = () => {
+    navigation.navigate(ROUTES.host_link_icalendar, { 
+      property,
+      hostId: currentUserId,
+    });
   };
 
   const handleAddCalendar = () => {
@@ -1802,10 +3141,10 @@ export default function PropertyDashboard({ route }) {
         });
       }
       await fetchSyncedCalendars();
-      Alert.alert('Success', 'Calendar sync saved successfully');
+      Alert.alert(tSafe('success_title', 'Success'), tSafe('calendar_sync_saved', 'Calendar sync saved successfully'));
     } catch (error) {
       console.error('Error saving calendar sync:', error);
-      Alert.alert('Error', 'Failed to save calendar sync');
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_save_calendar', 'Failed to save calendar sync'));
     }
   };
 
@@ -1815,20 +3154,21 @@ export default function PropertyDashboard({ route }) {
       await fetchSyncedCalendars();
     } catch (error) {
       console.error('Error toggling sync:', error);
-      Alert.alert('Error', 'Failed to update sync status');
+      Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_update_sync', 'Failed to update sync status'));
     }
   };
 
   const getPlatformName = (platformId) => {
     const map = {
-      airbnb: 'Airbnb',
-      booking: 'Booking.com',
-      vrbo: 'Vrbo',
-      ical: 'Other Calendar',
+      airbnb: tSafe('airbnb', 'Airbnb'),
+      booking: tSafe('booking_com', 'Booking.com'),
+      vrbo: tSafe('vrbo', 'Vrbo'),
+      ical: tSafe('other_calendar', 'Other Calendar'),
     };
     return map[platformId] || platformId;
   };
 
+  // Renderers (unchanged)
   const renderCleaner = ({ item }) => (
     <View style={styles.cleanerItem}>
       <Avatar.Image
@@ -1843,19 +3183,21 @@ export default function PropertyDashboard({ route }) {
         style={styles.unlinkButton}
         onPress={() => {
           Alert.alert(
-            'Unlink Cleaner',
-            `Remove ${item.firstname} from this property?`,
+            tSafe('unlink_cleaner_title', 'Unlink Cleaner'),
+            tSafe('unlink_cleaner_confirm', 'Remove {name} from this property?', { name: item.firstname }),
             [
-              { text: 'Cancel', style: 'cancel' },
+              { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
               {
-                text: 'Unlink',
+                text: tSafe('unlink', 'Unlink'),
                 style: 'destructive',
                 onPress: async () => {
                   try {
                     await userService.unlinkCleaner({ propertyId: property._id, cleanerId: item._id });
                     await fetchLinkedCleaners();
+                    // Also update local preferredCleaners state to reflect removal
+                    setPreferredCleaners(prev => prev.filter(pc => pc.id !== item._id));
                   } catch (err) {
-                    Alert.alert('Error', 'Failed to unlink cleaner');
+                    Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_unlink', 'Failed to unlink cleaner'));
                   }
                 },
               },
@@ -1871,14 +3213,16 @@ export default function PropertyDashboard({ route }) {
   const renderChecklist = ({ item }) => (
     <TouchableOpacity
       style={styles.checklistItem}
-      onPress={() => navigation.navigate(ROUTES.host_checklist_details, { checklist: item })}
+      onPress={() => navigation.navigate(ROUTES.host_create_checklist, { checklist: item })}
     >
       <View style={styles.checklistHeader}>
         <MaterialCommunityIcons name="clipboard-list-outline" size={24} color={COLORS.primary} />
-        <Text style={styles.checklistName} numberOfLines={1}>{item.checklistName || 'Cleaning Checklist'}</Text>
+        <Text style={styles.checklistName} numberOfLines={1}>
+          {item.checklistName || tSafe('cleaning_checklist', 'Cleaning Checklist')}
+        </Text>
       </View>
       <View style={styles.checklistMeta}>
-        <Text style={styles.checklistMetaText}>⏱️ {item.totalTime} min</Text>
+        <Text style={styles.checklistMetaText}>⏱️ {item.totalTime} {tSafe('minutes_abbr', 'min')}</Text>
         <Text style={styles.checklistMetaText}>💰 ${item.totalFee?.toFixed(2)}</Text>
       </View>
       <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} style={styles.checklistArrow} />
@@ -1892,11 +3236,11 @@ export default function PropertyDashboard({ route }) {
         <View style={styles.calendarInfo}>
           <Text style={styles.calendarName}>{platformName}</Text>
           <Text style={styles.calendarUrl} numberOfLines={1}>
-            {item.ical_url || item.calendar_url || 'No URL provided'}
+            {item.ical_url || item.calendar_url || tSafe('no_url_provided', 'No URL provided')}
           </Text>
           {item.last_synced && (
             <Text style={styles.calendarDate}>
-              Last synced: {new Date(item.last_synced).toLocaleDateString()}
+              {tSafe('last_synced', 'Last synced:')} {new Date(item.last_synced).toLocaleDateString()}
             </Text>
           )}
         </View>
@@ -1914,173 +3258,190 @@ export default function PropertyDashboard({ route }) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      {/* Property Card */}
-      <Animatable.View animation="fadeInUp" duration={500} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Property Details</Text>
-          <TouchableOpacity onPress={handleEditProperty} style={styles.cardButton}>
-            <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-        <Divider style={styles.divider} />
-        <View style={styles.propertyContent}>
-          <Text style={styles.propertyName}>{property.apt_name}</Text>
-          <View style={styles.addressRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={16} color={COLORS.gray} />
-            <Text style={styles.propertyAddress}>{property.address}</Text>
-          </View>
-          <View style={styles.roomStats}>
-            <CircleIcon
-              iconName="bed-empty"
-              buttonSize={26}
-              radiusSise={13}
-              iconSize={16}
-              title={bedroomCount}
-              roomSize={bedroomSize}
-              type="Bedrooms"
-            />
-            <CircleIcon
-              iconName="shower-head"
-              buttonSize={26}
-              radiusSise={13}
-              iconSize={16}
-              title={bathroomCount}
-              roomSize={bathroomSize}
-              type="Bathrooms"
-            />
-            <CircleIcon
-              iconName="silverware-fork-knife"
-              buttonSize={26}
-              radiusSise={13}
-              iconSize={16}
-              title={kitchen}
-              roomSize={kitchenSize}
-              type="Kitchen"
-            />
-            <CircleIcon
-              iconName="seat-legroom-extra"
-              buttonSize={26}
-              radiusSise={13}
-              iconSize={16}
-              title={livingroomCount}
-              roomSize={livingroomSize}
-              type="Livingroom"
-            />
-          </View>
-        </View>
-      </Animatable.View>
-
-      {/* Linked Cleaners Card */}
-      <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Linked Cleaners</Text>
-          <TouchableOpacity onPress={handleAddCleaner} style={styles.cardButton}>
-            <MaterialIcons name="add" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-        <Divider style={styles.divider} />
-        {loadingCleaners ? (
-          <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
-        ) : linkedCleaners.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="account-plus-outline" size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>No cleaners linked yet</Text>
-            <TouchableOpacity onPress={handleAddCleaner}>
-              <Text style={styles.emptyAction}>Invite cleaners</Text>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* Property Card */}
+        <Animatable.View animation="fadeInUp" duration={500} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{tSafe('property_details', 'Property Details')}</Text>
+            <TouchableOpacity onPress={handleEditProperty} style={styles.cardButton}>
+              <MaterialIcons name="edit" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
-        ) : (
-          <FlatList
-            data={linkedCleaners}
-            keyExtractor={(item) => item._id}
-            renderItem={renderCleaner}
-            scrollEnabled={false}
-          />
-        )}
-      </Animatable.View>
+          <Divider style={styles.divider} />
+          <View style={styles.propertyContent}>
+            <Text style={styles.propertyName}>{property.apt_name}</Text>
+            <View style={styles.addressRow}>
+              <MaterialCommunityIcons name="map-marker-outline" size={16} color={COLORS.gray} />
+              <Text style={styles.propertyAddress}>{property.address}</Text>
+            </View>
+            <View style={styles.roomStats}>
+              <CircleIcon
+                iconName="bed-empty"
+                buttonSize={26}
+                radiusSise={13}
+                iconSize={16}
+                title={bedroomCount}
+                roomSize={bedroomSize}
+                type={tSafe('bedrooms', 'Bedrooms')}
+              />
+              <CircleIcon
+                iconName="shower-head"
+                buttonSize={26}
+                radiusSise={13}
+                iconSize={16}
+                title={bathroomCount}
+                roomSize={bathroomSize}
+                type={tSafe('bathrooms', 'Bathrooms')}
+              />
+              <CircleIcon
+                iconName="silverware-fork-knife"
+                buttonSize={26}
+                radiusSise={13}
+                iconSize={16}
+                title={kitchen}
+                roomSize={kitchenSize}
+                type={tSafe('kitchen', 'Kitchen')}
+              />
+              <CircleIcon
+                iconName="seat-legroom-extra"
+                buttonSize={26}
+                radiusSise={13}
+                iconSize={16}
+                title={livingroomCount}
+                roomSize={livingroomSize}
+                type={tSafe('livingroom', 'Livingroom')}
+              />
+            </View>
+          </View>
+        </Animatable.View>
 
-      {/* Checklists Card */}
-      <Animatable.View animation="fadeInUp" delay={200} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Cleaning Checklists</Text>
-          <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
-            <MaterialIcons name="add" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-        <Divider style={styles.divider} />
-        {loadingChecklists ? (
-          <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
-        ) : checklists.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="clipboard-list-outline" size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>No checklists yet</Text>
-            <TouchableOpacity onPress={handleAddChecklist}>
-              <Text style={styles.emptyAction}>Create checklist</Text>
+        {/* Linked Cleaners Card */}
+        <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{tSafe('linked_cleaners', 'Linked Cleaners')}</Text>
+            <TouchableOpacity onPress={handleAddCleaner} style={styles.cardButton}>
+              <MaterialIcons name="add" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
-        ) : (
-          <FlatList
-            data={checklists}
-            keyExtractor={(item) => item._id}
-            renderItem={renderChecklist}
-            scrollEnabled={false}
-          />
-        )}
-      </Animatable.View>
+          <Divider style={styles.divider} />
+          {loadingCleaners ? (
+            <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+          ) : linkedCleaners.length === 0 ? (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="account-plus-outline" size={48} color={COLORS.gray} />
+              <Text style={styles.emptyText}>{tSafe('no_cleaners_linked', 'No cleaners linked yet')}</Text>
+              <TouchableOpacity onPress={handleAddCleaner}>
+                <Text style={styles.emptyAction}>{tSafe('invite_cleaners', 'Invite cleaners')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              data={linkedCleaners}
+              keyExtractor={(item) => item._id}
+              renderItem={renderCleaner}
+              scrollEnabled={false}
+            />
+          )}
+        </Animatable.View>
 
-      {/* Calendar Connections Card */}
-      <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Calendar Connections</Text>
-          <TouchableOpacity onPress={handleAddCalendar} style={styles.cardButton}>
-            <MaterialIcons name="add" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-        <Divider style={styles.divider} />
-        {syncedCalendars.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="calendar-sync-outline" size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>No calendars connected</Text>
-            <TouchableOpacity onPress={handleAddCalendar}>
-              <Text style={styles.emptyAction}>Connect a calendar</Text>
+        {/* Checklists Card */}
+        <Animatable.View animation="fadeInUp" delay={200} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{tSafe('cleaning_checklists', 'Cleaning Checklists')}</Text>
+            <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
+              <MaterialIcons name="add" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
-        ) : (
-          <FlatList
-            data={syncedCalendars}
-            keyExtractor={(item) => item._id}
-            renderItem={renderCalendar}
-            scrollEnabled={false}
-          />
-        )}
-      </Animatable.View>
+          <Divider style={styles.divider} />
+          {loadingChecklists ? (
+            <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+          ) : checklists.length === 0 ? (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="clipboard-list-outline" size={48} color={COLORS.gray} />
+              <Text style={styles.emptyText}>{tSafe('no_checklists', 'No checklists yet')}</Text>
+              <TouchableOpacity onPress={handleAddChecklist}>
+                <Text style={styles.emptyAction}>{tSafe('create_checklist', 'Create checklist')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              data={checklists}
+              keyExtractor={(item) => item._id}
+              renderItem={renderChecklist}
+              scrollEnabled={false}
+            />
+          )}
+        </Animatable.View>
 
-      <AddICalModal
-        visible={modalVisible}
+        {/* Calendar Connections Card */}
+        <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{tSafe('calendar_connections', 'Calendar Connections')}</Text>
+            <TouchableOpacity onPress={handleLinkCalendar} style={styles.cardButton}>
+              <MaterialIcons name="add" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+          <Divider style={styles.divider} />
+          {syncedCalendars.length === 0 ? (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="calendar-sync-outline" size={48} color={COLORS.gray} />
+              <Text style={styles.emptyText}>{tSafe('no_calendars_connected', 'No calendars connected')}</Text>
+              <TouchableOpacity onPress={handleLinkCalendar}>
+                <Text style={styles.emptyAction}>{tSafe('connect_calendar', 'Connect a calendar')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              data={syncedCalendars}
+              keyExtractor={(item) => item._id}
+              renderItem={renderCalendar}
+              scrollEnabled={false}
+            />
+          )}
+        </Animatable.View>
+
+        <AddICalModal
+          visible={modalVisible}
+          onClose={() => {
+            setModalVisible(false);
+            setSelectedCalendar(null);
+            setSelectedPlatform(null);
+          }}
+          onSave={handleSaveSync}
+          cleaners={[]}
+          aptId={property._id}
+          preselectedPlatform={selectedPlatform}
+          existingCalendar={selectedCalendar}
+          checklists={checklists}
+        />
+      </ScrollView>
+
+      <CleanerManagementModal
+        visible={cleanerModalVisible}
         onClose={() => {
-          setModalVisible(false);
-          setSelectedCalendar(null);
-          setSelectedPlatform(null);
+          setCleanerModalVisible(false);
+          // Save changes when modal is closed (user tapped Done)
+          saveCleanersToProperty();
         }}
-        onSave={handleSaveSync}
-        cleaners={[]} // Optionally pass cleaners if needed
-        aptId={property._id}
-        preselectedPlatform={selectedPlatform}
-        existingCalendar={selectedCalendar}
-        checklists={checklists}
+        platformCleaners={platformCleaners}
+        preferredCleaners={preferredCleaners}
+        setPreferredCleaners={setPreferredCleaners}
+        invitedCleaners={invitedCleaners}
+        setInvitedCleaners={setInvitedCleaners}
       />
-    </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  // ... (keep your existing styles, unchanged)
   container: {
-    flex: 1,
+    // flex: 1,
     backgroundColor: '#F8F9FC',
   },
   contentContainer: {
@@ -2214,6 +3575,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6C6C80',
     marginBottom: 2,
+    marginRight:10
   },
   calendarDate: {
     fontSize: 11,

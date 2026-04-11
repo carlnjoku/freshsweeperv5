@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
-
+import { tSafe } from '../../utils/tSafe'; // added import
 
 const NoScheduleMessage = ({ onUpdateProfile }) => {
   return (
@@ -10,21 +10,33 @@ const NoScheduleMessage = ({ onUpdateProfile }) => {
       {/* Icon or Illustration */}
       <MaterialCommunityIcons name="calendar-blank" size={44} color={COLORS.light_gray} />
       {/* Title */}
-      <Text style={styles.title}>No Schedule Requests Yet</Text>
+      <Text style={styles.title}>
+        {tSafe('no_schedule_requests_title', 'No Schedule Requests Yet')}
+      </Text>
       {/* Description */}
       <Text style={styles.description}>
-        It looks like you don’t have any schedule requests at the moment. Don't worry—here’s what you can do:
+        {tSafe('no_schedule_requests_description', 'It looks like you don’t have any schedule requests at the moment. Don\'t worry—here’s what you can do:')}
       </Text>
       {/* Tips */}
       <View style={styles.tip_containter}>
-      <Text style={styles.tip}>Update your profile to showcase your experience.</Text>
-      <Text style={styles.tip}>Turn on notifications to catch new requests.</Text>
-      <Text style={styles.tip}>Expand your service area for more visibility.</Text>
-      <Text style={styles.tip}>Deliver great service to maintain high ratings.</Text>
+        <Text style={styles.tip}>
+          {tSafe('tip_update_profile', 'Update your profile to showcase your experience.')}
+        </Text>
+        <Text style={styles.tip}>
+          {tSafe('tip_turn_on_notifications', 'Turn on notifications to catch new requests.')}
+        </Text>
+        <Text style={styles.tip}>
+          {tSafe('tip_expand_service_area', 'Expand your service area for more visibility.')}
+        </Text>
+        <Text style={styles.tip}>
+          {tSafe('tip_deliver_great_service', 'Deliver great service to maintain high ratings.')}
+        </Text>
       </View>
       {/* Buttons */}
       <TouchableOpacity style={styles.button} onPress={onUpdateProfile}>
-        <Text style={styles.buttonText}>Update Profile</Text>
+        <Text style={styles.buttonText}>
+          {tSafe('update_profile_button', 'Update Profile')}
+        </Text>
       </TouchableOpacity>
       {/* <TouchableOpacity style={styles.button} onPress={onExploreTips}>
         <Text style={styles.buttonText}>Explore Tips</Text>
@@ -60,7 +72,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  tip_containter:{
+  tip_containter: {
     justifyContent: 'center',
     alignItems: 'center',
   },

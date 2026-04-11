@@ -277,6 +277,7 @@ import { AuthContext } from "../../context/AuthContext";
 import userService from "../../services/connection/userService";
 import COLORS from "../../constants/colors";
 import ROUTES from "../../constants/routes";
+import { tSafe } from "../../utils/tSafe";
 
 /* ----------------------------- CARD COMPONENT ----------------------------- */
 const GigCard = ({ gig, onPress, index }) => {
@@ -313,6 +314,19 @@ const GigCard = ({ gig, onPress, index }) => {
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case "upcoming":
+        return tSafe("status_upcoming", "UPCOMING");
+      case "completed":
+        return tSafe("status_completed", "COMPLETED");
+      case "cancelled":
+        return tSafe("status_cancelled", "CANCELLED");
+      default:
+        return tSafe("status_unknown", "UNKNOWN");
+    }
+  };
+
   return (
     <Animated.View
       style={[
@@ -322,7 +336,7 @@ const GigCard = ({ gig, onPress, index }) => {
     >
       <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
         <View style={styles.cardHeader}>
-          <Text style={styles.gigTitle}>Cleaning Job</Text>
+          <Text style={styles.gigTitle}>{tSafe("cleaning_job", "Cleaning Job")}</Text>
           <View
             style={[
               styles.statusBadge,
@@ -330,12 +344,12 @@ const GigCard = ({ gig, onPress, index }) => {
             ]}
           >
             <Text style={styles.statusText}>
-              {gig.status?.toUpperCase() || "UNKNOWN"} 
+              {getStatusText(gig.status)}
             </Text>
           </View>
         </View>
 
-        <Text style={styles.propertyName}>{gig.property_name} </Text>
+        <Text style={styles.propertyName}>{gig.property_name}</Text>
 
         <View style={styles.detailRow}>
           <MaterialCommunityIcons
@@ -344,14 +358,18 @@ const GigCard = ({ gig, onPress, index }) => {
             color="#6C6C80"
           />
           <Text style={styles.detailText}>
-            {gig.date ? moment(gig.date).format("MMM DD, YYYY") : "Date TBD"}
+            {gig.date
+              ? moment(gig.date).format("MMM DD, YYYY")
+              : tSafe("date_tbd", "Date TBD")}
           </Text>
         </View>
 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
             <MaterialIcons name="access-time" size={16} color="#6C6C80" />
-            <Text style={styles.detailItemText}>{gig.time || "Time TBD"}</Text>
+            <Text style={styles.detailItemText}>
+              {gig.time || tSafe("time_tbd", "Time TBD")}
+            </Text>
           </View>
 
           <View style={styles.detailItem}>
@@ -363,7 +381,7 @@ const GigCard = ({ gig, onPress, index }) => {
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={styles.viewDetails}>View Details</Text>
+          <Text style={styles.viewDetails}>{tSafe("view_details", "View Details")}</Text>
           <MaterialIcons name="arrow-forward-ios" size={14} color={COLORS.primary} />
         </View>
       </TouchableOpacity>
@@ -391,12 +409,11 @@ export default function PropertyGigs() {
     try {
       setError(null);
       const response = await userService.getPropertyGigs(property.property_id, userToken);
-      
-      console.log("My gigs-------p",response.data)
+      console.log("My gigs-------p", response.data);
       setGigs(response.data || []);
     } catch (err) {
       console.log(err);
-      setError("Could not load gigs");
+      setError(tSafe("load_gigs_error", "Could not load gigs"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -453,7 +470,7 @@ export default function PropertyGigs() {
         <MaterialCommunityIcons name="alert-circle-outline" size={64} color="red" />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchGigs}>
-          <Text style={styles.retryText}>Try Again</Text>
+          <Text style={styles.retryText}>{tSafe("try_again", "Try Again")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -463,9 +480,9 @@ export default function PropertyGigs() {
     return (
       <View style={styles.centered}>
         <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#D3D3D3" />
-        <Text style={styles.emptyTitle}>No Gigs Found</Text>
+        <Text style={styles.emptyTitle}>{tSafe("no_gigs_found", "No Gigs Found")}</Text>
         <Text style={styles.emptyText}>
-          No cleaning jobs yet for {property.property_name}
+          {tSafe("no_gigs_for_property", "No cleaning jobs yet for {propertyName}", { propertyName: property.property_name })}
         </Text>
       </View>
     );
@@ -480,7 +497,7 @@ export default function PropertyGigs() {
         <>
           {upcoming.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>📅 Upcoming</Text>
+              <Text style={styles.sectionTitle}>{tSafe("upcoming_section", "📅 Upcoming")}</Text>
               {upcoming.map((item, index) =>
                 renderTimelineItem({
                   item,
@@ -494,7 +511,7 @@ export default function PropertyGigs() {
           {past.length > 0 && (
             <>
               <Text style={[styles.sectionTitle, styles.pastSectionTitle]}>
-                ✅ Past Jobs
+                {tSafe("past_jobs_section", "✅ Past Jobs")}
               </Text>
               {past.map((item, index) =>
                 renderTimelineItem({
