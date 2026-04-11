@@ -6,7 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CleanerSelectionProvider } from './context/CleanerSelectionContext';
-import { STRIPE_PUBLIC_SECRET_KEY } from './secret';
+// import { STRIPE_PUBLIC_SECRET_KEY } from './secret';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { BookingProvider } from './context/BookingContext';
@@ -34,6 +34,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
 
+  const STRIPE_PUBLIC_SECRET_KEY = process.env.STRIPE_PUBLIC_SECRET_KEY;
   const [showTestUI, setShowTestUI] = useState(false);
   const [ready, setReady] = useState(false); // ✅ ADD THIS
 
