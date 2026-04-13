@@ -503,10 +503,11 @@ import { useNavigation } from '@react-navigation/native';
 import { getCityState } from '../../utils/getAddressFromCoordinates';
 import { verification_items } from '../../data';
 import CleaningSummary from './CleaningSummary';
-import { MAP_BOX_SECRET_KEY } from '../../secret';
+// import { MAP_BOX_SECRET_KEY } from '../../secret';
 import { tSafe } from '../../utils/tSafe'; // added import
 
 export default function SchedulePreview({ route }) {
+  const MAP_BOX_SECRET_KEY = process.env.MAP_BOX_SECRET_KEY;
   const navigation = useNavigation();
   const { request_created_at, requestId, scheduleId, hostId } = route.params;
   const { geolocationData, currentUserId, currentUser } = useContext(AuthContext);

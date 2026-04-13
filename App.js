@@ -35,6 +35,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function App() {
 
   const STRIPE_PUBLIC_SECRET_KEY = process.env.STRIPE_PUBLIC_SECRET_KEY;
+  
   const [showTestUI, setShowTestUI] = useState(false);
   const [ready, setReady] = useState(false); // ✅ ADD THIS
 
