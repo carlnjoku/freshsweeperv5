@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
 import api from './axiosInstance'; // import the configured axios instance
+import { getAccessToken } from '../../utils/tokenManager';
+import { AuthContext } from '../../context/AuthContext';
 
 
 
-// const { currentUserId, userToken } = useContext(AuthContext);
+
 
 // Set token (this is now handled by the interceptor, but you can keep it for manual override)
 export const setChatAuthToken = (token) => {
@@ -72,4 +74,62 @@ export const uploadImage = async (uri) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return res.data.url;
+};
+
+
+
+
+// export const updateUserLanguage = async (language) => {
+//   const token = await getAccessToken();
+//   alert(token)
+//   if (!token) {
+//     console.warn('No access token found');
+//     return;
+//   }
+//   console.log('🔑 Token being sent:', token.substring(0, 20) + '...');
+//   const response = await api.post('/api/users/update_language', 
+//     { language },
+//     { headers: { Authorization: `Bearer ${token}` } }
+//   );
+//   return response.data;
+// };
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// export const updateUserLanguage = async (language) => {
+//   const { currentUserId, userToken } = useContext(AuthContext);
+//   const token = await AsyncStorage.getItem('accessToken');
+//   console.log("My token ============ MT", userToken);
+//   if (!token) {
+//     console.warn('No access token found');
+//     return;
+//   }
+//   console.log('🔑 Token being sent:', token.substring(0, 20) + '...');
+//   const response = await api.post('/api/users/update_language', 
+//     { language },
+//     { headers: { Authorization: `Bearer ${userToken}` } }
+//   );
+//   return response.data;
+// };
+
+// export const updateUserLanguage = async (language, token) => {
+//   alert(token)
+//   if (!token) {
+//     console.warn('No token provided');
+//     return;
+//   }
+//   const response = await api.post('/api/users/update_language', 
+//     { language },
+//     { headers: { Authorization: `Bearer ${token}` } }
+//   );
+//   return response.data;
+// };
+
+
+export const updateUserLanguage = async (userId, language) => {
+  const response = await api.post('/api/users/update_language', 
+    { language },
+    { params: { user_id: userId } }
+  );
+  return response.data;
 };

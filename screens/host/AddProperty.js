@@ -2017,7 +2017,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import COLORS from "../../constants/colors";
 import GoogleAutocomplete from "../../components/shared/GooglePlacesAutocomplete";
-import { GOOGLE_MAPS_API_KEY } from '../../secret';
+// import { GOOGLE_MAPS_API_KEY } from '../../secret';
 import userService from "../../services/connection/userService";
 import { geocodeAddress } from "../../utils/geocodeAddress";
 import ROUTES from "../../constants/routes";
@@ -2046,6 +2046,8 @@ export default function AddProperty() {
     const { currentUserId } = useContext(AuthContext);
     const { hasPermission } = useLocationPermission();
     const navigation = useNavigation();
+
+    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
     // Room State
     const [roomDetails, setRoomDetails] = useState([

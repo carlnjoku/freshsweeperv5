@@ -5,10 +5,12 @@ const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
 export const setTokens = async (accessToken, refreshToken) => {
-    alert(accessToken)
+    // console.log("My Access token --------AT", accessToken)
+    alert('setTokens called with accessToken: ' + accessToken);
   if (accessToken) await AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   if (refreshToken) await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
 };
+
 
 export const getAccessToken = async () => {
   return await AsyncStorage.getItem(ACCESS_TOKEN_KEY);

@@ -106,8 +106,8 @@ export default function App() {
    
     <SafeAreaProvider>
       <AuthProvider>
-      <ErrorProvider>
-        <ErrorBoundary>
+        <ErrorProvider>
+         <ErrorBoundary>
           <LanguageProvider>
             
             <WebSocketProvider>

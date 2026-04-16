@@ -423,7 +423,7 @@ import { tSafe } from '../../utils/tSafe'; // added import
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-const CustomChatHeader = ({ conversation }) => {
+const CustomChatHeader = ( conversation ) => {
   const navigation = useNavigation();
   return (
     <View>
@@ -432,14 +432,14 @@ const CustomChatHeader = ({ conversation }) => {
           <AntDesign name="arrowleft" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View style={{ marginTop: 10 }}>
-          {/* <Text style={{ alignSelf: 'center', color: COLORS.white, fontSize: 20, fontWeight: '500' }}>{conversation.apartment_name}</Text>
-          <Text style={{ alignSelf: 'center', color: COLORS.white, fontSize: 14 }}>{schedule.address} </Text> */}
+          <Text style={{ alignSelf: 'center', color: COLORS.white, fontSize: 20, fontWeight: '500' }}>{conversation?.schedule?.schedule?.apartment_name}</Text>
+          <Text style={{ alignSelf: 'center', color: COLORS.white, fontSize: 14 }}>{conversation?.schedule?.schedule?.address} </Text>
         </View>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: COLORS.light_gray }}>
         <MaterialCommunityIcons name="calendar" style={{ marginLeft: 5 }} size={20} color={COLORS.gray} />
         <Text style={{ fontSize: 14, marginTop: 0, color: COLORS.gray }}>
-          {/* {tSafe('schedule_label', 'Schedule')} {moment(schedule.cleaning_date).format('ddd MMM D')}, {moment(schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')} */}
+          {tSafe('schedule_label', 'Schedule')} {moment(conversation?.schedule?.schedule?.cleaning_date).format('ddd MMM D')}, {moment(conversation?.schedule?.schedule?.cleaning_time, 'h:mm:ss A').format('h:mm A')}
         </Text>
       </View>
     </View>
@@ -489,7 +489,7 @@ const MessageStack = () => {
         component={ChatConversation}
         options={({ route }) => ({
           headerShown: true,
-          header: () => <CustomChatHeader schedule={route.params.schedule} />,
+          header: () => <CustomChatHeader schedule={route.params.conversation} />,
           headerTintColor: COLORS.white,
           headerBackTitleVisible: false,
           headerStyle: {

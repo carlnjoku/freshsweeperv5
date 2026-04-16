@@ -173,10 +173,10 @@
 
 
 // geocoding.js
-import { GOOGLE_MAPS_API_KEY } from "../secret";
+// import { GOOGLE_MAPS_API_KEY } from "../secret";
 import * as Location from 'expo-location';
 import { Alert, Platform } from 'react-native'; // optional for user feedback
-
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const apiKey = GOOGLE_MAPS_API_KEY;
 
 // Helper to request location permission (only called when needed)

@@ -641,7 +641,7 @@ export default function MainHostStack() {
     const navigation = useNavigation();
     const Stack = createStackNavigator();
 
-    const CustomChatHeader = ({ conversation }) => {
+    const CustomChatHeader = ( conversation ) => {
 
       console.log("Chat schedulingggggg------PPP", conversation)
         const navigation = useNavigation();
@@ -655,7 +655,7 @@ export default function MainHostStack() {
                     elevation: 5,
                 }}
             >
-                <View style={{ flexDirection: 'row', paddingBottom: 10, paddingLeft: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent:'center', paddingBottom: 10}}>
                     <TouchableOpacity
                         onPress={() => navigation.goBack()}
                         style={{ marginRight: 15, marginTop: 10 }}
@@ -672,7 +672,7 @@ export default function MainHostStack() {
                                 fontWeight: '500',
                             }}
                         >
-                            {/* {conversation.schedule.apartment_name} */}
+                            {conversation.schedule.schedule.apartment_name}
                         </Text>
                         <Text
                             style={{
@@ -681,7 +681,7 @@ export default function MainHostStack() {
                                 fontSize: 14,
                             }}
                         >
-                            {/* {conversation.schedule.address} */}
+                            {conversation.schedule.schedule.address}
                         </Text>
                     </View>
                 </View>
@@ -699,7 +699,7 @@ export default function MainHostStack() {
                 >
                     <MaterialCommunityIcons name="calendar" style={{ marginLeft: 5 }} size={20} color={COLORS.gray} />
                     <Text style={{ fontSize: 14, color: COLORS.gray }}>
-                        {/* {tSafe('schedule', 'Schedule')} {moment(schedule.schedule.cleaning_date).format('ddd MMM D')}, {moment(schedule.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')} */}
+                        {tSafe('schedule', 'Schedule')} {moment(conversation.schedule.schedule.cleaning_date).format('ddd MMM D')}, {moment(conversation.schedule.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}
                     </Text>
                 </View>
             </SafeAreaView>
@@ -1028,7 +1028,7 @@ export default function MainHostStack() {
                     component={ChatConversation}
                     options={({ route }) => ({
                         headerShown: true,
-                        header: () => <CustomChatHeader schedule={route.params.schedule} />,
+                        header: () => <CustomChatHeader schedule={route.params.conversation} />,
                         headerTintColor: COLORS.white,
                         headerBackTitleVisible: false,
                         headerBackTitle: '',

@@ -416,7 +416,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'rea
 import COLORS from '../../constants/colors';
 import { TextInput, Icon } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { GOOGLE_MAPS_API_KEY } from '../../secret';
+// import { GOOGLE_MAPS_API_KEY } from '../../secret';
 import { geocodeAddress } from '../../utils/geocodeAddress';
 import GoogleAutocomplete from '../shared/GooglePlacesAutocomplete';
 import AddressInput from '../shared/AddressInput';          // adjust path as needed
@@ -430,6 +430,7 @@ const Contact = ({ contact, userId, close_modal }) => {
   const [autocompleteError, setAutocompleteError] = useState(null);
   const [coordinates, setCoordinates] = useState(null);
   const { hasPermission } = useLocationPermission();
+  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
   // Inputs state (includes address and location)
   const [inputs, setInputs] = useState({

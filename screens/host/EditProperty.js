@@ -2141,7 +2141,7 @@ import userService from "../../services/connection/userService";
 import moment from 'moment';
 import { AuthContext } from "../../context/AuthContext";
 import { propertyList } from "../../data";
-import { GOOGLE_MAPS_API_KEY } from '../../secret';
+// import { GOOGLE_MAPS_API_KEY } from '../../secret';
 import { Modal, Portal, Provider } from "react-native-paper";
 import Slider from "@react-native-community/slider";
 import AddressInput from "../../components/shared/AddressInput";
@@ -2153,6 +2153,8 @@ import { tSafe } from '../../utils/tSafe'; // added import
 export default function EditProperty({ navigation, route }) {
     const { currentUserId, userToken } = useContext(AuthContext);
     const { propertyId } = route.params; // Property ID from navigation params
+
+    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
     const [showGoogleAutocomplete, setShowGoogleAutocomplete] = useState(true);
     const [autocompleteError, setAutocompleteError] = useState(null);

@@ -85,7 +85,6 @@ const CleanerManagementModal = ({
         <Text style={modalStyles.sectionTitle}>
           {tSafe('invite_new_cleaner', 'Invite New Cleaner')}
         </Text>
-        
         <TextInput
             mode="outlined"
             label={tSafe('cleaner_email', 'Cleaner Email')}
@@ -113,6 +112,7 @@ const CleanerManagementModal = ({
         {/* Current selections */}
         <Text style={modalStyles.sectionTitle}>
           {tSafe('selected_cleaners', 'Selected Cleaners')}
+         
         </Text>
         <View style={modalStyles.chipContainer}>
           {preferredCleaners.map((cleaner) => (
@@ -137,7 +137,7 @@ const CleanerManagementModal = ({
           onPress={onClose}
           style={[modalStyles.buttonSpacing, { marginTop: 16 }]}
         >
-          {tSafe('done', 'Done')}
+          {tSafe('done', 'Done')} 
         </Button>
   
       </Modal>

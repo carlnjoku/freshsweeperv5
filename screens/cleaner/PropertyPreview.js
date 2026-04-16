@@ -4068,7 +4068,7 @@ import COLORS from '../../constants/colors';
 import CustomCard from '../../components/shared/CustomCard';
 import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
-import { MAP_BOX_SECRET_KEY } from '../../secret';
+// import { MAP_BOX_SECRET_KEY } from '../../secret';
 import { tSafe } from '../../utils/tSafe'; // added import
 
 // Helper to get room icon
@@ -4100,6 +4100,8 @@ export default function PropertyPreview() {
   const route = useRoute();
   const { propertyId, inviteToken } = route.params || {};
   const { currentUserId } = useContext(AuthContext);
+
+  const MAP_BOX_SECRET_KEY = rocess.env.MAP_BOX_SECRET_KEY
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
