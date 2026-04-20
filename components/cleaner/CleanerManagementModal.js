@@ -5,9 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  Modal
 } from 'react-native';
-import { Modal, Portal, Button, TextInput, Icon } from 'react-native-paper';
+// import { Modal, Portal, Button, TextInput, Icon } from 'react-native-paper';
+import { Button, TextInput, IconButton, Icon, Checkbox, RadioButton, Avatar } from 'react-native-paper';
 import COLORS from '../../constants/colors'; // adjust path as needed
 import { v4 as uuidv4 } from 'uuid';
 import { tSafe } from '../../utils/tSafe'; // added import
@@ -50,14 +52,27 @@ const CleanerManagementModal = ({
   };
 
   return (
-    <Portal>
+ 
       <Modal
-        visible={visible}
-        onDismiss={onClose}
-        contentContainerStyle={modalStyles.modalContent}
-        presentationStyle="fullScreen"
+        // visible={visible}
+        // onDismiss={onClose}
+        // contentContainerStyle={modalStyles.modalContent}
+        // presentationStyle="fullScreen"
+
+        visible={visible} animationType="slide" onRequestClose={onClose} transparent={false}
       >
-  
+  <View style={modalStyles.modalContainer}>
+  <ScrollView contentContainerStyle={modalStyles.scrollContent}>
+    {/* Header */}
+    <View style={modalStyles.header}>
+            <IconButton icon="arrow-left" onPress={onClose} color={COLORS.dark} size={24} />
+            <Text style={modalStyles.title}>
+              {/* {existingCalendar
+                ? tSafe('edit_calendar', 'Edit Calendar')
+                : tSafe('sync_calendar', 'Sync Calendar')} */}
+            </Text>
+            <View style={{ width: 48 }} />
+          </View>
         <Text style={modalStyles.modalTitle}>
           {tSafe('invite_your_own_cleaner', 'Invite your own Cleaners')}
         </Text>
@@ -139,22 +154,34 @@ const CleanerManagementModal = ({
         >
           {tSafe('done', 'Done')} 
         </Button>
-  
+        </ScrollView>
+        </View>
       </Modal>
-    </Portal>
+  
   );
 };
 
 const modalStyles = StyleSheet.create({
-  // safeArea: {
-  //   flex: 1,
-  //   backgroundColor: COLORS.white,
-  // },
+
   modalContent: {
-    backgroundColor: COLORS.white,
-    padding: 20,
-    borderRadius: 12,
-    maxHeight: '80%',
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.dark,
   },
   modalTitle: {
     fontSize: 20,

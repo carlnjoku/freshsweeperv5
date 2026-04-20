@@ -76,6 +76,15 @@ class UserService {
     getApartmentById(aptId){
       return http.get(`/api/apartments/get_apartment_by_id/${aptId}`)
     }
+
+    sendCleanerInvitations(invitationData){
+      return http.post('/api/apartments/invite_cleaners', invitationData)
+    }
+
+    getPropertyInvites(aptId){
+      return http.get(`/api/apartments/property_invites/${aptId}`)
+    }
+    
   
     acceptInviteOnSignup(payload){
       return http.post('/api/apartments/accept_invite_on_signup', payload);

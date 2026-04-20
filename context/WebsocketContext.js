@@ -124,6 +124,7 @@ export const WebSocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const handlerAddedRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
+  
 
   // Global handler for incoming messages
   useEffect(() => {
@@ -253,6 +254,8 @@ export const WebSocketProvider = ({ children }) => {
     
     return result;
   };
+
+  
 
   // Inside WebSocketProvider, add this function
   const sendRawMessage = (message) => {

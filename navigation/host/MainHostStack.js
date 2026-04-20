@@ -636,6 +636,7 @@ import PaymentSingleCheckout from '../../screens/host/Payment/PaymentSingleCheck
 import Receipt from '../../screens/host/Payment/Receipt';
 import ICalendar from '../../screens/host/ICalendar';
 import { tSafe } from '../../utils/tSafe'; // added import
+import InviteCleaner from '../../screens/host/InviteCleaner';
 
 export default function MainHostStack() {
     const navigation = useNavigation();
@@ -841,6 +842,27 @@ export default function MainHostStack() {
                         headerBackTitleVisible: false,
                         headerBackTitle: '',
                         title: tSafe('link_calendar_title', 'Link Calendar'),
+                        headerTintColor: COLORS.gray,
+                        headerBackTitleVisible: false,
+                        headerStyle: {
+                            backgroundColor: '#fff',
+                            elevation: 5,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.3,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowRadius: 3,
+                        },
+                    })}
+                />
+                <Stack.Screen
+                    name={ROUTES.host_invite_cleaners}
+                    component={InviteCleaner}
+                    options={({ route }) => ({
+                        headerShown: true,
+                        headerTintColor: COLORS.white,
+                        headerBackTitleVisible: false,
+                        headerBackTitle: '',
+                        title: tSafe('invite_cleaners', 'Invite Cleaner'),
                         headerTintColor: COLORS.gray,
                         headerBackTitleVisible: false,
                         headerStyle: {
