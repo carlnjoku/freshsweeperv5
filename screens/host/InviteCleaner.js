@@ -951,7 +951,9 @@ import {
   Modal,
   Alert,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  Image,
+  Dimensions
 } from 'react-native';
 import { MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { Button, TextInput, IconButton, Icon, Checkbox, RadioButton, Avatar, Card, Chip } from 'react-native-paper';
@@ -965,10 +967,14 @@ import { AuthContext } from '../../context/AuthContext';
 import userService from '../../services/connection/userService';
 import ROUTES from '../../constants/routes';
 
+const { width, height } = Dimensions.get('window');
+
 export default function InviteCleaner({ route }) {
   const { property } = route.params;
   const navigation = useNavigation();
   const { currentUserId } = useContext(AuthContext);
+
+  
 
   // Room details
   const bedroomCount = property?.roomDetails?.find(r => r.type === "Bedroom")?.number || 0;
@@ -992,12 +998,16 @@ export default function InviteCleaner({ route }) {
   const [inviteMethod, setInviteMethod] = useState('email');
   const [sendingInvites, setSendingInvites] = useState(false);
 
+
+
   // Fetch platform cleaners when component mounts
   useEffect(() => {
     if (property?.latitude && property?.longitude) {
       fetchPlatformCleaners(property.latitude, property.longitude);
     }
   }, [property]);
+
+
 
   const fetchPlatformCleaners = async (lat, lng) => {
     try {
@@ -1007,8 +1017,25 @@ export default function InviteCleaner({ route }) {
         longitude: lng,
         radius: 100
       });
-      console.log("Recommended cleaners:", res.data);
-      setPlatformCleaners(res.data);
+      console.log("Recommended cleaners raw data:", res.data);
+      
+      // Normalize the data to ensure consistent field names
+      const normalizedCleaners = (res.data || []).map(cleaner => ({
+        ...cleaner,
+        id: cleaner._id || cleaner.id,
+        _id: cleaner._id || cleaner.id,
+        firstname: cleaner.firstname || cleaner.first_name || cleaner.name?.split(' ')[0] || 'Cleaner',
+        lastname: cleaner.lastname || cleaner.last_name || cleaner.name?.split(' ')[1] || '',
+        fullName: cleaner.fullName || `${cleaner.firstname || ''} ${cleaner.lastname || ''}`.trim(),
+        email: cleaner.email || 'No email',
+        avatar: cleaner.avatar || null,
+        rating: cleaner.rating || cleaner.average_rating || 4.5,
+        completedJobs: cleaner.completedJobs || cleaner.jobs_completed || 0,
+        specialty: cleaner.specialty || cleaner.specialization || 'General Cleaning'
+      }));
+      
+      console.log("Normalized cleaners:", normalizedCleaners);
+      setPlatformCleaners(normalizedCleaners);
     } catch (err) {
       console.log('Failed to fetch platform cleaners', err);
     } finally {
@@ -1050,6 +1077,8 @@ export default function InviteCleaner({ route }) {
     setSelectedPlatformCleaner(null);
     setShowPlatformCleaners(false);
   };
+
+  
 
   const removeCleaner = (id) => {
     Alert.alert(
@@ -1135,210 +1164,6 @@ export default function InviteCleaner({ route }) {
     setInvitePhone(formatPhoneNumber(text));
   };
 
-//   const sendInvitations = async () => {
-//     if (preferredCleaners.length === 0) {
-//       Alert.alert('No Cleaners', 'Please add at least one cleaner to invite');
-//       return;
-//     }
-
-//     setSendingInvites(true);
-//     try {
-//       // Build preferred_cleaners array
-//       const preferred_cleaners = preferredCleaners.map(cleaner => ({
-//         id: cleaner.id,
-//         type: cleaner.type
-//       }));
-      
-//       // Build invited_cleaners array
-//       const invited_cleaners = preferredCleaners
-//         .filter(c => c.type === 'invited')
-//         .map(c => ({
-//           tempId: c.id,
-//           email: c.email,
-//           phone: c.phone
-//         }));
-      
-//       const requestData = {
-//         property_id: property._id,
-//         host_id: currentUserId,
-//         property_name: property.apt_name,
-//         host_name: `${property.owner_info?.firstname || ''} ${property.owner_info?.lastname || ''}`.trim(),
-//         host_avatar: property.owner_info?.avatar || null,
-//         preferred_cleaners: preferred_cleaners,
-//         invited_cleaners: invited_cleaners
-//       };
-      
-//       console.log('Sending invitation request:', JSON.stringify(requestData, null, 2));
-
-//       // Send invitations to backend
-//       const response = await userService.sendCleanerInvitations(requestData);
-      
-//       if (response.status === 200 || response.status === 'success') {
-//         // Show success message
-//         Alert.alert(
-//           tSafe('invitations_sent', 'Invitations Sent'),
-//           tSafe('cleaners_notified', `${preferredCleaners.length} cleaner(s) have been invited to your property`),
-//           [
-//             {
-//               text: tSafe('view_property', 'View Property'),
-//               onPress: () => {
-//                 // Navigate back to Property Dashboard with refresh flag
-//                 navigation.replace(ROUTES.host_property_dashboard, {
-//                   propertyId: property._id,
-//                   refresh: true,
-//                   timestamp: Date.now()
-//                 });
-//               }
-//             }
-//           ]
-//         );
-//       }
-//     } catch (error) {
-//       console.error('Error sending invitations:', error);
-//       Alert.alert(
-//         tSafe('error_title', 'Error'),
-//         error.response?.data?.detail || tSafe('failed_send_invitations', 'Failed to send invitations. Please try again.')
-//       );
-//     } finally {
-//       setSendingInvites(false);
-//     }
-//   };
-
-// const sendInvitations = async () => {
-//     if (preferredCleaners.length === 0) {
-//       Alert.alert('No Cleaners', 'Please add at least one cleaner to invite');
-//       return;
-//     }
-  
-//     setSendingInvites(true);
-//     try {
-//       const requestData = {
-//         property_id: property._id,
-//         host_id: currentUserId,
-//         property_name: property.apt_name,
-//         host_name: `${property.owner_info?.firstname || ''} ${property.owner_info?.lastname || ''}`.trim(),
-//         host_avatar: property.owner_info?.avatar || null,
-//         invited_cleaners: preferredCleaners.map(cleaner => ({
-//           id: cleaner.id,
-//           type: cleaner.type,
-//           email: cleaner.email,
-//           phone: cleaner.phone,
-//           firstname: cleaner.firstname,
-//           lastname: cleaner.lastname
-//         }))
-//       };
-      
-//       const response = await userService.sendCleanerInvitations(requestData);
-      
-//       if (response.status === 'success') {
-//         Alert.alert(
-//           tSafe('invitations_sent', 'Invitations Sent'),
-//           tSafe('cleaners_notified', `${preferredCleaners.length} cleaner(s) have been invited`),
-//           [
-//             {
-//               text: tSafe('view_property', 'View Property'),
-//               onPress: () => {
-//                 navigation.replace(ROUTES.host_property_dashboard, {
-//                   propertyId: property._id,
-//                   refresh: true
-//                 });
-//               }
-//             }
-//           ]
-//         );
-//       }
-//     } catch (error) {
-//       console.error('Error sending invitations:', error);
-//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_send_invitations', 'Failed to send invitations'));
-//     } finally {
-//       setSendingInvites(false);
-//     }
-//   };
-
-
-
-// const sendInvitations = async () => {
-//     if (preferredCleaners.length === 0) {
-//       Alert.alert('No Cleaners', 'Please add at least one cleaner to invite');
-//       return;
-//     }
-  
-//     setSendingInvites(true);
-//     try {
-//       // Build preferred_cleaners array with ALL cleaners
-//       const preferred_cleaners = preferredCleaners.map(cleaner => {
-//         if (cleaner.type === 'platform') {
-//           return {
-//             id: cleaner.id,
-//             type: 'platform'
-//           };
-//         } else {
-//           return {
-//             id: cleaner.id,
-//             type: 'invited'
-//           };
-//         }
-//       });
-      
-//       // Build invited_cleaners array for additional details
-//       const invited_cleaners = preferredCleaners
-//         .filter(c => c.type === 'invited')
-//         .map(c => ({
-//           tempId: c.id,
-//           email: c.email,
-//           phone: c.phone
-//         }));
-      
-//       const requestData = {
-//         property_id: property._id,
-//         host_id: currentUserId,
-//         property_name: property.apt_name,
-//         host_name: `${property.owner_info?.firstname || ''} ${property.owner_info?.lastname || ''}`.trim(),
-//         host_avatar: property.owner_info?.avatar || null,
-//         preferred_cleaners: preferred_cleaners,
-//         invited_cleaners: invited_cleaners
-//       };
-      
-//       console.log('Sending request:', JSON.stringify(requestData, null, 2));
-  
-//       const response = await userService.sendCleanerInvitations(requestData);
-      
-//       if (response.status === 200) {
-//         // Show success message
-//         Alert.alert(
-//           tSafe('invitations_sent', 'Invitations Sent'),
-//           tSafe('cleaners_notified', `${preferredCleaners.length} cleaner(s) have been invited to your property`),
-//           [
-//             {
-//               text: tSafe('view_property', 'View Property'),
-//               onPress: () => {
-//                 // Navigate back to Property Dashboard with refresh flag
-//                 // Use replace to remove InviteCleaner from navigation stack
-//                 navigation.replace(ROUTES.host_apt_dashboard, {
-//                   property: property,
-//                   refresh: true,
-//                   timestamp: Date.now()
-//                 });
-//               }
-//             }
-//           ]
-//         );
-//       } else {
-//         Alert.alert(
-//           tSafe('error_title', 'Error'),
-//           response.message || tSafe('failed_send_invitations', 'Failed to send invitations')
-//         );
-//       }
-//     } catch (error) {
-//       console.error('Error sending invitations:', error);
-//       Alert.alert(
-//         tSafe('error_title', 'Error'),
-//         error.response?.data?.detail || tSafe('failed_send_invitations', 'Failed to send invitations. Please try again.')
-//       );
-//     } finally {
-//       setSendingInvites(false);
-//     }
-//   };
 
 const formatPhoneNumberForStorage = (phone) => {
     // Remove all non-digit characters
@@ -1443,16 +1268,28 @@ const sendInvitations = async () => {
     } finally {
       setSendingInvites(false);
     }
-  };  const renderCleanerItem = (cleaner, index) => {
-    const isPlatform = cleaner.type === 'platform';
-    const displayName = isPlatform 
-      ? `${cleaner.firstname || ''} ${cleaner.lastname || ''}`.trim()
-      : cleaner.email || cleaner.phone;
-    
-    const displayInfo = isPlatform
-      ? cleaner.email
-      : cleaner.email ? `📧 ${cleaner.email}` : `📱 ${cleaner.phone}`;
+  };  
+  
 
+
+  const renderCleanerItem = (cleaner, index) => {
+    console.log(cleaner);
+    const isPlatform = cleaner.type === 'platform';
+    
+    // Handle display name differently for platform vs invited
+    let displayName = '';
+    let displayInfo = '';
+    
+    if (isPlatform) {
+      // Platform cleaner has firstname and lastname
+      displayName = `${cleaner.firstname || ''} ${cleaner.lastname || ''}`.trim() || 'Platform Cleaner';
+      displayInfo = cleaner.email || 'No email provided';
+    } else {
+      // Invited cleaner has email or phone
+      displayName = cleaner.email || cleaner.phone || 'Invited Cleaner';
+      displayInfo = cleaner.email ? `📧 ${cleaner.email}` : `📱 ${cleaner.phone}`;
+    }
+  
     return (
       <Animatable.View 
         key={cleaner.id || index} 
@@ -1477,13 +1314,14 @@ const sendInvitations = async () => {
             <View style={styles.cleanerInfo}>
               <Text style={styles.cleanerName}>{displayName}</Text>
               <Text style={styles.cleanerDetail}>{displayInfo}</Text>
-              <Chip 
+              {/* <Chip 
                 icon="clock-outline" 
                 style={styles.pendingChip}
                 textStyle={styles.pendingChipText}
               >
                 {tSafe('pending_invite', 'Pending Invite')}
-              </Chip>
+              </Chip> */}
+            
             </View>
             <TouchableOpacity 
               onPress={() => removeCleaner(cleaner.id)}
@@ -1497,40 +1335,103 @@ const sendInvitations = async () => {
     );
   };
 
-  const renderPlatformCleanerItem = ({ item }) => (
-    <TouchableOpacity 
-      style={[
-        styles.platformCleanerItem,
-        selectedPlatformCleaner?._id === item._id && styles.selectedPlatformCleaner
-      ]}
-      onPress={() => setSelectedPlatformCleaner(item)}
-    >
-      <View style={styles.platformCleanerAvatar}>
-        {item.avatar ? (
-          <Avatar.Image size={40} source={{ uri: item.avatar }} />
-        ) : (
-          <Avatar.Icon size={40} icon="account" style={{ backgroundColor: COLORS.primary + '20' }} />
-        )}
-      </View>
-      <View style={styles.platformCleanerInfo}>
-        <Text style={styles.platformCleanerName}>
-          {item.firstname} {item.lastname}
-        </Text>
-        <Text style={styles.platformCleanerDetail}>
-          ⭐ {item.rating || 4.5} • {item.completedJobs || 0} {tSafe('jobs', 'jobs')}
-        </Text>
-        <Text style={styles.platformCleanerSpecialty}>
-          {item.specialty || tSafe('general_cleaning', 'General Cleaning')}
-        </Text>
-      </View>
-      {selectedPlatformCleaner?._id === item._id && (
-        <View style={styles.selectedIndicator}>
-          <MaterialIcons name="check-circle" size={24} color={COLORS.primary} />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+// const renderPlatformCleanerItem = ({ item }) => {
+//     // Get the correct ID field (handle both _id and id)
+//     const cleanerId = item._id || item.id;
+    
+//     return (
+//       <TouchableOpacity 
+//         style={[
+//           styles.platformCleanerItem,
+//           (selectedPlatformCleaner?._id === cleanerId || selectedPlatformCleaner?.id === cleanerId) && styles.selectedPlatformCleaner
+//         ]}
+//         onPress={() => setSelectedPlatformCleaner(item)}
+//       >
+//         <View style={styles.platformCleanerAvatar}>
+//           {item.avatar ? (
+//             <Avatar.Image size={40} source={{ uri: item.avatar }} />
+//           ) : (
+//             <Avatar.Icon size={40} icon="account" style={{ backgroundColor: COLORS.primary + '20' }} />
+//           )}
+//         </View>
+//         <View style={styles.platformCleanerInfo}>
+//           <Text style={styles.platformCleanerName}>
+//             {item.firstname} {item.lastname}
+//           </Text>
+//           <Text style={styles.platformCleanerDetail}>
+//             ⭐ {item.rating || 4.5} • {item.completedJobs || 0} {tSafe('jobs', 'jobs')}
+//           </Text>
+//           <Text style={styles.platformCleanerSpecialty}>
+//             {item.specialty || tSafe('general_cleaning', 'General Cleaning')}
+//           </Text>
+//         </View>
+//         {(selectedPlatformCleaner?._id === cleanerId || selectedPlatformCleaner?.id === cleanerId) && (
+//           <View style={styles.selectedIndicator}>
+//             <MaterialIcons name="check-circle" size={24} color={COLORS.primary} />
+//           </View>
+//         )}
+//       </TouchableOpacity>
+//     );
+//   };
 
+const renderPlatformCleanerItem = ({ item }) => {
+    // Get the correct ID field (handle both _id and id)
+    const cleanerId = item._id || item.id;
+    const isSelected = (selectedPlatformCleaner?._id === cleanerId || selectedPlatformCleaner?.id === cleanerId);
+    
+    return (
+      <TouchableOpacity 
+        key={cleanerId}
+        style={[
+          styles.cleanerCard,
+          isSelected && styles.selectedCard
+        ]}
+        onPress={() => setSelectedPlatformCleaner(item)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.cardContent}>
+          <View style={styles.avatarContainer}>
+            {item.avatar ? (
+              <Image
+                source={{ uri: item.avatar }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Icon
+                  source="account"
+                  size={20}
+                  color={COLORS.white}
+                />
+              </View>
+            )}
+          </View>
+  
+          <View style={styles.infoContainer}>
+            <Text style={styles.cleanerName}>
+              {item.firstname} {item.lastname}
+            </Text>
+            <Text style={styles.cleanerDistance}>
+              ⭐ {item.rating || 4.5} • {item.completedJobs || 0} {tSafe('jobs', 'jobs')}
+            </Text>
+            {item.distance && (
+                <Text style={styles.cleanerDistance}>
+                {item.distance} {tSafe('miles_away', 'miles away')}
+                </Text>
+            )}
+          </View>
+  
+          <View style={isSelected ? styles.selectedButton : styles.addButton}>
+            <Icon
+              source={isSelected ? 'check' : 'plus'}
+              size={18}
+              color={isSelected ? COLORS.white : COLORS.primary}
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -1596,7 +1497,7 @@ const sendInvitations = async () => {
           {/* Add Cleaner Buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity 
-              style={[styles.addButton, styles.inviteButton]}
+              style={[styles.addButtonInviteType, styles.inviteButton]}
               onPress={() => {
                 setInviteMethod('email');
                 setInviteModalVisible(true);
@@ -1607,7 +1508,7 @@ const sendInvitations = async () => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.addButton, styles.inviteButton]}
+              style={[styles.addButtonInviteType, styles.inviteButton]}
               onPress={() => {
                 setInviteMethod('phone');
                 setInviteModalVisible(true);
@@ -1618,7 +1519,7 @@ const sendInvitations = async () => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.addButton, styles.platformButton]}
+              style={[styles.addButtonInviteType, styles.platformButton]}
               onPress={() => setShowPlatformCleaners(true)}
             >
               <MaterialIcons name="people" size={20} color="white" />
@@ -1627,70 +1528,74 @@ const sendInvitations = async () => {
           </View>
         </Animatable.View>
 
+        
         {/* Pending Invites List */}
         {preferredCleaners.length > 0 && (
-          <Animatable.View animation="fadeInUp" delay={300} style={styles.cleanersSection}>
+        <Animatable.View animation="fadeInUp" delay={300} style={styles.cleanersSection}>
             <View style={styles.pendingHeader}>
-              <MaterialCommunityIcons name="clock-outline" size={22} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>
+            <MaterialCommunityIcons name="clock-outline" size={22} color={COLORS.primary} />
+            <Text style={styles.sectionTitle}>
                 {tSafe('pending_invites', 'Pending Invites')} ({preferredCleaners.length})
-              </Text>
+            </Text>
             </View>
             {preferredCleaners.map((cleaner, index) => renderCleanerItem(cleaner, index))}
-          </Animatable.View>
+        </Animatable.View>
+        )}
+
+        {/* Benefits Section */}
+        {/* Send Invitations Button - Only show when there are preferred cleaners */}
+        {preferredCleaners.length > 0 && (
+        <Animatable.View animation="fadeInUp" delay={350} style={styles.sendButtonWrapper}>
+            <Button
+            mode="contained"
+            onPress={sendInvitations}
+            loading={sendingInvites}
+            disabled={sendingInvites}
+            style={styles.sendButton}
+            labelStyle={styles.sendButtonLabel}
+            buttonColor={COLORS.primary}
+            >
+            {tSafe('send_invitations', 'Send Invitations')} ({preferredCleaners.length})
+            </Button>
+        </Animatable.View>
         )}
 
         {/* Benefits Section */}
         <Animatable.View animation="fadeInUp" delay={400} style={styles.benefitsSection}>
-          <Text style={styles.sectionTitle}>{tSafe('why_invite_cleaners', 'Why Invite Cleaners?')}</Text>
-          <View style={styles.benefitsGrid}>
+        <Text style={styles.sectionTitle}>{tSafe('why_invite_cleaners', 'Why Invite Cleaners?')}</Text>
+        <View style={styles.benefitsGrid}>
             <View style={styles.benefitCard}>
-              <MaterialIcons name="verified" size={32} color={COLORS.primary} />
-              <Text style={styles.benefitTitle}>{tSafe('trusted_professionals', 'Trusted Professionals')}</Text>
-              <Text style={styles.benefitText}>
+            <MaterialIcons name="verified" size={32} color={COLORS.primary} />
+            <Text style={styles.benefitTitle}>{tSafe('trusted_professionals', 'Trusted Professionals')}</Text>
+            <Text style={styles.benefitText}>
                 {tSafe('trusted_professionals_desc', 'Vetted and experienced cleaners')}
-              </Text>
+            </Text>
             </View>
             <View style={styles.benefitCard}>
-              <MaterialIcons name="schedule" size={32} color={COLORS.primary} />
-              <Text style={styles.benefitTitle}>{tSafe('flexible_scheduling', 'Flexible Scheduling')}</Text>
-              <Text style={styles.benefitText}>
+            <MaterialIcons name="schedule" size={32} color={COLORS.primary} />
+            <Text style={styles.benefitTitle}>{tSafe('flexible_scheduling', 'Flexible Scheduling')}</Text>
+            <Text style={styles.benefitText}>
                 {tSafe('flexible_scheduling_desc', 'Choose times that work for you')}
-              </Text>
+            </Text>
             </View>
             <View style={styles.benefitCard}>
-              <MaterialIcons name="security" size={32} color={COLORS.primary} />
-              <Text style={styles.benefitTitle}>{tSafe('secure_payments', 'Secure Payments')}</Text>
-              <Text style={styles.benefitText}>
+            <MaterialIcons name="security" size={32} color={COLORS.primary} />
+            <Text style={styles.benefitTitle}>{tSafe('secure_payments', 'Secure Payments')}</Text>
+            <Text style={styles.benefitText}>
                 {tSafe('secure_payments_desc', 'Safe and transparent transactions')}
-              </Text>
+            </Text>
             </View>
             <View style={styles.benefitCard}>
-              <MaterialIcons name="support-agent" size={32} color={COLORS.primary} />
-              <Text style={styles.benefitTitle}>{tSafe('dedicated_support', 'Dedicated Support')}</Text>
-              <Text style={styles.benefitText}>
+            <MaterialIcons name="support-agent" size={32} color={COLORS.primary} />
+            <Text style={styles.benefitTitle}>{tSafe('dedicated_support', 'Dedicated Support')}</Text>
+            <Text style={styles.benefitText}>
                 {tSafe('dedicated_support_desc', '24/7 customer support')}
-              </Text>
+            </Text>
             </View>
-          </View>
+        </View>
         </Animatable.View>
 
-        {/* Send Invitations Button */}
-        {preferredCleaners.length > 0 && (
-          <Animatable.View animation="fadeInUp" delay={500}>
-            <Button
-              mode="contained"
-              onPress={sendInvitations}
-              loading={sendingInvites}
-              disabled={sendingInvites}
-              style={styles.sendButton}
-              labelStyle={styles.sendButtonLabel}
-              buttonColor={COLORS.primary}
-            >
-              {tSafe('send_invitations', 'Send Invitations')} ({preferredCleaners.length})
-            </Button>
-          </Animatable.View>
-        )}
+        
       </ScrollView>
 
       {/* Invite Modal */}
@@ -1902,7 +1807,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  addButton: {
+  addButtonInviteType: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2004,6 +1909,8 @@ const styles = StyleSheet.create({
   sendButton: {
     borderRadius: 12,
     paddingVertical: 8,
+  },
+  sendButtonWrapper: {
     marginBottom: 20,
   },
   sendButtonLabel: {
@@ -2115,6 +2022,113 @@ const styles = StyleSheet.create({
     color: '#6C6C80',
     marginTop: 16,
     textAlign: 'center',
+  },
+
+
+
+
+  cleanerListContainer: {
+    height: height * 0.28,
+    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  
+  // Card styles
+  cleanerCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: COLORS.light_gray,
+  },
+  
+  selectedCard: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '08',
+  },
+  
+  // Card content layout
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  
+  // Avatar styles
+  avatarContainer: {
+    marginRight: 12,
+  },
+  
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Info container
+  infoContainer: {
+    flex: 1,
+  },
+  
+  cleanerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.dark,
+  },
+  
+  cleanerDistance: {
+    fontSize: 13,
+    color: COLORS.gray,
+  },
+  
+  cleanerSpecialty: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginTop: 2,
+  },
+  
+  // Button styles
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  selectedButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Empty state
+  emptyText: {
+    textAlign: 'center',
+    color: COLORS.gray,
+    padding: 16,
+    fontStyle: 'italic',
   },
 });
 

@@ -397,6 +397,7 @@ import InviteGate from '../../screens/public/IniteGate';
 import Notification from '../../components/shared/Notification';
 import PropertyGigs from '../../screens/cleaner/PropertyGigs';
 import { tSafe } from '../../utils/tSafe'; // added import
+import ChatConversation from '../../screens/sharedscreen/ChatConversation';
 
 export default function MainCleanerStack() {
 
@@ -710,8 +711,22 @@ export default function MainCleanerStack() {
             }
             })}
         />
+        <Stack.Screen
+                    name={ROUTES.cleaner_chat_conversation}
+                    component={ChatConversation}
+                    options={({ route }) => ({
+                        headerShown: true,
+                        // header: () => <CustomChatHeader schedule={route.params.conversation} />,
+                        headerTintColor: COLORS.white,
+                        headerBackTitleVisible: false,
+                        headerBackTitle: '',
+                        headerStyle: {
+                            backgroundColor: COLORS.primary,
+                        },
+                    })}
+                />
 
-<Stack.Screen 
+      <Stack.Screen 
             name={ROUTES.notification}
             component={Notification}
             

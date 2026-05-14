@@ -1,220 +1,3 @@
-// import React, {useState, useEffect, useRef, useContext} from  'react';
-// import { SafeAreaView,StyleSheet,RefreshControl, Text, KeyboardAvoidingView, Keyboard, Platform, StatusBar, Linking,  FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator } from 'react-native';
-// import { AuthContext } from '../../context/AuthContext';
-// import COLORS from '../../constants/colors';
-// import ROUTES from '../../constants/routes';
-// import userService from '../../services/connection/userService';
-// import FloatingButton from '../../components/shared/FloatingButton';
-// import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
-
-// export default function Properties({navigation}) {
-
-//     const{currentUserId, currentUser} = useContext(AuthContext)
-//     const [refreshing, setRefreshing] = useState(false);
-
-//     const genericArray = new Array(5).fill(null);
-
-//     const [properties, setProperties] = useState([]);
-//     const [loading, setLoading] = useState(true);
-
-//     // Function to handle refresh
-//     const onRefresh = async () => {
-//         setRefreshing(true);
-//         // Call your API or refresh logic here
-//         await fetchProperties();  // Replace with your actual function to fetch data
-//         setRefreshing(false);
-//     };
-
-//     const fetchProperties = async () => {
-//         try {
-//             // Assuming userService.getPendingPayments fetches the pending payments from the API
-//             const response = await userService.getApartment(currentUserId);
-//             console.log("mmmmm", JSON.stringify(response.data, null, 2))
-//             setProperties(response.data);
-//             // console.log(response.data)
-//         } catch (error) {
-//             console.log(error);
-//             // alert('Error fetching pending payments');
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-    
-//       useEffect(()=> {
-      
-//         const unsubscribe = navigation.addListener('focus', () => {
-//           // Refresh data or reset state here
-//           fetchProperties()
-          
-//       });
-      
-//       fetchProperties()
-//       return unsubscribe; // Cleanup subscription
-      
-//       },[])
-
-//       const handleOpenCreateBooking = () => {
-//         navigation.navigate(ROUTES.host_add_apt)
-//       }
-
-//       const emptyApartment = () => (
-//         <View style={styles.empty_apartment}>
-//           <Text>No apartment found</Text>
-//           <TouchableOpacity 
-//             style={styles.action_button}
-//             onPress = {() => navigation.navigate(ROUTES.host_add_apt)}
-//           >
-//             <Text style={styles.action_button_color}>Create new property</Text>
-//           </TouchableOpacity>
-//         </View>
-//       )
-    
-//       if (loading) {
-//         return <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />;
-//       }
-    
-//     if (properties.length === 0) {
-//         return (
-//             <View style={styles.noData}>
-//                 <Text style={styles.noDataText}>No properties listed.</Text>
-            
-//                 <FloatingButton 
-//                     onPress={handleOpenCreateBooking}
-//                     color="green"
-//                 />
-//             </View>
-//         );
-//     }
-
-//   return (
-//     <SafeAreaView
-//           style={{
-//             flex:1,
-//             backgroundColor:COLORS.backgroundColor,
-//             justifyContent:"center",
-//             // alignItems:"center",
-//             marginBottom:0
-//           }}
-//         >
-    
-//         <View style={styles.container}>
-        
-//             <FlatList
-//                 data={properties}
-//                 keyExtractor={(item) => item._id.toString()}
-//                 renderItem={({ item }) => (
-//                     <TouchableOpacity onPress={() => navigation.navigate(ROUTES.host_apt_dashboard, {
-//                         property:item,
-//                         hostId:currentUserId,
-//                       })}
-//                       style={styles.apartmentItem}
-//                     >
-                        
-                    
-//                         <View style={styles.itemContent}>
-//                             <View>
-//                                 <AntDesign name="home" size={40} color={COLORS.gray}/>
-//                             </View>
-//                             <View style={{marginLeft:15, width:"90%"}}>
-//                                 <Text style={styles.apartmentName}>{item.apt_name}</Text>
-//                                 <Text style={styles.apartmentAddress}>{item.address}</Text>
-//                             </View>
-//                         </View>
-                   
-//                     </TouchableOpacity>
-//                 )}
-//                 ListEmptyComponent= {emptyApartment}
-//                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                
-//             />
-
-       
-        
-//         <FloatingButton 
-//             onPress={handleOpenCreateBooking}
-//             color="green"
-//         />
-
-//         </View>
-//     </SafeAreaView>
-//   )
-// }
-
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         padding: 10,
-     
-//     },
-//     itemContent:{
-//         flexDirection:'row',
-//         alignItems:'center'
-//     },
-//     empty_listing: {
-//       display:'flex',
-//       justifyContent:'center',
-//       alignItems:'center',
-//       marginTop:'50%'
-//     },
-//     empty_apartment: {
-//       display:'flex',
-//       justifyContent:'center',
-//       alignItems:'center',
-//       marginTop:'50%'
-//     },
-//     // apartmentItem: {
-//     //   backgroundColor: '#fff',
-//     //   padding: 15,
-//     //   borderRadius: 5,
-//     //   marginBottom: 10,
-//     //   shadowColor: '#000',
-//     //   shadowOpacity: 0.1,
-//     //   shadowRadius: 10,
-//     //   shadowOffset: { width: 0, height: 0 },
-//     // },
-//     apartmentItem: {
-//       padding: 15,
-//       paddingVertical:20,
-//       marginVertical: 8,
-//       marginHorizontal:5,
-//       borderRadius: 8,
-//       backgroundColor: '#fff',
-//       shadowColor: '#000',
-//       shadowOffset: { width: 0, height: 2 },
-//       shadowOpacity: 0.1,
-//       shadowRadius: 4,
-//       elevation: 3,
-//     },
-//     apartmentName: {
-//         fontSize: 18,
-//         fontWeight:'500'
-//     },
-//     apartmentAddress:{
-//       fontSize: 14,
-//       color: COLORS.gray,
-//     },
-    
-//     item_separator : {
-//         marginTop:5,
-//         marginBottom:5,
-//         height:1,
-//         width:"100%",
-//         backgroundColor:"#E4E4E4",
-//     },
-//     noData: {
-//         flex: 1,
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//     },
-//     noDataText: {
-//         fontSize: 18,
-//         color: COLORS.gray,
-//     },
-  
-//   });
-
-
 // import React, { useState, useEffect, useRef, useContext } from 'react';
 // import {
 //   SafeAreaView,
@@ -241,6 +24,7 @@
 // import userService from '../../services/connection/userService';
 // import FloatingButton from '../../components/shared/FloatingButton';
 // import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
+// import { tSafe } from '../../utils/tSafe'; // added import
 
 // export default function Properties({ navigation }) {
 //   const { currentUserId, currentUser } = useContext(AuthContext);
@@ -312,15 +96,15 @@
 //   const renderEmptyState = () => (
 //     <View style={styles.emptyContainer}>
 //       <AntDesign name="home" size={64} color={COLORS.lightGray} />
-//       <Text style={styles.emptyTitle}>No Properties Yet</Text>
+//       <Text style={styles.emptyTitle}>{tSafe('no_properties_yet', 'No Properties Yet')}</Text>
 //       <Text style={styles.emptySubtitle}>
-//         Get started by adding your first property
+//         {tSafe('get_started_add_property', 'Get started by adding your first property')}
 //       </Text>
 //       <TouchableOpacity
 //         style={styles.createButton}
 //         onPress={handleOpenCreateBooking}
 //       >
-//         <Text style={styles.createButtonText}>+ Create New Property</Text>
+//         <Text style={styles.createButtonText}>{tSafe('create_new_property', '+ Create New Property')}</Text>
 //       </TouchableOpacity>
 //     </View>
 //   );
@@ -329,7 +113,7 @@
 //     return (
 //       <View style={styles.loadingContainer}>
 //         <ActivityIndicator size="large" color={COLORS.primary} />
-//         <Text style={styles.loadingText}>Loading properties...</Text>
+//         <Text style={styles.loadingText}>{tSafe('loading_properties', 'Loading properties...')}</Text>
 //       </View>
 //     );
 //   }
@@ -343,9 +127,9 @@
 //         end={{ x: 0, y: 1 }}
 //       >
 //         <View style={styles.header}>
-//           <Text style={styles.headerTitle}>My Properties</Text>
+//           <Text style={styles.headerTitle}>{tSafe('my_properties', 'My Properties')}</Text>
 //           <Text style={styles.headerSubtitle}>
-//             {properties.length} {properties.length === 1 ? 'property' : 'properties'} listed
+//             {properties.length} {properties.length === 1 ? tSafe('property', 'property') : tSafe('properties_plural', 'properties')} {tSafe('listed', 'listed')}
 //           </Text>
 //         </View>
 //       </LinearGradient>
@@ -410,7 +194,7 @@
 //   listContainer: {
 //     paddingHorizontal: 16,
 //     paddingTop: 16,
-//     paddingBottom: 80, // space for floating button
+//     paddingBottom: 80,
 //   },
 //   propertyCard: {
 //     backgroundColor: '#fff',
@@ -490,26 +274,17 @@
 // });
 
 
-
-
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   RefreshControl,
   Text,
-  KeyboardAvoidingView,
-  Keyboard,
-  Platform,
-  StatusBar,
-  Linking,
   FlatList,
-  ScrollView,
-  Modal,
-  Image,
   View,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
@@ -517,11 +292,11 @@ import COLORS from '../../constants/colors';
 import ROUTES from '../../constants/routes';
 import userService from '../../services/connection/userService';
 import FloatingButton from '../../components/shared/FloatingButton';
-import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
+import { tSafe } from '../../utils/tSafe';
 
 export default function Properties({ navigation }) {
-  const { currentUserId, currentUser } = useContext(AuthContext);
+  const { currentUserId } = useContext(AuthContext);
   const [refreshing, setRefreshing] = useState(false);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -555,49 +330,122 @@ export default function Properties({ navigation }) {
     navigation.navigate(ROUTES.host_add_apt);
   };
 
-  const renderPropertyItem = ({ item }) => (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      style={styles.propertyCard}
-      onPress={() =>
-        navigation.navigate(ROUTES.host_apt_dashboard, {
-          property: item,
-          hostId: currentUserId,
-        })
-      }
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.iconContainer}>
-          <AntDesign name="home" size={32} color={COLORS.primary} />
+  // Helper to get room counts from roomDetails array
+  const getRoomCounts = (roomDetails) => {
+    let bedrooms = 0;
+    let bathrooms = 0;
+    let totalSize = 0;
+
+    if (roomDetails && Array.isArray(roomDetails)) {
+      roomDetails.forEach(room => {
+        const type = room.type?.toLowerCase();
+        const number = room.number || 0;
+        const size = room.size || 0;
+
+        if (type === 'bedroom') bedrooms += number;
+        if (type === 'bathroom') bathrooms += number;
+        totalSize += size;
+      });
+    }
+    return { bedrooms, bathrooms, totalSize };
+  };
+
+  // Property type icon mapping
+  const getPropertyTypeIcon = (aptType) => {
+    switch (aptType?.toLowerCase()) {
+      case 'house':
+        return 'home';
+      case 'apartment':
+        return 'home';
+      case 'condo':
+        return 'home';
+      default:
+        return 'home';
+    }
+  };
+
+  const renderPropertyItem = ({ item }) => {
+    const { bedrooms, bathrooms, totalSize } = getRoomCounts(item.roomDetails);
+    const propertyType = item.apt_type || 'Property';
+    const mainImage = null; // No image field in your current schema; can be added later
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={styles.propertyCard}
+        onPress={() =>
+          navigation.navigate(ROUTES.host_apt_dashboard, {
+            property: item,
+            hostId: currentUserId,
+          })
+        }
+      >
+        {/* Left: Icon / Placeholder */}
+        <View style={styles.imageContainer}>
+          {mainImage ? (
+            <Image source={{ uri: mainImage }} style={styles.propertyImage} />
+          ) : (
+            <View style={styles.iconPlaceholder}>
+              <AntDesign
+                name={getPropertyTypeIcon(propertyType)}
+                size={40}
+                color={COLORS.primary}
+              />
+            </View>
+          )}
         </View>
-        <View style={styles.infoContainer}>
+
+        {/* Middle: Details */}
+        <View style={styles.detailsContainer}>
           <Text style={styles.propertyName} numberOfLines={1}>
             {item.apt_name}
           </Text>
-          <Text style={styles.propertyAddress} numberOfLines={2}>
+          <Text style={styles.propertyAddress} numberOfLines={1}>
             {item.address}
           </Text>
+
+          {/* Room features row */}
+          <View style={styles.roomFeatures}>
+            <View style={styles.featureChip}>
+              <MaterialCommunityIcons name="bed-king" size={14} color={COLORS.primary} />
+              <Text style={styles.featureText}>
+                {bedrooms} {bedrooms === 1 ? 'Bed' : 'Beds'}
+              </Text>
+            </View>
+            <View style={styles.featureChip}>
+              <MaterialCommunityIcons name="shower" size={14} color={COLORS.primary} />
+              <Text style={styles.featureText}>
+                {bathrooms} {bathrooms === 1 ? 'Bath' : 'Baths'}
+              </Text>
+            </View>
+            {totalSize > 0 && (
+              <View style={styles.featureChip}>
+                <MaterialCommunityIcons name="ruler-square" size={14} color={COLORS.primary} />
+                <Text style={styles.featureText}>{totalSize} sq ft</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Property type badge */}
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeText}>{propertyType}</Text>
+          </View>
         </View>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={24}
-          color={COLORS.gray}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+
+        {/* Right: Chevron */}
+        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.gray} style={styles.chevron} />
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <AntDesign name="home" size={64} color={COLORS.lightGray} />
+      <AntDesign name="home" size={64} color={COLORS.light_gray} />
       <Text style={styles.emptyTitle}>{tSafe('no_properties_yet', 'No Properties Yet')}</Text>
       <Text style={styles.emptySubtitle}>
         {tSafe('get_started_add_property', 'Get started by adding your first property')}
       </Text>
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={handleOpenCreateBooking}
-      >
+      <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateBooking}>
         <Text style={styles.createButtonText}>{tSafe('create_new_property', '+ Create New Property')}</Text>
       </TouchableOpacity>
     </View>
@@ -623,7 +471,11 @@ export default function Properties({ navigation }) {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{tSafe('my_properties', 'My Properties')}</Text>
           <Text style={styles.headerSubtitle}>
-            {properties.length} {properties.length === 1 ? tSafe('property', 'property') : tSafe('properties_plural', 'properties')} {tSafe('listed', 'listed')}
+            {properties.length}{' '}
+            {properties.length === 1
+              ? tSafe('property', 'property')
+              : tSafe('properties_plural', 'properties')}{' '}
+            {tSafe('listed', 'listed')}
           </Text>
         </View>
       </LinearGradient>
@@ -633,9 +485,7 @@ export default function Properties({ navigation }) {
         keyExtractor={(item) => item._id}
         renderItem={renderPropertyItem}
         contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
@@ -691,6 +541,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   propertyCard: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 20,
     marginBottom: 12,
@@ -699,35 +550,78 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
-    overflow: 'hidden',
-  },
-  cardContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  imageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  propertyImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  iconPlaceholder: {
+    width: '100%',
+    height: '100%',
     backgroundColor: COLORS.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
   },
-  infoContainer: {
+  detailsContainer: {
     flex: 1,
+    justifyContent: 'center',
   },
   propertyName: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.dark,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   propertyAddress: {
     fontSize: 13,
     color: COLORS.gray,
-    lineHeight: 18,
+    marginBottom: 6,
+  },
+  roomFeatures: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 6,
+  },
+  featureChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    gap: 4,
+  },
+  featureText: {
+    fontSize: 12,
+    color: COLORS.dark,
+    fontWeight: '500',
+  },
+  typeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLORS.primary + '10',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  typeText: {
+    fontSize: 10,
+    color: COLORS.primary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  chevron: {
+    marginLeft: 8,
   },
   emptyContainer: {
     flex: 1,

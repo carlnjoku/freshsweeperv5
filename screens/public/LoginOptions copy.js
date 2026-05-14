@@ -19,7 +19,6 @@ import COLORS from '../../constants/colors';
 import * as Animatable from 'react-native-animatable';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import fetchIPGeolocation from '../../services/geolocation';
 import { db } from '../../services/firebase/config';
 import { ref, get, set } from 'firebase/database';
@@ -28,8 +27,6 @@ import { AuthContext } from '../../context/AuthContext';
 import { navigationRef } from '../../utils/navigationRef';
 import { auth } from '../../services/firebase/config';
 
-
-const GOOGLE_CLIENT_ID ="283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com";
 
 
 // Initialize WebBrowser for auth
@@ -43,33 +40,23 @@ const LoginOptions = () => {
   const [fbCurrentUser, setFBCurrentUser] = useState({});
   const [geolocationData, setGeolocationData] = useState({});
 
-  
   // Use the hook only once and get all values
   const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
   const { login, loginWithEmailPassword } = useContext(AuthContext);
 
   // Google Auth Configuration - Replace with your actual IDs
-  // const [request, response, promptAsync] = Google.useAuthRequest({
-  //   // For Expo Go development
-  //   expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com', // Web client ID
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    // For Expo Go development
+    expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com', // Web client ID
     
-  //   // For standalone apps (optional but recommended)
-  //   iosClientId: Platform.OS === 'ios' ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com' : undefined,
-  //   androidClientId: Platform.OS === 'android' ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com' : undefined,
+    // For standalone apps (optional but recommended)
+    iosClientId: Platform.OS === 'ios' ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com' : undefined,
+    androidClientId: Platform.OS === 'android' ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com' : undefined,
     
     
-  //   // Scopes for permissions
-  //   scopes: ['profile', 'email', 'openid'],
-  // });
-
-    // ----------------------------
-    // GOOGLE AUTH (FIXED)
-    // ----------------------------
-    const [request, response, promptAsync] = Google.useAuthRequest({
-      iosClientId: GOOGLE_CLIENT_ID,
-      androidClientId: GOOGLE_CLIENT_ID,
-      webClientId: GOOGLE_CLIENT_ID,
-    });
+    // Scopes for permissions
+    scopes: ['profile', 'email', 'openid'],
+  });
 
   const fetchGeolocation = async () => {
     try {
@@ -79,12 +66,6 @@ const LoginOptions = () => {
       console.error("Error fetching geolocation:", error);
     }
   };
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      handleGoogleAuthResponse(response);
-    }
-  }, [response]);
 
   useEffect(() => {
     const getGeoData = async () => {
@@ -105,65 +86,6 @@ const LoginOptions = () => {
     handleGoogleAuthResponse();
   }, [response]);
 
-  const handleGoogleAuthResponse = async (response) => {
-    try {
-      setGoogleLoading(true);
-  
-      const { authentication } = response;
-  
-      const accessToken = authentication?.accessToken;
-      const idToken = authentication?.idToken;
-  
-      if (!accessToken || !idToken) {
-        Alert.alert('Error', 'Google login failed: missing tokens');
-        return;
-      }
-  
-      // 1. GET USER INFO FROM GOOGLE
-      const userInfoResponse = await fetch(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-  
-      if (!userInfoResponse.ok) {
-        throw new Error('Failed to fetch user info from Google');
-      }
-  
-      const googleUser = await userInfoResponse.json();
-  
-      // attach tokens
-      googleUser.accessToken = accessToken;
-      googleUser.idToken = idToken;
-      googleUser.provider = 'google';
-  
-      console.log('Google User:', googleUser.email);
-  
-      // 2. FIREBASE AUTH (ONLY HERE — NOT IN USEEFFECT)
-      const credential = GoogleAuthProvider.credential(idToken);
-      const firebaseResult = await signInWithCredential(auth, credential);
-  
-      const firebaseUser = firebaseResult.user;
-  
-      console.log("Firebase user:", firebaseUser.email);
-  
-      // 3. SEND TO YOUR BACKEND
-      await handleGoogleBackendLogin(googleUser);
-  
-    } catch (error) {
-      console.log('Google sign-in error:', error);
-      Alert.alert(
-        'Google Sign-In Error',
-        error.message || 'Unable to sign in with Google'
-      );
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const checkAppleAuthAvailability = async () => {
     try {
       if (Platform.OS === 'ios') {
@@ -176,7 +98,198 @@ const LoginOptions = () => {
     }
   };
 
-  const handleGoogleBackendLogin = async (googleUser) => {
+  // Handle Google Auth Response
+  const handleGoogleAuthResponse = async () => {
+    
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      
+      setGoogleLoading(true);
+      try {
+        // Get user info from Google
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: { Authorization: `Bearer ${authentication.accessToken}` },
+          }
+        );
+
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to fetch user info from Google');
+        }
+
+        const user = await userInfoResponse.json();
+        
+        // Add token to user object
+        user.accessToken = authentication.accessToken;
+        user.idToken = authentication.idToken;
+        user.provider = 'google';
+        
+        console.log('Google Sign-In Success:', user.email);
+        
+        // Store user data locally
+        await AsyncStorage.setItem('@google_user', JSON.stringify(user));
+        
+        // Send to your backend for verification/token exchange
+        await handleGoogleBackendLogin(user);
+        
+      } catch (error) {
+        console.error('Google sign-in error:', error);
+        Alert.alert(
+          'Google Sign-In Error',
+          error.message || 'Unable to sign in with Google. Please try again.'
+        );
+        setGoogleLoading(false);
+      }
+    } else if (response?.type === 'error') {
+      // Don't show alert for user cancellation
+      if (response.error?.code !== 'ERR_REQUEST_CANCELED') {
+        console.error('Google auth error:', response.error);
+        Alert.alert(
+          'Authentication Failed',
+          response.error?.message || 'An error occurred during Google sign-in'
+        );
+      }
+      setGoogleLoading(false);
+    }
+  };
+
+  const fetchUserFirebaseData = async(uid, response) => {
+    try {
+        const mySnapshot = await get(ref(db, `users/${uid}`))
+        setFBCurrentUser(mySnapshot.val())
+
+        const data_to_send = {
+            resp: response,
+            fbUser: mySnapshot.val(),
+            expo_push_token: expoPushToken
+        }
+        
+        console.log("Firebase User collected:",data_to_send.fbUser)
+
+        login(data_to_send)
+
+        
+        
+        // Update expo push token if different
+        // if(response.expo_push_token !== expoPushToken){
+        //     const userTokenData = {
+        //         userId: uid,
+        //         expo_push_token: expoPushToken
+        //     }
+        //     userService.updateExpoPushToken(userTokenData)
+        // }
+    } catch (error) {
+        console.error("Error fetching Firebase data:", error);
+        // Even if Firebase fails, still login the user
+        const data_to_send = {
+            resp: response,
+            fbUser: null,
+            expo_push_token: expoPushToken
+        }
+        login(data_to_send);
+    }
+}
+
+// Handle sending Google credentials to your backend
+// const handleGoogleBackendLogin = async (googleUser) => {
+//     try {
+//       // Use your actual backend endpoint
+//       // Replace localhost with your actual server IP/domain
+//       const baseUrl = 'https://www.freshsweeper.com'; // or your server address
+//       const endpoint = `${baseUrl}/api/auth/google_auth`;
+     
+//       console.log('Sending Google token to backend:', {
+//         endpoint: endpoint,
+//         token: googleUser.idToken
+//       });
+      
+//       const response = await fetch(endpoint, {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({
+//           token: googleUser.idToken,
+//           userType: "host" // or "cleaner" - you might need to get this from user
+//         }),
+//       });
+  
+//       const data = await response.json();
+//       console.log('Backend response:', data);
+  
+//       if (response.ok && data.status === 'success') {
+
+        
+//         // // Store backend tokens
+//         // if (data.data?.token) {
+//         //   await AsyncStorage.setItem('@auth_token', data.data.token);
+          
+//         //   // Store user data for future use
+//         //   await AsyncStorage.setItem('@user_data', JSON.stringify(data.data));
+//         // }
+  
+//         // // Check if user needs onboarding
+//         // const needsOnboarding = data.data?.onboarding_completed === false || 
+//         //                         data.data?.account_verification === false;
+        
+//         // // For cleaners, check if Stripe onboarding is needed
+//         // if (data.data?.userType === "cleaner") {
+//         //   const cleanerNeedsOnboarding = 
+//         //     !data.data.onboarding_completed || 
+//         //     !data.data.identity_verified ||
+//         //     !data.data.stripe_account_id;
+            
+//         //   if (cleanerNeedsOnboarding) {
+//         //     navigation.navigate(ROUTES.cleaner_dashboard, {
+//         //       fromGoogle: true,
+//         //       userData: data.data,
+//         //     });
+//         //   } else {
+//         //     navigation.navigate(ROUTES.host_home_tab, {
+//         //       user: data.data,
+//         //     });
+//         //   }
+//         // } 
+       
+//         // // For hosts
+//         // else if (data.data?.userType === "host") {
+//         //   if (!data.data?.account_verification) {
+//         //     navigation.navigate(ROUTES.host_home_tab, {
+//         //       fromGoogle: true,
+//         //       userData: data.data,
+//         //     });
+//         //   } else {
+//         //     navigation.navigate(ROUTES.account_verification_gate, {
+//         //       user: data.data,
+//         //     });
+//         //   }
+//         // }
+
+//         const userData = data.data
+//         console.log("Registering push notifications for userId:", userData._id);
+//         registerForPushNotificationsAsync(userData._id);
+        
+//         // Fetch Firebase user data and update AuthContext
+//         await fetchUserFirebaseData(userData._id, userData);
+                
+//       } else {
+//         throw new Error(data.message || 'Google Sign-In failed');
+//       }
+//     } catch (error) {
+//       console.error('Backend Google login error:', error);
+//       Alert.alert(
+//         'Error',
+//         error.message || 'Unable to process Google Sign-In. Please try again.'
+//       );
+//     } finally {
+//       setGoogleLoading(false);
+//     }
+//   };
+
+
+
+const handleGoogleBackendLogin = async (googleUser) => {
     try {
       // Use your actual backend endpoint
       // Replace localhost with your actual server IP/domain
@@ -289,105 +402,6 @@ const LoginOptions = () => {
     }
   };
 
-  // Handle Google Auth Response
-  // const handleGoogleAuthResponse = async () => {
-    
-  //   if (response?.type === 'success') {
-  //     const { authentication } = response;
-      
-  //     setGoogleLoading(true);
-  //     try {
-  //       // Get user info from Google
-  //       const userInfoResponse = await fetch(
-  //         'https://www.googleapis.com/oauth2/v2/userinfo',
-  //         {
-  //           headers: { Authorization: `Bearer ${authentication.accessToken}` },
-  //         }
-  //       );
-
-  //       if (!userInfoResponse.ok) {
-  //         throw new Error('Failed to fetch user info from Google');
-  //       }
-
-  //       const user = await userInfoResponse.json();
-        
-  //       // Add token to user object
-  //       user.accessToken = authentication.accessToken;
-  //       user.idToken = authentication.idToken;
-  //       user.provider = 'google';
-        
-  //       console.log('Google Sign-In Success:', user.email);
-        
-  //       // Store user data locally
-  //       await AsyncStorage.setItem('@google_user', JSON.stringify(user));
-        
-  //       // Send to your backend for verification/token exchange
-  //       await handleGoogleBackendLogin(user);
-        
-  //     } catch (error) {
-  //       console.error('Google sign-in error:', error);
-  //       Alert.alert(
-  //         'Google Sign-In Error',
-  //         error.message || 'Unable to sign in with Google. Please try again.'
-  //       );
-  //       setGoogleLoading(false);
-  //     }
-  //   } else if (response?.type === 'error') {
-  //     // Don't show alert for user cancellation
-  //     if (response.error?.code !== 'ERR_REQUEST_CANCELED') {
-  //       console.error('Google auth error:', response.error);
-  //       Alert.alert(
-  //         'Authentication Failed',
-  //         response.error?.message || 'An error occurred during Google sign-in'
-  //       );
-  //     }
-  //     setGoogleLoading(false);
-  //   }
-  // };
-
-  const fetchUserFirebaseData = async(uid, response) => {
-    try {
-        const mySnapshot = await get(ref(db, `users/${uid}`))
-        setFBCurrentUser(mySnapshot.val())
-
-        const data_to_send = {
-            resp: response,
-            fbUser: mySnapshot.val(),
-            expo_push_token: expoPushToken
-        }
-        
-        console.log("Firebase User collected:",data_to_send.fbUser)
-
-        login(data_to_send)
-
-        
-        
-        // Update expo push token if different
-        // if(response.expo_push_token !== expoPushToken){
-        //     const userTokenData = {
-        //         userId: uid,
-        //         expo_push_token: expoPushToken
-        //     }
-        //     userService.updateExpoPushToken(userTokenData)
-        // }
-    } catch (error) {
-        console.error("Error fetching Firebase data:", error);
-        // Even if Firebase fails, still login the user
-        const data_to_send = {
-            resp: response,
-            fbUser: null,
-            expo_push_token: expoPushToken
-        }
-        login(data_to_send);
-    }
-}
-
-
-
-
-
-
-
   const handleEmailLogin = () => {
     navigation.navigate(ROUTES.signin, { loginMethod: 'email' });
   };
@@ -436,89 +450,72 @@ const LoginOptions = () => {
     }
   };
 
-
-
   const handleAppleCredential = async (credential) => {
     try {
-  
-      console.log("Apple credential:", credential);
-  
-      const response = await fetch(
-        'https://www.freshsweeper.com/api/auth/apple_auth',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      // Send to your FastAPI backend
+    //   const baseUrl = 'https://www.freshsweeper.com/api/auth/google_auth'; // or your server address
+    //   const endpoint = `${baseUrl}/api/auth/google_auth`;
+
+      const response = await fetch('https://www.freshsweeper.com/api/auth/apple_auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identityToken: credential.identityToken,
+          authorizationCode: credential.authorizationCode,
+          user: {
+            id: credential.user,
+            email: credential.email,
+            name: credential.fullName,
           },
-  
-          body: JSON.stringify({
-            identityToken: credential.identityToken,
-            authorizationCode: credential.authorizationCode,
-  
-            user: {
-              id: credential.user,
-  
-              email: credential.email,
-  
-              firstname:
-                credential.fullName?.givenName || null,
-  
-              lastname:
-                credential.fullName?.familyName || null,
-  
-              fullname:
-                `${credential.fullName?.givenName || ''} ${credential.fullName?.familyName || ''}`.trim(),
-            },
-          }),
-        }
-      );
-  
+        }),
+      });
+
       const data = await response.json();
-  
+
       if (response.ok) {
-  
-        const userData = data.data;
-  
-        console.log("Apple return data:", userData);
-  
+        // Store backend tokens if provided
+        // if (data.access_token) {
+        //   await AsyncStorage.setItem('@auth_token', data.access_token);
+        //   await AsyncStorage.setItem('@refresh_token', data.refresh_token || '');
+        // }
+
+        // // Success - navigate based on user status
+        // if (data.is_new_user) {
+        //   navigation.navigate(ROUTES.getting_started, {
+        //     fromApple: true,
+        //     appleData: data,
+        //   });
+        // } else {
+        //   navigation.navigate(ROUTES.dashboard);
+        // }
+
+        const userData = data.data
+        console.log("Apple return data:", userData)
+        console.log("Registering push notifications for userId:", userData._id);
         registerForPushNotificationsAsync(userData._id);
-  
-        await fetchUserFirebaseData(
-          userData._id,
-          userData
-        );
-  
+        
+        // Fetch Firebase user data and update AuthContext
+        await fetchUserFirebaseData(userData._id, userData);
+        
         if (navigationRef.current) {
           navigationRef.current.reset({
             index: 0,
-            routes: [
-              {
-                name:
-                  userData.userType === 'host'
-                    ? 'Host'
-                    : 'Cleaner',
-              },
-            ],
+            routes: [{ name: userData.userType === 'host' ? 'Host' : 'Cleaner' }],
           });
+        } else {
+          console.error('❌ Navigation ref not available');
         }
-  
       } else {
-        throw new Error(
-          data.detail || 'Apple Sign-In failed'
-        );
+        throw new Error(data.detail || 'Apple Sign-In failed');
       }
-  
     } catch (error) {
-      console.error(
-        'Apple credential error:',
-        error
-      );
-  
+      console.error('Apple credential error:', error);
       Alert.alert(
         'Error',
-        'Unable to process Apple Sign-In.'
+        'Unable to process Apple Sign-In. Please try another method.'
       );
-  
     } finally {
       setAppleLoading(false);
     }

@@ -8,7 +8,6 @@ import CustomCard from '../../../components/shared/CustomCard';
 import { MaterialCommunityIcons, MaterialIcons, AntDesign } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { tSafe } from '../../../utils/tSafe';
-import userService from '../../../services/connection/userService';
 
 const ratePerMinute = 0.8;
 const MINIMUM_TOTAL = 50;
@@ -50,112 +49,6 @@ const RoomAssignmentPicker = ({
   const prevGroupSummaryRef = useRef({});
   const prevExistingDataRef = useRef(null);
   const initializationAttempted = useRef(false);
-
-
-  const [roomConsumptionRules, setRoomConsumptionRules] = useState({});
-  const [consumptionModalVisible, setConsumptionModalVisible] = useState(false);
-  const [selectedRoomType, setSelectedRoomType] = useState('');
-  const [consumptionSupplyId, setConsumptionSupplyId] = useState('');
-  const [consumptionQuantity, setConsumptionQuantity] = useState('1');
-  const [supplyList, setSupplyList] = useState([]);
-
-useEffect(() => {
-  const fetchSupplies = async () => {
-    try {
-      const res = await userService.getAllSupplies();
-      setSupplyList(res.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  fetchSupplies();
-}, []);
-
-
-
-  const addRoomConsumptionRule = async () => {
-    if (!selectedRoomType || !consumptionSupplyId) return;
-    const qty = parseFloat(consumptionQuantity);
-    if (isNaN(qty) || qty <= 0) {
-      Alert.alert('Invalid Quantity', 'Please enter a positive number');
-      return;
-    }
-    try {
-      const res = await userService.createRoomConsumptionRule({
-        property_id: selectedApartment._id,
-        room_type: selectedRoomType,
-        supply_id: consumptionSupplyId,
-        quantity: qty,
-      });
-      // Update local state
-      setRoomConsumptionRules(prev => ({
-        ...prev,
-        [selectedRoomType]: [...(prev[selectedRoomType] || []), res.data],
-      }));
-      setConsumptionModalVisible(false);
-      setConsumptionSupplyId('');
-      setConsumptionQuantity('1');
-    } catch (err) {
-      Alert.alert('Error', 'Could not add rule');
-    }
-  };
-  
-  const deleteRoomConsumptionRule = async (roomType, ruleId) => {
-    Alert.alert(
-      'Remove Rule',
-      'Are you sure you want to remove this supply consumption?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await userService.deleteRoomConsumptionRule(ruleId);
-              setRoomConsumptionRules(prev => ({
-                ...prev,
-                [roomType]: prev[roomType].filter(r => r.id !== ruleId),
-              }));
-            } catch (err) {
-              Alert.alert('Error', 'Could not remove rule');
-            }
-          },
-        },
-      ]
-    );
-  };
-  
-
-useEffect(() => {
-  const fetchSupplies = async () => {
-    try {
-      const res = await userService.getAllSupplies();
-      setSupplyList(res.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  fetchSupplies();
-}, []);
-
-const fetchRoomConsumptionRules = async () => {
-  try {
-    const res = await userService.getRoomConsumptionRules(selectedApartment?._id);
-    const rules = {};
-    res.data.forEach(rule => {
-      if (!rules[rule.room_type]) rules[rule.room_type] = [];
-      rules[rule.room_type].push(rule);
-    });
-    setRoomConsumptionRules(rules);
-  } catch (err) {
-    console.error('Failed to load room consumption rules', err);
-  }
-};
-  
-
-useEffect(()=>{
-  fetchRoomConsumptionRules
-},[selectedApartment?._id])
 
   useEffect(() => {
     console.log('RoomAssignmentPicker - Current state:', {
@@ -595,9 +488,6 @@ useEffect(()=>{
     }
   };
 
-  
-  
-
   const validateCustomPrice = (customTotal) => {
     if (isNaN(customTotal) || customTotal <= 0) {
       Alert.alert('Invalid Amount', 'Please enter a valid positive amount.');
@@ -979,73 +869,120 @@ useEffect(()=>{
           })}
         </CustomCard>
 
-      
-        {/* Room Inventory Consumption Card */}
-        {/* Room Inventory Consumption Card – Modern Design */}
-<CustomCard style={styles.modernCard}>
-  <View style={styles.cardHeaderRow}>
-    <MaterialCommunityIcons name="package-variant-closed" size={24} color={COLORS.primary} />
-    <Text style={styles.cardTitle}>{tSafe('room_consumption', 'Room Supply Usage')}</Text>
-  </View>
-  <Text style={styles.cardSubtitle}>
-    {tSafe('room_consumption_desc', 'Tell us what supplies are used each time a room is cleaned – we’ll track consumption automatically.')}
-  </Text>
-
-  {['Bedroom', 'Bathroom', 'Kitchen', 'Livingroom'].map(roomType => {
-    const rules = roomConsumptionRules[roomType] || [];
-    const roomIcon = {
-      Bedroom: 'bed-king-outline',
-      Bathroom: 'shower-head',
-      Kitchen: 'fridge-outline',
-      Livingroom: 'sofa-outline'
-    }[roomType];
-
-    return (
-      <View key={roomType} style={styles.roomSection}>
-        <View style={styles.roomSectionHeader}>
-          <MaterialCommunityIcons name={roomIcon} size={20} color={COLORS.primary} />
-          <Text style={styles.roomSectionTitle}>{tSafe(roomType.toLowerCase(), roomType)}</Text>
-          <TouchableOpacity
-            style={styles.addSupplyChip}
-            onPress={() => {
-              setSelectedRoomType(roomType);
-              setConsumptionModalVisible(true);
-            }}
-          >
-            <MaterialIcons name="add" size={14} color={COLORS.primary} />
-            <Text style={styles.addSupplyChipText}>{tSafe('add_supply', 'Add')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {rules.length === 0 ? (
-          <View style={styles.emptySupplyState}>
-            <MaterialCommunityIcons name="clipboard-plus-outline" size={24} color="#ccc" />
-            <Text style={styles.emptySupplyText}>No supplies defined</Text>
-            <Text style={styles.emptySupplySubtext}>Tap + to add</Text>
-          </View>
-        ) : (
-          <View style={styles.supplyChipContainer}>
-            {rules.map(rule => {
-              const supply = supplyList.find(s => s._id === rule.supply_id);
-              const displayUnit = supply?.unit_type ? `${supply.unit_type}${rule.quantity !== 1 ? 's' : ''}` : '';
+        {Object.keys(groupSummary).length > 0 && (
+          <View style={styles.summaryContainer}>
+            <View style={styles.summaryHeaderRow}>
+              <Text style={styles.summaryTitle}>{tSafe('summary', 'Summary')}</Text>
+              <Text style={styles.totalTime}>
+                {Object.values(groupSummary).reduce((sum, group) => sum + group.totalTime, 0).toFixed(1)} {tSafe('minutes_abbr', 'min')}
+              </Text>
+            </View>
+            
+            {Object.entries(groupSummary).map(([groupId, data]) => {
+              const roomCounts = data.rooms.reduce((acc, roomId) => {
+                const roomType = roomId.split('_')[0];
+                acc[roomType] = (acc[roomType] || 0) + 1;
+                return acc;
+              }, {});
+              
+              const roomSummary = Object.entries(roomCounts)
+                .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+                .join(', ');
+                
               return (
-                <View key={rule.id} style={styles.supplyChip}>
-                  <MaterialCommunityIcons name="package-variant" size={14} color={COLORS.primary} />
-                  <Text style={styles.supplyChipText}>
-                    {supply?.name || 'Unknown'} × {rule.quantity} {displayUnit}
-                  </Text>
-                  <TouchableOpacity onPress={() => deleteRoomConsumptionRule(roomType, rule.id)}>
-                    <MaterialIcons name="close" size={16} color={COLORS.error} />
-                  </TouchableOpacity>
+                <View key={groupId} style={styles.groupItem}>
+                  <View style={styles.groupHeader}>
+                    <Text style={styles.groupName}>
+                      {tSafe('team', 'TEAM')} {groupId.replace('group_', '').toUpperCase()}
+                    </Text>
+                    <Text style={styles.groupPrice}>${data.price.toFixed(2)}</Text>
+                  </View>
+                  
+                  <View style={styles.groupDetails}>
+                    <Text style={styles.detailText}>
+                      {data.totalTime.toFixed(1)} {tSafe('minutes_abbr', 'min')} • {roomSummary}
+                    </Text>
+                    {data.extras.length > 0 && (
+                      <Text style={styles.extrasText}>{data.extras.join(', ')}</Text>
+                    )}
+                  </View>
                 </View>
               );
             })}
           </View>
         )}
-      </View>
-    );
-  })}
-</CustomCard>
+
+        {/* Custom Pricing Section - Moved to Bottom */}
+        <TouchableOpacity 
+          style={styles.customPricingToggle}
+          onPress={() => setShowCustomPricingCard(!showCustomPricingCard)}
+        >
+          <MaterialIcons 
+            name={showCustomPricingCard ? "price-check" : "attach-money"} 
+            size={24} 
+            color={COLORS.primary} 
+          />
+          <Text style={styles.customPricingToggleText}>
+            {showCustomPricingCard ? tSafe('hide_custom_pricing', 'Hide Custom Pricing') : tSafe('customize_pricing', 'Customize Pricing')}
+          </Text>
+          <MaterialIcons 
+            name={showCustomPricingCard ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
+            size={24} 
+            color={COLORS.gray} 
+          />
+        </TouchableOpacity>
+
+        {showCustomPricingCard && (
+          <CustomCard style={styles.customPricingCard}>
+            <View style={styles.customPricingHeader}>
+              <MaterialIcons name="edit" size={22} color={COLORS.primary} />
+              <Text style={styles.customPricingTitle}>{tSafe('custom_pricing_title', 'Set Your Own Price')}</Text>
+            </View>
+            
+            <View style={styles.customPricingDescription}>
+              <Text style={styles.customPricingDescriptionText}>
+                {tSafe('custom_pricing_description', 'Want to offer a special rate or adjust the total price? Set your own custom amount and we\'ll automatically distribute it fairly among all cleaners based on their assigned tasks.')}
+              </Text>
+            </View>
+            
+            <View style={styles.pricingInfo}>
+              <View style={styles.pricingRow}>
+                <Text style={styles.pricingLabel}>{tSafe('calculated_total', 'Calculated Total')}</Text>
+                <Text style={styles.calculatedPriceValue}>${calculatedTotalFee.toFixed(2)}</Text>
+              </View>
+              
+              {useCustomPricing ? (
+                <>
+                  <View style={styles.pricingRow}>
+                    <Text style={styles.pricingLabel}>{tSafe('custom_total', 'Your Custom Total')}</Text>
+                    <Text style={styles.customPriceValue}>${parseFloat(customTotalFee || calculatedTotalFee).toFixed(2)}</Text>
+                  </View>
+                  <TouchableOpacity onPress={handleResetPricing} style={styles.resetButton}>
+                    <Text style={styles.resetButtonText}>{tSafe('reset_to_calculated', 'Reset to Calculated Price')}</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.setCustomPriceButton}
+                  onPress={() => {
+                    setCustomTotalFee(calculatedTotalFee.toFixed(2));
+                    setCustomPricingModalVisible(true);
+                  }}
+                >
+                  <MaterialIcons name="edit" size={18} color="white" />
+                  <Text style={styles.setCustomPriceButtonText}>{tSafe('set_custom_price', 'Set Custom Price')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            <View style={styles.customPricingNote}>
+              <MaterialIcons name="info-outline" size={14} color={COLORS.gray} />
+              <Text style={styles.customPricingNoteText}>
+                {tSafe('custom_pricing_note', 'Custom prices are distributed proportionally among cleaners. Each cleaner will receive a fair share based on their assigned workload.')}
+              </Text>
+            </View>
+          </CustomCard>
+        )}
 
         <Modal visible={customPricingModalVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
@@ -1157,34 +1094,6 @@ useEffect(()=>{
           </Modal>
         )}
       </View>
-
-      <Modal visible={consumptionModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Consumption Rule for {selectedRoomType}</Text>
-            <Text style={styles.modalSubtitle}>
-              When cleaning this room, deduct:
-            </Text>
-            <FloatingLabelPickerSelect
-              label="Select Supply"
-              value={consumptionSupplyId}
-              onValueChange={setConsumptionSupplyId}
-              items={supplyList.map(s => ({ label: s.name, value: s._id }))}
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Quantity (e.g., 2)"
-              keyboardType="numeric"
-              value={consumptionQuantity}
-              onChangeText={setConsumptionQuantity}
-            />
-            <View style={styles.modalButtons}>
-              <Button mode="outlined" onPress={() => setConsumptionModalVisible(false)}>Cancel</Button>
-              <Button mode="contained" onPress={addRoomConsumptionRule} buttonColor={COLORS.primary}>Add</Button>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 };
@@ -1552,112 +1461,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textDecorationLine: 'underline',
   },
-
-  modernCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E1E2F',
-    marginLeft: 10,
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#6C6C80',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  roomSection: {
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    paddingBottom: 16,
-  },
-  roomSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  roomSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E1E2F',
-    flex: 1,
-    marginLeft: 8,
-  },
-  addSupplyChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F7FF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  addSupplyChipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  supplyChipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  supplyChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FC',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E8ECF0',
-    gap: 6,
-  },
-  supplyChipText: {
-    fontSize: 13,
-    color: '#1E1E2F',
-  },
-  emptySupplyState: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#F8F9FC',
-    borderRadius: 12,
-  },
-  emptySupplyText: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-  },
-  emptySupplySubtext: {
-    fontSize: 12,
-    color: '#bbb',
-  },
-
-  mappingSection: { marginTop: 12 },
-mappingSectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: '#333' },
-mappingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingVertical: 4 },
-mappingTaskLabel: { fontSize: 14, color: '#555', flex: 1 },
-mappingActions: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-addMappingButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E8F0FE', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 16 },
-addMappingText: { fontSize: 12, color: COLORS.primary, marginLeft: 4 },
-mappedItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F2F2F7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 16, gap: 4 },
-mappedText: { fontSize: 12, color: '#333' },
 });
 
 export default RoomAssignmentPicker;

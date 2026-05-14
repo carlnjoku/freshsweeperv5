@@ -637,6 +637,7 @@ import Receipt from '../../screens/host/Payment/Receipt';
 import ICalendar from '../../screens/host/ICalendar';
 import { tSafe } from '../../utils/tSafe'; // added import
 import InviteCleaner from '../../screens/host/InviteCleaner';
+import InventoryManagement from '../../screens/host/InventoryManagement';
 
 export default function MainHostStack() {
     const navigation = useNavigation();
@@ -876,6 +877,25 @@ export default function MainHostStack() {
                     })}
                 />
                 <Stack.Screen
+                    name={ROUTES.host_inventory}
+                    component={InventoryManagement}
+                    options={({ route }) => ({
+                        headerShown: true,
+                        headerTintColor: COLORS.gray,
+                        headerBackTitleVisible: false,
+                        headerBackTitle: '',
+                        headerStyle: {
+                            backgroundColor: '#fff',
+                            elevation: 5,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.3,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowRadius: 3,
+                        },
+                        title: tSafe('inventory_management', 'Inventory Management'),
+                    })}
+                />
+                <Stack.Screen
                     name={ROUTES.host_schedule_details}
                     component={ScheduleDetails}
                     options={({ route }) => ({
@@ -1050,7 +1070,7 @@ export default function MainHostStack() {
                     component={ChatConversation}
                     options={({ route }) => ({
                         headerShown: true,
-                        header: () => <CustomChatHeader schedule={route.params.conversation} />,
+                        // header: () => <CustomChatHeader schedule={route.params.conversation} />,
                         headerTintColor: COLORS.white,
                         headerBackTitleVisible: false,
                         headerBackTitle: '',

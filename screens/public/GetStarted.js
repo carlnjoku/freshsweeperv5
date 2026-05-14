@@ -18,16 +18,23 @@ import { useNavigation } from '@react-navigation/native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import fetchIPGeolocation from '../../services/geolocation';
+
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../../services/firebase/config';
 import {getDatabase, ref, set } from 'firebase/database';
 import { useNotification } from '../../hooks/useNotification';
-import { navigationRef } from '../../App';
+// import { navigationRef } from '../../App';
+import { navigationRef } from '../../utils/navigationRef';
+import { auth } from '../../services/firebase/config';
 
 // Initialize WebBrowser for auth
 WebBrowser.maybeCompleteAuthSession();
+const GOOGLE_CLIENT_ID ="283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com";
 
 const GetStarted = () => {
     const navigation = useNavigation();
@@ -42,17 +49,24 @@ const GetStarted = () => {
 
     const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
 
-    // Google Auth Configuration
+    // ----------------------------
+    // GOOGLE AUTH (FIXED)
+    // ----------------------------
     const [request, response, promptAsync] = Google.useAuthRequest({
-        // For Expo Go development
-        expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
-        
-        // For standalone apps
-        iosClientId: Platform.OS === 'ios' ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com' : undefined,
-        androidClientId: Platform.OS === 'android' ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com' : undefined,
-        
-        scopes: ['profile', 'email', 'openid'],
+      iosClientId: GOOGLE_CLIENT_ID,
+      androidClientId: GOOGLE_CLIENT_ID,
+      webClientId: GOOGLE_CLIENT_ID,
     });
+    // const [request, response, promptAsync] = Google.useAuthRequest({
+    //     // For Expo Go development
+    //     expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
+        
+    //     // For standalone apps
+    //     iosClientId: Platform.OS === 'ios' ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com' : undefined,
+    //     androidClientId: Platform.OS === 'android' ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com' : undefined,
+        
+    //     scopes: ['profile', 'email', 'openid'],
+    // });
 
     // Fetch geolocation on mount
     useEffect(() => {
@@ -60,22 +74,13 @@ const GetStarted = () => {
         checkAppleAuthAvailability();
     }, []);
 
-    // Handle Google auth response
-    useEffect(() => {
-        if (response?.type === 'success') {
-            handleGoogleAuthResponse(response);
-        } else if (response?.type === 'error') {
-            // Don't show alert for user cancellation
-            if (response.error?.code !== 'ERR_REQUEST_CANCELED') {
-                console.error('Google auth error:', response.error);
-                Alert.alert(
-                    'Authentication Failed',
-                    response.error?.message || 'An error occurred during Google sign-in'
-                );
-            }
-            setGoogleLoading(false);
-        }
-    }, [response]);
+    
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      handleGoogleAuthResponse(response);
+    }
+  }, [response]);
 
     const fetchGeolocation = async () => {
         try {
@@ -142,26 +147,33 @@ const GetStarted = () => {
         });
     };
 
-    const handleGoogleSignIn = async () => {
-        if (!selectedRole) {
-            Alert.alert('Select Role', 'Please select your role first');
-            return;
-        }
+    
 
-        if (fetchingLocation) {
-            Alert.alert("Please wait", "Fetching your location...");
-            return;
+    const handleGoogleSignIn = async () => {
+
+      try {
+        if (!selectedRole) {
+          Alert.alert("Select Role", "Please select your role first");
+          return;
         }
-        
+    
+        if (!request) {
+          Alert.alert("Error", "Google Auth not ready");
+          return;
+        }
+    
         setGoogleLoading(true);
-        try {
-            console.log(request)
-            console.log(response)
-            await promptAsync();
-        } catch (error) {
-            console.error('Google prompt error:', error);
-            setGoogleLoading(false);
-        }
+        await promptAsync();
+    
+      } catch (error) {
+        console.log("Prompt error:", error);
+        Alert.alert("Error", "Google sign-in failed");
+      } finally {
+    
+        setGoogleLoading(false);
+    
+      }
+    
     };
 
     const writeUserData = (userData) => {
@@ -202,45 +214,66 @@ const GetStarted = () => {
       console.log(udata)
     }
 
+    
+
     const handleGoogleAuthResponse = async (response) => {
-      
-        try {
-            const { authentication } = response;
-            
-            // Get user info from Google
-            const userInfoResponse = await fetch(
-                'https://www.googleapis.com/oauth2/v2/userinfo',
-                {
-                    headers: { Authorization: `Bearer ${authentication.accessToken}` },
-                }
-            );
-
-            if (!userInfoResponse.ok) {
-                throw new Error('Failed to fetch user info from Google');
-            }
-
-            const user = await userInfoResponse.json();
-            
-            // Add token to user object
-            user.accessToken = authentication.accessToken;
-            user.idToken = authentication.idToken;
-            user.provider = 'google';
-            
-            console.log('Google Sign-In Success:', user.email);
-            
-            // Send to backend via AuthContext
-            await handleGoogleBackendLogin(user);
-            
-        } catch (error) {
-            console.error('Google sign-in error:', error);
-            Alert.alert(
-                'Google Sign-In Error',
-                error.message || 'Unable to sign in with Google. Please try again.'
-            );
-            setGoogleLoading(false);
+      try {
+        setGoogleLoading(true);
+    
+        const { authentication } = response;
+    
+        const accessToken = authentication?.accessToken;
+        const idToken = authentication?.idToken;
+    
+        if (!accessToken || !idToken) {
+          Alert.alert('Error', 'Google login failed: missing tokens');
+          return;
         }
+    
+        // 1. GET USER INFO FROM GOOGLE
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+    
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to fetch user info from Google');
+        }
+    
+        const googleUser = await userInfoResponse.json();
+    
+        // attach tokens
+        googleUser.accessToken = accessToken;
+        googleUser.idToken = idToken;
+        googleUser.provider = 'google';
+    
+        console.log('Google User:', googleUser.email);
+    
+        // 2. FIREBASE AUTH (ONLY HERE — NOT IN USEEFFECT)
+        const credential = GoogleAuthProvider.credential(idToken);
+        const firebaseResult = await signInWithCredential(auth, credential);
+    
+        const firebaseUser = firebaseResult.user;
+    
+        console.log("Firebase user:", firebaseUser.email);
+    
+        // 3. SEND TO YOUR BACKEND
+        await handleGoogleBackendLogin(googleUser);
+    
+      } catch (error) {
+        console.log('Google sign-in error:', error);
+        Alert.alert(
+          'Google Sign-In Error',
+          error.message || 'Unable to sign in with Google'
+        );
+      } finally {
+        setGoogleLoading(false);
+      }
     };
-
     
     const handleGoogleBackendLogin = async (googleUser) => {
       // Move baseUrl outside try block so it's accessible in catch
@@ -404,7 +437,7 @@ const GetStarted = () => {
               // Check if phone number is already set
               if (hasPhone) {
                 console.log('📱 User already has phone number, navigating directly to onboarding...');
-                
+                alert(hasPhone)
                 // Update Firebase collection if needed
                 // writeUserData(navData);
                 
@@ -418,6 +451,7 @@ const GetStarted = () => {
                 
                 navigation.navigate(onboardingRoute, navData);
               } else {
+                alert("No phone number yet")
                 console.log('📱 Phone number missing, navigating to phone capture...');
                 
                 // Navigate to phone capture screen first
@@ -705,6 +739,7 @@ const GetStarted = () => {
   
                   // Check if phone number is already set
                   if (hasPhone) {
+                    alert(hasPhone)
                       console.log('📱 User already has phone number, navigating directly to onboarding...');
                       
                       // Navigate directly to appropriate onboarding
@@ -716,7 +751,7 @@ const GetStarted = () => {
                       navigation.navigate(onboardingRoute, navData);
                   } else {
                       console.log('📱 Phone number missing, navigating to phone capture...');
-                      
+                      alert("No phone yet")
                       // Navigate to phone capture screen first
                       navigation.navigate(ROUTES.phone_capture, navData);
                   }

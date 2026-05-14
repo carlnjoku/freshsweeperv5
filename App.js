@@ -18,6 +18,8 @@ import { ErrorProvider } from './context/ErrorContext';
 import ErrorBoundary from './components/fallback/ErrorBoundary';
 import GlobalErrorModal from './components/fallback/GlobalErrorModal';
 // import NetworkListener from './components/fallback/NetworkListener';
+import { navigationRef } from './utils/navigationRef';
+
 
 import DevMenu from './components/fallback/DevMenu';
 // import linking from './screens/sharedscreen/DeepLinking';
@@ -26,15 +28,14 @@ import { rootLinking } from './screens/sharedscreen/DeepLinking';
 import i18n, { loadTranslations } from './i18n';
 import userService from './services/connection/userService';
 import { WebSocketProvider } from './context/WebsocketContext';
-
+import { STRIPE_PUBLIC_SECRET_KEY } from './env';
+import { useNotification } from './hooks/useNotification';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-
 export default function App() {
 
-  const STRIPE_PUBLIC_SECRET_KEY = process.env.STRIPE_PUBLIC_SECRET_KEY;
+  const { registerForPushNotificationsAsync } = useNotification();
   
   const [showTestUI, setShowTestUI] = useState(false);
   const [ready, setReady] = useState(false); // ✅ ADD THIS
@@ -99,7 +100,7 @@ export default function App() {
 
   // ✅ BLOCK APP UNTIL TRANSLATIONS ARE READY
   if (!ready) {
-    return <Text>Loading translations...</Text>;
+    return <Text></Text>;
   }
    
    return (
@@ -107,25 +108,23 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <ErrorProvider>
-         <ErrorBoundary>
-          <LanguageProvider>
-            
-            <WebSocketProvider>
-              <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
-              <BookingProvider>
-                <PaperProvider>
-                  <CleanerSelectionProvider>
-                    <AppNavigationWrapper />
-                    <GlobalErrorModal />
-                  </CleanerSelectionProvider>
-                </PaperProvider>
-              </BookingProvider>
-              </StripeProvider>
+          <ErrorBoundary>
+            <LanguageProvider>
+              <WebSocketProvider>
+                <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
+                  <BookingProvider>
+                    <PaperProvider>
+                      <CleanerSelectionProvider>
+                        <AppNavigationWrapper />
+                        <GlobalErrorModal />
+                      </CleanerSelectionProvider>
+                    </PaperProvider>
+                  </BookingProvider>
+                </StripeProvider>
               </WebSocketProvider>
-         
-          </LanguageProvider>
-        </ErrorBoundary>
-      </ErrorProvider>
+            </LanguageProvider>
+          </ErrorBoundary>
+        </ErrorProvider>
       </AuthProvider> 
     </SafeAreaProvider>
          
@@ -133,7 +132,7 @@ export default function App() {
  }
  
 
- export const navigationRef = React.createRef();
+//  export const navigationRef = React.createRef();
 
  function AppNavigationWrapper() {
   const { userType, isLoading } = useContext(AuthContext); // 'host' or 'cleaner'
@@ -151,7 +150,8 @@ export default function App() {
       // linking={linkingConfig}
       ref = {navigationRef}
       linking={rootLinking}
-      fallback={<Text>Loading navigation...</Text>}
+      
+      fallback={<Text></Text>}
       onReady={() => {
         console.log('Navigation is ready!');
       }}

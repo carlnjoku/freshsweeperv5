@@ -86,6 +86,7 @@ const ROUTES = {
     host_promotion:"Promotion",
     host_team:"TeamManagement",
     host_invite_cleaners:"InviteACleaner",
+    host_inventory: 'InventoryManagement',
 
 
     getting_started: "Getting Started",
@@ -100,8 +101,8 @@ const ROUTES = {
     reset_password:"ResetPassword",
     set_password: 'SetPassword',
     signup_mock: "Sign Up Mock",
-    chat_conversation:"Chat Conversation",
-    cleaner_chat_conversation:"CleanChat Conversation",
+    chat_conversation:"ChatConversation",
+    cleaner_chat_conversation:"CleanChatConversation",
     stripe_redirect: "StripeRedirectExample",
     redirect_identity:"RedirectIdentity",
     onboarding_redirect_handler:"OnboardRedirect",
@@ -111,7 +112,6 @@ const ROUTES = {
     notification:'Notification',
     system_alert:'System Alert',
     invite_gate:'Invite Gate'
-  
   };
 
 

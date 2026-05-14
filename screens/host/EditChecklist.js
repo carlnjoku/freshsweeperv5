@@ -4852,7 +4852,7 @@ export default function EditChecklist() {
             </View>
             
             <Text style={styles.modalText}>
-              {tSafe('checklist_tooltip_text', 'This helps us understand how many cleaners will work on the apartment.\n\nIf it\'s just one cleaner, we\'ll assign all tasks to one group. If it\'s two or more, you\'ll be able to split tasks across groups for faster cleaning.\n\nEditing Mode: You can modify existing task assignments, add new tasks, or adjust pricing.')}
+              {tSafe('checklist_tooltip_text', 'This helps us understand how many cleaners will work on the apartment.\n\nIf it\'s just one cleaner, we\'ll assign all tasks to one team. If it\'s two or more, you\'ll be able to split tasks across teams for faster cleaning.\n\nEditing Mode: You can modify existing task assignments, add new tasks, or adjust pricing.')}
             </Text>
             
             <TouchableOpacity

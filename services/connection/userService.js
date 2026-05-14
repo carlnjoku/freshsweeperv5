@@ -138,25 +138,46 @@ class UserService {
     getInviteStatus(propertyId, cleanerId){
       return http.get(`/api/apartments/get_invite_status/${propertyId}/${cleanerId}`)
     }
-    getLinkedCleaners(authToken){
-      return http.get(
-        '/api/apartments/linked_cleaners',
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+    // getLinkedCleaners(authToken){
+    //   return http.get(
+    //     '/api/apartments/linked_cleaners',
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${authToken}`,
+    //       },
+    //     }
+    //   );
+    // }
+    getLinkedCleaners(authToken, hostId) {
+      return http.get('/api/apartments/linked_cleaners', {
+        params: {
+          host_id: hostId
+        },
+        // headers: {
+        //   Authorization: `Bearer ${authToken}`,
+        // },
+      });
     }
-    getHostInvites(authToken){
-      return http.get(
-        '/api/apartments/get_all_host_invites',
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+    // getHostInvites(authToken, hostId){
+    //   return http.get(
+    //     '/api/apartments/get_all_host_invites',
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${authToken}`,
+    //       },
+    //     }
+    //   );
+    // }
+
+    getHostInvites(authToken, hostId) {
+      return http.get('/api/apartments/get_all_host_invites', {
+        params: {
+          host_id: hostId
+        },
+        // headers: {
+        //   Authorization: `Bearer ${authToken}`,
+        // },
+      });
     }
 
     resendInvite(payload){
@@ -688,6 +709,46 @@ class UserService {
     getFullCopies() {
       return http.get('/api/admin/copies');
     }
+
+    getPropertyInventory(propertyId){
+      return http.get(`/api/inventory/property/${propertyId}`)
+    }
+
+    getAllSupplies(){
+      return http.get('/api/inventory/supplies')
+    }
+
+    updatePropertyInventory(propertyId, supplyId, data){
+      return http.put(`/api/inventory/property/${propertyId}/inventory/${supplyId}`, data)
+    }
+
+    restockSupply(propertyId, supplyId, quantity){
+      return http.post(`/api/inventory/property/${propertyId}/restock`, { supply_id: supplyId, quantity })
+    }
+
+    createSupply(supplyData){
+      return http.post('/api/inventory/supplies', supplyData)
+    }
+
+    recordInventoryConsumption(data){
+      return http.post('/api/inventory/consumption', data)
+    }
+
+    createRoomConsumptionRule(ruleData){
+      return http.post(`/api/inventory/room-consumption`, ruleData)
+    }
+
+    getRoomConsumptionRules(propertyId){
+      return http.get(`/api/inventory/room-consumption/${propertyId}`)
+    }
+
+    deleteRoomConsumptionRule(ruleId){
+      return http.delete(`/api/inventory/room-consumption/${ruleId}`)
+    }
+
+ 
+
+    
   
   }
   

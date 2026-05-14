@@ -1495,6 +1495,8 @@ export default function PropertyDetails({
     validateForm(isFormValid);
   }, [formData?.aptId, formData?.checklistId, formData?.checklists, validateForm]);
 
+  
+
   // Fetch apartments on mount only
   useEffect(() => {
     fetchApartments();

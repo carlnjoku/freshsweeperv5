@@ -4070,6 +4070,7 @@ import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
 // import { MAP_BOX_SECRET_KEY } from '../../secret';
 import { tSafe } from '../../utils/tSafe'; // added import
+import { MAP_BOX_SECRET_KEY } from '../../env';
 
 // Helper to get room icon
 const getRoomIcon = (type) => {
@@ -4101,7 +4102,7 @@ export default function PropertyPreview() {
   const { propertyId, inviteToken } = route.params || {};
   const { currentUserId } = useContext(AuthContext);
 
-  const MAP_BOX_SECRET_KEY = rocess.env.MAP_BOX_SECRET_KEY
+  
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -4120,7 +4121,7 @@ export default function PropertyPreview() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const scrollRef = useRef(null);
-
+  alert(MAP_BOX_SECRET_KEY)
   // Load property data
   useEffect(() => {
     const loadProperty = async () => {

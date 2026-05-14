@@ -32,7 +32,8 @@
           "color": "#00BFFF",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "splash": {
       "image": "./assets/splash.png",
@@ -68,8 +69,7 @@
         "backgroundColor": "#00BFFF"
       },
       "useNextNotificationsApi": true,
-      "package":"com.flavoursoft.freshsweeperv5",
-      
+      "package": "com.flavoursoft.freshsweeperv5",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

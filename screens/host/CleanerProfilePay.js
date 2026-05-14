@@ -1240,7 +1240,7 @@ const { width, height } = Dimensions.get('window');
 
 const CleanerProfilePay = ({ navigation }) => {
   const route = useRoute();
-  const { item, selected_schedule, assignedTo, expected_cleaners, selected_scheduleId, requestId, cleanerId } = route.params;
+  const { item, selected_schedule, assignedTo, expected_cleaners, selected_scheduleId, requestId, cleanerId, cleaning_fee } = route.params;
 
   const cleaner = item;
   console.log(cleaner);
@@ -1279,10 +1279,27 @@ const CleanerProfilePay = ({ navigation }) => {
   const groupName = findGroupByCleanerId(cleaner._id);
   const [expected_number_of_leaners, setExpectedCleaners] = useState(groupCount);
 
-  // Compute the cleaner's fee from assignedTo
+  // // Compute the cleaner's fee from assignedTo
+  // const cleanerFee = useMemo(() => {
+  //   if (!assignedTo || !Array.isArray(assignedTo)) return 0;
+  //   console.log("assignment----PYP", assignedTo.acceptedCleaners)
+  //   const assignedEntry = assignedTo.acceptedCleaners.find(a => a.cleanerId === cleaner._id);
+
+  //   return assignedEntry?.checklist?.price || 0;
+  // }, [assignedTo, cleaner._id]);
+
+
   const cleanerFee = useMemo(() => {
     if (!assignedTo || !Array.isArray(assignedTo)) return 0;
-    const assignedEntry = assignedTo.find(a => a.cleanerId === cleaner._id);
+  
+    console.log('assignment----PYP', assignedTo);
+  
+    const assignedEntry = assignedTo.find(
+      item =>
+        item.cleanerId === cleaner._id ||
+        item.acceptedCleaners?.includes(cleaner._id)
+    );
+  
     return assignedEntry?.checklist?.price || 0;
   }, [assignedTo, cleaner._id]);
 
@@ -1552,7 +1569,7 @@ const CleanerProfilePay = ({ navigation }) => {
       <View style={styles.navigation}>
       {expected_number_of_leaners > 1 ? <SchedulePrice currency={currency} price={(cleanerFee || 0).toFixed(2)} /> 
       :
-      <SchedulePrice currency={currency} price={(selected_schedule?.total_cleaning_fee || 0).toFixed(2)} />
+      <SchedulePrice currency={currency} price={(cleanerFee || 0).toFixed(2)} />
       }
         
         {expected_number_of_leaners > 1 ? (

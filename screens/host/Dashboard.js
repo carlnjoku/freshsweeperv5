@@ -854,6 +854,7 @@ import EditSchedule from './EditSchedule';
 
 
 
+
 const Dashboard = () => {
   // const { selectedCleaners } = useCleanerSelection();
 
@@ -947,7 +948,6 @@ const Dashboard = () => {
 
       setCleaningRequests(res);
       setFilteredPendingPayment(pendingPaymentRequests);
-
     } catch (e) {
       console.log(e);
     }
@@ -1291,7 +1291,7 @@ const Dashboard = () => {
 
         <View style={styles.content}>
 
-        
+       
 
           {/* Summary Cards */}
           {renderSummaryCards()}
@@ -1301,6 +1301,7 @@ const Dashboard = () => {
 
           {/* Pending Approvals */}
           {renderPendingApprovals()}
+          
 
           {/* Upcoming Schedules */}
           {renderUpcomingSchedules()}

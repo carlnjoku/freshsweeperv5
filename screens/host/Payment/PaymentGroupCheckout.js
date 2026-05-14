@@ -378,7 +378,7 @@ const PaymentGroupCheckout = ({ route, navigation }) => {
   }, [cleaning_fee]);
 
   const handlePaymentSuccess = async (result) => {
-    alert("Start payment")
+   
     // Compute total fee dynamically (from cleanersWithFee)
     const totalCleanersFee = cleanersWithFee?.reduce(
       (sum, c) => sum + (Number(c.fee) || 0),

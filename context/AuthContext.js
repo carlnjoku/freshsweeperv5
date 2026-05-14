@@ -275,7 +275,11 @@ export const AuthProvider = ({children}) => {
                 setUserToken(object.resp?.token);
                 setCurrentUserId(object.resp?._id);
                 setUserType(object.resp?.userType);
-                setCurrency(object.resp?.location?.currency?.symbol || '$');
+                setCurrency(
+                    object.resp?.location?.currency_symbol ||
+                    object.resp?.location?.currency?.symbol ||
+                    '$'
+                );
                 setCurrentUser(object.resp);
                 setFbaseUser(object.fbUser);
 

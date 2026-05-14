@@ -484,7 +484,7 @@ const MessageStack = () => {
         })}
       />
 
-      <Stack.Screen
+      {/* <Stack.Screen
         name={ROUTES.cleaner_chat_conversation}
         component={ChatConversation}
         options={({ route }) => ({
@@ -496,7 +496,7 @@ const MessageStack = () => {
             backgroundColor: COLORS.primary,
           },
         })}
-      />
+      /> */}
     </Stack.Navigator>
   );
 };

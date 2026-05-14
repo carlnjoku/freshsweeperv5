@@ -273,11 +273,11 @@ const MessageStack = () => (
         },
       }}
     />
-    <Stack.Screen
+    {/* <Stack.Screen
       name={ROUTES.host_conversations}
       component={ChatConversation}
       options={{ headerShown: false }}
-    />
+    /> */}
   </Stack.Navigator>
 );
 

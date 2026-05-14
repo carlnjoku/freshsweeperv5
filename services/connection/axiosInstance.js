@@ -21,14 +21,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor: attach access token
-// api.interceptors.request.use(async (config) => {
-//   const token = await getAccessToken();
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
 
 
 api.interceptors.request.use(async (config) => {

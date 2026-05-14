@@ -349,7 +349,6 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
               start_time,
               end_time,
               dayName,
-
               cleaners: JSON.stringify([{
                 cleanerId,
                 fee: cleaning_fee,
@@ -366,8 +365,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
           };
 
           // console.log("data", data)
-          
-
+     
           const response = await userService.fetchSinglePaymentIntentClientSecret(data);
           const { clientSecret, paymentIntentId, status } = response.data;
           
@@ -380,7 +378,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
         }
       }
     };
-
+    
     const fetchSavedCards = async () => {
       try {
         const custData = { customerId: currentUser.stripe_customer?.stripe_customer_id };

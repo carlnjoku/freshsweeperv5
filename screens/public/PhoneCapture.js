@@ -33,7 +33,7 @@ import {
   set } from 'firebase/database';
   import { db } from '../../services/firebase/config';
   import userService from '../../services/connection/userService';
-  import { navigationRef } from '../../App';
+import { navigationRef } from '../../utils/navigationRef';
 
 const PhoneCapture = () => {
   const navigation = useNavigation();
@@ -173,104 +173,226 @@ const fetchUserFirebaseData = async(uid, response) => {
 
   
 
+  // const handleContinue = async () => {
+  //   const cleanedPhone = phoneNumber.replace(/\D/g, '');
+    
+  //   if (cleanedPhone.length < 10) {
+  //     Alert.alert('Invalid Phone', 'Please enter a valid 10-digit phone number');
+  //     if (phoneInputRef.current?.shake) {
+  //       phoneInputRef.current.shake(500);
+  //     }
+  //     return;
+  //   }
+  
+  //   // Prepare request body matching Option 3 backend structure
+  //   const requestBody = {
+  //     userId: userId,  // Required: userId at top level
+  //     phone: cleanedPhone,
+  //     location: geolocation,
+  //     // Optionally include contact info if geolocation is available
+  //     ...(geolocation ? {
+  //       contact: {
+  //         phone: cleanedPhone,
+  //         cityLong: geolocation.city,
+  //         stateLong: geolocation.region,
+  //         countryLong: geolocation.country_name,
+  //         postalCode: geolocation.postal_code
+  //       }
+  //     } : {})
+  //   }
+
+
+
+    
+
+  //   console.log("Requests........", requestBody)
+  //   setLoading(true);
+    
+  //   setTimeout(async () => {
+  //     try {
+  //       await userService.updatePhoneAndLocation(requestBody)
+  //       .then(response => {
+  //         if(response.status === 200){
+  //           // IMPORTANT: Check the actual response structure
+  //           console.log("📦 Full response:", JSON.stringify(response.data, null, 2));
+            
+  //           // The response structure might be: 
+  //           // { status: "success", message: "...", data: { userObject } }
+  //           // OR: { status: "success", message: "...", data: { data: userObject } }
+            
+  //           let res;
+  //           if (response.data.data && response.data.data.data) {
+  //             // If it's nested: data.data.data
+  //             res = response.data.data.data;
+  //           } else if (response.data.data) {
+  //             // If it's: data.data
+  //             res = response.data.data;
+  //           } else {
+  //             // If it's just the user object
+  //             res = response.data;
+  //           }
+            
+  //           console.log("👤 User data extracted:", res);
+
+
+            
+            
+  //           // Register for push notifications with the user ID
+  //           console.log("Registering push notifications for userId:", res._id);
+  //           registerForPushNotificationsAsync(res._id);
+
+  //           // Fetch Firebase user data and update AuthContext
+  //           fetchUserFirebaseData(res._id, res);
+            
+  //           if (navigationRef.current) {
+  //             navigationRef.current.reset({
+  //               index: 0,
+  //               routes: [{ name: res.userType === 'host' ? 'Host' : 'Cleaner' }],
+  //             });
+  //           } else {
+  //             console.error('❌ Navigation ref not available');
+  //           }
+            
+            
+  //           // NO EXPLICIT NAVIGATION NEEDED HERE
+  //           // The login() call in fetchUserFirebaseData will update AuthContext
+  //           // which will trigger AppNav to switch from PublicStack to MainCleanerStack
+  //           // automatically, just like in Signin
+            
+  //         } else {
+  //           console.log("❌ Could not verify");
+  //           Alert.alert('Error', "Could not save phone number. Please try again.");
+  //         }  
+  //       }).catch((err) => {
+  //         console.log("❌ API error:", err);
+  //         Alert.alert('Error', "Something went wrong, please try again");
+  //       });
+  //     } catch (error) {
+  //       console.log("❌ General error:", error);
+  //       Alert.alert('Error', "Something went wrong, please try again");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }, 1000);
+  // };
+
   const handleContinue = async () => {
     const cleanedPhone = phoneNumber.replace(/\D/g, '');
-    
+  
     if (cleanedPhone.length < 10) {
       Alert.alert('Invalid Phone', 'Please enter a valid 10-digit phone number');
+  
       if (phoneInputRef.current?.shake) {
         phoneInputRef.current.shake(500);
       }
+  
       return;
     }
   
-    // Prepare request body matching Option 3 backend structure
     const requestBody = {
-      userId: userId,  // Required: userId at top level
+      userId,
       phone: cleanedPhone,
       location: geolocation,
-      // Optionally include contact info if geolocation is available
-      ...(geolocation ? {
-        contact: {
-          phone: cleanedPhone,
-          cityLong: geolocation.city,
-          stateLong: geolocation.region,
-          countryLong: geolocation.country_name,
-          postalCode: geolocation.postal
-        }
-      } : {})
-    }
-    console.log("Requests........", requestBody)
-    setLoading(true);
+  
+      ...(geolocation
+        ? {
+            contact: {
+              phone: cleanedPhone,
+              cityLong: geolocation.city,
+              stateLong: geolocation.region,
+              countryLong: geolocation.country,
+              postalCode: geolocation.postal_code,
+            },
+          }
+        : {}),
+    };
     
-    setTimeout(async () => {
-      try {
-        await userService.updatePhoneAndLocation(requestBody)
-        .then(response => {
-          if(response.status === 200){
-            // IMPORTANT: Check the actual response structure
-            console.log("📦 Full response:", JSON.stringify(response.data, null, 2));
-            
-            // The response structure might be: 
-            // { status: "success", message: "...", data: { userObject } }
-            // OR: { status: "success", message: "...", data: { data: userObject } }
-            
-            let res;
-            if (response.data.data && response.data.data.data) {
-              // If it's nested: data.data.data
-              res = response.data.data.data;
-            } else if (response.data.data) {
-              // If it's: data.data
-              res = response.data.data;
-            } else {
-              // If it's just the user object
-              res = response.data;
-            }
-            
-            console.log("👤 User data extracted:", res);
-
-
-            
-            
-            // Register for push notifications with the user ID
-            console.log("Registering push notifications for userId:", res._id);
-            registerForPushNotificationsAsync(res._id);
-
-            // Fetch Firebase user data and update AuthContext
-            fetchUserFirebaseData(res._id, res);
-            
-            if (navigationRef.current) {
-              navigationRef.current.reset({
-                index: 0,
-                routes: [{ name: res.userType === 'host' ? 'Host' : 'Cleaner' }],
-              });
-            } else {
-              console.error('❌ Navigation ref not available');
-            }
-            
-            
-            // NO EXPLICIT NAVIGATION NEEDED HERE
-            // The login() call in fetchUserFirebaseData will update AuthContext
-            // which will trigger AppNav to switch from PublicStack to MainCleanerStack
-            // automatically, just like in Signin
-            
-          } else {
-            console.log("❌ Could not verify");
-            Alert.alert('Error', "Could not save phone number. Please try again.");
-          }  
-        }).catch((err) => {
-          console.log("❌ API error:", err);
-          Alert.alert('Error', "Something went wrong, please try again");
-        });
-      } catch (error) {
-        console.log("❌ General error:", error);
-        Alert.alert('Error', "Something went wrong, please try again");
-      } finally {
-        setLoading(false);
+    console.log('📤 Request body:', requestBody);
+  
+    setLoading(true);
+  
+    try {
+      const response = await userService.updatePhoneAndLocation(
+        requestBody
+      );
+  
+      console.log(
+        '📦 Full response:',
+        JSON.stringify(response.data, null, 2)
+      );
+  
+      // SUCCESS CHECK
+      if (response.data?.status !== 'success') {
+        throw new Error(
+          response.data?.message || 'Profile update failed'
+        );
       }
-    }, 1000);
+  
+      // EXTRACT USER DATA
+      let res;
+  
+      if (response.data.data?.data) {
+        res = response.data.data.data;
+      } else if (response.data.data) {
+        res = response.data.data;
+      } else {
+        res = response.data;
+      }
+  
+      console.log('👤 User data extracted:', res);
+  
+      // REGISTER PUSH TOKEN
+      console.log(
+        '📲 Registering push notifications for:',
+        res._id
+      );
+  
+      registerForPushNotificationsAsync(res._id);
+  
+      // UPDATE AUTH CONTEXT
+      await fetchUserFirebaseData(res._id, res);
+  
+      // NAVIGATE
+      if (navigationRef.current) {
+        navigationRef.current.reset({
+          index: 0,
+          routes: [
+            {
+              name:
+                res.userType === 'host'
+                  ? 'Host'
+                  : 'Cleaner',
+            },
+          ],
+        });
+      } else {
+        console.error('❌ Navigation ref not available');
+      }
+  
+    } catch (error) {
+      console.log('❌ Update error:', error);
+  
+      // AXIOS ERROR RESPONSE
+      if (error.response) {
+        console.log('❌ Backend response:', error.response.data);
+  
+        Alert.alert(
+          'Error',
+          error.response.data?.detail ||
+            error.response.data?.message ||
+            'Could not update profile'
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          error.message || 'Something went wrong'
+        );
+      }
+  
+    } finally {
+      setLoading(false);
+    }
   };
-
 
   // const handleContinue = async () => {
   //   // Validate phone number
@@ -625,7 +747,7 @@ const fetchUserFirebaseData = async(uid, response) => {
               value={language}
               onValueChange={handleLanguageChange}
             />
-            
+          
             <TextInput
               label="Mobile Phone"
               placeholder="(123) 456-7890"

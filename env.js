@@ -1,0 +1,10 @@
+export const EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID='71969730539-4cum30gqpmvm4metu6e64n8h6ri4ov1b.apps.googleusercontent.com'
+export const EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID='71969730539-dglvkpjqmfgllbs91ma8qm63gb78rq2o.apps.googleusercontent.com'
+export const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID='71969730539-dltf3p5ohfk9fv29vde0fibq272r7vna.apps.googleusercontent.com'
+
+
+
+export const MAP_BOX_SECRET_KEY = 'pk.eyJ1IjoiZnJlc2hzd2VlcGVyIiwiYSI6ImNtbWM1cmt4YzAydjEycW9hNXl0Mmx4ZzAifQ.qMQ47OCahW_fAw6WXyeOww';
+export const STRIPE_PUBLIC_SECRET_KEY = 'pk_test_EFN6niSZSH7zAp3qWMHKcRWw';
+export const PUBLISHABLE_KEY = 'pk_test_EFN6niSZSH7zAp3qWMHKcRWw';
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyBfj5tHpZNcRxbPwBEjPSJVCXtZ5mw9vOM';

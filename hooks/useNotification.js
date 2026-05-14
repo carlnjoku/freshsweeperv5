@@ -3139,6 +3139,7 @@ export function useNotification() {
     }, []);
 
     const handleNotificationResponse = useCallback((response) => {
+        console.log('🔥🔥🔥 NOTIFICATION RESPONSE RECEIVED 🔥🔥🔥', response);
         debugLog('info', '🎯 NOTIFICATION TAPPED - Response received', {
             hasResponse: !!response,
             hasNotification: !!response?.notification,
@@ -3605,8 +3606,9 @@ export function useNotification() {
         'Schedule Details': ROUTES.host_schedule_details,
         'Confirm Request': ROUTES.host_confirm,
         'Task Progress': ROUTES.host_task_progress,
-        'Chat Conversation': ROUTES.chat_conversation,
-        'Chat': ROUTES.chat_conversation,
+        'ChatConversation': ROUTES.chat_conversation,
+        'CleanChatConversation' : ROUTES.cleaner_chat_conversation,
+        // 'Chat': ROUTES.chat_conversation,
         'Notification': ROUTES.notification,
         'Notifications': ROUTES.notification,
         'Home': ROUTES.cleaner_dashboard,
@@ -4084,48 +4086,74 @@ export function useNotification() {
     };
 
     // ========== MAIN SETUP EFFECT ==========
-    useEffect(() => {
-        debugLog('info', 'useNotification hook initialized', {
-            appState: AppState.currentState,
-            platform: Platform.OS,
-            isDevice: Device.isDevice,
-            timestamp: new Date().toISOString(),
-            projectId: Constants.expoConfig?.extra?.eas?.projectId
-        });
+    // useEffect(() => {
+    //     debugLog('info', 'useNotification hook initialized', {
+    //         appState: AppState.currentState,
+    //         platform: Platform.OS,
+    //         isDevice: Device.isDevice,
+    //         timestamp: new Date().toISOString(),
+    //         projectId: Constants.expoConfig?.extra?.eas?.projectId
+    //     });
         
-        // Setup notification handlers
+    //     // Setup notification handlers
+    //     Notifications.setNotificationHandler({
+    //         handleNotification: async () => ({
+    //             shouldShowAlert: true,
+    //             shouldPlaySound: true,
+    //             shouldSetBadge: true,
+    //         }),
+    //     });
+
+    //     // Handle initial notification
+    //     handleInitialNotification();
+
+    //     // Listeners for notification events
+    //     const notificationListener = Notifications.addNotificationReceivedListener(handleNotification);
+    //     const responseListener = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+
+    //     debugLog('info', 'Notification listeners added', {
+    //         hasNotificationListener: !!notificationListener,
+    //         hasResponseListener: !!responseListener,
+    //         device: Device.deviceName
+    //     });
+
+    //     // Clean up listeners on unmount
+    //     return () => {
+    //         if (notificationListener) {
+    //             Notifications.removeNotificationSubscription(notificationListener);
+    //         }
+    //         if (responseListener) {
+    //             Notifications.removeNotificationSubscription(responseListener);
+    //         }
+    //         debugLog('info', 'Notification listeners cleaned up');
+    //     };
+    // }, [handleNotification, handleNotificationResponse]);
+
+    useEffect(() => {
+        debugLog('info', '🔊 Setting up notification listeners');
+        
         Notifications.setNotificationHandler({
-            handleNotification: async () => ({
-                shouldShowAlert: true,
-                shouldPlaySound: true,
-                shouldSetBadge: true,
-            }),
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+          }),
         });
-
-        // Handle initial notification
-        handleInitialNotification();
-
-        // Listeners for notification events
+      
         const notificationListener = Notifications.addNotificationReceivedListener(handleNotification);
         const responseListener = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
-
-        debugLog('info', 'Notification listeners added', {
-            hasNotificationListener: !!notificationListener,
-            hasResponseListener: !!responseListener,
-            device: Device.deviceName
-        });
-
-        // Clean up listeners on unmount
+      
+        debugLog('success', '✅ Listeners added');
+      
+        // Handle initial notification (already there)
+        handleInitialNotification();
+      
         return () => {
-            if (notificationListener) {
-                Notifications.removeNotificationSubscription(notificationListener);
-            }
-            if (responseListener) {
-                Notifications.removeNotificationSubscription(responseListener);
-            }
-            debugLog('info', 'Notification listeners cleaned up');
+          debugLog('info', '🧹 Removing listeners');
+          Notifications.removeNotificationSubscription(notificationListener);
+          Notifications.removeNotificationSubscription(responseListener);
         };
-    }, [handleNotification, handleNotificationResponse]);
+      }, [handleNotification, handleNotificationResponse]);
 
     // ========== RETURN VALUES ==========
     return {

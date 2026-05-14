@@ -1864,6 +1864,7 @@ export default function ScheduleRequest() {
     try {
       const response = await userService.getHostCleaningRequestByScheduleId(scheduleId, currentTime);
       const res = response.data;
+      console.log(res)
       console.log('✅ Fetched host request assignedTo:', res[0]?.schedule?.assignedTo);
       setAssignedTo(res[0].schedule.assignedTo);
       setExpectedCleaners(res[0].schedule.assignedTo?.length || 0);
@@ -2180,6 +2181,7 @@ export default function ScheduleRequest() {
               selected_scheduleId: scheduleId,
               hostId: item,
               requestId: item._id,
+              cleaning_fee:item.schedule.cleaning_fee
             })
           }
         />

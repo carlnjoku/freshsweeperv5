@@ -18,7 +18,7 @@ import userService from '../../services/connection/userService';
 import Toast from 'react-native-toast-message';
 import FloatingLabelPickerSelect from '../../components/shared/FloatingLabelPicker';
 import { useBookingContext } from '../../context/BookingContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
 import ROUTES from '../../constants/routes';
 import { tSafe } from '../../utils/tSafe'; // added import
 
@@ -47,8 +47,11 @@ export default function CreateChecklist({ route }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [totalFee, setTotalFee] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
+  // const [checklistName, setChecklistName] = useState(
+  //   tSafe('default_checklist_name', 'Cleaning Checklist - {property}', { property: apartmentName || tSafe('property', 'Property') })
+  // );
   const [checklistName, setChecklistName] = useState(
-    tSafe('default_checklist_name', 'Cleaning Checklist - {property}', { property: apartmentName || tSafe('property', 'Property') })
+    `Cleaning Checklist - ${apartmentName || tSafe('property', 'Property')}`
   );
 
   const [selectedPropertyId, setSelectedPropertyId] = useState(propertyId || '');
@@ -239,6 +242,34 @@ export default function CreateChecklist({ route }) {
           {tSafe('save_checklist', 'Save Checklist')} ({currency}{totalFee.toFixed(2)})
         </Button>
       </ScrollView>
+
+      {/* Tooltip Modal */}
+      <Modal
+        visible={showTooltip}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTooltip(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <AntDesign name="infocirlce" size={24} color={COLORS.primary} />
+              <Text style={styles.modalTitle}>{tSafe('checklist_information', 'Checklist Information')}</Text>
+            </View>
+            
+            <Text style={styles.modalText}>
+              {tSafe('checklist_tooltip_text', 'This helps us understand how many cleaners will work on the apartment.\n\nIf it\'s just one cleaner, we\'ll assign all tasks to one team. If it\'s two or more, you\'ll be able to split tasks across teams for faster cleaning.\n\nEditing Mode: You can modify existing task assignments, add new tasks, or adjust pricing.')}
+            </Text>
+            
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowTooltip(false)}
+            >
+              <Text style={styles.modalCloseText}>{tSafe('got_it', 'Got it')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -276,5 +307,48 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center' 
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.dark,
+    marginLeft: 12,
+  },
+  modalText: {
+    fontSize: 16,
+    color: COLORS.gray,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalCloseButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignSelf: 'flex-end',
+  },
+  modalCloseText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

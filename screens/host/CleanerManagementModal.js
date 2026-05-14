@@ -1045,6 +1045,10 @@ const styles = StyleSheet.create({
     padding: 16,
     fontStyle: 'italic',
   },
+
+
+
+  
 });
 
 export default CleanerManagementModal;
