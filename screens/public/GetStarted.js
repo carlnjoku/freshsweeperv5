@@ -658,18 +658,18 @@ const GetStarted = () => {
           });
           
           // Prepare the request body matching your backend schema
+          
           const requestBody = {
-              identityToken: credential.identityToken,
-              authorizationCode: credential.authorizationCode,
-              userType: userType,
-              user: {
-                  id: credential.user,
-                  email: credential.email,
-                  name: credential.fullName ? {
-                      firstName: credential.fullName.givenName || "",
-                      lastName: credential.fullName.familyName || ""
-                  } : null
-              }
+            identityToken: credential.identityToken,
+            authorizationCode: credential.authorizationCode,
+            userType: userType,
+            user: {
+              id: credential.user,
+              email: credential.email || null,
+              firstname: credential.fullName?.givenName || "",
+              lastname: credential.fullName?.familyName || "",
+              fullname: `${credential.fullName?.givenName || ""} ${credential.fullName?.familyName || ""}`.trim()
+            }
           };
           
           console.log("Request body:", JSON.stringify(requestBody, null, 2));
@@ -708,15 +708,20 @@ const GetStarted = () => {
                   await AsyncStorage.setItem('@auth_token', userData.token);
                   await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
               }
-  
-              // Check if user has phone number
-              const hasPhone = userData?.phone && userData.phone.trim().length > 0;
-              
-              // Determine if user needs onboarding
-              const isNewUser = !userData?.account_verification || 
-                               (userData?.userType === 'cleaner' && 
-                                !userData?.onboarding_completed);
-  
+
+
+              const hasPhone =
+                !!userData?.phone &&
+                userData.phone.trim().length > 0;
+
+              const onboardingCompleted =
+                userData?.userType === 'cleaner'
+                  ? userData?.onboarding_completed
+                  : userData?.account_verification === 'active';
+
+              const isNewUser = !onboardingCompleted || !hasPhone;
+
+
               if (isNewUser) {
                   console.log('🔄 New user detected...');
                   
@@ -739,19 +744,17 @@ const GetStarted = () => {
   
                   // Check if phone number is already set
                   if (hasPhone) {
-                    alert(hasPhone)
                       console.log('📱 User already has phone number, navigating directly to onboarding...');
                       
                       // Navigate directly to appropriate onboarding
                       const onboardingRoute = selectedRole === 'cleaner' 
                         ? ROUTES.cleaner_onboarding 
-                        : ROUTES.host_onboarding;
+                        : ROUTES.host_home_tab;
                       
                       console.log('Navigating to:', onboardingRoute);
                       navigation.navigate(onboardingRoute, navData);
                   } else {
                       console.log('📱 Phone number missing, navigating to phone capture...');
-                      alert("No phone yet")
                       // Navigate to phone capture screen first
                       navigation.navigate(ROUTES.phone_capture, navData);
                   }

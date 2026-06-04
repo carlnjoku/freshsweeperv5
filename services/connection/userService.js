@@ -17,8 +17,14 @@ class UserService {
     }
 
     resetPassword(data){
-      return http.post('/api/auth/reset-password', data)
+      return http.post('/api/auth/reset_password', data)
     }
+    forgotPassword(data){
+      return http.post('/api/auth/forgot_password', data)
+    }
+    // forgotPassword(data){
+    //   return http.post('/api/auth/reset_password', data)
+    // }
     
 
   

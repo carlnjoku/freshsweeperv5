@@ -1752,6 +1752,38 @@ export default function PropertyDashboard({ route }) {
           </View>
         </Animatable.View>
 
+        {/* Checklists Card */}
+        <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{tSafe('cleaning_checklists', 'Cleaning Checklists')}</Text>
+            <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
+              <MaterialIcons name="add" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+          <Divider style={styles.divider} />
+          {loadingChecklists ? (
+            <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
+          ) : checklists.length === 0 ? (
+            <TouchableOpacity onPress={handleAddChecklist} activeOpacity={0.95}>
+              <LinearGradient colors={['#8E2DE2', '#4A00E0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientBanner}>
+                <View style={styles.gradientBannerContent}>
+                  <View style={styles.gradientIconContainer}>
+                    <MaterialCommunityIcons name="clipboard-check-multiple" size={32} color="white" />
+                  </View>
+                  <Text style={styles.gradientTitle}>{tSafe('no_checklists_yet', 'No Checklists Yet')}</Text>
+                  <Text style={styles.gradientText}>{tSafe('checklist_encouragement', 'Create your first cleaning checklist to ensure nothing gets missed. Customize tasks for each room type.')}</Text>
+                  <View style={styles.gradientButton}>
+                    <Text style={styles.gradientButtonText}>{tSafe('create_checklist', 'Create Checklist')}</Text>
+                    <MaterialIcons name="arrow-forward" size={18} color="white" />
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <FlatList data={checklists} keyExtractor={(item) => item._id} renderItem={renderChecklist} scrollEnabled={false} />
+          )}
+        </Animatable.View>
+
         {/* Pending Invites Section */}
         {loadingInvites ? (
           <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
@@ -1876,37 +1908,7 @@ export default function PropertyDashboard({ route }) {
           )}
         </Animatable.View>
 
-        {/* Checklists Card */}
-        <Animatable.View animation="fadeInUp" delay={300} style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{tSafe('cleaning_checklists', 'Cleaning Checklists')}</Text>
-            <TouchableOpacity onPress={handleAddChecklist} style={styles.cardButton}>
-              <MaterialIcons name="add" size={20} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-          <Divider style={styles.divider} />
-          {loadingChecklists ? (
-            <ActivityIndicator style={styles.loader} size="small" color={COLORS.primary} />
-          ) : checklists.length === 0 ? (
-            <TouchableOpacity onPress={handleAddChecklist} activeOpacity={0.95}>
-              <LinearGradient colors={['#8E2DE2', '#4A00E0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientBanner}>
-                <View style={styles.gradientBannerContent}>
-                  <View style={styles.gradientIconContainer}>
-                    <MaterialCommunityIcons name="clipboard-check-multiple" size={32} color="white" />
-                  </View>
-                  <Text style={styles.gradientTitle}>{tSafe('no_checklists_yet', 'No Checklists Yet')}</Text>
-                  <Text style={styles.gradientText}>{tSafe('checklist_encouragement', 'Create your first cleaning checklist to ensure nothing gets missed. Customize tasks for each room type.')}</Text>
-                  <View style={styles.gradientButton}>
-                    <Text style={styles.gradientButtonText}>{tSafe('create_checklist', 'Create Checklist')}</Text>
-                    <MaterialIcons name="arrow-forward" size={18} color="white" />
-                  </View>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <FlatList data={checklists} keyExtractor={(item) => item._id} renderItem={renderChecklist} scrollEnabled={false} />
-          )}
-        </Animatable.View>
+        
 
         {/* Calendar Connections Card */}
         <Animatable.View animation="fadeInUp" delay={400} style={styles.card}>

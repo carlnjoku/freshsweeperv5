@@ -717,7 +717,7 @@ import {
   DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
 import ROUTES from '../../../constants/routes';
@@ -737,7 +737,7 @@ const AccountVerificationGate = () => {
   const navigation = useNavigation();
   const route = useRoute();
   // ✅ Include updateUser from context
-  const { login, currentUserId, currentUser, updateUser } = useContext(AuthContext);
+  const { login, currentUserId, currentUser, updateUser, logout } = useContext(AuthContext);
   
   const expoPushToken = route.params?.expo_push_token;
   const [user, setUser] = useState(null);
@@ -1338,6 +1338,11 @@ const AccountVerificationGate = () => {
         extraData={[onboardingStatus, user?.identity_verified]} // Ensures re-render when status changes
         scrollEnabled={false}
       />
+
+<TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Ionicons name="log-out-outline" size={22} color={COLORS.gray} />
+          <Text style={styles.logoutText}>{tSafe('logout', 'Logout')}</Text>
+        </TouchableOpacity>
     </View>
   );
 };

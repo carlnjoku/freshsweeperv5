@@ -3,8 +3,8 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import COLORS from "../../constants/colors";
 import { tSafe } from "../../utils/tSafe"; // added import
 
-const GroupActions = ({ status, onAccept, onDecline, onDetails }) => {
-  const isSelected = status === "selected";
+const GroupActions = ({ status, schedule_status, onAccept, onDecline, onDetails }) => {
+  const isSelected = status === "selected" || schedule_status ==="upcoming"
 
   return (
     <View style={styles.actionsRow}>

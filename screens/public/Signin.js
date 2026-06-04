@@ -334,7 +334,7 @@ const Signin = () => {
         await registerForPushNotificationsAsync(userData._id);
 
         // Update AuthContext (this will cause re-render but rootNav remains valid)
-        await fetchUserFirebaseData(userData._id, userData);
+        // await fetchUserFirebaseData(userData._id, userData);
         // writeUserData(userData)
         console.log('✅ AuthContext updated, now navigating...');
         console.log('Invite token:', inviteToken);
@@ -396,7 +396,7 @@ const Signin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert(tSafe('error', 'Error'), tSafe('something_went_wrong', 'Something went wrong'));
+      // Alert.alert(tSafe('error', 'Error'), tSafe('something_went_wrong', 'Something went wrong'));
     } finally {
       setLoading(false);
     }
@@ -492,7 +492,7 @@ const Signin = () => {
 
           <TextInput
             mode="outlined"
-            label={t('email')}
+            label={tSafe('email', 'Email')}
             autoCapitalize="none"
             placeholder={tSafe('enter_your_email', 'Enter your email')}
             placeholderTextColor={COLORS.gray}
@@ -512,8 +512,8 @@ const Signin = () => {
             onChangeText={(text) => handleOnchange(text, 'password')}
             onFocus={() => handleError(null, 'password')}
             left={<TextInput.Icon icon="lock-outline" style={{ marginTop: 10 }} size={20} />}
-            label={t('password')}
-            placeholder={t('enter_password')}
+            label={tSafe('password', 'Password')}
+            placeholder={tSafe('enter_password', 'Enter Password')}
             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
             outlineColor="#D8D8D8"
             activeOutlineColor={COLORS.primary}
@@ -532,39 +532,18 @@ const Signin = () => {
             onPress={() => navigation.navigate(ROUTES.forgot_password)}
             style={{ textAlign: 'right', marginTop: 0, marginBottom: 10, fontSize: 12, color: COLORS.primary }}
           >
-            {t('forgot_password')}
+            {tSafe('forgot_password', 'Forgot Password')}
           </Text>
 
-          <Button title={t('login')} loading={loading} onPress={validate} />
+          <Button title={t('login', 'Login')} loading={loading} onPress={validate} />
 
-          {/* Google Sign-In Button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={() => handleGoogleSignIn()}
-            disabled={googleLoading}
-          >
-            <View style={styles.googleButtonContent}>
-              {googleLoading ? (
-                <ActivityIndicator size="small" color="#DB4437" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons
-                    name="google"
-                    size={20}
-                    color="#DB4437"
-                    style={styles.googleIcon}
-                  />
-                  <Text style={styles.googleButtonText}>{tSafe('continue_with_google', 'Continue with Google')}</Text>
-                </>
-              )}
-            </View>
-          </TouchableOpacity>
+          
 
           <Text
             onPress={() => navigation.navigate(ROUTES.getting_started)}
             style={{ color: COLORS.black, fontWeight: 'bold', textAlign: 'center', fontSize: 16, marginTop: 20 }}
           >
-            {t('dont_have_account')}
+            {t('i_dont_have_account', 'I do not have an account')}
           </Text>
         </View>
       </ScrollView>

@@ -275,7 +275,7 @@ import onAddFriend from '../../../utils/createNewChatFriend';
 import { tSafe } from '../../../utils/tSafe'; // added import
 
 const PaymentSingleCheckout = ({ route, navigation }) => {
-  const { currentUser, currentUserId, fbaseUser } = useContext(AuthContext);
+  const { currentUser, currency, currentUserId, fbaseUser } = useContext(AuthContext);
   // const navigation = useNavigation()
 
   const {
@@ -308,24 +308,11 @@ const PaymentSingleCheckout = ({ route, navigation }) => {
   const [cleaning_time, setCleaningTime] = useState(schedule.cleaning_time);
   const [cleaning_end_time, setCleaningEndTime] = useState(schedule.cleaning_end_time);
 
-  // alert(cleaning_end_time)
-  // alert(scheduleId)
-  // alert(moment("19:09:00", "HH:mm:ss").add(2, 'hours').format("h:mm A"))
-
-  // console.log(typeof cleaning_end_time); // Should be 'object' if it's a Date
-  // console.log(cleaning_end_time); // Check its actual value
 
 let cleaning_end_time1 = cleaning_end_time;  // Example string
 let end_time = moment(cleaning_end_time1, "HH:mm:ss").add(2, 'hours').format("HH:mm");
  
 let start_time = moment(cleaning_time, "HH:mm:ss").format("HH:mm")
-// let roko = moment(cleaning_end_time, "HH:mm:ss").format("HH:mm");
-// console.log("Roko", roko)
-// console.log(moment(cleaning_time, "HH:mm:ss").format("HH:mm"))
-// console.log(cleaning_end_time)
-// console.log("Formated",formattedEndTime); // Expected Output: 1:10 PM
-// const newTime = moment(cleaning_end_time, "HH:mm:ss").add(2, 'hours').format("HH:mm");
-// console.log("new", newTime)
 
 
 let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
@@ -336,6 +323,8 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
         try {
           const data = {
             amount: cleaning_fee,
+            currency: "USD",
+            // currency:currentUser.location?.currency?.code
             customerId: currentUser.stripe_customer?.stripe_customer_id,
             cleaner_stripe_account_id,
             metadata: {
@@ -361,10 +350,18 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
             
             platformFeeAmount: serviceFee,
             receiptEmail: currentUser.email, // Ensure the receipt email is sent
-            currency:currentUser.location?.currency?.code
+            
           };
 
-          // console.log("data", data)
+          console.log("data", data)
+
+    //       amount: Union[int, float]  # Accepts both int and float
+    // currency:str
+    // customerId: str
+    // cleaner_stripe_account_id: str
+    // platformFeeAmount: Union[int, float]  # Accepts both int and float
+    // metadata:dict
+    // receiptEmail:str
      
           const response = await userService.fetchSinglePaymentIntentClientSecret(data);
           const { clientSecret, paymentIntentId, status } = response.data;

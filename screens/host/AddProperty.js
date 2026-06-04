@@ -2285,14 +2285,75 @@ export default function AddProperty() {
       setInputs(prevState => ({...prevState, [input]: text}));
     };
 
+    // const onSubmit = async () => {
+    //   setLoading(true);
+
+    //   if (!validate()) {
+    //     setLoading(false);
+    //     return;
+    //   }
+
+    //   try {
+    //     const owner_info = {
+    //       firstname,
+    //       lastname,
+    //       email,
+    //       userId: currentUserId,
+    //       avatar
+    //     };
+
+    //     const propertyData = {
+    //       userId: currentUserId,
+    //       owner_info,
+    //       apt_name: inputs.apt_name,
+    //       instructions: inputs.instructions,
+    //       cleaning_supplies: checked,
+    //       contact_phone: phoneNumber.replace(/\D/g, ''),
+    //       address,
+    //       latitude: coordinates.latitude.toFixed(4),
+    //       longitude: coordinates.longitude.toFixed(4),
+    //       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //       apt_type,
+    //       preferredCleaners: preferredCleaners.map(c => ({
+    //         id: c.id,
+    //         type: c.type
+    //       })),
+    //       invitedCleaners,
+    //       roomDetails,
+    //     };
+
+    //     console.log("Property data-------------|-------|", propertyData);
+
+    //     const propertyResponse = await userService.addApartment(propertyData);
+
+    //     if (propertyResponse.status === 200) {
+    //       const { propertyId, checklistId } = propertyResponse.data;
+    //     } else {
+    //       Alert.alert(
+    //         tSafe('error_title', 'Error'),
+    //         tSafe('property_creation_failed', 'Property creation failed')
+    //       );
+    //     }
+    //   } catch (err) {
+    //     console.log("Error creating property:", err);
+    //     Alert.alert(
+    //       tSafe('error_title', 'Error'),
+    //       tSafe('something_went_wrong', 'Something went wrong, please try again')
+    //     );
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
+
     const onSubmit = async () => {
       setLoading(true);
-
+    
       if (!validate()) {
         setLoading(false);
         return;
       }
-
+    
       try {
         const owner_info = {
           firstname,
@@ -2301,7 +2362,7 @@ export default function AddProperty() {
           userId: currentUserId,
           avatar
         };
-
+    
         const propertyData = {
           userId: currentUserId,
           owner_info,
@@ -2321,13 +2382,16 @@ export default function AddProperty() {
           invitedCleaners,
           roomDetails,
         };
-
+    
         console.log("Property data-------------|-------|", propertyData);
-
+    
         const propertyResponse = await userService.addApartment(propertyData);
-
+    
         if (propertyResponse.status === 200) {
           const { propertyId, checklistId } = propertyResponse.data;
+    
+          // ✅ Navigate to PropertyDashboard with the new property ID
+          navigation.replace(ROUTES.host_apt_dashboard, { propertyId });
         } else {
           Alert.alert(
             tSafe('error_title', 'Error'),

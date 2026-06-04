@@ -33,16 +33,23 @@
           "defaultChannel": "default"
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.flavoursoft.freshsweeperv5",
@@ -50,16 +57,11 @@
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone for video.",
-        "UIBackgroundModes": [
-          "remote-notification",
-          "remote-notification",
-          "remote-notification",
-          "remote-notification"
-        ],
+        "UIBackgroundModes": ["remote-notification"],
         "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyBfj5tHpZNcRxbPwBEjPSJVCXtZ5mw9vOM"
+        "googleMapsApiKey": "AIzaSyAVFRFrTl9UKj_NZhvQAdQblwxEUsGRcu0"
       }
     },
     "android": {
@@ -68,7 +70,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#00BFFF"
       },
-      "useNextNotificationsApi": true,
       "package": "com.flavoursoft.freshsweeperv5",
       "permissions": [
         "android.permission.CAMERA",
@@ -78,7 +79,7 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.VIBRATE"
       ],
-      "versionCode": 1
+      "versionCode": 8
     },
     "web": {
       "favicon": "./assets/favicon.png"

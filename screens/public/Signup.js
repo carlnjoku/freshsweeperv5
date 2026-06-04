@@ -57,7 +57,7 @@ export default function Signup({navigation, route}) {
     availability: null, // Should be null or dict, not empty object
     certification: [], // Empty array is fine
   });
-  
+  const [smsConsent, setSmsConsent] = useState(false);
   const [errors, setErrors] = React.useState({});
   const [loading, setLoading] = React.useState(false);
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -168,6 +168,11 @@ export default function Signup({navigation, route}) {
       isValid = false;
     }
 
+    if (!smsConsent) {
+      Alert.alert('Consent Required', 'You must agree to receive SMS messages to use this feature. You can opt out later by replying STOP.');
+      return false;
+    }
+
     // Password validation
     if (!inputs.password) {
       handleError(<Animatable.View animation="fadeInUpBig"><Text style={{color: COLORS.red}}>Please input password</Text></Animatable.View>, 'password');
@@ -217,6 +222,7 @@ export default function Signup({navigation, route}) {
       aboutme: null, // Send null if empty
       availability: null, // Send null if empty
       certification: [], // Empty array
+      sms_consent: smsConsent,   // ✅ store consent flag
     };
     
     // If user entered aboutme text, include it
@@ -405,6 +411,21 @@ export default function Signup({navigation, route}) {
           <Text style={styles.phoneHelperText}>
             Phone number is optional. We'll use it for account verification and important updates.
           </Text>
+          {/* SMS Opt-in Checkbox */}
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setSmsConsent(!smsConsent)}
+              style={styles.checkbox}
+            >
+              <View style={[styles.checkboxBox, smsConsent && styles.checkboxChecked]}>
+                {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                I agree to receive SMS text messages from FreshSweeper about job alerts, booking updates, and other service-related notifications. Message frequency varies. Msg & data rates may apply. I can reply STOP to unsubscribe at any time.
+              </Text>
+            </TouchableOpacity>
+          </View>
           
           <TextInput
             mode="outlined"
@@ -501,6 +522,40 @@ const styles = StyleSheet.create({
   loginLinkText: {
     color: COLORS.primary,
     fontWeight: '600',
+  },
+
+
+  checkboxContainer: {
+    marginVertical: 12,
+  },
+  checkbox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  checkboxBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+  },
+  checkboxTick: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: '#555',
+    lineHeight: 20,
   },
 });
 

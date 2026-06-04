@@ -11,7 +11,7 @@ import { tSafe } from '../../utils/tSafe'; // added import
 
 const { width } = Dimensions.get('window');
 
-export default function CleaningSummary({ checklist, assignedTo, handleAccept }) {
+export default function CleaningSummary({ schedule_status, checklist, assignedTo, handleAccept }) {
   const { currency } = useContext(AuthContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [acceptModalVisible, setAcceptModalVisible] = useState(false);
@@ -292,7 +292,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
           </View>
         </ScrollView>
         
-        <View style={styles.modalFooter}>
+        {/* <View style={styles.modalFooter}>
           <Button 
             mode="contained" 
             onPress={() => {
@@ -303,7 +303,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
           >
             {tSafe('accept_this_task', 'Accept This Task')}
           </Button>
-        </View>
+        </View> */}
       </View>
     );
   };
@@ -361,6 +361,7 @@ export default function CleaningSummary({ checklist, assignedTo, handleAccept })
             <View style={styles.buttonRow}>
               <GroupActions
                 status={item?.status}
+                schedule_status={schedule_status}
                 onAccept={() => openAcceptModal(item)}
                 onDecline={() => handleDecline(item)}
                 onDetails={() => openModal(item)}

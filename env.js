@@ -7,4 +7,5 @@ export const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID='71969730539-dltf3p5ohfk9fv29v
 export const MAP_BOX_SECRET_KEY = 'pk.eyJ1IjoiZnJlc2hzd2VlcGVyIiwiYSI6ImNtbWM1cmt4YzAydjEycW9hNXl0Mmx4ZzAifQ.qMQ47OCahW_fAw6WXyeOww';
 export const STRIPE_PUBLIC_SECRET_KEY = 'pk_test_EFN6niSZSH7zAp3qWMHKcRWw';
 export const PUBLISHABLE_KEY = 'pk_test_EFN6niSZSH7zAp3qWMHKcRWw';
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyBfj5tHpZNcRxbPwBEjPSJVCXtZ5mw9vOM';
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyAVFRFrTl9UKj_NZhvQAdQblwxEUsGRcu0';
+

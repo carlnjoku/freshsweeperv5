@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
 import moment from 'moment';
 
-const ScheduleCard = ({ item, selectedProperty, regular_cleaning, extra, cleaning_date, cleaning_time, cleaning_end_time, onPress, borderColor = '#3498db'  }) => {
+const CleaningScheduleCard = ({ item, selectedProperty, regular_cleaning, extra, cleaning_date, cleaning_time, cleaning_end_time, onPress, borderColor = '#3498db'  }) => {
 
     console.log(item)
     const date = moment(cleaning_date).format('DD'); // Extracts "20"
@@ -158,4 +158,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ScheduleCard;
+export default CleaningScheduleCard;

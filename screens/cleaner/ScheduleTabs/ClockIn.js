@@ -245,7 +245,7 @@ const ClockIn = ({ route }) => {
           <Text style={styles.sectionTitle}>{tSafe('location_check', 'Location Check')}</Text>
         </View>
         <View style={styles.distanceContainer}>
-          <Text style={styles.distanceText}>{distanceMessage}sdiusdiu</Text>
+          <Text style={styles.distanceText}>{distanceMessage}</Text>
           {distance !== null && (
             <>
               <ProgressBar

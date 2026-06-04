@@ -927,6 +927,7 @@ const UpcomingScheduleItem = ({ item, canClockIn = false, clockInStatus = {} }) 
     (cleaner) => cleaner.cleanerId === currentUserId
   );
 
+  console.log(clockInStatus)
   // Check if schedule is cancelled OR current user's assignment is cancelled
   const isScheduleCancelled = item.status?.toLowerCase() === 'cancelled';
   const isUserAssignmentCancelled = assignedToForCleaner?.status?.toLowerCase() === 'cancelled';

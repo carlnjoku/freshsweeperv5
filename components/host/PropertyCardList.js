@@ -102,7 +102,7 @@ const PropertyCardList = ({ properties = [], handleHostPress, currentUserId, nav
               </TouchableOpacity>
               
               {/* Alternative: Learn More Link */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.learnMoreContainer}
                 onPress={() => navigation.navigate(ROUTES.host_help || 'Help')}
               >
@@ -110,7 +110,7 @@ const PropertyCardList = ({ properties = [], handleHostPress, currentUserId, nav
                   Learn how to add and manage properties
                 </Text>
                 <AntDesign name="right" size={14} color={COLORS.primary} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           )}
         </View>

@@ -21,6 +21,7 @@ import { navigationRef } from '../utils/navigationRef';
 import { CommonActions } from '@react-navigation/native';
 
 export function navigate(name, params) {
+
   if (navigationRef.isReady()) {
     navigationRef.navigate(name, params);
   } else {

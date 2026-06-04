@@ -24,11 +24,9 @@ import CleaningRequestItem from '../../components/cleaner/CleaningRequestItem';
 import { AuthContext } from '../../context/AuthContext';
 import userService from '../../services/connection/userService';
 import { useFocusEffect } from '@react-navigation/native';
-import { verification_items } from '../../data';
 import NoScheduleMessage from '../../components/cleaner/NoScheduleMessage';
 import { get_clean_future_requests } from '../../utils/get_cleaner_future_request';
 import { useTranslation } from 'react-i18next';
-// import { useNotification } from '../../hooks/useNotification';
 import InviteBanner from '../../components/cleaner/InviteBanner';
 import { tSafe } from '../../utils/tSafe'; // added import
 
@@ -248,7 +246,7 @@ const Dashboard = () => {
         const res = response.data;
         console.log('Reqeeeeeeeeeeeeeeeust', res[0]);
         setCleaningRequests(res);
-        // alert(res[0])
+        
       });
     } catch (e) {
       console.log(e);
@@ -372,6 +370,12 @@ const Dashboard = () => {
       </View>
     );
   }
+
+  const renderUpcomingScheduleItem = ({ item }) => (
+    <View style={{ marginBottom: 12 }}>
+      <UpcomingScheduleListItem item={item} currency={currency}  />
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -505,11 +509,12 @@ const Dashboard = () => {
             <SectionHeader
               title={tSafe('upcoming_schedule', 'Upcoming Schedule')}
               count={upcoming_schedule.length}
-              onViewAll={() => navigation.navigate(ROUTES.cleaner_schedule)}
+              onViewAll={() => navigation.navigate(ROUTES.cleaner_schedules)}
             />
             <FlatList
               data={upcoming_schedule.slice(0, 3)}
-              renderItem={({ item }) => <UpcomingScheduleListItem item={item} />}
+              // renderItem={({ item }) => <UpcomingScheduleListItem item={item} />}
+              renderItem={renderUpcomingScheduleItem}
               scrollEnabled={false}
               keyExtractor={(item) => item._id || item.id}
               ItemSeparatorComponent={() => <View style={styles.listSeparator} />}

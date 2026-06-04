@@ -568,7 +568,7 @@ export default function Bookings({ navigation }) {
 
           const isValidStatus =
             schedule.status === 'pending_payment' ||
-            schedule.status === 'payment_confirmed';
+            schedule.status === "upcoming"
 
           return isValidStatus && scheduleDateTime >= new Date();
         })
@@ -668,10 +668,16 @@ export default function Bookings({ navigation }) {
     setOpenModal(true);
   };
   const handleCloseCreateBooking = () => {
-    handleCreateSchedule(false);
-    setTimeout(() => {
-      resetFormData();
-    }, 300);
+    // handleCreateSchedule(false);
+    // setTimeout(() => {
+    //   resetFormData();
+    // }, 300);
+    const handleCreateSchedule = (shouldOpen = true) => {
+      setModalVisible(false);   // ❗ close the modal
+      if (!shouldOpen) {
+        resetFormData();
+      }
+    };
   };
 
   const onUpcomingSchedule = () => {
@@ -681,6 +687,8 @@ export default function Bookings({ navigation }) {
   const onOngoingSchedule = () => {
     setCurrentStep(2);
   };
+
+  console.log("Geolocationssssss------PT", geolocationData)
 
   return (
     <View
@@ -765,7 +773,7 @@ export default function Bookings({ navigation }) {
             {currentStep === 1 && (
               <Upcoming
                 schedules={upcoming_schedules}
-                currency={geolocationData.currency.symbol}
+                currency={geolocationData?.currency_symbol}
                 handleEditSchedule={handleEdit}
               />
             )}

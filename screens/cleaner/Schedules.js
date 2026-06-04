@@ -309,6 +309,7 @@ import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
 import CompletedJobsList from './ScheduleTabs/CompletedJobList';
 import History from './ScheduleTabs/History';
+import Requests from './ScheduleTabs/Requests';
 import { tSafe } from '../../utils/tSafe'; // added import
 
 // Helper function for local date parsing (unchanged)
@@ -326,10 +327,15 @@ export default function Schedules({ navigation }) {
   const [openModal, setOpenModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
-  const [upcoming_schedules, setUpComingSchedules] = useState([]);
-  const [ongoing_schedules, setOnGoingSchedules] = useState([]);
+  // const [upcoming_schedules, setUpComingSchedules] = useState([]);
+  // const [ongoing_schedules, setOnGoingSchedules] = useState([]);
   const [completed_schedules, setCompletedSchedules] = useState([]);
   const [future_schedules, setFutureSchedules] = useState([]);
+
+  const [request_schedules, setRequestSchedules] = useState([]);
+  const [upcoming_schedules, setUpComingSchedules] = useState([]);
+  const [ongoing_schedules, setOnGoingSchedules] = useState([]);
+  const [history_schedules, setHistorySchedules] = useState([]);
 
   useEffect(() => {
     fetchSchedules();
@@ -343,60 +349,141 @@ export default function Schedules({ navigation }) {
     await userService.getSchedulesAssignedToCleaner(currentUserId)
       .then(response => {
         const res = response.data;
-        console.log("1111111111113");
-        console.log("1111111111112");
+      
         
-        // Upcoming schedules (payment confirmed or cancelled)
-        const upcomingSchedules = res.filter(schedule => {
-          const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
-            cleaner.cleanerId === currentUserId
-          );
-          return currentUserAssignment && (
-            currentUserAssignment.status.toLowerCase() === "payment_confirmed" ||
-            currentUserAssignment.status.toLowerCase() === "cancelled"
-          );
-        });
+        // // Upcoming schedules (payment confirmed or cancelled)
+        // const upcomingSchedules = res.filter(schedule => {
+        //   const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
+        //     cleaner.cleanerId === currentUserId
+        //   );
+        //   return currentUserAssignment && (
+        //     currentUserAssignment.status.toLowerCase() === "payment_confirmed" ||
+        //     currentUserAssignment.status.toLowerCase() === "cancelled"
+        //   );
+        // });
         
-        // Ongoing schedules (in progress or pending completion approval)
-        const ongoingSchedules = res.filter(schedule => {
-          const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
-            cleaner.cleanerId === currentUserId
-          );
-          return currentUserAssignment?.status.toLowerCase() === "in_progress" || 
-                 currentUserAssignment?.status.toLowerCase() === "pending_completion_approval";
-        });
+        // // Ongoing schedules (in progress or pending completion approval)
+        // const ongoingSchedules = res.filter(schedule => {
+        //   const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
+        //     cleaner.cleanerId === currentUserId
+        //   );
+        //   return currentUserAssignment?.status.toLowerCase() === "in_progress" || 
+        //          currentUserAssignment?.status.toLowerCase() === "pending_completion_approval";
+        // });
         
-        // History: completed AND uncompleted schedules for current user
-        const historySchedules = res.filter(schedule => {
-          const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
-            cleaner.cleanerId === currentUserId
-          );
-          const status = currentUserAssignment?.status.toLowerCase();
-          return status === "approved" || status === "uncompleted";
-        });
+        // // History: completed AND uncompleted schedules for current user
+        // const historySchedules = res.filter(schedule => {
+        //   const currentUserAssignment = schedule.assignedTo?.find(cleaner => 
+        //     cleaner.cleanerId === currentUserId
+        //   );
+        //   const status = currentUserAssignment?.status.toLowerCase();
+        //   return status === "approved" || status === "uncompleted";
+        // });
     
+        // setUpComingSchedules(upcomingSchedules);
+        // setOnGoingSchedules(ongoingSchedules);
+        // setCompletedSchedules(historySchedules);
+
+        const requestsSchedules = res.filter(schedule => {
+          const assignment = schedule.assignedTo?.find(
+            cleaner => cleaner.cleanerId === currentUserId
+          );
+        
+          const status = assignment?.status?.toLowerCase();
+          return [
+            "pending",
+            "requested",
+            "invited",
+            "pending_acceptance"
+          ].includes(status);
+        });
+        
+        const upcomingSchedules = res.filter(schedule => {
+          const assignment = schedule.assignedTo?.find(
+            cleaner => cleaner.cleanerId === currentUserId
+          );
+        
+          const status = assignment?.status?.toLowerCase();
+          return [
+            "accepted",
+            "payment_confirmed",
+            "scheduled"
+          ].includes(status);
+        });
+        
+        const ongoingSchedules = res.filter(schedule => {
+          const assignment = schedule.assignedTo?.find(
+            cleaner => cleaner.cleanerId === currentUserId
+          );
+        
+          const status = assignment?.status?.toLowerCase();
+          return [
+            "in_progress",
+            "pending_completion_approval"
+          ].includes(status);
+        });
+        
+        const historySchedules = res.filter(schedule => {
+          const assignment = schedule.assignedTo?.find(
+            cleaner => cleaner.cleanerId === currentUserId
+          );
+        
+          const status = assignment?.status?.toLowerCase();
+          return [
+            "approved",
+            "completed",
+            "paid",
+            "cancelled",
+            "rejected",
+            "uncompleted"
+          ].includes(status);
+        
+        });
+        
+        setRequestSchedules(requestsSchedules);
         setUpComingSchedules(upcomingSchedules);
         setOnGoingSchedules(ongoingSchedules);
-        setCompletedSchedules(historySchedules);
+        setHistorySchedules(historySchedules);
       
         // Future dates for calendar view
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // const futureDates = res
+        //   .filter(schedule => {
+        //     const dateStr = schedule?.schedule?.cleaning_date;
+        //     const scheduleDate = parseLocalDate(dateStr);
+        //     if (!scheduleDate) return false;
+        //     return (
+        //       scheduleDate > today &&
+        //       schedule.status === "payment_confirmed"
+        //     );
+        //   })
+        //   .map(schedule =>
+        //     parseLocalDate(schedule.schedule.cleaning_date).toDateString()
+        //   );
         const futureDates = res
           .filter(schedule => {
             const dateStr = schedule?.schedule?.cleaning_date;
             const scheduleDate = parseLocalDate(dateStr);
             if (!scheduleDate) return false;
+            const assignment = schedule.assignedTo?.find(
+              cleaner => cleaner.cleanerId === currentUserId
+            );
+
+            const status = assignment?.status?.toLowerCase();
             return (
               scheduleDate > today &&
-              schedule.status === "payment_confirmed"
+              [
+                "accepted",
+                "payment_confirmed",
+                "scheduled"
+              ].includes(status)
             );
           })
           .map(schedule =>
             parseLocalDate(schedule.schedule.cleaning_date).toDateString()
           );
-
         console.log(futureDates);
         setFutureSchedules(futureDates);
       })
@@ -405,12 +492,29 @@ export default function Schedules({ navigation }) {
       });
   };
 
+  // const onUpcomingSchedule = () => {
+  //   setCurrentStep(1);
+  // };
+
+  // const onOngoingSchedule = () => {
+  //   setCurrentStep(2);
+  // };
+
+
+  const onRequestSchedule = () => {
+    setCurrentStep(0);
+  };
+  
   const onUpcomingSchedule = () => {
     setCurrentStep(1);
   };
-
+  
   const onOngoingSchedule = () => {
     setCurrentStep(2);
+  };
+  
+  const onHistorySchedule = () => {
+    setCurrentStep(3);
   };
 
   return (
@@ -428,7 +532,14 @@ export default function Schedules({ navigation }) {
       </View>
 
       <View style={styles.container2}>
-        <View style={styles.tabsContainer}>
+        {/* <View style={styles.tabsContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, { borderBottomColor: currentStep == 2 ? COLORS.primary : "#f0f0f0" }]} 
+            onPress={() => setCurrentStep(2)}
+          >
+            <MaterialCommunityIcons name="progress-clock" size={24} color={currentStep === 2 ? COLORS.primary : COLORS.gray} />
+            <Text style={styles.tab_text}>{tSafe('requests_1', 'Requests')}</Text>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, { borderBottomColor: currentStep == 2 ? COLORS.primary : "#f0f0f0" }]} 
             onPress={() => setCurrentStep(2)}
@@ -452,14 +563,128 @@ export default function Schedules({ navigation }) {
             <MaterialCommunityIcons name="history" size={24} color={currentStep === 3 ? COLORS.primary : COLORS.gray} />
             <Text style={styles.tab_text}>{tSafe('history', 'History')}</Text>
           </TouchableOpacity>
+        </View> */}
+
+        <View style={styles.tabsContainer}>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              {
+                borderBottomColor:
+                  currentStep === 0 ? COLORS.primary : "#f0f0f0",
+              },
+            ]}
+            onPress={() => setCurrentStep(0)}
+          >
+            <MaterialCommunityIcons
+              name="email-outline"
+              size={24}
+              color={
+                currentStep === 0
+                  ? COLORS.primary
+                  : COLORS.gray
+              }
+            />
+            <Text style={styles.tab_text}>
+              {tSafe("requests", "Requests")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              {
+                borderBottomColor:
+                  currentStep === 1 ? COLORS.primary : "#f0f0f0",
+              },
+            ]}
+            onPress={() => setCurrentStep(1)}
+          >
+            <MaterialCommunityIcons
+              name="calendar-blank"
+              size={24}
+              color={
+                currentStep === 1
+                  ? COLORS.primary
+                  : COLORS.gray
+              }
+            />
+            <Text style={styles.tab_text}>
+              {tSafe("up_coming", "Upcoming")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              {
+                borderBottomColor:
+                  currentStep === 2 ? COLORS.primary : "#f0f0f0",
+              },
+            ]}
+            onPress={() => setCurrentStep(2)}
+          >
+            <MaterialCommunityIcons
+              name="progress-clock"
+              size={24}
+              color={
+                currentStep === 2
+                  ? COLORS.primary
+                  : COLORS.gray
+              }
+            />
+            <Text style={styles.tab_text}>
+              {tSafe("in_progress", "In Progress")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              {
+                borderBottomColor:
+                  currentStep === 3 ? COLORS.primary : "#f0f0f0",
+              },
+            ]}
+            onPress={() => setCurrentStep(3)}
+          >
+            <MaterialCommunityIcons
+              name="history"
+              size={24}
+              color={
+                currentStep === 3
+                  ? COLORS.primary
+                  : COLORS.gray
+              }
+            />
+            <Text style={styles.tab_text}>
+              {tSafe("history", "History")}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.container}>
+          {currentStep === 0 && (
+            <Requests schedules={request_schedules} />
+          )}
+          {currentStep === 1 && (
+            <Upcoming schedules={upcoming_schedules} />
+          )}
+          {currentStep === 2 && (
+            <Ongoing schedules={ongoing_schedules} />
+          )}
+          {currentStep === 3 && (
+            <History schedules={history_schedules} />
+          )}
+        </View>
+
+        {/* <View style={styles.container}>
           {currentStep === 1 && <Upcoming schedules={upcoming_schedules} />}
           {currentStep === 2 && <Ongoing schedules={ongoing_schedules} />}
           {currentStep === 3 && <History schedules={completed_schedules} />}
-          {/* {currentStep === 3 && <CompletedJobsList schedules={completed_schedules} />} */}
-        </View>
+          
+        </View> */}
       </View>
 
       <Modal 
@@ -522,7 +747,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.primary,
     alignItems: 'center',
     marginTop: 10,
-    paddingHorizontal: 26,
+    paddingHorizontal: 16,
   },
   tab_text: {
     marginBottom: 5,

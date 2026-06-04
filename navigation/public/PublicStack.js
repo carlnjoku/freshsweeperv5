@@ -15,6 +15,8 @@ import PhoneCapture from '../../screens/public/PhoneCapture';
 import AutoGoogleSignIn from '../../screens/public/AutoGoogleSignIn';
 import NavigationTest from '../../screens/public/NavigationTest';
 import InviteGate from '../../screens/public/IniteGate';
+import ForgotPassword from '../../screens/public/ForgotPassword';
+import ResetPassword from '../../screens/public/ResetPassword';
 
 // import ResetPassword from '../../screens/public/ResetPassword';
 
@@ -186,12 +188,6 @@ const PublicStack = () => {
             },
           })}
       />
-
-
-    <Stack.Screen name="NavigationTest" component={NavigationTest} />
-    <Stack.Screen name={ROUTES.set_password}  component={NavigationTest} />
-
-      {/* 
       <Stack.Screen 
         name={ROUTES.forgot_password}
         component={ForgotPassword} 
@@ -206,6 +202,13 @@ const PublicStack = () => {
             headerShown:false,
           })}
       />
+
+
+    <Stack.Screen name="NavigationTest" component={NavigationTest} />
+    <Stack.Screen name={ROUTES.set_password}  component={NavigationTest} />
+
+      {/* 
+      
 
       <Stack.Screen 
         name={"AccountVerificationGate"}

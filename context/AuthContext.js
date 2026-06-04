@@ -53,11 +53,11 @@ export const AuthProvider = ({children}) => {
     }
 
     const login = (loginResp) => {
-        console.log("Nyfb user stored", loginResp.fbUser);  
-        console.log("type response:", loginResp.resp.userType);    
-        console.log("id response:", loginResp.resp._id);    
-        console.log("Login response:", JSON.stringify(loginResp, null , 2));
-        console.log("Token response:", loginResp.resp?.data?.token);
+        // console.log("Nyfb user stored", loginResp.fbUser);  
+        // console.log("type response:", loginResp.resp.userType);    
+        // console.log("id response:", loginResp.resp._id);    
+        // console.log("Login response:", JSON.stringify(loginResp, null , 2));
+        // console.log("Token response:", loginResp.resp?.data?.token);
         storeData(loginResp);
         setCurrentUser(loginResp.resp);
         setCurrentUserId(loginResp.resp._id);
@@ -96,7 +96,9 @@ export const AuthProvider = ({children}) => {
       
           const response = await userService.userLogin(payload);
           
-          console.log("✅ Login response:", response);
+        //   console.log("✅ Login response:", response);
+
+          
           
         //   if (response.data && response.data.data) {
         //     // Create login response
@@ -128,6 +130,12 @@ export const AuthProvider = ({children}) => {
           }
         } catch (error) {
           console.error('Email/password login error:', error);
+          
+         
+            console.error('🔴 Full login error:', error);
+            console.error('🔴 Error message:', error.message);
+            console.error('🔴 Error stack:', error.stack);
+            Alert.alert('Error', error.message || 'Something went wrong');
           
           let errorType = 'GENERAL';
           let errorMessage = 'Login failed. Please try again.';
@@ -229,7 +237,7 @@ export const AuthProvider = ({children}) => {
     // AuthContext.js - Add this function to your AuthProvider
     const updateUser = async (updatedUserData) => {
         try {
-        console.log('🔄 Updating user in AuthContext:', updatedUserData);
+        // console.log('🔄 Updating user in AuthContext:', updatedUserData);
         
         // Update current user state
         setCurrentUser(prev => ({
@@ -339,7 +347,7 @@ export const AuthProvider = ({children}) => {
             });
 
             console.log("Backend response status:", response.status);
-            console.log("Backend response data:", response.data);
+            // console.log("Backend response data:", response.data);
 
             if (response.data && response.data.data) {
                 // 3. Create login response
@@ -451,7 +459,7 @@ export const AuthProvider = ({children}) => {
         try {
             const data = await fetchIPGeolocation();
             setGeolocationData(data);
-            console.log("Geolocation data:", data);
+            // console.log("Geolocation data:", data);
         } catch (error) {
             console.error("Error fetching geolocation:", error);
         }

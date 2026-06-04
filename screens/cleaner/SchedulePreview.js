@@ -514,6 +514,7 @@ export default function SchedulePreview({ route }) {
 
   const [schedule, setSchedule] = useState({});
   const [checklist, setChecklist] = useState({});
+  const [schedule_status, setScheduleStatus] = useState({});
   const [assignedTo, setAssignedTo] = useState({});
   const [cleaningDate, setCleaningDate] = useState('');
   const [cleaningTime, setCleaningTime] = useState('');
@@ -584,6 +585,7 @@ export default function SchedulePreview({ route }) {
       setSchedule(res);
       setChecklist(res.overall_checklist.checklist);
       setAssignedTo(res.assignedTo);
+      setScheduleStatus(res.status);
       setRoomTypeSize(res.schedule.selected_apt_room_type_and_size);
       setCleaningDate(res.schedule.cleaning_date);
       setCleaningTime(res.schedule.cleaning_time);
@@ -767,6 +769,7 @@ export default function SchedulePreview({ route }) {
             checklist={checklist} 
             assignedTo={assignedTo} 
             handleAccept={handleAccept} 
+            schedule_status={schedule_status}
           />
         </ScrollView>
       </View>

@@ -377,6 +377,8 @@ const currencySymbols = {
   ZAR: 'R',   // South Africa
 };
 
+const API_KEY ='8608836aa29e2352890739179612edbf6bf884ba5471ceb8a89038bf'
+
 // GET CURRENCY SYMBOL
 const getCurrencySymbol = (currencyCode) => {
   if (!currencyCode) return null;
@@ -388,46 +390,34 @@ const fetchIPGeolocation = async () => {
   const providers = [
     {
       name: 'ipdata',
-      url: 'https://api.ipdata.co?api-key=YOUR_API_KEY',
+      url: `https://api.ipdata.co?api-key=${API_KEY}`,
 
       parser: (data) => {
         const currencyCode = data.currency?.code || null;
 
         return {
           ip: data.ip || null,
-
           city: data.city || null,
           region: data.region || null,
           region_code: data.region_code || null,
-
           country: data.country_name || null,
           country_code: data.country_code || null,
-
           latitude: data.latitude || null,
           longitude: data.longitude || null,
-
           postal_code: data.postal || null,
-
           timezone: data.time_zone?.name || null,
-
           isp: data.asn?.name || null,
-
           currency: currencyCode,
           currency_symbol:
             data.currency?.symbol ||
             getCurrencySymbol(currencyCode),
-
           language: data.languages?.[0]?.code || null,
-
           is_proxy: data.threat?.is_proxy || false,
-
           is_vpn:
             data.threat?.is_tor ||
             data.threat?.is_icloud_relay ||
             false,
-
           provider: 'ipdata',
-
           raw: data,
         };
       },
@@ -488,36 +478,24 @@ const fetchIPGeolocation = async () => {
 
         return {
           ip: data.ip || null,
-
           city: data.city || null,
           region: data.region || null,
           region_code: data.region_code || null,
-
           country: data.country || null,
           country_code: data.country_code || null,
-
           latitude: data.latitude || null,
           longitude: data.longitude || null,
-
           postal_code: data.postal || null,
-
           timezone: data.timezone?.id || null,
-
           isp: data.connection?.isp || null,
-
           currency: currencyCode,
-
           currency_symbol:
             data.currency?.symbol ||
             getCurrencySymbol(currencyCode),
-
           language: data.languages?.[0]?.code || null,
-
           is_proxy: false,
           is_vpn: false,
-
           provider: 'ipwhois',
-
           raw: data,
         };
       },
@@ -568,33 +546,22 @@ const fetchIPGeolocation = async () => {
 
   return {
     ip: null,
-
     city: null,
     region: null,
     region_code: null,
-
     country: null,
     country_code: null,
-
     latitude: null,
     longitude: null,
-
     postal_code: null,
-
     timezone: null,
-
     isp: null,
-
     currency: null,
     currency_symbol: null,
-
     language: null,
-
     is_proxy: false,
     is_vpn: false,
-
     provider: null,
-
     raw: null,
   };
 };

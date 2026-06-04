@@ -63,6 +63,7 @@ export const rootLinking = {
           'Login Options': 'oauth2redirect',
           'Change Password': 'change-password',
           'Change Language': 'change-language',
+          'ResetPassword': 'reset-password'
         },
       },
 
