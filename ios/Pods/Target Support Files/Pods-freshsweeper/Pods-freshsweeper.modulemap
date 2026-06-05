@@ -1,0 +1,6 @@
+module Pods_freshsweeper {
+  umbrella header "Pods-freshsweeper-umbrella.h"
+
+  export *
+  module * { export * }
+}

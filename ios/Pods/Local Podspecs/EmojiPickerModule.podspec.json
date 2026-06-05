@@ -1,0 +1,27 @@
+{
+  "name": "EmojiPickerModule",
+  "version": "1.0.0",
+  "summary": "Emoji Picker for React Native",
+  "description": "Emoji Picker for React Native",
+  "license": "MIT",
+  "authors": "Alan Hughes <alan@expo.io> (https://github.com/alanjhughes)",
+  "homepage": "https://github.com/alanjhughes/expo-emoji-picker#readme",
+  "platforms": {
+    "ios": "15.1",
+    "tvos": "15.1"
+  },
+  "swift_versions": "5.4",
+  "source": {
+    "git": "https://github.com/alanjhughes/expo-emoji-picker"
+  },
+  "static_framework": true,
+  "dependencies": {
+    "ExpoModulesCore": [],
+    "MCEmojiPicker": []
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES"
+  },
+  "source_files": "**/*.{h,m,mm,swift,hpp,cpp}",
+  "swift_version": "5.4"
+}

@@ -1,0 +1,50 @@
+{
+  "name": "HtmlToPdf",
+  "version": "1.3.0",
+  "summary": "Convert html strings to PDF documents using React Native",
+  "homepage": "https://github.com/christopherdro/react-native-html-to-pdf#readme",
+  "license": "MIT",
+  "authors": "Christopher Dro <hello@blick-labs.com> (https://github.com/christopherdro)",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/christopherdro/react-native-html-to-pdf.git",
+    "tag": "1.3.0"
+  },
+  "source_files": "ios/**/*.{h,m,mm,cpp}",
+  "private_header_files": "ios/**/*.h",
+  "frameworks": [
+    "WebKit"
+  ],
+  "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32",
+  "dependencies": {
+    "React-Core": [],
+    "RCT-Folly": [
+      "2024.10.14.00"
+    ],
+    "glog": [],
+    "React-RCTFabric": [],
+    "ReactCodegen": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "ReactCommon/turbomodule/bridging": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-NativeModulesApple": [],
+    "Yoga": [],
+    "React-Fabric": [],
+    "React-graphics": [],
+    "React-utils": [],
+    "React-featureflags": [],
+    "React-debug": [],
+    "React-ImageManager": [],
+    "React-rendererdebug": [],
+    "DoubleConversion": [],
+    "hermes-engine": []
+  },
+  "pod_target_xcconfig": {
+    "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32"
+  }
+}
