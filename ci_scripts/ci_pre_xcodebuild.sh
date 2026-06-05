@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+echo "=== Cleaning DerivedData and build folders ==="
+cd "$CI_PRIMARY_REPOSITORY_PATH"
+rm -rf ios/build
+rm -rf ios/DerivedData
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+# (Keep your existing npm install and verification steps here)
+export PATH="/usr/local/bin:$PATH"
+npm install
+
 echo "=== Cleaning DerivedData to avoid cache issues ==="
 rm -rf "$CI_PRIMARY_REPOSITORY_PATH/ios/build"
 rm -rf "$CI_PRIMARY_REPOSITORY_PATH/ios/DerivedData"
