@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "=== Cleaning DerivedData to avoid cache issues ==="
+rm -rf "$CI_PRIMARY_REPOSITORY_PATH/ios/build"
+rm -rf "$CI_PRIMARY_REPOSITORY_PATH/ios/DerivedData"
+
 echo "=== Running ci_pre_xcodebuild.sh ==="
 
 # Ensure Node is in PATH
