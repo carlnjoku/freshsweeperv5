@@ -34,7 +34,9 @@ jobs:
             -workspace freshsweeper.xcworkspace \
             -scheme freshsweeper \
             -archivePath freshsweeper.xcarchive \
-            -jobs 1
+            -jobs 1 \
+            SWIFT_VERSION=5.0 \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Export IPA
         working-directory: ios
