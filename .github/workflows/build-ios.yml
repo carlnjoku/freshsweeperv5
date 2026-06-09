@@ -39,12 +39,14 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Export IPA
-        working-directory: ios
         run: |
+          # Verify the plist file exists
+          ls -la ios/exportOptions.plist
+          # Export using repository-relative paths
           xcodebuild -exportArchive \
-            -archivePath freshsweeper.xcarchive \
-            -exportOptionsPlist exportOptions.plist \
-            -exportPath output
+            -archivePath ios/freshsweeper.xcarchive \
+            -exportOptionsPlist ios/exportOptions.plist \
+            -exportPath ios/output
 
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
