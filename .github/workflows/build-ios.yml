@@ -1,0 +1,51 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prebuild iOS project
+        run: npx expo prebuild --platform ios --non-interactive --clean
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Archive app
+        working-directory: ios
+        run: |
+          xcodebuild archive \
+            -workspace freshsweeper.xcworkspace \
+            -scheme freshsweeper \
+            -archivePath freshsweeper.xcarchive \
+            -jobs 1
+
+      - name: Export IPA
+        working-directory: ios
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath freshsweeper.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath output
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshsweeper
+          path: ios/output/freshsweeper.ipa
