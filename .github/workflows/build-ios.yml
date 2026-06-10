@@ -69,8 +69,7 @@ jobs:
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: |
-          # Use the local cloned repo as the git_url
-          fastlane match appstore --readonly --git_url ./certs_repo
+          fastlane match appstore --readonly --git_url ./certs_repo --app_identifier com.flavoursoft.freshsweeperv5
 
       - name: Export IPA with signing
         run: |
