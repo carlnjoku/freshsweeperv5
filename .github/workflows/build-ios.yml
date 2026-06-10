@@ -12,6 +12,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: DEBUG - Show root contents and find exportOptions.plist
+        run: |
+          echo "=== Repository root contents ==="
+          ls -la
+          echo "=== Searching for exportOptions.plist ==="
+          find . -name "exportOptions.plist" -type f
+          echo "=== Git status ==="
+          git status
+          echo "=== Last commit ==="
+          git log -1 --oneline
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,6 +33,18 @@ jobs:
 
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
+
+      - name: Copy exportOptions.plist from root to ios folder
+        run: |
+          if [ -f "exportOptions.plist" ]; then
+            echo "✅ exportOptions.plist found in root, copying to ios/"
+            cp -v exportOptions.plist ios/
+          else
+            echo "❌ exportOptions.plist NOT found in root"
+            echo "Current directory contents:"
+            ls -la
+            exit 1
+          fi
 
       - name: Install CocoaPods
         working-directory: ios
@@ -38,11 +61,13 @@ jobs:
             SWIFT_VERSION=5.0 \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Verify exportOptions.plist exists before export
+        run: |
+          echo "=== Checking ios/exportOptions.plist before export ==="
+          ls -la ios/exportOptions.plist || (echo "File missing!" && exit 1)
+
       - name: Export IPA
         run: |
-          # Verify the plist file exists
-          ls -la ios/exportOptions.plist
-          # Export using repository-relative paths
           xcodebuild -exportArchive \
             -archivePath ios/freshsweeper.xcarchive \
             -exportOptionsPlist ios/exportOptions.plist \
