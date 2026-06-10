@@ -28,20 +28,19 @@ jobs:
 
       - name: Create exportOptions.plist
         run: |
-          cat > exportOptions.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store-connect</string>
-    <key>teamID</key>
-    <string>Q74Y85HU2Y</string>
-    <key>signingStyle</key>
-    <string>automatic</string>
-</dict>
-</plist>
-EOF
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '    <key>method</key>' \
+            '    <string>app-store-connect</string>' \
+            '    <key>teamID</key>' \
+            '    <string>Q74Y85HU2Y</string>' \
+            '    <key>signingStyle</key>' \
+            '    <string>automatic</string>' \
+            '</dict>' \
+            '</plist>' > exportOptions.plist
           cp exportOptions.plist ios/
 
       - name: Install CocoaPods
@@ -59,19 +58,19 @@ EOF
             SWIFT_VERSION=5.0 \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Clone certificates repository manually
+      - name: Clone certificates repository
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
           git clone https://carlnjoku:${MATCH_GIT_BASIC_AUTHORIZATION}@github.com/carlnjoku/certificates.git ./certs_repo
 
-      - name: Install certificates and profiles with fastlane match
+      - name: Install certificates with fastlane match
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: |
           fastlane match appstore --readonly --git_url ./certs_repo --app_identifier com.flavoursoft.freshsweeperv5
 
-      - name: Export IPA with signing
+      - name: Export IPA
         run: |
           xcodebuild -exportArchive \
             -archivePath ios/freshsweeper.xcarchive \
@@ -79,7 +78,7 @@ EOF
             -exportPath ios/output \
             -allowProvisioningUpdates
 
-      - name: Upload IPA as artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: freshsweeper
