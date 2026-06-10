@@ -59,6 +59,15 @@ jobs:
             SWIFT_VERSION=5.0 \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Debug - Test git clone with token
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          echo "Testing clone using the token..."
+          git clone https://carlnjoku:${MATCH_GIT_BASIC_AUTHORIZATION}@github.com/carlnjoku/certificates.git test_clone
+          ls -la test_clone
+          rm -rf test_clone
+
       - name: Sync certificates with fastlane match
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
