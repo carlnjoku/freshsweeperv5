@@ -12,15 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      - name: Install Fastlane
-        run: gem install fastlane
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,6 +19,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Install Fastlane
+        run: sudo gem install fastlane
 
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
@@ -38,19 +32,19 @@ jobs:
             cp exportOptions.plist ios/
           else
             cat > exportOptions.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>teamID</key>
-              <string>Q74Y85HU2Y</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-          </dict>
-          </plist>
-          EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>teamID</key>
+    <string>Q74Y85HU2Y</string>
+    <key>signingStyle</key>
+    <string>manual</string>
+</dict>
+</plist>
+EOF
             cp exportOptions.plist ios/
           fi
 
@@ -74,7 +68,7 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
-          bundle exec fastlane match appstore --readonly
+          fastlane match appstore --readonly
 
       - name: Export IPA with signing
         run: |
