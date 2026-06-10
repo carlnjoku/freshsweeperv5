@@ -26,27 +26,23 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
 
-      - name: Copy exportOptions.plist back into ios folder
+      - name: Create exportOptions.plist if missing
         run: |
-          if [ -f "exportOptions.plist" ]; then
-            cp exportOptions.plist ios/
-          else
-            cat > exportOptions.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store-connect</string>
-    <key>teamID</key>
-    <string>Q74Y85HU2Y</string>
-    <key>signingStyle</key>
-    <string>manual</string>
-</dict>
-</plist>
-EOF
-            cp exportOptions.plist ios/
-          fi
+          if [ ! -f exportOptions.plist ]; then
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            echo '<plist version="1.0">'
+            echo '<dict>'
+            echo '    <key>method</key>'
+            echo '    <string>app-store-connect</string>'
+            echo '    <key>teamID</key>'
+            echo '    <string>Q74Y85HU2Y</string>'
+            echo '    <key>signingStyle</key>'
+            echo '    <string>manual</string>'
+            echo '</dict>'
+            echo '</plist>'
+          fi > exportOptions.plist
+          cp exportOptions.plist ios/
 
       - name: Install CocoaPods
         working-directory: ios
@@ -67,8 +63,7 @@ EOF
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-        run: |
-          fastlane match appstore --readonly
+        run: fastlane match appstore --readonly
 
       - name: Export IPA with signing
         run: |
