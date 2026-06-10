@@ -36,4 +36,9 @@ yarn-error.*
 
 
 .env
-secret.js
+secret.js# Ignore bundler vendor
+vendor/
+.bundle/
+
+# Ignore fastlane temporary files
+fastlane/README.md
