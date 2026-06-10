@@ -59,20 +59,18 @@ jobs:
             SWIFT_VERSION=5.0 \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Debug - Test git clone with token
+      - name: Clone certificates repository manually
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
-          echo "Testing clone using the token..."
-          git clone https://carlnjoku:${MATCH_GIT_BASIC_AUTHORIZATION}@github.com/carlnjoku/certificates.git test_clone
-          ls -la test_clone
-          rm -rf test_clone
+          git clone https://carlnjoku:${MATCH_GIT_BASIC_AUTHORIZATION}@github.com/carlnjoku/certificates.git ./certs_repo
 
-      - name: Sync certificates with fastlane match
+      - name: Install certificates and profiles with fastlane match (local repo)
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-        run: fastlane match appstore --readonly
+        run: |
+          # Use the local cloned repo as the git_url
+          fastlane match appstore --readonly --git_url ./certs_repo
 
       - name: Export IPA with signing
         run: |
