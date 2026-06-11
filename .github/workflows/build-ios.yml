@@ -63,28 +63,42 @@ jobs:
             SWIFT_VERSION=5.0 \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Create temporary keychain
+        run: |
+          security create-keychain -p "temp123" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "temp123" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
       - name: Clone certificates repository
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
           git clone https://carlnjoku:${MATCH_GIT_BASIC_AUTHORIZATION}@github.com/carlnjoku/certificates.git ./certs_repo
 
-      - name: Install certificates with fastlane match
+      - name: Install certificates and provisioning profile
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_KEYCHAIN_NAME: "build.keychain"
+          MATCH_KEYCHAIN_PASSWORD: "temp123"
         run: |
-          fastlane match appstore --readonly --git_url ./certs_repo --app_identifier com.flavoursoft.freshsweeperv5
+          fastlane match appstore --readonly \
+            --git_url ./certs_repo \
+            --app_identifier com.flavoursoft.freshsweeperv5 \
+            --keychain_name build.keychain \
+            --keychain_password temp123
 
       - name: Export IPA
-        env:
-          FASTLANE_USER: ${{ secrets.APPLE_ID }}
-          FASTLANE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
         run: |
           xcodebuild -exportArchive \
             -archivePath ios/freshsweeper.xcarchive \
             -exportOptionsPlist ios/exportOptions.plist \
-            -exportPath ios/output \
-            -allowProvisioningUpdates
+            -exportPath ios/output
+
+      - name: Clean up keychain (optional)
+        if: always()
+        run: |
+          security delete-keychain build.keychain
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
