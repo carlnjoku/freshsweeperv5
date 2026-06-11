@@ -422,7 +422,7 @@ export default function Signup({navigation, route}) {
                 {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>
-                I agree to receive SMS text messages from FreshSweeper about job alerts, booking updates, and other service-related notifications. Message frequency varies. Msg & data rates may apply. I can reply STOP to unsubscribe at any time.
+              SMS notifications are optional. By checking this box, you agree to receive SMS messages from FreshSweeper regarding job alerts, booking updates, account notifications, and service-related messages. Message frequency varies. Message and data rates may apply. Reply STOP to opt out at any time.
               </Text>
             </TouchableOpacity>
           </View>

@@ -7,15 +7,15 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Select Xcode 26
+      - name: Verify Xcode version
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
           xcodebuild -version
+          xcodebuild -showsdks | grep iOS
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,6 +30,20 @@ jobs:
 
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
+
+      - name: Patch Podfile for iOS 15.0 deployment target
+        run: |
+          # Replace platform line
+          sed -i '' 's/platform :ios, .*/platform :ios, '\''15.0'\''/' ios/Podfile
+          # Insert use_modular_headers! at the top
+          echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
+          # Verify changes
+          echo "=== Podfile header ==="
+          head -5 ios/Podfile
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
 
       - name: Create exportOptions.plist
         run: |
@@ -53,10 +67,6 @@ jobs:
             '</plist>' > exportOptions.plist
           cp exportOptions.plist ios/
 
-      - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
-
       - name: Archive app (no signing)
         working-directory: ios
         run: |
@@ -66,7 +76,10 @@ jobs:
             -archivePath freshsweeper.xcarchive \
             -jobs 1 \
             SWIFT_VERSION=5.0 \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            CLANG_CXX_LANGUAGE_STANDARD=c++20 \
+            CLANG_CXX_LIBRARY=libc++ \
+            GCC_PREPROCESSOR_DEFINITIONS='$(inherited) _LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1'
 
       - name: Create temporary keychain
         run: |
@@ -84,8 +97,6 @@ jobs:
       - name: Install certificates and provisioning profile
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_KEYCHAIN_NAME: "build.keychain"
-          MATCH_KEYCHAIN_PASSWORD: "temp123"
         run: |
           fastlane match appstore --readonly \
             --git_url ./certs_repo \
@@ -99,11 +110,6 @@ jobs:
             -archivePath ios/freshsweeper.xcarchive \
             -exportOptionsPlist ios/exportOptions.plist \
             -exportPath ios/output
-
-      - name: Clean up keychains
-        if: always()
-        run: |
-          security delete-keychain build.keychain
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4

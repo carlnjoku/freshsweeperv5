@@ -9,7 +9,7 @@ const ErrorTest = () => {
 
   const testRenderError = () => {
     // This will be caught by ErrorBoundary
-    throw new Error('Test React render error!');
+    throw new Error('Test React renders error!');
   };
 
   const testGlobalError = () => {
