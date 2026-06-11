@@ -37,8 +37,13 @@ jobs:
             '    <string>app-store-connect</string>' \
             '    <key>teamID</key>' \
             '    <string>Q74Y85HU2Y</string>' \
+            '    <key>provisioningProfiles</key>' \
+            '    <dict>' \
+            '        <key>com.flavoursoft.freshsweeperv5</key>' \
+            '        <string>match AppStore com.flavoursoft.freshsweeperv5</string>' \
+            '    </dict>' \
             '    <key>signingStyle</key>' \
-            '    <string>automatic</string>' \
+            '    <string>manual</string>' \
             '</dict>' \
             '</plist>' > exportOptions.plist
           cp exportOptions.plist ios/
@@ -71,6 +76,9 @@ jobs:
           fastlane match appstore --readonly --git_url ./certs_repo --app_identifier com.flavoursoft.freshsweeperv5
 
       - name: Export IPA
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
         run: |
           xcodebuild -exportArchive \
             -archivePath ios/freshsweeper.xcarchive \
