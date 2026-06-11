@@ -100,7 +100,7 @@ jobs:
             -exportOptionsPlist ios/exportOptions.plist \
             -exportPath ios/output
 
-      - name: Clean up keychain
+      - name: Clean up keychains
         if: always()
         run: |
           security delete-keychain build.keychain
