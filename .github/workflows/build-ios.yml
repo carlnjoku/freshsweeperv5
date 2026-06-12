@@ -39,7 +39,10 @@ jobs:
           # Force fmt to a modern version
           sed -i '' 's/pod 'fmt', .*/pod 'fmt', '\''~> 10.1.0'\''/' ios/Podfile || true
 
-          # Add post_install hook line by line (no HEREDOC)
+          # Remove any existing post_install block (from Expo)
+          awk '/^post_install/,/^end/ {next} {print}' ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
+
+          # Add our new post_install hook (C++20, deployment target)
           echo "" >> ios/Podfile
           echo "post_install do |installer|" >> ios/Podfile
           echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
