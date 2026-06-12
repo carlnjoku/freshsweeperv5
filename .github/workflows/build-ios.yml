@@ -33,26 +33,23 @@ jobs:
 
       - name: Patch Podfile for compatibility with iOS 26 SDK
         run: |
-          # Insert modular headers
+          # Insert modular headers at the top
           echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
 
           # Force fmt to a modern version
-          sed -i '' 's/pod 'fmt', .*/pod 'fmt', '~> 10.1.0'/' ios/Podfile || true
+          sed -i '' 's/pod 'fmt', .*/pod 'fmt', '\''~> 10.1.0'\''/' ios/Podfile || true
 
-          # Add post_install hook to set C++20 for all pods
-          cat >> ios/Podfile << 'EOF'
-
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
-      config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
-      # Also fix deployment target warnings
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-    end
-  end
-end
-EOF
+          # Add post_install hook line by line (no HEREDOC)
+          echo "" >> ios/Podfile
+          echo "post_install do |installer|" >> ios/Podfile
+          echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
+          echo "    target.build_configurations.each do |config|" >> ios/Podfile
+          echo "      config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'" >> ios/Podfile
+          echo "      config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'" >> ios/Podfile
+          echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'" >> ios/Podfile
+          echo "    end" >> ios/Podfile
+          echo "  end" >> ios/Podfile
+          echo "end" >> ios/Podfile
 
       - name: Install CocoaPods
         working-directory: ios
