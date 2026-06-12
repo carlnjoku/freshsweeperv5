@@ -31,15 +31,9 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
 
-      - name: Patch Podfile for iOS 15.0 deployment target
+      - name: Insert use_modular_headers! in Podfile
         run: |
-          # Replace platform line
-          sed -i '' 's/platform :ios, .*/platform :ios, '\''15.0'\''/' ios/Podfile
-          # Insert use_modular_headers! at the top
           echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
-          # Verify changes
-          echo "=== Podfile header ==="
-          head -5 ios/Podfile
 
       - name: Install CocoaPods
         working-directory: ios
