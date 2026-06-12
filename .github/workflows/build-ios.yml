@@ -33,16 +33,9 @@ jobs:
 
       - name: Patch Podfile for compatibility with iOS 26 SDK
         run: |
-          # Insert modular headers at the top
           echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
-
-          # Force fmt to a modern version
           sed -i '' 's/pod 'fmt', .*/pod 'fmt', '\''~> 10.1.0'\''/' ios/Podfile || true
-
-          # Remove any existing post_install block (from Expo)
-          awk '/^post_install/,/^end/ {next} {print}' ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
-
-          # Add our new post_install hook (C++20, deployment target)
+          sed -i '' '/^post_install/,/^end/d' ios/Podfile
           echo "" >> ios/Podfile
           echo "post_install do |installer|" >> ios/Podfile
           echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
