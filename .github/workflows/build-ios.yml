@@ -39,20 +39,11 @@ jobs:
           # Force fmt to a modern version
           sed -i '' 's/pod 'fmt', .*/pod 'fmt', '\''~> 10.1.0'\''/' ios/Podfile || true
 
-          # Remove any existing post_install block (robust deletion)
-          perl -0777 -pi -e 's/post_install\s+do\s*\|installer\|.*?end\s*$//s' ios/Podfile
+          # Remove any existing post_install block completely
+          perl -0777 -pi -e 's/^\s*post_install\s+do\s*\|installer\|\s*.*?^\s*end\s*$//sm' ios/Podfile
 
-          # Append our own post_install hook (no duplicates)
-          echo "" >> ios/Podfile
-          echo "post_install do |installer|" >> ios/Podfile
-          echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
-          echo "    target.build_configurations.each do |config|" >> ios/Podfile
-          echo "      config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'" >> ios/Podfile
-          echo "      config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'" >> ios/Podfile
-          echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'" >> ios/Podfile
-          echo "    end" >> ios/Podfile
-          echo "  end" >> ios/Podfile
-          echo "end" >> ios/Podfile
+          # Append a clean post_install block (printf avoids HEREDOC)
+          printf '\n\npost_install do |installer|\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      config.build_settings["CLANG_CXX_LANGUAGE_STANDARD"] = "c++20"\n      config.build_settings["CLANG_CXX_LIBRARY"] = "libc++"\n      config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0"\n    end\n  end\nend\n' >> ios/Podfile
 
       - name: Install CocoaPods
         working-directory: ios
