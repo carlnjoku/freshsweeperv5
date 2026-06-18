@@ -31,6 +31,10 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
 
+      - name: Insert use_modular_headers! in Podfile
+        run: |
+          echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
+
       - name: Install CocoaPods
         working-directory: ios
         run: pod install
