@@ -31,19 +31,8 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios --non-interactive --clean
 
-      - name: Patch Podfile for compatibility with iOS 26 SDK
-        run: |
-          # Insert modular headers at the top
-          echo "use_modular_headers!" | cat - ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
-
-          # Force fmt to a modern version
-          sed -i '' 's/pod 'fmt', .*/pod 'fmt', '\''~> 10.1.0'\''/' ios/Podfile || true
-
-          # Remove any existing post_install block completely
-          perl -0777 -pi -e 's/^\s*post_install\s+do\s*\|installer\|\s*.*?^\s*end\s*$//sm' ios/Podfile
-
-          # Append a clean post_install block (printf avoids HEREDOC)
-          printf '\n\npost_install do |installer|\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      config.build_settings["CLANG_CXX_LANGUAGE_STANDARD"] = "c++20"\n      config.build_settings["CLANG_CXX_LIBRARY"] = "libc++"\n      config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0"\n    end\n  end\nend\n' >> ios/Podfile
+      - name: Replace Podfile with known-good template
+        run: cp ios/Podfile.template ios/Podfile
 
       - name: Install CocoaPods
         working-directory: ios
