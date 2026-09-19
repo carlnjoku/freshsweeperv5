@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, Alert, StatusBar } from 'react-native';
 import { List, Switch, Divider, Button } from 'react-native-paper';
 import ROUTES from '../../constants/routes';
 import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../constants/colors';
 import { tSafe } from '../../utils/tSafe'; // added import
+import { AuthContext } from '../../context/AuthContext';
 
 const Settings = () => {
   const navigation = useNavigation();
+  const {logout} = useContext(AuthContext)
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 
   const handleLogout = () => {
@@ -16,7 +18,7 @@ const Settings = () => {
       tSafe('logout_message', 'Are you sure you want to log out?'),
       [
         { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
-        { text: tSafe('logout', 'Logout'), onPress: () => console.log('Logged out') },
+        { text: tSafe('logout', 'Logout'), onPress: logout },
       ]
     );
   };

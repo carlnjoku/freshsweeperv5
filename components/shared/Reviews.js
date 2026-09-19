@@ -1,371 +1,488 @@
+// // components/shared/Reviews.js
 
-
-
-// import React, { useContext } from 'react';
+// import React from 'react';
 // import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
-// import Icon from 'react-native-vector-icons/FontAwesome';
-// import { Avatar } from 'react-native-paper';
-// import COLORS from '../../constants/colors';
-// import moment from 'moment';
 // import StarRating from 'react-native-star-rating-widget';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import COLORS from '../../constants/colors';
+// import { tSafe } from '../../utils/tSafe';
 
+// // Helper to format date
+// const formatDate = (dateString) => {
+//   if (!dateString) return '';
+//   // If dateString is like "14-08-2026 10:30:00"
+//   const parts = dateString.split(' ');
+//   if (parts.length === 2) {
+//     const [day, month, year] = parts[0].split('-');
+//     return `${month}/${day}/${year}`;
+//   }
+//   return dateString;
+// };
 
-// const Reviews = ({ratings, cleanerId}) => {
+// const ReviewItem = ({ review }) => {
+//   // Destructure with fallbacks
+//   const {
+//     averageRating = 0,
+//     ratings = {},
+//     comment = '',
+//     createdAt = '',
+//     hostName = 'Unknown Host',
+//     hostAvatar = '',
+//     hostId = null,
+//   } = review;
 
-// console.log("_______ __________", ratings)
+//   const hasHost = !!hostId;
 
-//   React.useEffect(()=> {
-//     // fetchCleanerFeedbacks()
-//   },[])
-//   const renderStars = (rating) => {
-//     return [...Array(5)].map((_, i) => (
-//       <Icon
-//         key={i}
-//         name={i < rating ? 'star' : 'star-o'}
-//         size={16}
-//         color="#FFD700"
-//       />
-//     ));
-//   };
-
-  
-//   const renderItem = ({ item }) => (
-//     <View style={styles.reviewContainer}>
-//       {/* <Image source={{ uri: item.avatar }} style={styles.avatar} /> */}
-//       {item.schedule_info.hostInfo.avatar ? 
-//           <Avatar.Image 
-//               source={{uri:item.schedule_info.hostInfo.firstname}}
-//               size={40}
-//               style={styles.avatar}
-//           />
-//           :
-
-//           <Avatar.Icon 
-//             size={40} 
-//             icon="account" // Default icon
-//             style={styles.avatarIcon}
-//           />
-//       }
-              
-//       <View style={styles.reviewContent}>
-//         <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-//           <Text style={styles.username}>{item.schedule_info.hostInfo.firstname} {item.schedule_info.hostInfo.lastname}</Text>
-//           <Text style={styles.created_on}>{moment(item.created_on).fromNow()}</Text>
-//         </View>
-//         {/* <View style={styles.rating}>
-//           <StarRating
-//             rating={item.averageRating.toFixed(1)}
-//             onChange={() => {}} // No-op function to disable interaction
-//             maxStars={5} // Maximum stars
-//             starSize={18} // Size of the stars
-//             starStyle={{ marginHorizontal: 0 }} // Customize star spacing
-//           />
-//           <Text style={{marginLeft:5}}>{item.averageRating.toFixed(1)}</Text>
-//         </View> */}
-
-        
-//         <Text style={styles.reviewText}>{item.comment} </Text>
-//       </View>
-//     </View>
+//   // Generate category rating pairs
+//   const categoryEntries = Object.entries(ratings).filter(
+//     ([key]) => ['cleanliness', 'communication', 'punctuality', 'professionalism'].includes(key)
 //   );
 
 //   return (
-//     <View style={styles.container}>
-      
-//       <FlatList
-//         data={ratings}
-//         renderItem={renderItem}
-//         keyExtractor={(item) => item.id}
-//         contentContainerStyle={styles.list}
-//         // showsVerticalScrollIndicator={true}
-//         // nestedScrollEnabled={true} // Allow nested scrolling
-//         horizontal={false}
-//       />
+//     <View style={styles.card}>
+//       {/* Header: Host Avatar & Name + Date */}
+//       <View style={styles.header}>
+//         <View style={styles.hostInfo}>
+//           {hostAvatar ? (
+//             <Image source={{ uri: hostAvatar }} style={styles.avatar} />
+//           ) : (
+//             <View style={[styles.avatar, styles.placeholderAvatar]}>
+//               <MaterialCommunityIcons name="account" size={24} color="#999" />
+//             </View>
+//           )}
+//           <View style={styles.hostText}>
+//             <Text style={styles.hostName}>
+//               {hasHost ? hostName : tSafe('guest', 'Guest')}
+//             </Text>
+//             {hasHost && <Text style={styles.hostLabel}>{tSafe('host', 'Host')}</Text>}
+//           </View>
+//         </View>
+//         <Text style={styles.date}>{formatDate(createdAt)}</Text>
+//       </View>
+
+//       {/* Rating Display */}
+//       <View style={styles.ratingRow}>
+//         <StarRating
+//           rating={averageRating}
+//           onChange={() => {}}
+//           maxStars={5}
+//           starSize={16}
+//           starStyle={{ marginHorizontal: 0 }}
+//         />
+//         <Text style={styles.ratingNumber}>{averageRating.toFixed(1)}</Text>
+//       </View>
+
+//       {/* Category Ratings */}
+//       {/* {categoryEntries.length > 0 && (
+//         <View style={styles.categoryContainer}>
+//           {categoryEntries.map(([key, value]) => (
+//             <View key={key} style={styles.categoryRow}>
+//               <Text style={styles.categoryLabel}>
+//                 {key.charAt(0).toUpperCase() + key.slice(1)}
+//               </Text>
+//               <View style={styles.categoryStars}>
+//                 {[1, 2, 3, 4, 5].map((star) => (
+//                   <MaterialCommunityIcons
+//                     key={star}
+//                     name={star <= value ? 'star' : 'star-outline'}
+//                     size={12}
+//                     color={star <= value ? '#F5A623' : '#D1D1D6'}
+//                     style={{ marginHorizontal: 1 }}
+//                   />
+//                 ))}
+//               </View>
+//             </View>
+//           ))}
+//         </View>
+//       )} */}
+
+//       {/* Comment */}
+//       {comment ? (
+//         <View style={styles.commentContainer}>
+//           <Text style={styles.commentText}>{comment}</Text>
+//         </View>
+//       ) : null}
+
+//       {/* Small separator at bottom */}
+//       <View style={styles.footerDivider} />
 //     </View>
 //   );
 // };
 
+// const Reviews = ({ ratings, cleanerId }) => {
+//   if (!ratings || ratings.length === 0) {
+//     return (
+//       <View style={styles.emptyContainer}>
+//         <MaterialCommunityIcons name="star-outline" size={48} color="#ccc" />
+//         <Text style={styles.emptyText}>{tSafe('no_reviews_yet', 'No reviews yet for this cleaner.')}</Text>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <FlatList
+//       data={ratings}
+//       keyExtractor={(item) => item._id || item.id || String(Math.random())}
+//       renderItem={({ item }) => <ReviewItem review={item} />}
+//       showsVerticalScrollIndicator={false}
+//       contentContainerStyle={styles.listContainer}
+//     />
+//   );
+// };
+
 // const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: 16,
-//     backgroundColor: '#f9f9f9',
-//     width:'100%',
-//     borderRadius: 8,
+//   listContainer: {
+//     paddingVertical: 8,
+//     paddingHorizontal: 2,
 //   },
-//   header: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     marginBottom: 16,
-//     color: '#333',
-//   },
-//   list: {
-//     paddingBottom: 16,
-//   },
-//   reviewContainer: {
-//     flexDirection: 'row',
-//     justifyContent:'space-between',
-//     marginBottom: 20,
-//     padding: 16,
-//     borderRadius: 8,
+//   card: {
 //     backgroundColor: '#fff',
-//     shadowColor: '#ddd',
-//     shadowOpacity: 0.1,
-//     shadowRadius: 8,
+//     borderRadius: 14,
+//     padding: 16,
+//     marginBottom: 14,
+//     borderWidth: 1,
+//     borderColor: '#f0f0f0',
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.04,
+//     shadowRadius: 6,
 //     elevation: 2,
 //   },
-//   avatar: {
-//     marginRight:5
-//   },
-//   reviewContent: {
-//     flex: 1,
-//   },
-//   username: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     color: '#333',
-//   },
-//   rating: {
+//   header: {
 //     flexDirection: 'row',
-//     marginTop: 4,
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 10,
+//   },
+//   hostInfo: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   avatar: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 18,
+//     marginRight: 10,
+//   },
+//   placeholderAvatar: {
+//     backgroundColor: '#f0f0f0',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   hostText: {
+//     flexDirection: 'column',
+//   },
+//   hostName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#1C1C1E',
+//   },
+//   hostLabel: {
+//     fontSize: 11,
+//     color: '#8E8E93',
+//     marginTop: 1,
+//   },
+//   date: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//   },
+//   ratingRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
 //     marginBottom: 8,
 //   },
-//   reviewText: {
+//   ratingNumber: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#1C1C1E',
+//     marginLeft: 8,
+//   },
+//   categoryContainer: {
+//     marginVertical: 6,
+//   },
+//   categoryRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingVertical: 2,
+//   },
+//   categoryLabel: {
+//     fontSize: 13,
+//     color: '#555',
+//     flex: 1,
+//   },
+//   categoryStars: {
+//     flexDirection: 'row',
+//     marginLeft: 10,
+//   },
+//   commentContainer: {
+//     marginTop: 8,
+//     paddingTop: 8,
+//     borderTopWidth: 1,
+//     borderTopColor: '#f5f5f5',
+//   },
+//   commentText: {
 //     fontSize: 14,
-//     color: '#666',
+//     color: '#333',
+//     fontStyle: 'italic',
+//     lineHeight: 20,
 //   },
-//   avatarIcon:{
-//     marginRight:5,
-//     backgroundColor:COLORS.gray
+//   footerDivider: {
+//     height: 1,
+//     backgroundColor: 'transparent',
+//     marginTop: 4,
 //   },
-//   created_on:{
-//     fontSize:12,
+//   emptyContainer: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 60,
 //   },
-//   rating:{
-//     flexDirection:'row',
-//     // justifyContent:'center',
-//     alignItems:'center'
+//   emptyText: {
+//     marginTop: 12,
+//     fontSize: 16,
+//     color: '#999',
+//     textAlign: 'center',
 //   },
 // });
 
 // export default Reviews;
 
 
-
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Avatar } from 'react-native-paper';
-import COLORS from '../../constants/colors';
-import moment from 'moment';
+// components/shared/Reviews.js
+import React from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import StarRating from 'react-native-star-rating-widget';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import COLORS from '../../constants/colors';
+import { tSafe } from '../../utils/tSafe';
 
-const Reviews = ({ ratings, cleanerId }) => {
-  console.log("Reviews data:", ratings);
+// Helper to format date
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const parts = dateString.split(' ');
+  if (parts.length === 2) {
+    const [day, month, year] = parts[0].split('-');
+    return `${month}/${day}/${year}`;
+  }
+  return dateString;
+};
 
-  // Add safety checks and data transformation
-  const safeRatings = Array.isArray(ratings) ? ratings : [];
-  
-  // Transform data if needed to match expected structure
-  const transformedRatings = safeRatings.map((item, index) => ({
-    ...item,
-    id: item.id || item._id || `review-${index}`, // Ensure each item has a unique id
-    schedule_info: item.schedule_info || {},
-    hostInfo: item.hostInfo || (item.schedule_info?.hostInfo || {}),
-    comment: item.comment || item.feedback || '',
-    created_on: item.created_on || item.createdAt || new Date(),
-    averageRating: item.averageRating || item.rating || 0
-  }));
+const ReviewItem = ({ review }) => {
+  const {
+    averageRating = 0,
+    ratings = {},
+    comment = '',
+    createdAt = '',
+    hostName = 'Unknown Host',
+    hostAvatar = '',
+    hostId = null,
+  } = review;
 
-  console.log("Transformed ratings:", transformedRatings);
+  const hasHost = !!hostId;
 
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, i) => (
-      <Icon
-        key={i}
-        name={i < rating ? 'star' : 'star-o'}
-        size={16}
-        color="#FFD700"
-      />
-    ));
-  };
-
-  const renderItem = ({ item }) => {
-    // Safety checks for nested properties
-    const hostInfo = item.hostInfo || item.schedule_info?.hostInfo || {};
-    const firstName = hostInfo.firstname || hostInfo.firstName || 'Unknown';
-    const lastName = hostInfo.lastname || hostInfo.lastName || '';
-    const avatar = hostInfo.avatar;
-    const comment = item.comment || item.feedback || 'No comment provided';
-    const createdOn = item.created_on ? moment(item.created_on).fromNow() : 'Recently';
-
-    return (
-      <View style={styles.reviewContainer}>
-        {avatar ? (
-          <Avatar.Image 
-            source={{ uri: avatar }}
-            size={40}
-            style={styles.avatar}
-          />
-        ) : (
-          <Avatar.Icon 
-            size={40} 
-            icon="account"
-            style={styles.avatarIcon}
-          />
-        )}
-        
-        <View style={styles.reviewContent}>
-          <View style={styles.reviewHeader}>
-            <Text style={styles.username}>{firstName} {lastName}</Text>
-            <Text style={styles.created_on}>{createdOn}</Text>
-          </View>
-          
-          {/* Rating display */}
-          {item.averageRating > 0 && (
-            <View style={styles.rating}>
-              <StarRating
-                rating={parseFloat(item.averageRating)}
-                onChange={() => {}} // Read-only
-                maxStars={5}
-                starSize={18}
-                starStyle={{ marginHorizontal: 0 }}
-                enableSwiping={false}
-                enableHalfStar={true}
-              />
-              <Text style={styles.ratingText}>{parseFloat(item.averageRating).toFixed(1)}</Text>
-            </View>
-          )}
-          
-          <Text style={styles.reviewText}>{comment}</Text>
-        </View>
-      </View>
-    );
-  };
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Icon name="comments-o" size={48} color={COLORS.gray} />
-      <Text style={styles.emptyStateText}>No reviews yet</Text>
-      <Text style={styles.emptyStateSubtext}>Be the first to leave a review</Text>
-    </View>
+  // Category ratings (optional, kept commented out)
+  const categoryEntries = Object.entries(ratings).filter(
+    ([key]) => ['cleanliness', 'communication', 'punctuality', 'professionalism'].includes(key)
   );
 
   return (
-    <View style={styles.container}>
-      
-      <FlatList
-        data={transformedRatings}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.list,
-          transformedRatings.length === 0 && styles.emptyList
-        ]}
-        ListEmptyComponent={renderEmptyState}
-        showsVerticalScrollIndicator={true}
-        horizontal={false}
-      />
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <View style={styles.hostInfo}>
+          {hostAvatar ? (
+            <Image source={{ uri: hostAvatar }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, styles.placeholderAvatar]}>
+              <MaterialCommunityIcons name="account" size={24} color="#999" />
+            </View>
+          )}
+          <View style={styles.hostText}>
+            <Text style={styles.hostName}>
+              {hasHost ? hostName : tSafe('guest', 'Guest')}
+            </Text>
+            {hasHost && <Text style={styles.hostLabel}>{tSafe('host', 'Host')}</Text>}
+          </View>
+        </View>
+        <Text style={styles.date}>{formatDate(createdAt)}</Text>
+      </View>
+
+      <View style={styles.ratingRow}>
+        <StarRating
+          rating={averageRating}
+          onChange={() => {}}
+          maxStars={5}
+          starSize={16}
+          starStyle={{ marginHorizontal: 0 }}
+        />
+        <Text style={styles.ratingNumber}>{averageRating.toFixed(1)}</Text>
+      </View>
+
+      {/* Comment */}
+      {comment ? (
+        <View style={styles.commentContainer}>
+          <Text style={styles.commentText}>“{comment}”</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+};
+
+const Reviews = ({ ratings, cleanerId }) => {
+  if (!ratings || ratings.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons
+            name="star-outline"
+            size={34}
+            color={COLORS.primary}
+          />
+        </View>
+    
+        <Text style={styles.emptyTitle}>
+          {tSafe(
+            'no_reviews_title',
+            'No Reviews Yet'
+          )}
+        </Text>
+    
+        <Text style={styles.emptySubtitle}>
+          {tSafe(
+            'no_reviews_desc',
+            'This cleaner has not received any reviews yet.'
+          )}
+        </Text>
+      </View>
+    );
+  }
+
+  // Render reviews using map – no nested FlatList
+  return (
+    <View style={styles.listContainer}>
+      {ratings.map((item) => (
+        <ReviewItem key={item._id || item.id || Math.random()} review={item} />
+      ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  listContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 2,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
     padding: 16,
-    backgroundColor: '#f9f9f9',
-    width: '100%',
-    borderRadius: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  list: {
-    paddingBottom: 16,
-  },
-  emptyList: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  reviewContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  avatar: {
-    marginRight: 12,
-  },
-  avatarIcon: {
-    marginRight: 12,
-    backgroundColor: COLORS.gray
-  },
-  reviewContent: {
-    flex: 1,
-  },
-  reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  username: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
+  hostInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  created_on: {
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  placeholderAvatar: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hostText: {
+    flexDirection: 'column',
+  },
+  hostName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1C1C1E',
+  },
+  hostLabel: {
+    fontSize: 11,
+    color: '#8E8E93',
+    marginTop: 1,
+  },
+  date: {
     fontSize: 12,
-    color: COLORS.gray,
-    marginLeft: 8,
+    color: '#8E8E93',
   },
-  rating: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  ratingText: {
+  ratingNumber: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1C1C1E',
     marginLeft: 8,
-    fontSize: 14,
-    color: COLORS.gray,
-    fontWeight: '500',
   },
-  reviewText: {
+  commentContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f5f5f5',
+  },
+  commentText: {
     fontSize: 14,
-    color: '#666',
+    color: '#333',
+    fontStyle: 'italic',
     lineHeight: 20,
   },
-  emptyState: {
+  emptyContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F5',
+  },
+  
+  emptyIconContainer: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary + '12',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    marginBottom: 14,
   },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.gray,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: COLORS.light_gray,
+  
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
     textAlign: 'center',
+    marginBottom: 5,
+  },
+  
+  emptySubtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: COLORS.gray,
+    textAlign: 'center',
+    maxWidth: 280,
   },
 });
 

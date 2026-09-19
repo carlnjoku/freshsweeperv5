@@ -689,6 +689,886 @@
 //   },
 // });
 
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   TouchableOpacity,
+//   Alert,
+//   SafeAreaView,
+//   ActivityIndicator,
+//   Platform
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import DatePicker from 'react-native-date-picker';
+// import COLORS from '../../constants/colors';
+// import userService from '../../services/connection/userService';
+// import { format } from 'date-fns';
+// import { tSafe } from '../../utils/tSafe'; // added import
+
+// // Helper: safely convert any input to a Date object
+// const toSafeDate = (dateValue, fallback = new Date()) => {
+//   if (!dateValue) return fallback;
+//   try {
+//     const date = new Date(dateValue);
+//     if (isNaN(date.getTime())) return fallback;
+//     return date;
+//   } catch {
+//     return fallback;
+//   }
+// };
+
+// // Helper: format time as HH:mm
+// const formatTime = (date) => {
+//   if (!date) return '';
+//   return format(date, 'HH:mm');
+// };
+
+// export default function Availability({ cleanerId, close_avail_modal, get_availability }) {
+//   const [availability, setAvailability] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+//   const [selectedDay, setSelectedDay] = useState(null);
+//   const [startTime, setStartTime] = useState(new Date());
+//   const [endTime, setEndTime] = useState(new Date());
+//   const [timePickerVisible, setTimePickerVisible] = useState({ visible: false, type: 'start' });
+
+//   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+//   useEffect(() => {
+//     fetchAvailability();
+//   }, []);
+
+//   const fetchAvailability = async () => {
+//     try {
+//       const response = await userService.getCleanerAvailability(cleanerId);
+//       const data = response.data.data;
+//       const rawAvailability = data?.availability || [];
+//       const formatted = rawAvailability.map((item) => ({
+//         day: item.day,
+//         slots: (item.slots || []).map((slot) => ({
+//           start: toSafeDate(slot.start),
+//           end: toSafeDate(slot.end),
+//         })),
+//       }));
+//       setAvailability(formatted);
+//     } catch (err) {
+//       console.error('Error fetching availability:', err);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_availability', 'Failed to load availability'));
+//       setAvailability([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleAddSlot = () => {
+//     if (!selectedDay) {
+//       Alert.alert(tSafe('select_day_title', 'Select Day'), tSafe('please_select_day', 'Please select a day first'));
+//       return;
+//     }
+//     if (startTime >= endTime) {
+//       Alert.alert(tSafe('invalid_time_title', 'Invalid Time'), tSafe('end_time_after_start', 'End time must be after start time'));
+//       return;
+//     }
+
+//     setAvailability((prev) => {
+//       const dayIndex = prev.findIndex((item) => item.day === selectedDay);
+//       const newSlot = { start: startTime, end: endTime };
+//       if (dayIndex >= 0) {
+//         const updated = [...prev];
+//         updated[dayIndex] = {
+//           ...updated[dayIndex],
+//           slots: [...updated[dayIndex].slots, newSlot],
+//         };
+//         return updated;
+//       } else {
+//         return [...prev, { day: selectedDay, slots: [newSlot] }];
+//       }
+//     });
+
+//     // Reset times for next entry
+//     setStartTime(new Date());
+//     setEndTime(new Date());
+//   };
+
+//   const handleRemoveSlot = (day, index) => {
+//     setAvailability((prev) => {
+//       const dayIndex = prev.findIndex((item) => item.day === day);
+//       if (dayIndex === -1) return prev;
+//       const updated = [...prev];
+//       updated[dayIndex].slots = updated[dayIndex].slots.filter((_, i) => i !== index);
+//       if (updated[dayIndex].slots.length === 0) {
+//         return prev.filter((_, i) => i !== dayIndex);
+//       }
+//       return updated;
+//     });
+//   };
+
+//   const handleSave = async () => {
+//     setSaving(true);
+//     try {
+//       if (!Array.isArray(availability)) {
+//         throw new Error(`Availability is not an array: ${typeof availability}`);
+//       }
+
+//       const payload = {
+//         availability: availability.map((item) => ({
+//           day: item.day,
+//           slots: item.slots.map((slot) => ({
+//             start: formatTime(slot.start),
+//             end: formatTime(slot.end),
+//           })),
+//         })),
+//       };
+
+//       console.log(availability)
+//       await userService.updateCleanerAvailability(cleanerId, payload);
+//       get_availability(payload);
+//       Alert.alert(tSafe('success_title', 'Success'), tSafe('availability_updated', 'Availability updated'));
+//       close_avail_modal();
+//     } catch (err) {
+//       console.error('Error saving availability:', err);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_save_availability', 'Failed to save availability: ') + err.message);
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <View style={styles.centered}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//       </View>
+//     );
+//   }
+
+//   // Helper to get translated day name
+//   const getDayTranslation = (day) => {
+//     const dayKey = day.toLowerCase();
+//     switch (dayKey) {
+//       case 'monday': return tSafe('monday', 'Monday');
+//       case 'tuesday': return tSafe('tuesday', 'Tuesday');
+//       case 'wednesday': return tSafe('wednesday', 'Wednesday');
+//       case 'thursday': return tSafe('thursday', 'Thursday');
+//       case 'friday': return tSafe('friday', 'Friday');
+//       case 'saturday': return tSafe('saturday', 'Saturday');
+//       case 'sunday': return tSafe('sunday', 'Sunday');
+//       default: return day;
+//     }
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <View style={styles.header}>
+//         <TouchableOpacity onPress={close_avail_modal}>
+//           <MaterialCommunityIcons name="close" size={24} color={COLORS.gray} />
+//         </TouchableOpacity>
+//         <Text style={styles.title}>{tSafe('set_availability', 'Set Availability')}</Text>
+//         <TouchableOpacity onPress={handleSave} disabled={saving}>
+//           {saving ? (
+//             <ActivityIndicator size="small" color={COLORS.primary} />
+//           ) : (
+//             <Text style={styles.saveText}>{tSafe('save', 'Save')}</Text>
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView style={styles.content}>
+//         {/* Day Selection */}
+//         <Text style={styles.sectionTitle}>{tSafe('select_day', 'Select Day')}</Text>
+//         <View style={styles.daysContainer}>
+//           {days.map((day) => (
+//             <TouchableOpacity
+//               key={day}
+//               style={[
+//                 styles.dayButton,
+//                 selectedDay === day && styles.dayButtonSelected,
+//               ]}
+//               onPress={() => setSelectedDay(day)}
+//             >
+//               <Text
+//                 style={[
+//                   styles.dayText,
+//                   selectedDay === day && styles.dayTextSelected,
+//                 ]}
+//               >
+//                 {getDayTranslation(day).slice(0, 3)}
+//               </Text>
+//             </TouchableOpacity>
+//           ))}
+//         </View>
+
+//         {/* Time Selection */}
+//         {selectedDay && (
+//           <>
+//             <Text style={styles.sectionTitle}>{tSafe('add_time_slot', 'Add Time Slot')}</Text>
+//             <View style={styles.timeRow}>
+//               <TouchableOpacity
+//                 style={styles.timeButton}
+//                 onPress={() => setTimePickerVisible({ visible: true, type: 'start' })}
+//               >
+//                 <Text style={styles.timeLabel}>{tSafe('start', 'Start')}</Text>
+//                 <Text style={styles.timeValue}>{formatTime(startTime)}</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 style={styles.timeButton}
+//                 onPress={() => setTimePickerVisible({ visible: true, type: 'end' })}
+//               >
+//                 <Text style={styles.timeLabel}>{tSafe('end', 'End')}</Text>
+//                 <Text style={styles.timeValue}>{formatTime(endTime)}</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity style={styles.addButton} onPress={handleAddSlot}>
+//                 <MaterialCommunityIcons name="plus" size={24} color={COLORS.white} />
+//               </TouchableOpacity>
+//             </View>
+//           </>
+//         )}
+
+//         {/* Availability List */}
+//         <Text style={styles.sectionTitle}>{tSafe('your_availability', 'Your Availability')}</Text>
+//         {availability.length === 0 ? (
+//           <View style={styles.emptyContainer}>
+//             <MaterialCommunityIcons
+//               name="calendar-blank-outline"
+//               size={48}
+//               color={COLORS.gray}
+//             />
+//             <Text style={styles.emptyText}>{tSafe('no_availability_set', 'No availability set yet.')}</Text>
+//           </View>
+//         ) : (
+//           availability.map((item) => (
+//             <View key={item.day} style={styles.daySection}>
+//               <Text style={styles.dayHeader}>{getDayTranslation(item.day)}</Text>
+//               {item.slots.map((slot, index) => (
+//                 <View key={index} style={styles.slotRow}>
+//                   <Text style={styles.slotTime}>
+//                     {formatTime(slot.start)} - {formatTime(slot.end)}
+//                   </Text>
+//                   <TouchableOpacity
+//                     onPress={() => handleRemoveSlot(item.day, index)}
+//                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+//                   >
+//                     <MaterialCommunityIcons
+//                       name="close-circle-outline"
+//                       size={20}
+//                       color={COLORS.error}
+//                     />
+//                   </TouchableOpacity>
+//                 </View>
+//               ))}
+//             </View>
+//           ))
+//         )}
+//       </ScrollView>
+
+//       {/* Time Picker Modal */}
+//       <DatePicker
+//         modal
+//         open={timePickerVisible.visible}
+//         date={timePickerVisible.type === 'start' ? startTime : endTime}
+//         mode="time"
+//         onConfirm={(date) => {
+//           if (timePickerVisible.type === 'start') {
+//             setStartTime(date);
+//           } else {
+//             setEndTime(date);
+//           }
+//           setTimePickerVisible({ ...timePickerVisible, visible: false });
+//         }}
+//         onCancel={() => setTimePickerVisible({ ...timePickerVisible, visible: false })}
+//         title={timePickerVisible.type === 'start' ? tSafe('select_start_time', 'Select Start Time') : tSafe('select_end_time', 'Select End Time')}
+//         confirmText={tSafe('done', 'Done')}
+//         cancelText={tSafe('cancel', 'Cancel')}
+//         locale="en"
+//         minuteInterval={15}
+//         is24hourSource="locale"
+//       />
+//     </SafeAreaView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingHorizontal: 16,
+//     paddingVertical: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#eee',
+//     marginTop: Platform.OS === 'ios' ? 0 : 30,
+//   },
+//   title: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     color: '#333',
+//   },
+//   saveText: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.primary,
+//   },
+//   content: {
+//     flex: 1,
+//     padding: 16,
+//   },
+//   sectionTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginTop: 16,
+//     marginBottom: 8,
+//   },
+//   daysContainer: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     marginBottom: 16,
+//   },
+//   dayButton: {
+//     paddingHorizontal: 16,
+//     paddingVertical: 8,
+//     borderRadius: 20,
+//     backgroundColor: '#f0f0f0',
+//     marginRight: 8,
+//     marginBottom: 8,
+//   },
+//   dayButtonSelected: {
+//     backgroundColor: COLORS.primary,
+//   },
+//   dayText: {
+//     fontSize: 14,
+//     color: '#666',
+//   },
+//   dayTextSelected: {
+//     color: '#fff',
+//     fontWeight: '600',
+//   },
+//   timeRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 24,
+//   },
+//   timeButton: {
+//     flex: 1,
+//     paddingVertical: 12,
+//     paddingHorizontal: 10,
+//     backgroundColor: '#f9f9f9',
+//     borderRadius: 8,
+//     borderWidth: 1,
+//     borderColor: '#ddd',
+//     marginRight: 8,
+//   },
+//   timeLabel: {
+//     fontSize: 12,
+//     color: '#999',
+//     marginBottom: 2,
+//   },
+//   timeValue: {
+//     fontSize: 16,
+//     fontWeight: '500',
+//     color: '#333',
+//   },
+//   addButton: {
+//     width: 48,
+//     height: 48,
+//     borderRadius: 24,
+//     backgroundColor: COLORS.primary,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   daySection: {
+//     marginBottom: 16,
+//     paddingBottom: 8,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0f0f0',
+//   },
+//   dayHeader: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 8,
+//   },
+//   slotRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingVertical: 6,
+//     paddingHorizontal: 8,
+//     backgroundColor: '#fafafa',
+//     borderRadius: 6,
+//     marginBottom: 4,
+//   },
+//   slotTime: {
+//     fontSize: 14,
+//     color: '#555',
+//   },
+//   emptyContainer: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 40,
+//   },
+//   emptyText: {
+//     marginTop: 12,
+//     fontSize: 14,
+//     color: COLORS.gray,
+//   },
+//   centered: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+
+// import React, { useState, useEffect } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   TouchableOpacity,
+//   Alert,
+//   SafeAreaView,
+//   ActivityIndicator,
+//   Platform
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import DatePicker from 'react-native-date-picker';
+// import COLORS from '../../constants/colors';
+// import userService from '../../services/connection/userService';
+// import { tSafe } from '../../utils/tSafe';
+
+// // Helper: convert "HH:MM" to a Date object for the picker
+// const timeStringToDate = (timeStr) => {
+//   if (!timeStr) return new Date();
+//   const [hours, minutes] = timeStr.split(':');
+//   const date = new Date();
+//   date.setHours(parseInt(hours, 10) || 0);
+//   date.setMinutes(parseInt(minutes, 10) || 0);
+//   date.setSeconds(0);
+//   return date;
+// };
+
+// // Helper: format Date to "HH:MM"
+// const dateToTimeString = (date) => {
+//   if (!date) return '';
+//   const hours = String(date.getHours()).padStart(2, '0');
+//   const minutes = String(date.getMinutes()).padStart(2, '0');
+//   return `${hours}:${minutes}`;
+// };
+
+// export default function Availability({ cleanerId, close_avail_modal, get_availability }) {
+//   const [availability, setAvailability] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+//   const [selectedDay, setSelectedDay] = useState(null);
+//   const [startTime, setStartTime] = useState('09:00'); // Store as string
+//   const [endTime, setEndTime] = useState('17:00');   // Store as string
+//   const [timePickerVisible, setTimePickerVisible] = useState({ visible: false, type: 'start' });
+
+//   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+//   useEffect(() => {
+//     fetchAvailability();
+//   }, []);
+
+//   const fetchAvailability = async () => {
+//     try {
+//       const response = await userService.getCleanerAvailability(cleanerId);
+//       const data = response.data.data;
+//       const rawAvailability = data?.availability || [];
+//       // ✅ Keep time strings – NO Date conversion!
+//       const formatted = rawAvailability.map((item) => ({
+//         day: item.day,
+//         slots: (item.slots || []).map((slot) => ({
+//           start: slot.start, // "06:00"
+//           end: slot.end,     // "23:00"
+//         })),
+//       }));
+//       setAvailability(formatted);
+//     } catch (err) {
+//       console.error('Error fetching availability:', err);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_availability', 'Failed to load availability'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleAddSlot = () => {
+//     if (!selectedDay) {
+//       Alert.alert(tSafe('select_day_title', 'Select Day'), tSafe('please_select_day', 'Please select a day first'));
+//       return;
+//     }
+//     // Compare as strings (HH:MM) – convert to minutes for comparison
+//     const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+//     const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+//     if (startMinutes >= endMinutes) {
+//       Alert.alert(tSafe('invalid_time_title', 'Invalid Time'), tSafe('end_time_after_start', 'End time must be after start time'));
+//       return;
+//     }
+
+//     setAvailability((prev) => {
+//       const dayIndex = prev.findIndex((item) => item.day === selectedDay);
+//       const newSlot = { start: startTime, end: endTime };
+//       if (dayIndex >= 0) {
+//         const updated = [...prev];
+//         updated[dayIndex] = {
+//           ...updated[dayIndex],
+//           slots: [...updated[dayIndex].slots, newSlot],
+//         };
+//         return updated;
+//       } else {
+//         return [...prev, { day: selectedDay, slots: [newSlot] }];
+//       }
+//     });
+
+//     // Reset to default times
+//     setStartTime('09:00');
+//     setEndTime('17:00');
+//   };
+
+//   const handleRemoveSlot = (day, index) => {
+//     setAvailability((prev) => {
+//       const dayIndex = prev.findIndex((item) => item.day === day);
+//       if (dayIndex === -1) return prev;
+//       const updated = [...prev];
+//       updated[dayIndex].slots = updated[dayIndex].slots.filter((_, i) => i !== index);
+//       if (updated[dayIndex].slots.length === 0) {
+//         return prev.filter((_, i) => i !== dayIndex);
+//       }
+//       return updated;
+//     });
+//   };
+
+//   const handleSave = async () => {
+//     setSaving(true);
+//     try {
+//       if (!Array.isArray(availability)) {
+//         throw new Error(`Availability is not an array: ${typeof availability}`);
+//       }
+
+//       const payload = {
+//         availability: availability.map((item) => ({
+//           day: item.day,
+//           slots: item.slots.map((slot) => ({
+//             start: slot.start, // already string
+//             end: slot.end,     // already string
+//           })),
+//         })),
+//       };
+
+//       await userService.updateCleanerAvailability(cleanerId, payload);
+//       get_availability(payload);
+//       Alert.alert(tSafe('success_title', 'Success'), tSafe('availability_updated', 'Availability updated'));
+//       close_avail_modal();
+//     } catch (err) {
+//       console.error('Error saving availability:', err);
+//       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_save_availability', 'Failed to save availability: ') + err.message);
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <View style={styles.centered}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//       </View>
+//     );
+//   }
+
+//   const getDayTranslation = (day) => {
+//     const dayKey = day.toLowerCase();
+//     switch (dayKey) {
+//       case 'monday': return tSafe('monday', 'Monday');
+//       case 'tuesday': return tSafe('tuesday', 'Tuesday');
+//       case 'wednesday': return tSafe('wednesday', 'Wednesday');
+//       case 'thursday': return tSafe('thursday', 'Thursday');
+//       case 'friday': return tSafe('friday', 'Friday');
+//       case 'saturday': return tSafe('saturday', 'Saturday');
+//       case 'sunday': return tSafe('sunday', 'Sunday');
+//       default: return day;
+//     }
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <View style={styles.header}>
+//         <TouchableOpacity onPress={close_avail_modal}>
+//           <MaterialCommunityIcons name="close" size={24} color={COLORS.gray} />
+//         </TouchableOpacity>
+//         <Text style={styles.title}>{tSafe('set_availability', 'Set Availability')}</Text>
+//         <TouchableOpacity onPress={handleSave} disabled={saving}>
+//           {saving ? (
+//             <ActivityIndicator size="small" color={COLORS.primary} />
+//           ) : (
+//             <Text style={styles.saveText}>{tSafe('save', 'Save')}</Text>
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView style={styles.content}>
+//         {/* Day Selection */}
+//         <Text style={styles.sectionTitle}>{tSafe('select_day', 'Select Day')}</Text>
+//         <View style={styles.daysContainer}>
+//           {days.map((day) => (
+//             <TouchableOpacity
+//               key={day}
+//               style={[
+//                 styles.dayButton,
+//                 selectedDay === day && styles.dayButtonSelected,
+//               ]}
+//               onPress={() => setSelectedDay(day)}
+//             >
+//               <Text
+//                 style={[
+//                   styles.dayText,
+//                   selectedDay === day && styles.dayTextSelected,
+//                 ]}
+//               >
+//                 {getDayTranslation(day).slice(0, 3)}
+//               </Text>
+//             </TouchableOpacity>
+//           ))}
+//         </View>
+
+//         {/* Time Selection */}
+//         {selectedDay && (
+//           <>
+//             <Text style={styles.sectionTitle}>{tSafe('add_time_slot', 'Add Time Slot')}</Text>
+//             <View style={styles.timeRow}>
+//               <TouchableOpacity
+//                 style={styles.timeButton}
+//                 onPress={() => setTimePickerVisible({ visible: true, type: 'start' })}
+//               >
+//                 <Text style={styles.timeLabel}>{tSafe('start', 'Start')}</Text>
+//                 <Text style={styles.timeValue}>{startTime}</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 style={styles.timeButton}
+//                 onPress={() => setTimePickerVisible({ visible: true, type: 'end' })}
+//               >
+//                 <Text style={styles.timeLabel}>{tSafe('end', 'End')}</Text>
+//                 <Text style={styles.timeValue}>{endTime}</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity style={styles.addButton} onPress={handleAddSlot}>
+//                 <MaterialCommunityIcons name="plus" size={24} color={COLORS.white} />
+//               </TouchableOpacity>
+//             </View>
+//           </>
+//         )}
+
+//         {/* Availability List */}
+//         <Text style={styles.sectionTitle}>{tSafe('your_availability', 'Your Availability')}</Text>
+//         {availability.length === 0 ? (
+//           <View style={styles.emptyContainer}>
+//             <MaterialCommunityIcons
+//               name="calendar-blank-outline"
+//               size={48}
+//               color={COLORS.gray}
+//             />
+//             <Text style={styles.emptyText}>{tSafe('no_availability_set', 'No availability set yet.')}</Text>
+//           </View>
+//         ) : (
+//           availability.map((item) => (
+//             <View key={item.day} style={styles.daySection}>
+//               <Text style={styles.dayHeader}>{getDayTranslation(item.day)}</Text>
+//               {item.slots.map((slot, index) => (
+//                 <View key={index} style={styles.slotRow}>
+//                   <Text style={styles.slotTime}>
+//                     {slot.start} - {slot.end}
+//                   </Text>
+//                   <TouchableOpacity
+//                     onPress={() => handleRemoveSlot(item.day, index)}
+//                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+//                   >
+//                     <MaterialCommunityIcons
+//                       name="close-circle-outline"
+//                       size={20}
+//                       color={COLORS.error}
+//                     />
+//                   </TouchableOpacity>
+//                 </View>
+//               ))}
+//             </View>
+//           ))
+//         )}
+//       </ScrollView>
+
+//       {/* Time Picker Modal */}
+//       <DatePicker
+//         modal
+//         open={timePickerVisible.visible}
+//         date={timePickerVisible.type === 'start' ? timeStringToDate(startTime) : timeStringToDate(endTime)}
+//         mode="time"
+//         onConfirm={(date) => {
+//           const timeStr = dateToTimeString(date);
+//           if (timePickerVisible.type === 'start') {
+//             setStartTime(timeStr);
+//           } else {
+//             setEndTime(timeStr);
+//           }
+//           setTimePickerVisible({ ...timePickerVisible, visible: false });
+//         }}
+//         onCancel={() => setTimePickerVisible({ ...timePickerVisible, visible: false })}
+//         title={timePickerVisible.type === 'start' ? tSafe('select_start_time', 'Select Start Time') : tSafe('select_end_time', 'Select End Time')}
+//         confirmText={tSafe('done', 'Done')}
+//         cancelText={tSafe('cancel', 'Cancel')}
+//         locale="en"
+//         minuteInterval={15}
+//         is24hourSource="locale"
+//       />
+//     </SafeAreaView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingHorizontal: 16,
+//     paddingVertical: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#eee',
+//     marginTop: Platform.OS === 'ios' ? 0 : 30,
+//   },
+//   title: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     color: '#333',
+//   },
+//   saveText: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.primary,
+//   },
+//   content: {
+//     flex: 1,
+//     padding: 16,
+//   },
+//   sectionTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginTop: 16,
+//     marginBottom: 8,
+//   },
+//   daysContainer: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     marginBottom: 16,
+//   },
+//   dayButton: {
+//     paddingHorizontal: 16,
+//     paddingVertical: 8,
+//     borderRadius: 20,
+//     backgroundColor: '#f0f0f0',
+//     marginRight: 8,
+//     marginBottom: 8,
+//   },
+//   dayButtonSelected: {
+//     backgroundColor: COLORS.primary,
+//   },
+//   dayText: {
+//     fontSize: 14,
+//     color: '#666',
+//   },
+//   dayTextSelected: {
+//     color: '#fff',
+//     fontWeight: '600',
+//   },
+//   timeRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 24,
+//   },
+//   timeButton: {
+//     flex: 1,
+//     paddingVertical: 12,
+//     paddingHorizontal: 10,
+//     backgroundColor: '#f9f9f9',
+//     borderRadius: 8,
+//     borderWidth: 1,
+//     borderColor: '#ddd',
+//     marginRight: 8,
+//   },
+//   timeLabel: {
+//     fontSize: 12,
+//     color: '#999',
+//     marginBottom: 2,
+//   },
+//   timeValue: {
+//     fontSize: 16,
+//     fontWeight: '500',
+//     color: '#333',
+//   },
+//   addButton: {
+//     width: 48,
+//     height: 48,
+//     borderRadius: 24,
+//     backgroundColor: COLORS.primary,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   daySection: {
+//     marginBottom: 16,
+//     paddingBottom: 8,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0f0f0',
+//   },
+//   dayHeader: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 8,
+//   },
+//   slotRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingVertical: 6,
+//     paddingHorizontal: 8,
+//     backgroundColor: '#fafafa',
+//     borderRadius: 6,
+//     marginBottom: 4,
+//   },
+//   slotTime: {
+//     fontSize: 14,
+//     color: '#555',
+//   },
+//   emptyContainer: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 40,
+//   },
+//   emptyText: {
+//     marginTop: 12,
+//     fontSize: 14,
+//     color: COLORS.gray,
+//   },
+//   centered: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -699,31 +1579,31 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
-  Platform
+  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DatePicker from 'react-native-date-picker';
 import COLORS from '../../constants/colors';
 import userService from '../../services/connection/userService';
-import { format } from 'date-fns';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
 
-// Helper: safely convert any input to a Date object
-const toSafeDate = (dateValue, fallback = new Date()) => {
-  if (!dateValue) return fallback;
-  try {
-    const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return fallback;
-    return date;
-  } catch {
-    return fallback;
-  }
+// Helper: convert "HH:MM" to a Date object for the picker
+const timeStringToDate = (timeStr) => {
+  if (!timeStr) return new Date();
+  const [hours, minutes] = timeStr.split(':');
+  const date = new Date();
+  date.setHours(parseInt(hours, 10) || 0);
+  date.setMinutes(parseInt(minutes, 10) || 0);
+  date.setSeconds(0);
+  return date;
 };
 
-// Helper: format time as HH:mm
-const formatTime = (date) => {
+// Helper: format Date to "HH:MM"
+const dateToTimeString = (date) => {
   if (!date) return '';
-  return format(date, 'HH:mm');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 };
 
 export default function Availability({ cleanerId, close_avail_modal, get_availability }) {
@@ -731,8 +1611,8 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
   const [timePickerVisible, setTimePickerVisible] = useState({ visible: false, type: 'start' });
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -749,18 +1629,38 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       const formatted = rawAvailability.map((item) => ({
         day: item.day,
         slots: (item.slots || []).map((slot) => ({
-          start: toSafeDate(slot.start),
-          end: toSafeDate(slot.end),
+          start: slot.start,
+          end: slot.end,
         })),
       }));
       setAvailability(formatted);
     } catch (err) {
       console.error('Error fetching availability:', err);
       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_availability', 'Failed to load availability'));
-      setAvailability([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const setFullDay = () => {
+    if (!selectedDay) return;
+  
+    // Remove all existing slots for this day and add a single 00:00-23:59 slot
+    const fullDaySlot = { start: '00:00', end: '23:59' };
+  
+    setAvailability((prev) => {
+      const dayIndex = prev.findIndex((item) => item.day === selectedDay);
+      if (dayIndex >= 0) {
+        const updated = [...prev];
+        updated[dayIndex] = {
+          ...updated[dayIndex],
+          slots: [fullDaySlot],
+        };
+        return updated;
+      } else {
+        return [...prev, { day: selectedDay, slots: [fullDaySlot] }];
+      }
+    });
   };
 
   const handleAddSlot = () => {
@@ -768,7 +1668,9 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       Alert.alert(tSafe('select_day_title', 'Select Day'), tSafe('please_select_day', 'Please select a day first'));
       return;
     }
-    if (startTime >= endTime) {
+    const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+    const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+    if (startMinutes >= endMinutes) {
       Alert.alert(tSafe('invalid_time_title', 'Invalid Time'), tSafe('end_time_after_start', 'End time must be after start time'));
       return;
     }
@@ -788,9 +1690,8 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       }
     });
 
-    // Reset times for next entry
-    setStartTime(new Date());
-    setEndTime(new Date());
+    setStartTime('09:00');
+    setEndTime('17:00');
   };
 
   const handleRemoveSlot = (day, index) => {
@@ -817,8 +1718,8 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
         availability: availability.map((item) => ({
           day: item.day,
           slots: item.slots.map((slot) => ({
-            start: formatTime(slot.start),
-            end: formatTime(slot.end),
+            start: slot.start,
+            end: slot.end,
           })),
         })),
       };
@@ -835,15 +1736,6 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  // Helper to get translated day name
   const getDayTranslation = (day) => {
     const dayKey = day.toLowerCase();
     switch (dayKey) {
@@ -858,6 +1750,121 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
     }
   };
 
+  const renderDayChips = () => (
+    <View style={styles.daysContainer}>
+      {days.map((day) => (
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.dayButton,
+            selectedDay === day && styles.dayButtonSelected,
+          ]}
+          onPress={() => setSelectedDay(day)}
+        >
+          <Text
+            style={[
+              styles.dayText,
+              selectedDay === day && styles.dayTextSelected,
+            ]}
+          >
+            {getDayTranslation(day).slice(0, 3)}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderSelectedDayContent = () => {
+    const dayAvailability = availability.find((a) => a.day === selectedDay);
+    const slots = dayAvailability?.slots || [];
+  
+    return (
+      <View style={styles.selectedDayContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={() => setSelectedDay(null)}>
+          <MaterialCommunityIcons name="arrow-left" size={20} color={COLORS.primary} />
+          <Text style={styles.backButtonText}>{tSafe('change_day', 'Change Day')}</Text>
+        </TouchableOpacity>
+  
+        <Text style={styles.selectedDayTitle}>{getDayTranslation(selectedDay)}</Text>
+  
+        {/* Full Day Button */}
+        <TouchableOpacity style={styles.fullDayButton} onPress={setFullDay}>
+          <MaterialCommunityIcons name="clock-plus" size={20} color="#fff" />
+          <Text style={styles.fullDayButtonText}>{tSafe('available_all_day', 'Available All Day')}</Text>
+        </TouchableOpacity>
+  
+        <Text style={styles.sectionTitle}>{tSafe('add_time_slot', 'Add Time Slot')}</Text>
+        <View style={styles.timeRow}>
+          <TouchableOpacity
+            style={styles.timeButton}
+            onPress={() => setTimePickerVisible({ visible: true, type: 'start' })}
+          >
+            <Text style={styles.timeLabel}>{tSafe('start', 'Start')}</Text>
+            <Text style={styles.timeValue}>{startTime}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.timeButton}
+            onPress={() => setTimePickerVisible({ visible: true, type: 'end' })}
+          >
+            <Text style={styles.timeLabel}>{tSafe('end', 'End')}</Text>
+            <Text style={styles.timeValue}>{endTime}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddSlot}>
+            <MaterialCommunityIcons name="plus" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
+  
+        {/* Slots for this day */}
+        {slots.length > 0 ? (
+          <View style={styles.slotsList}>
+            {slots.map((slot, index) => (
+              <View key={index} style={styles.slotRow}>
+                <Text style={styles.slotTime}>
+                  {slot.start} - {slot.end}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => handleRemoveSlot(selectedDay, index)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MaterialCommunityIcons
+                    name="close-circle-outline"
+                    size={20}
+                    color={COLORS.error}
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.noSlotsContainer}>
+            <Text style={styles.noSlotsText}>{tSafe('no_slots_added', 'No time slots added yet.')}</Text>
+          </View>
+        )}
+  
+        {/* Save Button */}
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.saveButtonText}>{tSafe('save_availability', 'Save Availability')}</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -865,100 +1872,19 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
           <MaterialCommunityIcons name="close" size={24} color={COLORS.gray} />
         </TouchableOpacity>
         <Text style={styles.title}>{tSafe('set_availability', 'Set Availability')}</Text>
-        <TouchableOpacity onPress={handleSave} disabled={saving}>
-          {saving ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
-          ) : (
-            <Text style={styles.saveText}>{tSafe('save', 'Save')}</Text>
-          )}
-        </TouchableOpacity>
+        {/* Placeholder for alignment */}
+        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Day Selection */}
-        <Text style={styles.sectionTitle}>{tSafe('select_day', 'Select Day')}</Text>
-        <View style={styles.daysContainer}>
-          {days.map((day) => (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.dayButton,
-                selectedDay === day && styles.dayButtonSelected,
-              ]}
-              onPress={() => setSelectedDay(day)}
-            >
-              <Text
-                style={[
-                  styles.dayText,
-                  selectedDay === day && styles.dayTextSelected,
-                ]}
-              >
-                {getDayTranslation(day).slice(0, 3)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Time Selection */}
-        {selectedDay && (
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {!selectedDay ? (
           <>
-            <Text style={styles.sectionTitle}>{tSafe('add_time_slot', 'Add Time Slot')}</Text>
-            <View style={styles.timeRow}>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => setTimePickerVisible({ visible: true, type: 'start' })}
-              >
-                <Text style={styles.timeLabel}>{tSafe('start', 'Start')}</Text>
-                <Text style={styles.timeValue}>{formatTime(startTime)}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => setTimePickerVisible({ visible: true, type: 'end' })}
-              >
-                <Text style={styles.timeLabel}>{tSafe('end', 'End')}</Text>
-                <Text style={styles.timeValue}>{formatTime(endTime)}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleAddSlot}>
-                <MaterialCommunityIcons name="plus" size={24} color={COLORS.white} />
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>{tSafe('select_day', 'Select a Day')}</Text>
+            {renderDayChips()}
+            <Text style={styles.hintText}>{tSafe('tap_day_to_manage', 'Tap a day to manage its time slots.')}</Text>
           </>
-        )}
-
-        {/* Availability List */}
-        <Text style={styles.sectionTitle}>{tSafe('your_availability', 'Your Availability')}</Text>
-        {availability.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons
-              name="calendar-blank-outline"
-              size={48}
-              color={COLORS.gray}
-            />
-            <Text style={styles.emptyText}>{tSafe('no_availability_set', 'No availability set yet.')}</Text>
-          </View>
         ) : (
-          availability.map((item) => (
-            <View key={item.day} style={styles.daySection}>
-              <Text style={styles.dayHeader}>{getDayTranslation(item.day)}</Text>
-              {item.slots.map((slot, index) => (
-                <View key={index} style={styles.slotRow}>
-                  <Text style={styles.slotTime}>
-                    {formatTime(slot.start)} - {formatTime(slot.end)}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveSlot(item.day, index)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <MaterialCommunityIcons
-                      name="close-circle-outline"
-                      size={20}
-                      color={COLORS.error}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          ))
+          renderSelectedDayContent()
         )}
       </ScrollView>
 
@@ -966,13 +1892,14 @@ export default function Availability({ cleanerId, close_avail_modal, get_availab
       <DatePicker
         modal
         open={timePickerVisible.visible}
-        date={timePickerVisible.type === 'start' ? startTime : endTime}
+        date={timePickerVisible.type === 'start' ? timeStringToDate(startTime) : timeStringToDate(endTime)}
         mode="time"
         onConfirm={(date) => {
+          const timeStr = dateToTimeString(date);
           if (timePickerVisible.type === 'start') {
-            setStartTime(date);
+            setStartTime(timeStr);
           } else {
-            setEndTime(date);
+            setEndTime(timeStr);
           }
           setTimePickerVisible({ ...timePickerVisible, visible: false });
         }}
@@ -1007,11 +1934,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.primary,
   },
   content: {
     flex: 1,
@@ -1048,6 +1970,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  hintText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  // Selected day styles
+  selectedDayContainer: {
+    marginTop: 8,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  backButtonText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    marginLeft: 4,
+  },
+  selectedDayTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1E1E2F',
+    marginBottom: 16,
+  },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1081,45 +2029,65 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  daySection: {
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  dayHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+  slotsList: {
+    marginBottom: 24,
   },
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     backgroundColor: '#fafafa',
-    borderRadius: 6,
-    marginBottom: 4,
+    borderRadius: 8,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   slotTime: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 15,
+    color: '#333',
   },
-  emptyContainer: {
+  noSlotsContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  noSlotsText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    marginBottom: 20,
   },
-  emptyText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: COLORS.gray,
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fullDayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 8,
+  },
+  fullDayButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

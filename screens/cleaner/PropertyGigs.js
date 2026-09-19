@@ -283,6 +283,7 @@ import { tSafe } from "../../utils/tSafe";
 const GigCard = ({ gig, onPress, index }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
+  console.log(gig)
 
   useEffect(() => {
     Animated.parallel([

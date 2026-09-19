@@ -24,6 +24,7 @@ public:
   virtual void setInputMode(jsi::Runtime &rt, double mode) = 0;
   virtual void setDefaultMode(jsi::Runtime &rt) = 0;
   virtual void preload(jsi::Runtime &rt) = 0;
+  virtual void setTranslucent(jsi::Runtime &rt, bool translucent) = 0;
   virtual void dismiss(jsi::Runtime &rt, bool keepFocus, bool animated) = 0;
   virtual void setFocusTo(jsi::Runtime &rt, jsi::String direction) = 0;
   virtual jsi::Value viewPositionInWindow(jsi::Runtime &rt, double viewTag) = 0;
@@ -86,6 +87,14 @@ private:
 
       return bridging::callFromJs<void>(
           rt, &T::preload, jsInvoker_, instance_);
+    }
+    void setTranslucent(jsi::Runtime &rt, bool translucent) override {
+      static_assert(
+          bridging::getParameterCount(&T::setTranslucent) == 2,
+          "Expected setTranslucent(...) to have 2 parameters");
+
+      return bridging::callFromJs<void>(
+          rt, &T::setTranslucent, jsInvoker_, instance_, std::move(translucent));
     }
     void dismiss(jsi::Runtime &rt, bool keepFocus, bool animated) override {
       static_assert(

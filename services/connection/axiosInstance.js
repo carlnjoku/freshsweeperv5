@@ -3,7 +3,8 @@ import axios from 'axios';
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../../utils/tokenManager';
 
 
-const API_BASE = 'https://www.freshsweeper.com';
+// const API_BASE = 'https://www.freshsweeper.com';
+const API_BASE = 'http://localhost:8000';
 
 let isRefreshing = false;
 let failedQueue = [];

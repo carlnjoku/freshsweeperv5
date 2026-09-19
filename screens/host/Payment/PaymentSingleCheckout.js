@@ -295,9 +295,10 @@ const PaymentSingleCheckout = ({ route, navigation }) => {
     // cleaner_expo_token 
   } = route.params;
 
+  
   const serviceFee = cleaning_fee * 0.1; // 10% service fee
-  // const serviceFee = cleaning_fee * 0.1; // 10% service fee
-  // const total = cleaning_fee + serviceFee;
+  const totalAmount = cleaning_fee + serviceFee;
+
 
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
@@ -314,7 +315,6 @@ let end_time = moment(cleaning_end_time1, "HH:mm:ss").add(2, 'hours').format("HH
  
 let start_time = moment(cleaning_time, "HH:mm:ss").format("HH:mm")
 
-
 let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
 // console.log(moment(cleaning_date, "YYYY-MM-DD").format("dddd"))
   useEffect(() => {
@@ -322,7 +322,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
       if (serviceFee > 0) {
         try {
           const data = {
-            amount: cleaning_fee,
+            amount: totalAmount,
             currency: "USD",
             // currency:currentUser.location?.currency?.code
             customerId: currentUser.stripe_customer?.stripe_customer_id,
@@ -340,7 +340,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
               dayName,
               cleaners: JSON.stringify([{
                 cleanerId,
-                fee: cleaning_fee,
+                fee: totalAmount,
                 firstname: cleaner_firstname,
                 lastname: cleaner_lastname
               }]),
@@ -417,14 +417,15 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
     console.log("cleanerId---------User", cleanerId)
     console.log("Schedule---------User", schedule)
     console.log("scheduleId---------User", scheduleId)
-    console.log("Cleaning fee---------User", cleaning_fee)
+    console.log("Cleaning fee---------User", totalAmount)
     // Create chat room and friend
     onAddFriend(
+      currentUserId,
       cleanerId, 
-      fbaseUser, 
+      currentUser,
       schedule, 
       scheduleId,
-      cleaning_fee,
+      totalAmount,
     )
 
     // onAddFriend(cleanerId, fbaseUser, schedule, scheduleId, fee)
@@ -462,7 +463,7 @@ let dayName = moment(cleaning_date, "YYYY-MM-DD").format("dddd");
           
           <StripePaymentButton 
             clientSecret={clientSecret} 
-            totalAmount={cleaning_fee} 
+            totalAmount={totalAmount} 
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             fbaseUser={fbaseUser} 

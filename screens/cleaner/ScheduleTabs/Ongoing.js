@@ -382,7 +382,7 @@ export default function Ongoing({ schedules, isLoading = false }) {
 
   return (
     <View style={styles.container}>
-      <Animatable.View animation="fadeIn" duration={550} style={styles.animatedContainer}>
+      <Animatable.View animation="fadeInUp" duration={500} style={styles.animatedContainer}>
         <FlatList 
           data={schedules}
           renderItem={singleItem}

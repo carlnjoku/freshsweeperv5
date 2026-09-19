@@ -38,6 +38,10 @@ namespace facebook::react {
       return static_cast<ObjCTurboModule&>(turboModule).invokeObjCMethod(rt, VoidKind, "preload", @selector(preload), args, count);
     }
 
+    static facebook::jsi::Value __hostFunction_NativeKeyboardControllerSpecJSI_setTranslucent(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<ObjCTurboModule&>(turboModule).invokeObjCMethod(rt, VoidKind, "setTranslucent", @selector(setTranslucent:), args, count);
+    }
+
     static facebook::jsi::Value __hostFunction_NativeKeyboardControllerSpecJSI_dismiss(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
       return static_cast<ObjCTurboModule&>(turboModule).invokeObjCMethod(rt, VoidKind, "dismiss", @selector(dismiss:animated:), args, count);
     }
@@ -72,6 +76,9 @@ namespace facebook::react {
         
         
         methodMap_["preload"] = MethodMetadata {0, __hostFunction_NativeKeyboardControllerSpecJSI_preload};
+        
+        
+        methodMap_["setTranslucent"] = MethodMetadata {1, __hostFunction_NativeKeyboardControllerSpecJSI_setTranslucent};
         
         
         methodMap_["dismiss"] = MethodMetadata {2, __hostFunction_NativeKeyboardControllerSpecJSI_dismiss};

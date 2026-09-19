@@ -2421,6 +2421,7 @@ export default function EditProperty({ navigation, route }) {
         }
 
         const updatedData = {
+            userId:currentUserId,
             aptId: propertyId,
             apt_name: aptName,
             address: address,
@@ -2615,11 +2616,11 @@ export default function EditProperty({ navigation, route }) {
                     />
                     {errors.contact_phone && <Text style={styles.errorText}>{errors.contact_phone}</Text>}
 
-                    <TouchableOpacity style={styles.cleanerButton} onPress={() => setCleanerModalVisible(true)}>
+                    {/* <TouchableOpacity style={styles.cleanerButton} onPress={() => setCleanerModalVisible(true)}>
                         <Text style={styles.cleanerButtonText}>
                             {tSafe('manage_cleaners', 'Manage Cleaners')} ({preferredCleaners.length} {tSafe('selected', 'selected')})
                         </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <Button title={tSafe('update_property', 'Update Property')} onPress={handleUpdate} loading={loading} />
                 </ScrollView>

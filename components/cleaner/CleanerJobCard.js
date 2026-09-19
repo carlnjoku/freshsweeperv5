@@ -667,99 +667,117 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
     cleaner => cleaner.cleanerId === currentCleanerId
   );
 
+  currentCleaner.text
+
   // If cleaner not found in this schedule, don't render
   if (!currentCleaner) {
     return null;
   }
 
-  // Determine if the schedule is completed or uncompleted
-  const getCompletionStatus = () => {
-    // First, check the current cleaner's status
-    const currentCleanerStatus = currentCleaner.status?.toLowerCase();
-    
-    // Check if payment has been released for this cleaner
-    const isPaymentReleased = currentCleaner.payment_released === true;
-    
-    // Check if payment is approved (using both field names to handle typos)
-    const isPaymentApproved = currentCleaner.payment_approved === true || 
-                             currentCleaner.payment_appoved === true; // Handle typo in sample data
-    
-    // If payment has been released, show payment released status (highest priority)
-    if (isPaymentReleased) {
-      return { 
-        type: 'payment_released', 
-        text: tSafe('payment_released', 'Payment Released'), 
-        color: COLORS.success 
-      };
-    }
-    
-    // If payment is approved but not yet released
-    if (isPaymentApproved || currentCleanerStatus === 'payment_approved') {
-      return { 
-        type: 'payment_approved', 
-        text: tSafe('payment_approved', 'Payment Approved'), 
-        color: '#28a745' 
-      }; // Green color
-    }
-    
-    // If status is payment_confirmed
-    if (currentCleanerStatus === 'payment_confirmed') {
-      return { 
-        type: 'payment_confirmed', 
-        text: tSafe('payment_confirmed', 'Payment Confirmed'), 
-        color: '#17a2b8' 
-      }; // Teal color
-    }
-    
-    // If current cleaner is completed, show as completed
-    if (currentCleanerStatus === 'completed') {
-      return { 
-        type: 'completed', 
-        text: tSafe('completed', 'Completed'), 
-        color: COLORS.green 
-      };
-    }
-    
-    // If current cleaner is uncompleted, show as uncompleted
-    if (currentCleanerStatus === 'uncompleted') {
-      return { 
-        type: 'uncompleted', 
-        text: tSafe('uncompleted', 'Uncompleted'), 
-        color: COLORS.error 
-      };
-    }
-    
-    // Check if all cleaners are completed (for overall schedule status)
-    const allCleanersCompleted = schedule?.assignedTo?.every(
-      cleaner => cleaner.status?.toLowerCase() === 'completed'
-    );
-    
-    // Check if any cleaner is uncompleted
-    const anyCleanerUncompleted = schedule?.assignedTo?.some(
-      cleaner => cleaner.status?.toLowerCase() === 'uncompleted'
-    );
   
-    // Final fallback logic
-    if (allCleanersCompleted) {
-      return { 
-        type: 'completed', 
-        text: tSafe('completed', 'Completed'), 
-        color: COLORS.success 
-      };
-    } else if (anyCleanerUncompleted) {
-      return { 
-        type: 'uncompleted', 
-        text: tSafe('uncompleted', 'Uncompleted'), 
-        color: COLORS.error 
-      };
-    } else {
-      return { 
-        type: 'in_progress', 
-        text: tSafe('in_progress', 'In Progress'), 
-        color: COLORS.warning 
-      };
-    }
+
+  const getStatusIcon = () => {
+    const type = completionStatus.type;
+    if (type === 'payment_released') return "checkmark-done-circle-outline";
+    if (type === 'payment_approved') return "checkmark-circle-outline";
+    if (type === 'payment_confirmed') return "checkmark-circle";
+    if (type === 'completed') return "checkmark-circle-outline";
+    if (type === 'uncompleted') return "close-circle-outline";
+    if (type === 'pending_review') return "time-outline";
+    if (type === 'in_progress') return "timer-outline";
+    if (type === 'approved') return "checkmark-circle-outline";
+    if (type === 'cancelled') return "ban-outline";
+    if (type === 'rejected') return "close-circle-outline";
+    return "time-outline";
   };
+
+// CleanerJobCard.js – only the changed parts (getCompletionStatus and related)
+const getCompletionStatus = () => {
+  // Get the current cleaner's status
+  const cleanerStatus = currentCleaner?.status?.toLowerCase();
+
+  // 1. Payment released has the highest priority
+  if (currentCleaner?.payment_released === true) {
+    return {
+      type: 'payment_released',
+      text: tSafe('payment_released', 'Payment Released'),
+      color: COLORS.success,
+    };
+  }
+
+  // 2. Payment approved (either field)
+  if (currentCleaner?.payment_approved === true || 
+      currentCleaner?.payment_appoved === true || 
+      cleanerStatus === 'payment_approved') {
+    return {
+      type: 'payment_approved',
+      text: tSafe('payment_approved', 'Payment Approved'),
+      color: '#28a745',
+    };
+  }
+
+  // 3. Payment confirmed
+  if (cleanerStatus === 'payment_confirmed') {
+    return {
+      type: 'payment_confirmed',
+      text: tSafe('payment_confirmed', 'Payment Confirmed'),
+      color: '#17a2b8',
+    };
+  }
+
+  // 4. Directly map the cleaner's status from assignedTo
+  switch (cleanerStatus) {
+    case 'completed':
+      return {
+        type: 'completed',
+        text: tSafe('completed', 'Completed'),
+        color: COLORS.green,
+      };
+    case 'uncompleted':
+      return {
+        type: 'uncompleted',
+        text: tSafe('uncompleted', 'Uncompleted'),
+        color: COLORS.error,
+      };
+    case 'pending_review':
+      return {
+        type: 'pending_review',
+        text: tSafe('pending_review', 'Pending Review'),
+        color: COLORS.warning,
+      };
+    case 'in_progress':
+      return {
+        type: 'in_progress',
+        text: tSafe('in_progress', 'In Progress'),
+        color: COLORS.warning,
+      };
+    case 'approved':
+      return {
+        type: 'approved',
+        text: tSafe('approved', 'Approved'),
+        color: '#28a745',
+      };
+    case 'cancelled':
+      return {
+        type: 'cancelled',
+        text: tSafe('cancelled', 'Cancelled'),
+        color: '#6c757d',
+      };
+    case 'rejected':
+      return {
+        type: 'rejected',
+        text: tSafe('rejected', 'Rejected'),
+        color: '#dc3545',
+      };
+    default:
+      // Fallback – if status is unknown, show as 'in_progress' (or 'unknown')
+      return {
+        type: 'unknown',
+        text: cleanerStatus || tSafe('unknown_status', 'Unknown'),
+        color: COLORS.gray,
+      };
+  }
+};
 
   const completionStatus = getCompletionStatus();
 
@@ -794,21 +812,7 @@ const CleanerJobCard = ({ schedule, onImagePress, currentCleanerId }) => {
     outputRange: ['0deg', '180deg'],
   });
 
-  const getStatusIcon = () => {
-    if (completionStatus.type === 'payment_released') {
-      return "checkmark-done-circle-outline"; // Double checkmark for released payment
-    } else if (completionStatus.type === 'payment_approved') {
-      return "checkmark-circle-outline"; // Single checkmark for approved
-    } else if (completionStatus.type === 'payment_confirmed') {
-      return "checkmark-circle"; // Filled checkmark for confirmed
-    } else if (completionStatus.type === 'completed') {
-      return "checkmark-circle-outline";
-    } else if (completionStatus.type === 'uncompleted') {
-      return "close-circle-outline";
-    } else {
-      return "time-outline";
-    }
-  };
+  
 
   const getCleanerProgress = () => {
     return {

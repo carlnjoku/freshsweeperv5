@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   View,
@@ -21,7 +20,6 @@ import COLORS from '../../constants/colors';
 import CustomCard from '../../components/shared/CustomCard';
 import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
-// import { MAP_BOX_SECRET_KEY } from '../../secret';
 import { tSafe } from '../../utils/tSafe'; // added import
 import { MAP_BOX_SECRET_KEY } from '../../env';
 
@@ -74,7 +72,7 @@ export default function PropertyPreview() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const scrollRef = useRef(null);
-  alert(MAP_BOX_SECRET_KEY)
+
   // Load property data
   useEffect(() => {
     const loadProperty = async () => {
@@ -330,7 +328,7 @@ export default function PropertyPreview() {
           <View style={styles.infoRow}>
             <MaterialIcons name="person" size={18} color={COLORS.darkGray} />
             <Text style={styles.infoLabel}>{tSafe('name_label', 'Name:')}</Text>
-            <Text style={styles.infoValue}>{property.owner_info?.firstname || tSafe('na', 'N/A')}</Text>
+            <Text style={styles.infoValue}>{property.owner_info?.firstname  || tSafe('na', 'N/A')}</Text>
           </View>
           <View style={styles.infoRow}>
             <MaterialIcons name="email" size={18} color={COLORS.darkGray} />

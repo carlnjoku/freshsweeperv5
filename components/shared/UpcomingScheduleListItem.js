@@ -1,3 +1,248 @@
+// import React, { useContext, useState } from 'react';
+// import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+// import COLORS from '../../constants/colors';
+// import { Chip } from 'react-native-paper';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import moment from 'moment';
+// import ROUTES from '../../constants/routes';
+// import { useNavigation } from '@react-navigation/native';
+// import { useBookingContext } from '../../context/BookingContext';
+// import { AuthContext } from '../../context/AuthContext';
+// import { tSafe } from '../../utils/tSafe';
+
+// const UpcomingScheduleListItem = ({ item, currency }) => {
+//   const navigation = useNavigation();
+//   const { userType, currentUserId } = useContext(AuthContext);
+
+//   console.log("Upp------coming", JSON.stringify(item.schedule, null, 2))
+
+
+//   const assignedToForCleaner = item.assignedTo?.find(
+//     (cleaner) => cleaner.cleanerId === currentUserId
+//   );
+
+//   // Check if schedule is cancelled OR current user's assignment is cancelled
+//   const isScheduleCancelled = item.status?.toLowerCase() === 'cancelled';
+//   const isUserAssignmentCancelled = assignedToForCleaner?.status?.toLowerCase() === 'cancelled';
+
+//   const isCancelled = isScheduleCancelled || isUserAssignmentCancelled;
+
+//   const { handleEdit } = useBookingContext();
+
+//   return (
+//     <View>
+//       <View style={styles.container}>
+//         <View style={styles.date_time}>
+//           <Text style={styles.date}>
+//             {moment(item.schedule.cleaning_date).format('ddd MMM DD')}
+//           </Text>
+//           <Text style={styles.time}>
+//             {moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}
+//           </Text>
+//         </View>
+
+//         <View style={styles.dotline}>
+//           <View style={styles.dot} />
+//           <View style={styles.line} />
+//         </View>
+
+//         <View style={styles.task_details}>
+//           <Text bold style={styles.task}>
+//             {item.schedule.apartment_name}
+//           </Text>
+//           <Text style={styles.apartment}>{item.schedule.address}</Text>
+
+//           <Chip
+//               mode="flat"
+//               style={styles.activeChip}
+//               textStyle={styles.text}
+//             >
+
+//               {`${currency}${Number(item.schedule.total_cleaning_fee || 0).toFixed(2)}`}
+
+//             </Chip>
+
+//           {userType === 'host' ? (
+//             <View style={styles.action}>
+//               {item.status === 'pending_payment' || 'upcoming' ? (
+//                 <View
+//                   style={{
+//                     flexDirection: 'row',
+//                     width: '85%',
+//                     justifyContent: 'space-between',
+//                     alignItems: 'center',
+//                   }}
+//                 >
+//                   <TouchableOpacity
+//                     onPress={() =>
+//                       navigation.navigate(ROUTES.host_schedule_details, {
+//                         scheduleId: item._id,
+//                       })
+//                     }
+//                   >
+//                     <Text style={styles.details}>
+//                       {tSafe('view_schedule', 'View schedule')}
+//                     </Text>
+//                   </TouchableOpacity>
+
+//                   <TouchableOpacity
+//                     onPress={() => handleEdit(true, item)}
+//                   >
+//                     <Text style={styles.details}>
+//                       {tSafe('edit_schedule', 'Edit schedule')}
+//                     </Text>
+//                   </TouchableOpacity>
+//                 </View>
+//               ) : (
+//                 <TouchableOpacity
+//                   onPress={() =>
+//                     navigation.navigate(ROUTES.host_schedule_details, {
+//                       scheduleId: item._id,
+//                     })
+//                   }
+//                 >
+//                   <Text style={styles.details}>
+//                     {tSafe('view_schedule', 'View schedule')}
+//                   </Text>
+//                 </TouchableOpacity>
+//               )}
+//             </View>
+//           ) : (
+//             <View style={styles.action}>
+//               {item.status === 'open' ? (
+//                 <TouchableOpacity
+//                   onPress={() =>
+//                     navigation.navigate(ROUTES.cleaner_schedule_details, {
+//                       item: item.item,
+//                     })
+//                   }
+//                 >
+//                   <Text style={styles.details}>
+//                     {tSafe('view_details', 'View Details')}
+//                   </Text>
+//                 </TouchableOpacity>
+//               ) : (
+//                 <>
+//                   {!isCancelled && (
+//                     <TouchableOpacity
+//                       onPress={() =>
+//                         navigation.navigate(ROUTES.cleaner_clock_in, {
+//                           scheduleId: item._id,
+//                           schedule: item,
+//                           cleaner: assignedToForCleaner,
+//                         })
+//                       }
+//                     >
+//                       <Text style={styles.clockin}>
+//                         {tSafe('clock_in', 'Clock-In')}
+//                       </Text>
+//                     </TouchableOpacity>
+//                   )}
+//                 </>
+//               )}
+//             </View>
+//           )}
+//         </View>
+//       </View>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flexDirection: 'row',
+//     marginBottom: 10,
+//     marginTop: 15,
+//   },
+//   dotline: {
+//     flex: 0.05,
+//     height: '100%',
+//     alignItems: 'flex-start',
+//   },
+//   line: {
+//     borderLeftWidth: 0.7,
+//     borderLeftColor: COLORS.light_gray,
+//     minHeight: 78,
+//     marginHorizontal: 5,
+//     marginVertical: 0,
+//   },
+//   date_time: {
+//     flex: 0.25,
+//     alignItems: 'flex-end',
+//     marginRight: 5,
+//   },
+//   task: {
+//     fontWeight: '500',
+//   },
+//   apartment: {
+//     color: COLORS.gray,
+//     fontSize: 13,
+//     marginBottom: 5,
+//   },
+//   date: {
+//     marginTop: -4,
+//     fontSize: 14,
+//     fontWeight: '500',
+//   },
+//   time: {
+//     marginTop: 4,
+//     fontSize: 12,
+//   },
+//   assignee: {
+//     fontSize: 12,
+//     color: COLORS.gray,
+//   },
+//   task_details: {
+//     flex: 0.7,
+//     alignItems: 'flex-start',
+//     width: '100%',
+//     marginTop: -5,
+//   },
+//   status: {
+//     textTransform: 'capitalize',
+//     color: COLORS.light_gray,
+//   },
+//   dot: {
+//     width: 10,
+//     height: 10,
+//     borderRadius: 5,
+//     backgroundColor: COLORS.primary,
+//     marginBottom: 5,
+//   },
+//   details: {
+//     fontSize: 14,
+//     color: COLORS.primary,
+//     textDecorationLine: 'underline',
+//   },
+//   clockin: {
+//     fontSize: 14,
+//     marginLeft: 20,
+//     color: COLORS.primary,
+//     fontWeight: 'bold',
+//   },
+//   action: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-evenly',
+//     marginTop: 5,
+//     marginBottom: 5,
+//   },
+//   chip: {
+//     backgroundColor: COLORS.light_gray_1,
+//     borderRadius: 50,
+//   },
+//   activeChip: {
+//     backgroundColor: COLORS.primary_light_1,
+//     borderRadius: 50,
+//   },
+//   text: {
+//     fontWeight: '400',
+//   },
+// });
+
+// export default UpcomingScheduleListItem;
+
+
+
 import React, { useContext, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import COLORS from '../../constants/colors';
@@ -14,7 +259,8 @@ const UpcomingScheduleListItem = ({ item, currency }) => {
   const navigation = useNavigation();
   const { userType, currentUserId } = useContext(AuthContext);
 
-  
+  // console.log("Upp------coming", JSON.stringify(item.schedule, null, 2));
+
   const assignedToForCleaner = item.assignedTo?.find(
     (cleaner) => cleaner.cleanerId === currentUserId
   );
@@ -24,6 +270,11 @@ const UpcomingScheduleListItem = ({ item, currency }) => {
   const isUserAssignmentCancelled = assignedToForCleaner?.status?.toLowerCase() === 'cancelled';
 
   const isCancelled = isScheduleCancelled || isUserAssignmentCancelled;
+
+  // Check if any cleaner has already clocked in (to hide edit link)
+  const hasAnyCleanerClockedIn = item.assignedTo?.some(
+    (cleaner) => cleaner.clockedIn === true || cleaner.clockInTime != null
+  ) || false;
 
   const { handleEdit } = useBookingContext();
 
@@ -51,18 +302,16 @@ const UpcomingScheduleListItem = ({ item, currency }) => {
           <Text style={styles.apartment}>{item.schedule.address}</Text>
 
           <Chip
-              mode="flat"
-              style={styles.activeChip}
-              textStyle={styles.text}
-            >
-
-              {`${currency}${Number(item.schedule.total_cleaning_fee || 0).toFixed(2)}`}
-
-            </Chip>
+            mode="flat"
+            style={styles.activeChip}
+            textStyle={styles.text}
+          >
+            {`${currency}${Number(item.schedule.total_cleaning_fee || 0).toFixed(2)}`}
+          </Chip>
 
           {userType === 'host' ? (
             <View style={styles.action}>
-              {item.status === 'pending_payment' || 'upcoming' ? (
+              {(item.status === 'pending_payment' || item.status === 'upcoming' || item.status === 'payment_confirmed' || item.status === 'open') ? (
                 <View
                   style={{
                     flexDirection: 'row',
@@ -83,13 +332,16 @@ const UpcomingScheduleListItem = ({ item, currency }) => {
                     </Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => handleEdit(true, item)}
-                  >
-                    <Text style={styles.details}>
-                      {tSafe('edit_schedule', 'Edit schedule')}
-                    </Text>
-                  </TouchableOpacity>
+                  {/* Only show Edit link if no cleaner has clocked in yet */}
+                  {!hasAnyCleanerClockedIn && (
+                    <TouchableOpacity
+                      onPress={() => handleEdit(true, item)}
+                    >
+                      <Text style={styles.details}>
+                        {tSafe('edit_schedule', 'Edit schedule')}
+                      </Text>
+                    </TouchableOpacity>
+                   )}
                 </View>
               ) : (
                 <TouchableOpacity
@@ -147,6 +399,7 @@ const UpcomingScheduleListItem = ({ item, currency }) => {
 };
 
 const styles = StyleSheet.create({
+  // ... (all your existing styles remain unchanged)
   container: {
     flexDirection: 'row',
     marginBottom: 10,

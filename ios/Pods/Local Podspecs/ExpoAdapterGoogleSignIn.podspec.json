@@ -1,6 +1,6 @@
 {
   "name": "ExpoAdapterGoogleSignIn",
-  "version": "16.1.2",
+  "version": "16.1.4",
   "summary": "Google sign in for your react native applications",
   "description": "Google sign in for your react native applications",
   "license": "MIT",
@@ -12,7 +12,7 @@
   "swift_versions": "5.4",
   "source": {
     "git": "https://github.com/react-native-google-signin/google-signin.git",
-    "tag": "v16.1.2"
+    "tag": "v16.1.4"
   },
   "static_framework": true,
   "dependencies": {
@@ -20,7 +20,10 @@
     "React-Core": [],
     "GoogleSignIn": [
       "~> 9.0"
-    ]
+    ],
+    "GoogleUtilities/Environment": [],
+    "GoogleUtilities/UserDefaults": [],
+    "RecaptchaInterop": []
   },
   "pod_target_xcconfig": {
     "DEFINES_MODULE": "YES"

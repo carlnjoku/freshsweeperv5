@@ -1692,6 +1692,8 @@ import { tSafe } from '../../utils/tSafe'; // added import
 export default function OngoingWorkListItem({ item }) {
   const navigation = useNavigation();
 
+  console.log("Ongoing Schedules", item.schedule)
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':

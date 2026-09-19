@@ -825,7 +825,7 @@ const getTranslatedStatus = (status) => {
   }
 };
 
-const BeforePhoto = ({ scheduleId, schedule }) => {
+const BeforePhoto = ({ scheduleId, schedule, onScroll }) => {
   const { currentUserId } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [assignedCleaners, setAssignedCleaners] = useState([]);
@@ -1191,6 +1191,8 @@ const BeforePhoto = ({ scheduleId, schedule }) => {
               showsVerticalScrollIndicator={false}
               style={styles.cleanersScrollView}
               contentContainerStyle={styles.cleanersList}
+              onScroll={onScroll}                 // ✅ added
+              scrollEventThrottle={16} 
             >
               {hasPhotos ? (
                 <View style={styles.cleanersContent}>

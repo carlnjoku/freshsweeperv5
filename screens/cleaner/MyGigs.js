@@ -25,6 +25,7 @@ const MyGigs = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+
   const fetchLinkedProperties = async () => {
     try {
       setError(null);

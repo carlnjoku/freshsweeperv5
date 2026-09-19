@@ -157,7 +157,7 @@ export default function AllRequests({ route }) {
       </Text>
       
       {/* Status Summary Cards */}
-      <View style={styles.summaryCards}>
+      {/* <View style={styles.summaryCards}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryCount}>{statusCounts.total}</Text>
           <Text style={styles.summaryLabel}>{tSafe('total', 'Total')}</Text>
@@ -177,7 +177,7 @@ export default function AllRequests({ route }) {
           <Text style={[styles.summaryLabel, styles.declinedLabel]}>{tSafe('declined', 'Declined')}</Text>
           <Text style={styles.summarySubtext}>{tSafe('not_available', 'Not available')}</Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Filter Tabs */}
       <ScrollView 

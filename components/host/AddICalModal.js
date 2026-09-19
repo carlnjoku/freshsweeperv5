@@ -312,13 +312,16 @@ export default function AddICalModal({
                             disabled={!enabled}
                           />
                           <Avatar.Image
-                            size={40}
-                            source={{ uri: cleaner.avatarUrl || 'https://via.placeholder.com/40' }}
+                            size={30}
+                            source={{ uri: cleaner.avatar || 'https://via.placeholder.com/40' }}
                             style={styles.cleanerAvatar}
                           />
-                          <Text style={styles.cleanerName}>
-                            {cleaner.firstname} {cleaner.lastname}
-                          </Text>
+                          <View style={styles.linkedCleaners}> 
+                            <Text style={styles.cleanerName}>
+                              {cleaner.firstname} {cleaner.lastname}
+                            </Text>
+                            <Text style={styles.email}>{cleaner.email}</Text>
+                          </View>
                         </TouchableOpacity>
                       ))}
                       {cleaners.length === 0 && (
@@ -454,7 +457,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 56,
     marginBottom: 24,
     paddingHorizontal: 16,
   },
@@ -727,4 +730,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     marginTop: 8,
   },
+  linkedCleaners:{
+    flexDirection:'column'
+  },
+  email:{
+    fontSize:13,
+    color:COLORS.gray
+  }
 });

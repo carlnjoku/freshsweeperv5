@@ -331,6 +331,7 @@ export default function ScheduleDetails({ navigation, route }) {
                     callPhone={callPhone}
                     openExisitingConversation={openExisitingConversation}
                     onCancelCleaner={canCancelThisCleaner ? () => openPartialCancellationModal(cleaner) : null}
+                    onClaimCleaner={() => handleClaim(cleaner)}
                     canCancel={canCancelThisCleaner}
                 />
             </View>
@@ -592,34 +593,7 @@ export default function ScheduleDetails({ navigation, route }) {
                                         );
                                         const isCancelled = isCleanerCancelled(cleaner);
                                         
-                                        // For cancelled cleaners, show a special card
-                                        // if (isCancelled) {
-                                        //     return (
-                                        //         <View key={cleaner.cleanerId || index} style={styles.cancelledCleanerCard}>
-                                        //             <View style={styles.cancelledCleanerContent}>
-                                        //                 <Avatar.Icon 
-                                        //                     size={50} 
-                                        //                     icon="account-off" 
-                                        //                     style={styles.cancelledAvatar}
-                                        //                 />
-                                        //                 <View style={styles.cancelledCleanerInfo}>
-                                        //                     <Text style={styles.cancelledCleanerName}>
-                                        //                         {cleaner.firstname} {cleaner.lastname}
-                                        //                     </Text>
-                                        //                     <View style={styles.cancelledBadge}>
-                                        //                         <MaterialCommunityIcons name="close-circle" size={14} color="#DC3545" />
-                                        //                         <Text style={styles.cancelledBadgeText}>
-                                        //                             {tSafe('cancelled', 'CANCELLED')}
-                                        //                         </Text>
-                                        //                     </View>
-                                        //                     <Text style={styles.cancelledNote}>
-                                        //                         {tSafe('cleaner_cancelled_note', 'This cleaner has been cancelled from this booking.')}
-                                        //                     </Text>
-                                        //                 </View>
-                                        //             </View>
-                                        //         </View>
-                                        //     );
-                                        // }
+                                        
 
                                         {/* For cancelled cleaners */}
                                         {isCancelled && (

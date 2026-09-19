@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import {
   View,
@@ -26,15 +23,14 @@ import userService from '../../../services/connection/userService';
 import COLORS from '../../../constants/colors';
 import { formatAmountWithSymbol } from '../../../utils/formatAmountWithSymbol';
 import { minutesToDuration } from '../../../utils/minuteToDuration';
-import { tSafe } from '../../../utils/tSafe'; // added import
+import { tSafe } from '../../../utils/tSafe';
 
 const { width, height } = Dimensions.get('window');
 
 const PaymentsHistoryCleaner = () => {
   const navigation = useNavigation();
-  const { currentUserId, currentUser, geolocationData } = useContext(AuthContext);
+  const { currentUserId, currency, currentUser, geolocationData } = useContext(AuthContext);
 
-  const currencySymbol = geolocationData?.currency?.symbol ?? "";
 
   const [payments, setPayments] = useState([]);
   const [filteredPayments, setFilteredPayments] = useState([]);
@@ -319,7 +315,7 @@ const PaymentsHistoryCleaner = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `${currencySymbol}${amount?.toFixed(2) || '0.00'}`;
+    return `${currency}${amount?.toFixed(2) || '0.00'}`;
   };
 
   const formatDate = (dateString) => {
@@ -394,12 +390,12 @@ const PaymentsHistoryCleaner = () => {
           />
         </View>
         <View style={styles.paymentInfo}>
-          <Text style={styles.paymentService}>{item.service || tSafe('cleaning_service', 'Cleaning Service')}</Text>
+          <Text style={styles.paymentService}>{item.property_name || tSafe('cleaning_service', 'Cleaning Service')}</Text>
           <Text style={styles.paymentClient}>{item.client || tSafe('client', 'Client')}</Text>
           <Text style={styles.paymentDate}>{formatDate(item.date)}</Text>
         </View>
         <View style={styles.paymentAmountContainer}>
-          <Text style={styles.paymentAmount}>{formatAmountWithSymbol(item.amount, currencySymbol)}</Text>
+          <Text style={styles.paymentAmount}>{formatAmountWithSymbol(item.amount, currency)}</Text>
 
           <View style={[
             styles.statusBadge,
@@ -420,7 +416,7 @@ const PaymentsHistoryCleaner = () => {
       <View style={styles.paymentCardFooter}>
         <View style={styles.footerItem}>
           <MaterialCommunityIcons name="clock-outline" size={14} color="#8E8E93" />
-          <Text style={styles.footerText}>{item.duration || tSafe('na', 'N/A')}</Text>
+          <Text style={styles.footerText}>{minutesToDuration(item.duration) || tSafe('na', 'N/A')}</Text>
         </View>
         <View style={styles.footerItem}>
           <MaterialCommunityIcons 
@@ -447,18 +443,18 @@ const PaymentsHistoryCleaner = () => {
       {/* Stats Overview */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="cash-multiple" size={24} color="#007AFF" />
-          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.total, currencySymbol)}</Text>
+          <MaterialCommunityIcons name="cash-multiple" size={24} color={COLORS.primary} />
+          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.total, currency)}</Text>
           <Text style={styles.statLabel}>{tSafe('total_earnings', 'Total Earnings')}</Text>
         </View>
         <View style={styles.statCard}>
           <MaterialCommunityIcons name="calendar-month" size={24} color="#34C759" />
-          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.thisMonth, currencySymbol)}</Text>
+          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.thisMonth, currency)}</Text>
           <Text style={styles.statLabel}>{tSafe('this_month', 'This Month')}</Text>
         </View>
         <View style={styles.statCard}>
           <MaterialCommunityIcons name="trending-up" size={24} color="#FF9500" />
-          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.averagePayment, currencySymbol)}</Text>
+          <Text style={styles.statValue}>{formatAmountWithSymbol(stats.averagePayment, currency)}</Text>
           <Text style={styles.statLabel}>{tSafe('avg_payment', 'Avg Payment')}</Text>
         </View>
       </View>
@@ -503,7 +499,7 @@ const PaymentsHistoryCleaner = () => {
               <MaterialCommunityIcons 
                 name={filter.icon} 
                 size={16} 
-                color={selectedFilter === filter.id ? '#FFFFFF' : '#007AFF'} 
+                color={selectedFilter === filter.id ? '#FFFFFF' : COLORS.primary} 
               />
               <Text style={[
                 styles.filterButtonText,
@@ -529,7 +525,7 @@ const PaymentsHistoryCleaner = () => {
             <MaterialCommunityIcons 
               name={sortOrder === 'asc' ? 'sort-ascending' : 'sort-descending'} 
               size={20} 
-              color="#007AFF" 
+              color={COLORS.primary} 
             />
             <Text style={styles.sortButtonText}>
               {tSafe('sort_by', 'Sort by {order}', { order: sortOrder === 'asc' ? tSafe('ascending', 'Ascending') : tSafe('descending', 'Descending') })}
@@ -555,7 +551,7 @@ const PaymentsHistoryCleaner = () => {
               <MaterialCommunityIcons 
                 name={option.icon} 
                 size={16} 
-                color={sortBy === option.id ? '#FFFFFF' : '#007AFF'} 
+                color={sortBy === option.id ? '#FFFFFF' : COLORS.primary} 
               />
               <Text style={[
                 styles.sortOptionText,
@@ -597,7 +593,7 @@ const PaymentsHistoryCleaner = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.loadingText}>{tSafe('loading_payment_history', 'Loading payment history...')}</Text>
       </View>
     );
@@ -613,17 +609,16 @@ const PaymentsHistoryCleaner = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#007AFF" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{tSafe('payment_history', 'Payment History')}</Text>
         <TouchableOpacity 
           style={styles.exportButton}
           onPress={() => {
-            // Implement export functionality
             alert(tSafe('export_feature_coming_soon', 'Export feature coming soon!'));
           }}
         >
-          <MaterialCommunityIcons name="export" size={24} color="#007AFF" />
+          <MaterialCommunityIcons name="export" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -704,7 +699,7 @@ const PaymentsHistoryCleaner = () => {
                       <MaterialCommunityIcons name="briefcase" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>{tSafe('service_type', 'Service Type')}</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.service || tSafe('standard_cleaning', 'Standard Cleaning')}</Text>
+                        <Text style={styles.detailValue}>{selectedPayment.property_name || tSafe('standard_cleaning', 'Standard Cleaning')}</Text>
                       </View>
                     </View>
 
@@ -720,7 +715,7 @@ const PaymentsHistoryCleaner = () => {
                       <MaterialCommunityIcons name="clock-outline" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>{tSafe('duration', 'Duration')}</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.duration || tSafe('two_hours', '2 hours')}</Text>
+                        <Text style={styles.detailValue}>{minutesToDuration(selectedPayment.duration) || tSafe('two_hours', '2 hours')}</Text>
                       </View>
                     </View>
 
@@ -817,9 +812,7 @@ const PaymentsHistoryCleaner = () => {
                     <TouchableOpacity 
                       style={[styles.actionButton, styles.primaryAction]}
                       onPress={() => {
-                        // Handle receipt download or view
                         closePaymentModal();
-                        // Add your receipt logic here
                         alert(tSafe('downloading_receipt', 'Downloading receipt...'));
                       }}
                     >
@@ -967,15 +960,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: COLORS.primary,
   },
   filterButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterButtonText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: COLORS.primary,
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -997,7 +990,7 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: COLORS.primary,
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -1020,8 +1013,8 @@ const styles = StyleSheet.create({
     borderColor: '#E9ECEF',
   },
   sortOptionButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   sortOptionText: {
     fontSize: 14,
@@ -1133,7 +1126,7 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     marginTop: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1260,7 +1253,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   primaryAction: {
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     borderWidth: 0,
     paddingVertical: 16,
     gap: 8,

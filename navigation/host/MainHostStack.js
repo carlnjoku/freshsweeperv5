@@ -27,6 +27,7 @@
 // // import ChangePassword from '../../screens/host/ChangePassword';
 // import PaymentComplete from '../../screens/host/Payment/PaymentComplete';
 // import ScheduleRequest from '../../screens/host/ScheduleRequest';
+
 // import PaymentGroupCheckout from '../../screens/host/Payment/PaymentGroupCheckout';
 // import Notification from '../../components/shared/Notification';
 // import Createchecklist from '../../screens/host/Createchecklist';
@@ -638,6 +639,13 @@ import ICalendar from '../../screens/host/ICalendar';
 import { tSafe } from '../../utils/tSafe'; // added import
 import InviteCleaner from '../../screens/host/InviteCleaner';
 import InventoryManagement from '../../screens/host/InventoryManagement';
+import TeamForm from '../../screens/host/Team/TeamForm';
+import SelectTeamMembers from '../../screens/host/Team/SelectTeamMembers';
+import CustomBackButton from '../../components/shared/CustomBackButton';
+import HostCleanerRecommendations from '../../screens/host/HostCleanerRecommendations';
+import ReplacementCleaner from '../../screens/host/ReplacementCleaner';
+import ReplacementRequestStatus from '../../screens/host/ReplacementRequestStatus';
+
 
 export default function MainHostStack() {
     const navigation = useNavigation();
@@ -713,7 +721,8 @@ export default function MainHostStack() {
             <Stack.Navigator
                 screenOptions={{
                     ...TransitionPresets.ScaleFromCenterAndroid,
-                    headerTintColor: COLORS.white,
+                    headerTintColor: '#000',
+                    headerBackImage: ({ tintColor }) => <CustomBackButton tintColor={tintColor || '#333'} />,
                     headerBackTitleVisible: false,
                     headerStyle: {
                         backgroundColor: '#ffffff',
@@ -752,6 +761,45 @@ export default function MainHostStack() {
                         title: tSafe('apartment_title', 'Apartment'),
                     })}
                 />
+                <Stack.Screen
+                    name={ROUTES.host_team_form}
+                    component={TeamForm}
+                    options={({ route }) => ({
+                        headerShown: true,
+                        headerTintColor: COLORS.gray,
+                        headerBackTitleVisible: false,
+                        headerBackTitle: '',
+                        headerStyle: {
+                            backgroundColor: '#fff',
+                            elevation: 5,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.3,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowRadius: 3,
+                        },
+                        title: tSafe('team_form', 'Team Form'),
+                    })}
+                />
+                <Stack.Screen 
+                    name={ROUTES.host_select_team_members} 
+                    component={SelectTeamMembers} 
+                    options={({ route }) => ({
+                        headerShown: true,
+                        title: tSafe('select_team_members', 'Select Team Members'),
+                        headerTintColor: COLORS.gray,
+                        headerBackTitleVisible: false,
+                        headerBackTitle: '',
+                        headerStyle: {
+                            backgroundColor: '#fff',
+                            elevation: 5,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.3,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowRadius: 3,
+                        },
+                    })}
+                />
+                
                 <Stack.Screen
                     name={ROUTES.host_edit_apt}
                     component={EditProperty}
@@ -821,7 +869,7 @@ export default function MainHostStack() {
                         headerTintColor: COLORS.white,
                         headerBackTitleVisible: false,
                         headerBackTitle: '',
-                        title: tSafe('create_checklist_title', 'Create Checklist'),
+                        title: tSafe('edit_checklist_title', 'Edit Checklist'),
                         headerTintColor: COLORS.gray,
                         headerBackTitleVisible: false,
                         headerStyle: {
@@ -912,6 +960,22 @@ export default function MainHostStack() {
                         headerBackTitleVisible: false,
                     })}
                 />
+
+                {/* <Stack.Screen
+                    name={ROUTES.host_recommended_cleaners}
+                    component={HostCleanerRecommendations}
+                    options={{ title: 'Build Your Cleaning Team' }}
+                /> */}
+
+<Stack.Screen
+    name={ROUTES.host_recommended_cleaners}
+    component={HostCleanerRecommendations}
+    options={{
+    title: 'Build Your Cleaning Team',
+    headerBackButtonDisplayMode: 'minimal',
+    }}
+
+/>
 
                 <Stack.Screen
                     name={ROUTES.host_schedule_request}
@@ -1052,6 +1116,7 @@ export default function MainHostStack() {
                         },
                     })}
                 />
+                
                 <Stack.Screen
                     name={ROUTES.host_receipt_details}
                     component={Receipt}
@@ -1064,6 +1129,19 @@ export default function MainHostStack() {
                             backgroundColor: COLORS.primary,
                         },
                     })}
+                />
+                <Stack.Screen
+                    name={ROUTES.host_replacement_cleaner}
+                    component={ReplacementCleaner}
+                    options={{ title: "Find Replacement Cleaner" }}
+                />
+                
+                <Stack.Screen
+                    name={ROUTES.host_replacement_request_status}
+                    component={ReplacementRequestStatus}
+                    options={{
+                        title: 'Replacement Requests',
+                    }}
                 />
                 <Stack.Screen
                     name={ROUTES.chat_conversation}

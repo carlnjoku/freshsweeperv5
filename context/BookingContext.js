@@ -640,6 +640,7 @@ export const BookingProvider = ({ children }) => {
     setModalEVisible(visible);
     setSelectedSchedule(schedule);
     setFormData(schedule?.schedule || initialFormData);
+   
 
     if (!visible) {
       resetFormData();

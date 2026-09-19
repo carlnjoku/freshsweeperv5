@@ -406,6 +406,300 @@
 
 
 
+// import React from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Linking,
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import CardNoPrimary from '../../components/shared/CardNoPrimary';
+// import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
+// import COLORS from '../../constants/colors';
+// import { tSafe } from '../../utils/tSafe'; // added import
+
+// export default function ContactDisplay({ contact, handleOpenContact }) {
+//   const handleCall = () => {
+//     if (contact?.phone) {
+//       Linking.openURL(`tel:${contact.phone}`);
+//     }
+//   };
+
+//   const handleOpenMaps = () => {
+//     if (contact?.address) {
+//       const encodedAddress = encodeURIComponent(contact.address);
+//       Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
+//     }
+//   };
+
+//   const handleEmail = () => {
+//     if (contact?.email) {
+//       Linking.openURL(`mailto:${contact.email}`);
+//     }
+//   };
+
+//   return (
+//     <CardNoPrimary style={styles.card}>
+//       {/* Header with title and edit button */}
+//       <View style={styles.header}>
+//         <View style={styles.titleContainer}>
+//           <View style={styles.iconWrapper}>
+//             <MaterialCommunityIcons
+//               name="card-account-details-outline"
+//               size={20}
+//               color={COLORS.white}
+//             />
+//           </View>
+//           <Text style={styles.title}>
+//             {tSafe('contact_information', 'Contact Information')}
+//           </Text>
+//         </View>
+//         <TouchableOpacity onPress={handleOpenContact} style={styles.editButton}>
+//           <CircleIconNoLabel
+//             onPress={handleOpenContact}
+//             iconName="pencil"
+//             buttonSize={36}
+//             radiusSise={18}
+//             iconSize={18}
+//           />
+//         </TouchableOpacity>
+//       </View>
+
+//       <View style={styles.divider} />
+
+//       {/* Contact items */}
+//       <View style={styles.content}>
+//         {/* Address */}
+//         <TouchableOpacity
+//           style={styles.contactRow}
+//           onPress={handleOpenMaps}
+//           disabled={!contact?.address}
+//           activeOpacity={0.7}
+//         >
+//           <View style={[styles.iconWrapper, { backgroundColor: '#E8F0FE' }]}>
+//             <MaterialCommunityIcons
+//               name="map-marker-outline"
+//               size={20}
+//               color={COLORS.primary}
+//             />
+//           </View>
+//           <View style={styles.textWrapper}>
+//             <Text style={styles.label}>
+//               {tSafe('address', 'Address')}
+//             </Text>
+//             <Text style={styles.value} numberOfLines={1}>
+//               {contact?.address || tSafe('not_provided', 'Not provided')}
+//             </Text>
+//           </View>
+//           {contact?.address && (
+//             <MaterialCommunityIcons
+//               name="chevron-right"
+//               size={20}
+//               color={COLORS.gray}
+//             />
+//           )}
+//         </TouchableOpacity>
+
+//         {/* Phone */}
+//         <TouchableOpacity
+//           style={styles.contactRow}
+//           onPress={handleCall}
+//           disabled={!contact?.phone}
+//           activeOpacity={0.7}
+//         >
+//           <View style={[styles.iconWrapper, { backgroundColor: '#E8F5E9' }]}>
+//             <MaterialCommunityIcons
+//               name="phone-outline"
+//               size={20}
+//               color="#4CAF50"
+//             />
+//           </View>
+//           <View style={styles.textWrapper}>
+//             <Text style={styles.label}>
+//               {tSafe('phone', 'Phone')}
+//             </Text>
+//             <Text style={styles.value}>
+//               {contact?.phone || tSafe('not_provided', 'Not provided')}
+//             </Text>
+//           </View>
+//           {contact?.phone && (
+//             <MaterialCommunityIcons
+//               name="chevron-right"
+//               size={20}
+//               color={COLORS.gray}
+//             />
+//           )}
+//         </TouchableOpacity>
+
+//         {/* Email */}
+//         <TouchableOpacity
+//           style={styles.contactRow}
+//           onPress={handleEmail}
+//           disabled={!contact?.email}
+//           activeOpacity={0.7}
+//         >
+//           <View style={[styles.iconWrapper, { backgroundColor: '#F3E5F5' }]}>
+//             <MaterialCommunityIcons
+//               name="email-outline"
+//               size={20}
+//               color="#9C27B0"
+//             />
+//           </View>
+//           <View style={styles.textWrapper}>
+//             <Text style={styles.label}>
+//               {tSafe('email', 'Email')}
+//             </Text>
+//             <Text style={styles.value} numberOfLines={1}>
+//               {contact?.email || tSafe('not_provided', 'Not provided')}
+//             </Text>
+//           </View>
+//           {contact?.email && (
+//             <MaterialCommunityIcons
+//               name="chevron-right"
+//               size={20}
+//               color={COLORS.gray}
+//             />
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Optional footer with quick actions */}
+//       {(contact?.phone || contact?.address) && (
+//         <View style={styles.footer}>
+//           {contact?.phone && (
+//             <TouchableOpacity style={styles.footerButton} onPress={handleCall}>
+//               <MaterialCommunityIcons name="phone" size={18} color={COLORS.white} />
+//               <Text style={styles.footerText}>
+//                 {tSafe('call', 'Call')}
+//               </Text>
+//             </TouchableOpacity>
+//           )}
+//           {contact?.address && (
+//             <TouchableOpacity style={styles.footerButton} onPress={handleOpenMaps}>
+//               <MaterialCommunityIcons name="map" size={18} color={COLORS.white} />
+//               <Text style={styles.footerText}>
+//                 {tSafe('directions', 'Directions')}
+//               </Text>
+//             </TouchableOpacity>
+//           )}
+//         </View>
+//       )}
+//     </CardNoPrimary>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   card: {
+//     backgroundColor: '#fff',
+//     borderRadius: 20,
+//     padding: 16,
+//     marginBottom: 16,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.08,
+//     shadowRadius: 12,
+//     elevation: 4,
+//     borderWidth: 1,
+//     borderColor: '#F0F0F5',
+//   },
+//   iconWrapper: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 18,
+//     backgroundColor: COLORS.primary,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginRight: 12,
+//     shadowColor: COLORS.primary,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 4,
+//     elevation: 3,
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   titleContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   title: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     color: '#1E1E2F',
+//     marginLeft: 8,
+//   },
+//   editButton: {
+//     padding: 4,
+//     backgroundColor: '#F8F9FC',
+//     borderRadius: 20,
+//     borderWidth: 1,
+//     borderColor: '#E6E9F0',
+//   },
+//   divider: {
+//     height: 1,
+//     backgroundColor: '#E6E9F0',
+//     marginBottom: 16,
+//   },
+//   content: {
+//     marginBottom: 8,
+//   },
+//   contactRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingVertical: 12,
+//     paddingHorizontal: 4,
+//     borderRadius: 12,
+//   },
+//   textWrapper: {
+//     flex: 1,
+//   },
+//   label: {
+//     fontSize: 12,
+//     fontWeight: '600',
+//     color: COLORS.gray,
+//     textTransform: 'uppercase',
+//     letterSpacing: 0.5,
+//     marginBottom: 2,
+//   },
+//   value: {
+//     fontSize: 15,
+//     fontWeight: '500',
+//     color: '#1E1E2F',
+//   },
+//   footer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     marginTop: 12,
+//     paddingTop: 12,
+//     borderTopWidth: 1,
+//     borderTopColor: '#F0F0F5',
+//   },
+//   footerButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     backgroundColor: COLORS.primary,
+//     paddingHorizontal: 20,
+//     paddingVertical: 10,
+//     borderRadius: 30,
+//     flex: 0.45,
+//     justifyContent: 'center',
+//   },
+//   footerText: {
+//     color: COLORS.white,
+//     fontWeight: '600',
+//     fontSize: 14,
+//     marginLeft: 6,
+//   },
+// });
+
+
+
 import React from 'react';
 import {
   View,
@@ -415,16 +709,12 @@ import {
   Linking,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import CardNoPrimary from '../../components/shared/CardNoPrimary';
-import CircleIconNoLabel from '../../components/shared/CirecleIconNoLabel';
 import COLORS from '../../constants/colors';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
 
-export default function ContactDisplay({ contact, handleOpenContact }) {
+const ContactDisplay = ({ contact, handleOpenContact }) => {
   const handleCall = () => {
-    if (contact?.phone) {
-      Linking.openURL(`tel:${contact.phone}`);
-    }
+    if (contact?.phone) Linking.openURL(`tel:${contact.phone}`);
   };
 
   const handleOpenMaps = () => {
@@ -435,160 +725,80 @@ export default function ContactDisplay({ contact, handleOpenContact }) {
   };
 
   const handleEmail = () => {
-    if (contact?.email) {
-      Linking.openURL(`mailto:${contact.email}`);
-    }
+    if (contact?.email) Linking.openURL(`mailto:${contact.email}`);
   };
 
+  const hasContactInfo = contact?.address || contact?.phone || contact?.email;
+
   return (
-    <CardNoPrimary style={styles.card}>
-      {/* Header with title and edit button */}
+    <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <View style={styles.iconWrapper}>
-            <MaterialCommunityIcons
-              name="card-account-details-outline"
-              size={20}
-              color={COLORS.white}
-            />
+          <View style={[styles.iconContainer, { backgroundColor: '#F0F0F5' }]}>
+            <MaterialCommunityIcons name="card-account-details-outline" size={20} color="#6B7280" />
           </View>
-          <Text style={styles.title}>
-            {tSafe('contact_information', 'Contact Information')}
-          </Text>
+          <Text style={styles.title}>{tSafe('contact_information', 'Contact Information')}</Text>
         </View>
         <TouchableOpacity onPress={handleOpenContact} style={styles.editButton}>
-          <CircleIconNoLabel
-            onPress={handleOpenContact}
-            iconName="pencil"
-            buttonSize={36}
-            radiusSise={18}
-            iconSize={18}
-          />
+          <MaterialCommunityIcons name="pencil" size={20} color="#6B7280" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.divider} />
 
-      {/* Contact items */}
-      <View style={styles.content}>
-        {/* Address */}
-        <TouchableOpacity
-          style={styles.contactRow}
-          onPress={handleOpenMaps}
-          disabled={!contact?.address}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconWrapper, { backgroundColor: '#E8F0FE' }]}>
-            <MaterialCommunityIcons
-              name="map-marker-outline"
-              size={20}
-              color={COLORS.primary}
-            />
-          </View>
-          <View style={styles.textWrapper}>
-            <Text style={styles.label}>
-              {tSafe('address', 'Address')}
-            </Text>
-            <Text style={styles.value} numberOfLines={1}>
-              {contact?.address || tSafe('not_provided', 'Not provided')}
-            </Text>
-          </View>
+      {hasContactInfo ? (
+        <View style={styles.content}>
+          {/* Address */}
           {contact?.address && (
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={20}
-              color={COLORS.gray}
-            />
-          )}
-        </TouchableOpacity>
-
-        {/* Phone */}
-        <TouchableOpacity
-          style={styles.contactRow}
-          onPress={handleCall}
-          disabled={!contact?.phone}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconWrapper, { backgroundColor: '#E8F5E9' }]}>
-            <MaterialCommunityIcons
-              name="phone-outline"
-              size={20}
-              color="#4CAF50"
-            />
-          </View>
-          <View style={styles.textWrapper}>
-            <Text style={styles.label}>
-              {tSafe('phone', 'Phone')}
-            </Text>
-            <Text style={styles.value}>
-              {contact?.phone || tSafe('not_provided', 'Not provided')}
-            </Text>
-          </View>
-          {contact?.phone && (
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={20}
-              color={COLORS.gray}
-            />
-          )}
-        </TouchableOpacity>
-
-        {/* Email */}
-        <TouchableOpacity
-          style={styles.contactRow}
-          onPress={handleEmail}
-          disabled={!contact?.email}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconWrapper, { backgroundColor: '#F3E5F5' }]}>
-            <MaterialCommunityIcons
-              name="email-outline"
-              size={20}
-              color="#9C27B0"
-            />
-          </View>
-          <View style={styles.textWrapper}>
-            <Text style={styles.label}>
-              {tSafe('email', 'Email')}
-            </Text>
-            <Text style={styles.value} numberOfLines={1}>
-              {contact?.email || tSafe('not_provided', 'Not provided')}
-            </Text>
-          </View>
-          {contact?.email && (
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={20}
-              color={COLORS.gray}
-            />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Optional footer with quick actions */}
-      {(contact?.phone || contact?.address) && (
-        <View style={styles.footer}>
-          {contact?.phone && (
-            <TouchableOpacity style={styles.footerButton} onPress={handleCall}>
-              <MaterialCommunityIcons name="phone" size={18} color={COLORS.white} />
-              <Text style={styles.footerText}>
-                {tSafe('call', 'Call')}
-              </Text>
+            <TouchableOpacity style={styles.row} onPress={handleOpenMaps} activeOpacity={0.7}>
+              <View style={[styles.iconWrapper, { backgroundColor: '#F5F5F8' }]}>
+                <MaterialCommunityIcons name="map-marker-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.textWrapper}>
+                <Text style={styles.label}>{tSafe('address', 'Address')}</Text>
+                <Text style={styles.value} numberOfLines={1}>{contact.address}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
           )}
-          {contact?.address && (
-            <TouchableOpacity style={styles.footerButton} onPress={handleOpenMaps}>
-              <MaterialCommunityIcons name="map" size={18} color={COLORS.white} />
-              <Text style={styles.footerText}>
-                {tSafe('directions', 'Directions')}
-              </Text>
+
+          {/* Phone */}
+          {contact?.phone && (
+            <TouchableOpacity style={styles.row} onPress={handleCall} activeOpacity={0.7}>
+              <View style={[styles.iconWrapper, { backgroundColor: '#F5F5F8' }]}>
+                <MaterialCommunityIcons name="phone-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.textWrapper}>
+                <Text style={styles.label}>{tSafe('phone', 'Phone')}</Text>
+                <Text style={styles.value}>{contact.phone}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+          )}
+
+          {/* Email */}
+          {contact?.email && (
+            <TouchableOpacity style={styles.row} onPress={handleEmail} activeOpacity={0.7}>
+              <View style={[styles.iconWrapper, { backgroundColor: '#F5F5F8' }]}>
+                <MaterialCommunityIcons name="email-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.textWrapper}>
+                <Text style={styles.label}>{tSafe('email', 'Email')}</Text>
+                <Text style={styles.value} numberOfLines={1}>{contact.email}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
           )}
         </View>
+      ) : (
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="account-edit-outline" size={32} color="#D1D5DB" />
+          <Text style={styles.emptyText}>{tSafe('no_contact_info', 'No contact info added yet')}</Text>
+        </View>
       )}
-    </CardNoPrimary>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -597,26 +807,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
     borderColor: '#F0F0F5',
-  },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   header: {
     flexDirection: 'row',
@@ -628,14 +824,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1E1E2F',
-    marginLeft: 8,
   },
   editButton: {
-    padding: 4,
+    padding: 6,
     backgroundColor: '#F8F9FC',
     borderRadius: 20,
     borderWidth: 1,
@@ -647,14 +850,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   content: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  contactRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderRadius: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F8',
+  },
+  iconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   textWrapper: {
     flex: 1,
@@ -662,38 +873,25 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.gray,
+    color: '#9CA3AF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   value: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#1E1E2F',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F5',
-  },
-  footerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 30,
-    flex: 0.45,
-    justifyContent: 'center',
-  },
-  footerText: {
-    color: COLORS.white,
-    fontWeight: '600',
     fontSize: 14,
-    marginLeft: 6,
+    fontWeight: '500',
+    color: COLORS.gray,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#9CA3AF',
   },
 });
+
+export default ContactDisplay;

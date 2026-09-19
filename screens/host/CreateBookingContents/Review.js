@@ -993,6 +993,7 @@ export default function Review({formData, step}) {
     return regular_cleaning;
   };
   
+  console.log("sdgsd----fff", formData)
   console.log("Form datttttttttaaatttat", JSON.stringify(formData, null, 2))
   const handleEditStep = (sp) => {
     step(sp);
@@ -1158,7 +1159,7 @@ export default function Review({formData, step}) {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{tSafe('estimated_time', 'Estimated Time:')}</Text>
               <Text style={styles.summaryValue}>
-                {formData.total_cleaning_Time || '--'} {tSafe('minutes', 'minutes')}
+                {formData.total_cleaning_time || '--'} {tSafe('minutes', 'minutes')}
               </Text>
             </View>
             

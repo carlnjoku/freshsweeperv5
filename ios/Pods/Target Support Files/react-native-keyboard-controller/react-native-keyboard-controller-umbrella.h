@@ -18,7 +18,7 @@
 #import "KeyboardControllerModule-Header.h"
 #import "NSObject+SafeKVC.h"
 #import "RCTUIManager+LayoutAnimationManager.h"
-#import "UITextView+DelegateManager.h"
+#import "TextInput+DelegateManager.h"
 #import "ClippingScrollViewDecoratorViewManager.h"
 #import "KeyboardBackgroundViewManager.h"
 #import "KeyboardControllerView.h"

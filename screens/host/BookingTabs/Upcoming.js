@@ -228,6 +228,7 @@ import COLORS from '../../../constants/colors';
 import { tSafe } from '../../../utils/tSafe'; // added import
 
 export default function Upcoming({ schedules, currency, isLoading = false }) {
+
   // Enhanced empty state function
   const renderEmptyState = (type = 'general') => {
     const messages = {
@@ -270,10 +271,10 @@ export default function Upcoming({ schedules, currency, isLoading = false }) {
         <Text style={styles.emptyStateText}>{message}</Text>
         
         {/* Optional: Add a call-to-action button */}
-        <TouchableOpacity style={styles.actionButton}>
+        {/* <TouchableOpacity style={styles.actionButton}>
           <MaterialCommunityIcons name="refresh" size={16} color="#fff" />
           <Text style={styles.actionButtonText}>{tSafe('check_new_bookings', 'Check for New Bookings')}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animatable.View>
     );
   };
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   container: {
     // flex: 1,
     backgroundColor: COLORS.background,
-    marginBottom: 60,
+    marginBottom: 0,
   },
   animatedContainer: {
     // flex: 1,

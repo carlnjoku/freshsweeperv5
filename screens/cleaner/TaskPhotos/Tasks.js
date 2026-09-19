@@ -499,8 +499,740 @@
 // export default Tasks;
 
 
+// import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
+// import { SafeAreaView, Text, StyleSheet, StatusBar, Linking, FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+// import COLORS from '../../../constants/colors';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import BeforePhoto from './BeforePhoto';
+// import AfterPhoto from './AfterPhoto';
+// import ReportIncident from './ReportIncident';
+// import { AuthContext } from '../../../context/AuthContext';
+// import userService from '../../../services/connection/userService';
+// import { tSafe } from '../../../utils/tSafe'; // added import
+
+// const Tasks = ({route}) => {
+//   const {scheduleId, schedule, hostId} = route.params;
+//   const { currentUserId } = useContext(AuthContext);
+  
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [isBeforePhotosComplete, setIsBeforePhotosComplete] = useState(false);
+//   const [isLoadingBeforePhotosStatus, setIsLoadingBeforePhotosStatus] = useState(true);
+//   const [hasInitialized, setHasInitialized] = useState(false);
+//   const checkRef = useRef(false); // To prevent infinite calls
+
+
+//   const cleanerAssignment = schedule.assignedTo?.find(
+//     (cleaner) => cleaner.cleanerId === currentUserId
+//   );
+//   const isReadOnly = cleanerAssignment?.status !== 'in_progress';
+
+//   // Check if all before photos are completed
+//   const checkBeforePhotosCompletion = useCallback(async () => {
+//     if (checkRef.current) return; // Prevent multiple simultaneous calls
+    
+//     checkRef.current = true;
+//     try {
+//       setIsLoadingBeforePhotosStatus(true);
+//       const response = await userService.getUpdatedImageUrls(scheduleId);
+//       const res = response.data.data;
+      
+//       // Find cleaner by ID
+//       const getCleanerById = (id) => {
+//         return res.assignedTo.find(cleaner => cleaner.cleanerId === id);
+//       };
+      
+//       const cleanerData = getCleanerById(currentUserId);
+//       const beforePhotos = cleanerData?.before_photos || {};
+      
+//       // Check if all rooms have at least 3 photos
+//       const rooms = Object.keys(beforePhotos);
+//       let allRoomsComplete = false;
+      
+//       if (rooms.length === 0) {
+//         allRoomsComplete = false;
+//       } else {
+//         allRoomsComplete = rooms.every(room => {
+//           const roomPhotos = beforePhotos[room]?.photos || [];
+//           return roomPhotos.length >= 3;
+//         });
+//       }
+      
+//       setIsBeforePhotosComplete(allRoomsComplete);
+//       setHasInitialized(true);
+//       return allRoomsComplete;
+//     } catch (error) {
+//       console.error('Error checking before photos:', error);
+//       setIsBeforePhotosComplete(false);
+//       setHasInitialized(true);
+//       return false;
+//     } finally {
+//       setIsLoadingBeforePhotosStatus(false);
+//       checkRef.current = false;
+//     }
+//   }, [scheduleId, currentUserId]);
+
+//   // Memoize the update function
+//   const handleBeforePhotosUpdated = useCallback(() => {
+//     console.log("Before photos updated, checking completion...");
+//     checkBeforePhotosCompletion();
+//   }, [checkBeforePhotosCompletion]);
+
+//   // Initial load
+//   useEffect(() => {
+//     let isMounted = true;
+    
+//     const loadInitialStatus = async () => {
+//       if (isMounted && !hasInitialized) {
+//         await checkBeforePhotosCompletion();
+//       }
+//     };
+    
+//     loadInitialStatus();
+    
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [checkBeforePhotosCompletion, hasInitialized]);
+
+//   const handleTabPress = (step) => {
+//     if (step === 2) {
+//       // Check if before photos are complete
+//       if (!isBeforePhotosComplete) {
+//         Alert.alert(
+//           tSafe('before_photos_required_title', 'Before Photos Required'),
+//           tSafe('before_photos_required_message', 'You must complete before photos for all rooms before proceeding to after photos. Please upload at least 3 photos for each room in the Before Photos tab.'),
+//           [
+//             { text: tSafe('ok', 'OK'), onPress: () => setCurrentStep(1) }
+//           ]
+//         );
+//         return;
+//       }
+//     }
+//     setCurrentStep(step);
+//   };
+
+//   // Calculate progress text based on current step
+//   const getProgressContent = () => {
+//     if (currentStep === 1) {
+//       if (isLoadingBeforePhotosStatus) {
+//         return (
+//           <View style={styles.progressContent}>
+//             <ActivityIndicator size="small" color={COLORS.primary} />
+//             <Text style={styles.progressText}>{tSafe('checking_before_photos_status', 'Checking before photos status...')}</Text>
+//           </View>
+//         );
+//       }
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>
+//             {tSafe('before_photos_status_label', 'Before Photos Status:')} {isBeforePhotosComplete 
+//               ? tSafe('complete', '✓ Complete') 
+//               : tSafe('incomplete', 'Incomplete')}
+//           </Text>
+//           <Text style={styles.progressSubtext}>
+//             {isBeforePhotosComplete 
+//               ? tSafe('all_rooms_complete_message', 'All rooms have sufficient before photos. You can proceed to After Photos.')
+//               : tSafe('complete_before_photos_message', 'Complete before photos for all rooms to unlock After Photos tab.')}
+//           </Text>
+//         </View>
+//       );
+//     } else if (currentStep === 2) {
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>
+//             {tSafe('after_photos_label', 'After Photos:')} {isBeforePhotosComplete 
+//               ? tSafe('unlocked', '✓ Unlocked') 
+//               : tSafe('locked', 'Locked')}
+//           </Text>
+//           <Text style={styles.progressSubtext}>
+//             {isBeforePhotosComplete 
+//               ? tSafe('document_cleaning_results', 'Document cleaning results for each room.')
+//               : tSafe('complete_before_photos_first', 'Complete before photos first.')}
+//           </Text>
+//         </View>
+//       );
+//     } else {
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>{tSafe('incident_report', 'Incident Report')}</Text>
+//           <Text style={styles.progressSubtext}>
+//             {tSafe('incident_report_description', 'Report any issues or incidents during cleaning')}
+//           </Text>
+//         </View>
+//       );
+//     }
+//   };
+
+//   return (
+//     <View style={{ flex: 1, backgroundColor:COLORS.white }}>
+//       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      
+//       {/* Always render the progress indicator with fixed height */}
+//       {/* <View style={styles.progressIndicator}>
+//         {getProgressContent()}
+//       </View> */}
+
+//       <View style={styles.tabsContainer}>
+//         {/* Before Photos Tab */}
+//         <TouchableOpacity 
+//           style={[styles.tab, { borderBottomColor: currentStep == 1 ? COLORS.primary : "#f0f0f0"}]} 
+//           onPress={() => setCurrentStep(1)}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="camera" 
+//               size={24} 
+//               color={currentStep === 1 ? COLORS.primary : COLORS.gray} 
+//             />
+//             <Text style={[styles.tab_text, currentStep === 1 && styles.activeTabText]}>
+//               {tSafe('before_photos_tab', 'Before Photos')}
+//             </Text>
+//           </View>
+//           {isBeforePhotosComplete && currentStep !== 1 && (
+//             <View style={styles.completeBadge}>
+//               <MaterialCommunityIcons name="check" size={10} color="white" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+        
+//         {/* After Photos Tab - Conditionally disabled */}
+//         <TouchableOpacity 
+//           style={[
+//             styles.tab, 
+//             { 
+//               borderBottomColor: currentStep == 2 ? COLORS.primary : "#f0f0f0",
+//               opacity: isBeforePhotosComplete ? 1 : 0.5
+//             }
+//           ]} 
+//           onPress={() => handleTabPress(2)}
+//           disabled={!isBeforePhotosComplete && !isLoadingBeforePhotosStatus}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="camera-flip" 
+//               size={24} 
+//               color={
+//                 currentStep === 2 ? COLORS.primary : 
+//                 isBeforePhotosComplete ? COLORS.gray : COLORS.lightGray
+//               } 
+//             />
+//             <Text style={[
+//               styles.tab_text,
+//               !isBeforePhotosComplete && styles.disabledTabText,
+//               currentStep === 2 && styles.activeTabText
+//             ]}>
+//               {tSafe('after_photos_tab', 'After Photos')}
+//             </Text>
+//           </View>
+//           {!isBeforePhotosComplete && !isLoadingBeforePhotosStatus && (
+//             <View style={styles.lockedBadge}>
+//               <MaterialCommunityIcons name="lock" size={10} color="white" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+
+//         {/* Incident Report Tab */}
+//         <TouchableOpacity 
+//           style={[styles.tab, { borderBottomColor: currentStep == 3 ? COLORS.primary :"#f0f0f0"}]} 
+//           onPress={() => setCurrentStep(3)}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="format-list-checks" 
+//               size={24} 
+//               color={currentStep === 3 ? COLORS.primary : COLORS.gray} 
+//             />
+//             <Text style={[styles.tab_text, currentStep === 3 && styles.activeTabText]}>
+//               {tSafe('incident_report_tab', 'Incident Report')}
+//             </Text>
+//           </View>
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Content for each step */}
+//       <View style={styles.container}>
+//         {currentStep === 1 && (
+//           <BeforePhoto 
+//             scheduleId={scheduleId}
+//             onPhotosUpdated={handleBeforePhotosUpdated}
+//           />
+//         )}
+//         {currentStep === 2 && isBeforePhotosComplete && (
+//           <AfterPhoto scheduleId={scheduleId} hostId={schedule?.hostInfo?.userId || hostId} />
+//         )}
+//         {currentStep === 3 && (
+//           <ReportIncident scheduleId={scheduleId}/>
+//         )}
+//       </View>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container:{
+//     flex:1, 
+//     margin:10,
+//     backgroundColor:COLORS.white
+//   },
+//   tabsContainer:{
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     alignItems: 'center',
+//     backgroundColor: '#ffffff',
+//     borderBottomWidth: 0,
+//     borderBottomColor: "#e9e9e9",
+//     elevation:2,
+//     height: 60, // Ensure consistent tab bar height
+//   },
+//   tab:{
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderBottomWidth: 3,
+//     borderBottomColor: "#f0f0f0",
+//     paddingVertical: 12,
+//     position: 'relative',
+//     height: '100%',
+//   },
+//   tabContent: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   tab_text:{
+//     fontSize: 12,
+//     color: COLORS.gray,
+//     marginTop: 4,
+//     textAlign: 'center',
+//   },
+//   activeTabText: {
+//     color: COLORS.primary,
+//     fontWeight: '600',
+//   },
+//   disabledTabText: {
+//     color: COLORS.lightGray,
+//   },
+//   progressIndicator: {
+//     minHeight: 70, // Fixed minimum height
+//     backgroundColor: '#f8f9fa',
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#e0e0e0',
+//     justifyContent: 'center',
+//     paddingHorizontal: 16,
+//   },
+//   progressContent: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   progressText: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#1a1a1a',
+//     textAlign: 'center',
+//   },
+//   progressSubtext: {
+//     fontSize: 12,
+//     color: '#666',
+//     textAlign: 'center',
+//     marginTop: 4,
+//     opacity: 0.8,
+//   },
+//   completeBadge: {
+//     position: 'absolute',
+//     top: 6,
+//     right: '50%',
+//     marginRight: -35,
+//     backgroundColor: '#4CAF50',
+//     borderRadius: 8,
+//     width: 16,
+//     height: 16,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   lockedBadge: {
+//     position: 'absolute',
+//     top: 6,
+//     right: '50%',
+//     marginRight: -35,
+//     backgroundColor: '#ff9800',
+//     borderRadius: 8,
+//     width: 16,
+//     height: 16,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+// export default Tasks;
+
+
+
+
+
+// import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
+// import { SafeAreaView, Text, StyleSheet, StatusBar, Linking, FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+// import COLORS from '../../../constants/colors';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import BeforePhoto from './BeforePhoto';
+// import AfterPhoto from './AfterPhoto';
+// import ReportIncident from './ReportIncident';
+// import { AuthContext } from '../../../context/AuthContext';
+// import userService from '../../../services/connection/userService';
+// import { tSafe } from '../../../utils/tSafe';
+
+// const Tasks = ({ route }) => {
+//   const { scheduleId, schedule, hostId } = route.params;
+//   const { currentUserId } = useContext(AuthContext);
+  
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [isBeforePhotosComplete, setIsBeforePhotosComplete] = useState(false);
+//   const [isLoadingBeforePhotosStatus, setIsLoadingBeforePhotosStatus] = useState(true);
+//   const [hasInitialized, setHasInitialized] = useState(false);
+//   const checkRef = useRef(false);
+
+//   // ✅ Determine if the cleaner can edit
+//   const cleanerAssignment = schedule.assignedTo?.find(
+//     (cleaner) => cleaner.cleanerId === currentUserId
+//   );
+//   const isReadOnly = cleanerAssignment?.status !== 'in_progress';
+
+//   // Check if all before photos are completed
+//   const checkBeforePhotosCompletion = useCallback(async () => {
+//     if (checkRef.current) return;
+//     checkRef.current = true;
+//     try {
+//       setIsLoadingBeforePhotosStatus(true);
+//       const response = await userService.getUpdatedImageUrls(scheduleId);
+//       const res = response.data.data;
+//       const getCleanerById = (id) => res.assignedTo.find(cleaner => cleaner.cleanerId === id);
+//       const cleanerData = getCleanerById(currentUserId);
+//       const beforePhotos = cleanerData?.before_photos || {};
+//       const rooms = Object.keys(beforePhotos);
+//       let allRoomsComplete = false;
+//       if (rooms.length === 0) {
+//         allRoomsComplete = false;
+//       } else {
+//         allRoomsComplete = rooms.every(room => {
+//           const roomPhotos = beforePhotos[room]?.photos || [];
+//           return roomPhotos.length >= 3;
+//         });
+//       }
+//       setIsBeforePhotosComplete(allRoomsComplete);
+//       setHasInitialized(true);
+//       return allRoomsComplete;
+//     } catch (error) {
+//       console.error('Error checking before photos:', error);
+//       setIsBeforePhotosComplete(false);
+//       setHasInitialized(true);
+//       return false;
+//     } finally {
+//       setIsLoadingBeforePhotosStatus(false);
+//       checkRef.current = false;
+//     }
+//   }, [scheduleId, currentUserId]);
+
+//   const handleBeforePhotosUpdated = useCallback(() => {
+//     console.log("Before photos updated, checking completion...");
+//     checkBeforePhotosCompletion();
+//   }, [checkBeforePhotosCompletion]);
+
+//   useEffect(() => {
+//     let isMounted = true;
+//     const loadInitialStatus = async () => {
+//       if (isMounted && !hasInitialized) {
+//         await checkBeforePhotosCompletion();
+//       }
+//     };
+//     loadInitialStatus();
+//     return () => { isMounted = false; };
+//   }, [checkBeforePhotosCompletion, hasInitialized]);
+
+//   const handleTabPress = (step) => {
+//     if (step === 2) {
+//       if (!isBeforePhotosComplete) {
+//         Alert.alert(
+//           tSafe('before_photos_required_title', 'Before Photos Required'),
+//           tSafe('before_photos_required_message', 'You must complete before photos for all rooms before proceeding to after photos. Please upload at least 3 photos for each room in the Before Photos tab.'),
+//           [{ text: tSafe('ok', 'OK'), onPress: () => setCurrentStep(1) }]
+//         );
+//         return;
+//       }
+//     }
+//     setCurrentStep(step);
+//   };
+
+//   const getProgressContent = () => {
+//     if (currentStep === 1) {
+//       if (isLoadingBeforePhotosStatus) {
+//         return (
+//           <View style={styles.progressContent}>
+//             <ActivityIndicator size="small" color={COLORS.primary} />
+//             <Text style={styles.progressText}>{tSafe('checking_before_photos_status', 'Checking before photos status...')}</Text>
+//           </View>
+//         );
+//       }
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>
+//             {tSafe('before_photos_status_label', 'Before Photos Status:')} {isBeforePhotosComplete 
+//               ? tSafe('complete', '✓ Complete') 
+//               : tSafe('incomplete', 'Incomplete')}
+//           </Text>
+//           <Text style={styles.progressSubtext}>
+//             {isBeforePhotosComplete 
+//               ? tSafe('all_rooms_complete_message', 'All rooms have sufficient before photos. You can proceed to After Photos.')
+//               : tSafe('complete_before_photos_message', 'Complete before photos for all rooms to unlock After Photos tab.')}
+//           </Text>
+//         </View>
+//       );
+//     } else if (currentStep === 2) {
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>
+//             {tSafe('after_photos_label', 'After Photos:')} {isBeforePhotosComplete 
+//               ? tSafe('unlocked', '✓ Unlocked') 
+//               : tSafe('locked', 'Locked')}
+//           </Text>
+//           <Text style={styles.progressSubtext}>
+//             {isBeforePhotosComplete 
+//               ? tSafe('document_cleaning_results', 'Document cleaning results for each room.')
+//               : tSafe('complete_before_photos_first', 'Complete before photos first.')}
+//           </Text>
+//         </View>
+//       );
+//     } else {
+//       return (
+//         <View style={styles.progressContent}>
+//           <Text style={styles.progressText}>{tSafe('incident_report', 'Incident Report')}</Text>
+//           <Text style={styles.progressSubtext}>
+//             {tSafe('incident_report_description', 'Report any issues or incidents during cleaning')}
+//           </Text>
+//         </View>
+//       );
+//     }
+//   };
+
+//   return (
+//     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+//       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+
+//       <View style={styles.tabsContainer}>
+//         {/* Before Photos Tab */}
+//         <TouchableOpacity 
+//           style={[styles.tab, { borderBottomColor: currentStep == 1 ? COLORS.primary : "#f0f0f0"}]} 
+//           onPress={() => setCurrentStep(1)}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="camera" 
+//               size={24} 
+//               color={currentStep === 1 ? COLORS.primary : COLORS.gray} 
+//             />
+//             <Text style={[styles.tab_text, currentStep === 1 && styles.activeTabText]}>
+//               {tSafe('before_photos_tab', 'Before Photos')}
+//             </Text>
+//           </View>
+//           {isBeforePhotosComplete && currentStep !== 1 && (
+//             <View style={styles.completeBadge}>
+//               <MaterialCommunityIcons name="check" size={10} color="white" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+        
+//         {/* After Photos Tab */}
+//         <TouchableOpacity 
+//           style={[
+//             styles.tab, 
+//             { 
+//               borderBottomColor: currentStep == 2 ? COLORS.primary : "#f0f0f0",
+//               opacity: isBeforePhotosComplete ? 1 : 0.5
+//             }
+//           ]} 
+//           onPress={() => handleTabPress(2)}
+//           disabled={!isBeforePhotosComplete && !isLoadingBeforePhotosStatus}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="camera-flip" 
+//               size={24} 
+//               color={
+//                 currentStep === 2 ? COLORS.primary : 
+//                 isBeforePhotosComplete ? COLORS.gray : COLORS.lightGray
+//               } 
+//             />
+//             <Text style={[
+//               styles.tab_text,
+//               !isBeforePhotosComplete && styles.disabledTabText,
+//               currentStep === 2 && styles.activeTabText
+//             ]}>
+//               {tSafe('after_photos_tab', 'After Photos')}
+//             </Text>
+//           </View>
+//           {!isBeforePhotosComplete && !isLoadingBeforePhotosStatus && (
+//             <View style={styles.lockedBadge}>
+//               <MaterialCommunityIcons name="lock" size={10} color="white" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+
+//         {/* Incident Report Tab */}
+//         <TouchableOpacity 
+//           style={[styles.tab, { borderBottomColor: currentStep == 3 ? COLORS.primary :"#f0f0f0"}]} 
+//           onPress={() => setCurrentStep(3)}
+//         >
+//           <View style={styles.tabContent}>
+//             <MaterialCommunityIcons 
+//               name="format-list-checks" 
+//               size={24} 
+//               color={currentStep === 3 ? COLORS.primary : COLORS.gray} 
+//             />
+//             <Text style={[styles.tab_text, currentStep === 3 && styles.activeTabText]}>
+//               {tSafe('incident_report_tab', 'Incident Report')}
+//             </Text>
+//           </View>
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Tab Content */}
+//       <View style={styles.container}>
+//         {currentStep === 1 && (
+//           <BeforePhoto 
+//             scheduleId={scheduleId}
+//             onPhotosUpdated={handleBeforePhotosUpdated}
+//             isReadOnly={isReadOnly} // ✅ pass read-only flag
+//           />
+//         )}
+//         {currentStep === 2 && isBeforePhotosComplete && (
+//           <AfterPhoto 
+//             scheduleId={scheduleId} 
+//             hostId={schedule?.hostInfo?.userId || hostId}
+//             isReadOnly={isReadOnly} // ✅ pass read-only flag
+//           />
+//         )}
+//         {currentStep === 3 && (
+//           <ReportIncident 
+//             scheduleId={scheduleId}
+//             isReadOnly={isReadOnly} // ✅ pass read-only flag
+//           />
+//         )}
+//       </View>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container:{
+//     flex:1, 
+//     margin:10,
+//     backgroundColor:COLORS.white
+//   },
+//   tabsContainer:{
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     alignItems: 'center',
+//     backgroundColor: '#ffffff',
+//     borderBottomWidth: 0,
+//     borderBottomColor: "#e9e9e9",
+//     elevation:2,
+//     height: 60,
+//   },
+//   tab:{
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderBottomWidth: 3,
+//     borderBottomColor: "#f0f0f0",
+//     paddingVertical: 12,
+//     position: 'relative',
+//     height: '100%',
+//   },
+//   tabContent: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   tab_text:{
+//     fontSize: 12,
+//     color: COLORS.gray,
+//     marginTop: 4,
+//     textAlign: 'center',
+//   },
+//   activeTabText: {
+//     color: COLORS.primary,
+//     fontWeight: '600',
+//   },
+//   disabledTabText: {
+//     color: COLORS.lightGray,
+//   },
+//   progressIndicator: {
+//     minHeight: 70,
+//     backgroundColor: '#f8f9fa',
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#e0e0e0',
+//     justifyContent: 'center',
+//     paddingHorizontal: 16,
+//   },
+//   progressContent: {
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   progressText: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#1a1a1a',
+//     textAlign: 'center',
+//   },
+//   progressSubtext: {
+//     fontSize: 12,
+//     color: '#666',
+//     textAlign: 'center',
+//     marginTop: 4,
+//     opacity: 0.8,
+//   },
+//   completeBadge: {
+//     position: 'absolute',
+//     top: 6,
+//     right: '50%',
+//     marginRight: -35,
+//     backgroundColor: '#4CAF50',
+//     borderRadius: 8,
+//     width: 16,
+//     height: 16,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   lockedBadge: {
+//     position: 'absolute',
+//     top: 6,
+//     right: '50%',
+//     marginRight: -35,
+//     backgroundColor: '#ff9800',
+//     borderRadius: 8,
+//     width: 16,
+//     height: 16,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+// export default Tasks;
+
+
 import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { SafeAreaView, Text, StyleSheet, StatusBar, Linking, FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import {
+  SafeAreaView,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Linking,
+  FlatList,
+  ScrollView,
+  Modal,
+  Image,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BeforePhoto from './BeforePhoto';
@@ -508,49 +1240,107 @@ import AfterPhoto from './AfterPhoto';
 import ReportIncident from './ReportIncident';
 import { AuthContext } from '../../../context/AuthContext';
 import userService from '../../../services/connection/userService';
-import { tSafe } from '../../../utils/tSafe'; // added import
+import { tSafe } from '../../../utils/tSafe';
 
-const Tasks = ({route}) => {
-  const {scheduleId, schedule, hostId} = route.params;
+const Tasks = ({ route }) => {
+  const { scheduleId, schedule, hostId } = route.params;
   const { currentUserId } = useContext(AuthContext);
-  
+  const navigation = useNavigation();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isBeforePhotosComplete, setIsBeforePhotosComplete] = useState(false);
   const [isLoadingBeforePhotosStatus, setIsLoadingBeforePhotosStatus] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const checkRef = useRef(false); // To prevent infinite calls
+  const checkRef = useRef(false);
+
+  // ✅ Determine if the cleaner can edit
+  const cleanerAssignment = schedule?.assignedTo?.find(
+    (cleaner) => cleaner.cleanerId === currentUserId
+  );
+  const isReadOnly = cleanerAssignment?.status !== 'in_progress';
+
+  // ─── Update header title ──────────────────────────────────────────
+  useEffect(() => {
+    navigation.setOptions({
+      title: isReadOnly
+        ? tSafe('task_readonly_title', 'Task (Read Only)')
+        : tSafe('task_title', 'Task'),
+      headerRight: isReadOnly
+        ? () => (
+            <MaterialCommunityIcons
+              name="lock"
+              size={22}
+              color="#999"
+              style={{ marginRight: 16 }}
+            />
+          )
+        : undefined,
+    });
+  }, [isReadOnly, navigation]);
 
   // Check if all before photos are completed
+  // const checkBeforePhotosCompletion = useCallback(async () => {
+  //   if (checkRef.current) return;
+  //   checkRef.current = true;
+  //   try {
+  //     setIsLoadingBeforePhotosStatus(true);
+  //     const response = await userService.getUpdatedImageUrls(scheduleId);
+  //     const res = response.data.data;
+  //     const getCleanerById = (id) => res.assignedTo.find(cleaner => cleaner.cleanerId === id);
+  //     const cleanerData = getCleanerById(currentUserId);
+  //     const beforePhotos = cleanerData?.before_photos || {};
+  //     const rooms = Object.keys(beforePhotos);
+  //     let allRoomsComplete = false;
+  //     if (rooms.length === 0) {
+  //       allRoomsComplete = false;
+  //     } else {
+  //       allRoomsComplete = rooms.every(room => {
+  //         const roomPhotos = beforePhotos[room]?.photos || [];
+  //         return roomPhotos.length >= 3;
+  //       });
+  //     }
+  //     setIsBeforePhotosComplete(allRoomsComplete);
+  //     setHasInitialized(true);
+  //     return allRoomsComplete;
+  //   } catch (error) {
+  //     console.error('Error checking before photos:', error);
+  //     setIsBeforePhotosComplete(false);
+  //     setHasInitialized(true);
+  //     return false;
+  //   } finally {
+  //     setIsLoadingBeforePhotosStatus(false);
+  //     checkRef.current = false;
+  //   }
+  // }, [scheduleId, currentUserId]);
+
+
   const checkBeforePhotosCompletion = useCallback(async () => {
-    if (checkRef.current) return; // Prevent multiple simultaneous calls
-    
+    if (checkRef.current) return;
     checkRef.current = true;
     try {
       setIsLoadingBeforePhotosStatus(true);
       const response = await userService.getUpdatedImageUrls(scheduleId);
-      const res = response.data.data;
-      
-      // Find cleaner by ID
-      const getCleanerById = (id) => {
-        return res.assignedTo.find(cleaner => cleaner.cleanerId === id);
-      };
-      
-      const cleanerData = getCleanerById(currentUserId);
-      const beforePhotos = cleanerData?.before_photos || {};
-      
-      // Check if all rooms have at least 3 photos
-      const rooms = Object.keys(beforePhotos);
-      let allRoomsComplete = false;
-      
-      if (rooms.length === 0) {
-        allRoomsComplete = false;
-      } else {
-        allRoomsComplete = rooms.every(room => {
-          const roomPhotos = beforePhotos[room]?.photos || [];
-          return roomPhotos.length >= 3;
-        });
+      const res = response?.data?.data;
+  
+      // 👇 Guard against missing data
+      if (!res || !res.assignedTo) {
+        console.warn('No assignedTo data in response');
+        setIsBeforePhotosComplete(false);
+        setHasInitialized(true);
+        return false;
       }
-      
+  
+      const cleanerData = res.assignedTo.find(
+        cleaner => cleaner.cleanerId === currentUserId
+      );
+      const beforePhotos = cleanerData?.before_photos || {};
+      const rooms = Object.keys(beforePhotos);
+  
+      const allRoomsComplete = rooms.length > 0 && rooms.every(room => {
+        const roomPhotos = beforePhotos[room]?.photos || [];
+        return roomPhotos.length >= 3;
+      });
+  
       setIsBeforePhotosComplete(allRoomsComplete);
       setHasInitialized(true);
       return allRoomsComplete;
@@ -565,39 +1355,31 @@ const Tasks = ({route}) => {
     }
   }, [scheduleId, currentUserId]);
 
-  // Memoize the update function
   const handleBeforePhotosUpdated = useCallback(() => {
     console.log("Before photos updated, checking completion...");
     checkBeforePhotosCompletion();
   }, [checkBeforePhotosCompletion]);
 
-  // Initial load
+  
+
   useEffect(() => {
     let isMounted = true;
-    
     const loadInitialStatus = async () => {
       if (isMounted && !hasInitialized) {
         await checkBeforePhotosCompletion();
       }
     };
-    
     loadInitialStatus();
-    
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [checkBeforePhotosCompletion, hasInitialized]);
 
   const handleTabPress = (step) => {
     if (step === 2) {
-      // Check if before photos are complete
       if (!isBeforePhotosComplete) {
         Alert.alert(
           tSafe('before_photos_required_title', 'Before Photos Required'),
           tSafe('before_photos_required_message', 'You must complete before photos for all rooms before proceeding to after photos. Please upload at least 3 photos for each room in the Before Photos tab.'),
-          [
-            { text: tSafe('ok', 'OK'), onPress: () => setCurrentStep(1) }
-          ]
+          [{ text: tSafe('ok', 'OK'), onPress: () => setCurrentStep(1) }]
         );
         return;
       }
@@ -605,7 +1387,6 @@ const Tasks = ({route}) => {
     setCurrentStep(step);
   };
 
-  // Calculate progress text based on current step
   const getProgressContent = () => {
     if (currentStep === 1) {
       if (isLoadingBeforePhotosStatus) {
@@ -658,13 +1439,18 @@ const Tasks = ({route}) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor:COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      
-      {/* Always render the progress indicator with fixed height */}
-      {/* <View style={styles.progressIndicator}>
-        {getProgressContent()}
-      </View> */}
+
+      {/* ─── Read‑Only Banner ─────────────────────────────────────────── */}
+      {isReadOnly && (
+        <View style={styles.readOnlyBanner}>
+          <MaterialCommunityIcons name="lock" size={18} color="#856404" />
+          <Text style={styles.readOnlyBannerText}>
+            {tSafe('read_only_banner', 'Read‑Only Mode – This job has been submitted and cannot be edited.')}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.tabsContainer}>
         {/* Before Photos Tab */}
@@ -689,7 +1475,7 @@ const Tasks = ({route}) => {
           )}
         </TouchableOpacity>
         
-        {/* After Photos Tab - Conditionally disabled */}
+        {/* After Photos Tab */}
         <TouchableOpacity 
           style={[
             styles.tab, 
@@ -743,19 +1529,27 @@ const Tasks = ({route}) => {
         </TouchableOpacity>
       </View>
 
-      {/* Content for each step */}
+      {/* Tab Content */}
       <View style={styles.container}>
         {currentStep === 1 && (
           <BeforePhoto 
             scheduleId={scheduleId}
             onPhotosUpdated={handleBeforePhotosUpdated}
+            isReadOnly={isReadOnly}
           />
         )}
         {currentStep === 2 && isBeforePhotosComplete && (
-          <AfterPhoto scheduleId={scheduleId} hostId={schedule?.hostInfo?.userId || hostId} />
+          <AfterPhoto 
+            scheduleId={scheduleId} 
+            hostId={schedule?.hostInfo?.userId || hostId}
+            isReadOnly={isReadOnly}
+          />
         )}
         {currentStep === 3 && (
-          <ReportIncident scheduleId={scheduleId}/>
+          <ReportIncident 
+            scheduleId={scheduleId}
+            isReadOnly={isReadOnly}
+          />
         )}
       </View>
     </View>
@@ -763,22 +1557,22 @@ const Tasks = ({route}) => {
 };
 
 const styles = StyleSheet.create({
-  container:{
-    flex:1, 
-    margin:10,
-    backgroundColor:COLORS.white
+  container: {
+    flex: 1,
+    margin: 10,
+    backgroundColor: COLORS.white,
   },
-  tabsContainer:{
+  tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderBottomWidth: 0,
     borderBottomColor: "#e9e9e9",
-    elevation:2,
-    height: 60, // Ensure consistent tab bar height
+    elevation: 2,
+    height: 60,
   },
-  tab:{
+  tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -792,8 +1586,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tab_text:{
-    fontSize: 12,
+  tab_text: {
+    fontSize: 14,
     color: COLORS.gray,
     marginTop: 4,
     textAlign: 'center',
@@ -803,10 +1597,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   disabledTabText: {
-    color: COLORS.lightGray,
+    color: COLORS.gray,
   },
   progressIndicator: {
-    minHeight: 70, // Fixed minimum height
+    minHeight: 70,
     backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -853,6 +1647,23 @@ const styles = StyleSheet.create({
     height: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // ─── Read‑Only Banner ──────────────────────────────────────────────
+  readOnlyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff3cd',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ffc107',
+  },
+  readOnlyBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#856404',
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 

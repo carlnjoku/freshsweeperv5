@@ -8,6 +8,9 @@ class UserService {
       return http.put('/api/users/update_phone_location', data);
     }
 
+    generateCleanerBio(userid){
+      return http.get(`/api/users/generate-bio/${userid}`);
+    }
     changePassword(data) {
       return http.post('/api/auth/change_password', data);
     }
@@ -55,6 +58,9 @@ class UserService {
 
     getCleanerAvailability(cleanerId){
       return http.get(`/api/users/get_cleaner_availability/${cleanerId}`)
+    }
+    deleteAccount(userId){
+      return http.delete(`/api/users/delete/${userId}`)
     }
   
     logOut(data) {
@@ -288,11 +294,12 @@ class UserService {
       return http.get(`/api/schedules/get_checklists_checklistId/${checklisId}`)
     }
 
+
     createSchedule(data){
       return http.post('/api/schedules/create_schedule', data)
     }
-    updateSchedule(data){
-      return http.put('/api/schedules/update_schedule', data)
+    updateSchedule(scheduleId, data){
+      return http.put(`/api/schedules/update_schedule/${scheduleId}`, data)
     }
 
     getSchedulesByHostId(hostId){
@@ -321,18 +328,68 @@ class UserService {
       return http.get(`/api/schedules/get_payments/${apartmentId}`)
     }
 
+    // userService.js
+    approveWork(data) {
+      return http.post('/api/schedules/approve_work', data);
+    }
+    rejectWork(data) {
+      return http.post('/api/schedules/reject_work', data);
+    }
+
+    getDateChangeRequest(requestId) {
+      return http.get(
+        `/api/schedules/date_change_request/${requestId}`
+      );
+    }
+    replyToDateChang(data){
+      return http.put('/api/schedules/respond_to_date_change', data);
+    }
+
+
     getRecommendedCleaners(schedulId){
       return http.get(`/api/recommended_cleaners/get_recommended_cleaners/${schedulId}`)
+    }
+
+    getHostCleanerCandidates(scheduleId) {
+      return http.get(`/api/recommended_cleaners/host_candidates/${scheduleId}`);
+    }
+
+    sendHostGroupCleanerRequests(scheduleId) {
+      return http.post(`/api/recommended_cleaners/host_group_requests/${scheduleId}`);
     }
   
     findCleaners(schedulId){
       return http.get(`/api/recommended_cleaners/find_cleaners/${schedulId}`)
     }
 
+    
     getPlatformCleaners(data){
       return http.post(`/api/recommended_cleaners/get_platform_cleaners`, data)
     }
 
+    getReplacementCleaners(scheduleId, requestId) {
+      return http.get(`/api/recommended_cleaners/replacement_cleaners/${scheduleId}/${requestId}`);
+    }
+
+    sendReplacementRequests(data) {
+      return http.post(
+        '/api/recommended_cleaners/send_replacement_requests',
+        data
+      );
+    }
+
+    getReplacementRequestStatus(scheduleId, requestId) {
+      return http.get(
+        `/api/recommended_cleaners/replacement_request_status/${scheduleId}/${requestId}`
+      );
+    }
+
+    respondToReplacementRequest(data) {
+      return http.put(
+        '/api/recommended_cleaners/respond_to_replacement_request',
+        data
+      );
+    }
   
     getMyCleaningRequest(cleanerId){
       return http.get(`/api/schedules/get_cleaners_requests/${cleanerId}`);
@@ -432,10 +489,10 @@ class UserService {
     }
 
     sendFeedback(data){
-      return http.post('/api/feedbacks/submit_feedback', data)
+      return http.post('/api/feedbacks', data)
     }
     getCleanerFeedbacks(cleanerId){
-      return http.get(`/api/feedbacks/get_cleaner_feedbacks/${cleanerId}`)
+      return http.get(`/api/feedbacks/cleaner_id/${cleanerId}`)
     }
 
     
@@ -617,6 +674,10 @@ class UserService {
       return http.put('/api/schedules/finish_cleaning', data)
     }
 
+    markCleanerUncompleted(data) {
+      return http.put('/api/schedules/mark_cleaner_uncompleted', data);
+    }
+
     updateAva(id){
       return http.get(`/api/schedules/update_avail/${id}`)
     }
@@ -626,6 +687,7 @@ class UserService {
       return http.get(`/api/job_queue/job_status/${job_id}`)
     }
 
+    
     
 
 
@@ -753,6 +815,43 @@ class UserService {
     }
 
  
+    // getTeamMembers(){
+    //   return http.get('/api/')
+    // }
+
+    // getTeamMember(id){
+    //   return http.get(`/api/${id}`)
+    // }
+ 
+
+    // Add these methods to UserService class
+
+// Team Management
+createTeamMember(data) {
+  return http.post('/api/team/', data);
+}
+
+updateTeamMember(id, data) {
+  return http.put(`/api/team/${id}`, data);
+}
+
+getTeamMembers() {
+  return http.get('/api/team/');
+}
+
+getTeamMember(id) {
+  return http.get(`/api/team/${id}`);
+}
+
+deleteTeamMember(id) {
+  return http.delete(`/api/team/${id}`);
+}
+
+notifyTeamMembers(data) {
+  return http.post('/api/team/notify_team', data);
+}
+
+
 
     
   

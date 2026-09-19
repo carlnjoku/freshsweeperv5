@@ -43,6 +43,8 @@ const ROUTES = {
     cleaner_invite_gate:'Invite Gate1',
     cleaner_my_gigs:'MyGigs',
     cleaner_property_gigs:'PropertyGig',
+    cleaner_schedule_date_change:"ScheduleDateChange",
+    cleaner_replacement_request: 'ReplacementRequest',
 
     host_home_tab: "Home",
     host_home_drawer:"Dashboard Host",
@@ -58,8 +60,8 @@ const ROUTES = {
     host_messages: 'Messages',
     host_conversations: 'Conversations',
     host_feedbacks: 'Freedbacks',
-    host_apartments: "Apartments",
-    host_add_apt: "Add Apartment",
+    host_apartments: "Properties",
+    host_add_apt: "Add Property",
     host_create_checklist: "Create Checklist",
     host_link_icalendar: "Link ICalendar",
     host_connection: "Cconnection",
@@ -87,6 +89,15 @@ const ROUTES = {
     host_team:"TeamManagement",
     host_invite_cleaners:"InviteACleaner",
     host_inventory: 'InventoryManagement',
+    host_team_list: 'TeamList',
+    host_team_detail: 'TeamDetail', // optional, can just use form for editing
+    host_team_form: 'TeamForm',
+    host_replacement_cleaner:'ReplacementCleaner',
+    host_replacement_request_status: 'ReplacementRequestStatus',
+    
+
+    host_select_incident: 'SelectIncident',   // new
+    host_select_team_members: 'SelectTeamMembers', // new
 
 
     getting_started: "Getting Started",

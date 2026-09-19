@@ -29,8 +29,8 @@ const Earnings = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { bookingId, notificationId } = route.params || {};
-  const { currentUserId, currentUser, geolocationData } = useContext(AuthContext);
-  const currencySymbol = geolocationData?.currency?.symbol ?? "";
+  const { currentUserId, currency, currentUser, geolocationData } = useContext(AuthContext);
+
 
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [earningsData, setEarningsData] = useState(null);
@@ -166,7 +166,7 @@ const Earnings = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `${currencySymbol}${amount?.toFixed(2) || '0.00'}`;
+    return `${currency}${amount?.toFixed(2) || '0.00'}`;
   };
 
   const formatDate = (dateString) => {
@@ -223,7 +223,7 @@ const Earnings = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.loadingText}>{tSafe('loading_earnings', 'Loading earnings data...')}</Text>
       </View>
     );
@@ -249,7 +249,7 @@ const Earnings = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#007AFF" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <View style={styles.headerUserInfo}>
           {cleanerInfo?.avatar ? (
@@ -267,7 +267,7 @@ const Earnings = () => {
           </View>
         </View>
         <TouchableOpacity style={styles.helpButton}>
-          <MaterialCommunityIcons name="help-circle-outline" size={24} color="#007AFF" />
+          <MaterialCommunityIcons name="help-circle-outline" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -341,7 +341,7 @@ const Earnings = () => {
           {/* Upcoming Payout Card */}
           <View style={styles.payoutCard}>
             <View style={styles.payoutHeader}>
-              <MaterialCommunityIcons name="cash-fast" size={24} color="#007AFF" />
+              <MaterialCommunityIcons name="cash-fast" size={24} color={COLORS.primary} />
               <View style={styles.payoutInfo}>
                 <Text style={styles.payoutLabel}>{tSafe('next_payout', 'Next Payout')}</Text>
                 <Text style={styles.payoutAmount}>
@@ -391,7 +391,7 @@ const Earnings = () => {
               </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>
-                  {earningsData?.performance?.responseTime || '0 min'}
+                  {minutesToDuration(earningsData?.performance?.responseTime) || '0 min'}
                 </Text>
                 <Text style={styles.metricLabel}>{tSafe('avg_response', 'Avg. Response')}</Text>
               </View>
@@ -431,15 +431,15 @@ const Earnings = () => {
                     />
                   </View>
                   <View style={styles.paymentDetails}>
-                    <Text style={styles.paymentService}>{payment.service || tSafe('cleaning_service', 'Cleaning Service')}</Text>
+                    <Text style={styles.paymentService}>{payment.apartment_name || tSafe('cleaning_service', 'Cleaning Service')}</Text>
                     <Text style={styles.paymentClient}>{payment.client || tSafe('client', 'Client')}</Text>
                     <Text style={styles.paymentDate}>
-                      {payment.date ? formatDate(payment.date) : tSafe('date_unknown', 'Date unknown')} • {payment.duration || tSafe('duration_na', 'N/A')}
+                      {payment.date ? formatDate(payment.date) : tSafe('date_unknown', 'Date unknown')} • {minutesToDuration(payment.duration) || tSafe('duration_na', 'N/A')}
                     </Text>
                   </View>
                   <View style={styles.paymentAmountContainer}>
                     <Text style={styles.paymentAmount}>
-                      {formatAmountWithSymbol(payment.amount, currencySymbol)}
+                      {formatAmountWithSymbol(payment.amount, currency)}
                     </Text>
                     <MaterialCommunityIcons 
                       name="chevron-right" 
@@ -466,21 +466,21 @@ const Earnings = () => {
               style={styles.actionButton}
               onPress={() => navigation.navigate('EarningsReport')}
             >
-              <MaterialCommunityIcons name="chart-box" size={24} color="#007AFF" />
+              <MaterialCommunityIcons name="chart-box" size={24} color={COLORS.primary} />
               <Text style={styles.actionText}>{tSafe('detailed_reports', 'Detailed Reports')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => navigation.navigate('PayoutSettings')}
             >
-              <MaterialCommunityIcons name="bank-outline" size={24} color="#007AFF" />
+              <MaterialCommunityIcons name="bank-outline" size={24} color={COLORS.primary} />
               <Text style={styles.actionText}>{tSafe('payout_settings', 'Payout Settings')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => navigation.navigate('TaxDocuments')}
             >
-              <MaterialCommunityIcons name="file-document" size={24} color="#007AFF" />
+              <MaterialCommunityIcons name="file-document" size={24} color={COLORS.primary} />
               <Text style={styles.actionText}>{tSafe('tax_documents', 'Tax Documents')}</Text>
             </TouchableOpacity>
           </View>
@@ -563,7 +563,7 @@ const Earnings = () => {
                       <MaterialCommunityIcons name="briefcase" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>{tSafe('service_type', 'Service Type')}</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.service || tSafe('standard_cleaning', 'Standard Cleaning')}</Text>
+                        <Text style={styles.detailValue}>{selectedPayment.apartment_name || tSafe('standard_cleaning', 'Standard Cleaning')}</Text>
                       </View>
                     </View>
 
@@ -579,7 +579,7 @@ const Earnings = () => {
                       <MaterialCommunityIcons name="clock-outline" size={20} color="#8E8E93" />
                       <View style={styles.detailTextContainer}>
                         <Text style={styles.detailLabel}>{tSafe('duration', 'Duration')}</Text>
-                        <Text style={styles.detailValue}>{selectedPayment.duration || tSafe('two_hours', '2 hours')}</Text>
+                        <Text style={styles.detailValue}>{minutesToDuration(selectedPayment.duration) || tSafe('two_hours', '2 hours')}</Text>
                       </View>
                     </View>
 
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   periodButtonActive: {
-    backgroundColor: COLORS.deepBlue,
+    backgroundColor: COLORS.primary,
   },
   periodButtonText: {
     fontSize: 12,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#007AFF',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: COLORS.primary,
     fontWeight: '500',
   },
   metricsGrid: {
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
-    color: '#007AFF',
+    color: COLORS.primary,
     marginTop: 8,
     textAlign: 'center',
     fontWeight: '500',
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     borderWidth: 0,
     paddingVertical: 16,
     gap: 8,

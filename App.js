@@ -1,5 +1,396 @@
+// import * as SplashScreen from 'expo-splash-screen';
+// import React, {useState, useContext, useEffect} from 'react';
+// import { DeviceEventEmitter, Platform } from 'react-native';
+// import { NavigationContainer } from '@react-navigation/native';
+// import AppNav from './navigation/public/AppNav';
+// import { AuthProvider } from './context/AuthContext';
+// import { LanguageProvider } from './context/LanguageContext';
+// import { SafeAreaProvider } from 'react-native-safe-area-context';
+// import { CleanerSelectionProvider } from './context/CleanerSelectionContext';
+// // import { STRIPE_PUBLIC_SECRET_KEY } from './secret';
+// import { StripeProvider } from '@stripe/stripe-react-native';
+// import { Provider as PaperProvider } from 'react-native-paper';
+// import { BookingProvider } from './context/BookingContext';
+// import { Text } from 'react-native';
+// // import * as Linking from 'expo-linking';
+// import { AuthContext } from './context/AuthContext';
+// // Import error handling components
+// import { ErrorProvider } from './context/ErrorContext';
+// import ErrorBoundary from './components/fallback/ErrorBoundary';
+// import GlobalErrorModal from './components/fallback/GlobalErrorModal';
+// // import NetworkListener from './components/fallback/NetworkListener';
+// import { navigationRef } from './utils/navigationRef';
+
+
+// import DevMenu from './components/fallback/DevMenu';
+// // import linking from './screens/sharedscreen/DeepLinking';
+
+// import { rootLinking } from './screens/sharedscreen/DeepLinking';
+// import i18n, { loadTranslations } from './i18n';
+// import userService from './services/connection/userService';
+// import { WebSocketProvider } from './context/WebsocketContext';
+// import { STRIPE_PUBLIC_SECRET_KEY } from './env';
+// import { useNotification } from './hooks/useNotification';
+
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// SplashScreen.preventAutoHideAsync();
+
+// function CustomLoadingScreen() {
+//   return (
+//     <View style={styles.container}>
+//       <Image source={require('./assets/images/logo.png')} style={styles.image} />
+//       <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+//       <Text style={styles.text}>Loading...</Text>
+//     </View>
+//   );
+// }
+
+
+// export default function App() {
+
+//   const { registerForPushNotificationsAsync } = useNotification();
+  
+//   const [showTestUI, setShowTestUI] = useState(false);
+//   const [ready, setReady] = useState(false); // ✅ ADD THIS
+
+//   const [appIsReady, setAppIsReady] = useState(false);
+//   const [showCustomLoader, setShowCustomLoader] = useState(true);
+
+
+//   useEffect(() => {
+//     async function prepare() {
+//       try {
+//         // Load assets
+//         await loadAssets();
+
+//         // Hide native splash
+//         await SplashScreen.hideAsync();
+//       } catch (e) {
+//         console.warn(e);
+//       } finally {
+//         setAppIsReady(true);
+//         // Optionally hide custom loader after a short delay
+//         setTimeout(() => setShowCustomLoader(false), 1000);
+//       }
+//     }
+//     prepare();
+//   }, []);
+
+//   if (!appIsReady) {
+//     return <CustomLoadingScreen />; // Native splash + custom overlay
+//   }
+
+//   if (showCustomLoader) {
+//     return <CustomLoadingScreen />; // Still showing custom loader after native splash
+//   }
+
+
+//   useEffect(() => {
+//     fetchTranslations();
+//   }, []);
+
+
+// //   const clearAllTokens = async () => {
+// //     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+// //     console.log('Tokens cleared');
+// //   };
+
+// // useEffect(() => {
+// //   AsyncStorage.clear().then(() => console.log('Storage cleared'));
+// //   clearAllTokens()
+// // }, []);
+
+
+//   // const fetchTranslations = async () => {
+//   //   try {
+//   //     const res = await userService.getFullCopies(0, 500); // limit
+//   //     const data = res.data;
+  
+//   //     console.log("My copies", data);
+  
+//   //     loadTranslations(data);
+  
+//   //     // 🔥 force UI refresh
+//   //     i18n.reloadResources();
+//   //     i18n.changeLanguage(i18n.language);
+  
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //   }
+//   // };
+
+//   const fetchTranslations = async () => {
+//     try {
+//       const res = await userService.getFullCopies();
+//       const data = res.data;
+
+//       if (!data || !data.length) {
+//         console.warn("No translations loaded");
+//         setReady(true); // ⚠️ IMPORTANT so app doesn't hang
+//         return;
+//       }
+
+//       console.log("My copies", data);
+
+//       loadTranslations(data); // 🔥 inject into i18n
+
+//       setReady(true); // ✅ IMPORTANT
+//     } catch (err) {
+//       console.error(err);
+//       // fallback to local translations
+//       loadTranslations([]);
+//       setReady(true); // still allow app to load
+//     }
+//   };
+
+//   // ✅ BLOCK APP UNTIL TRANSLATIONS ARE READY
+//   if (!ready) {
+//     return <Text></Text>;
+//   }
+   
+//    return (
+   
+//     <SafeAreaProvider>
+//       <AuthProvider>
+//         <ErrorProvider>
+//           <ErrorBoundary>
+//             <LanguageProvider>
+//               <WebSocketProvider>
+//                 <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
+//                   <BookingProvider>
+//                     <PaperProvider>
+//                       <CleanerSelectionProvider>
+//                         <AppNavigationWrapper />
+//                         <GlobalErrorModal />
+//                       </CleanerSelectionProvider>
+//                     </PaperProvider>
+//                   </BookingProvider>
+//                 </StripeProvider>
+//               </WebSocketProvider>
+//             </LanguageProvider>
+//           </ErrorBoundary>
+//         </ErrorProvider>
+//       </AuthProvider> 
+//     </SafeAreaProvider>
+         
+//    );
+//  }
+ 
+
+// //  export const navigationRef = React.createRef();
+
+//  function AppNavigationWrapper() {
+//   const { userType, isLoading } = useContext(AuthContext); // 'host' or 'cleaner'
+
+//   // Wait until auth context is ready
+//   if (isLoading) {
+//     return <Text>Loading...</Text>;
+//   }
+
+//   // Fallback if no userType yet
+//   // const linkingConfig = userType === 'host' ? hostLinking : cleanerLinking;
+
+//   return (
+//     <NavigationContainer
+//       // linking={linkingConfig}
+//       ref = {navigationRef}
+//       linking={rootLinking}
+      
+//       fallback={<Text></Text>}
+//       onReady={() => {
+//         console.log('Navigation is ready!');
+//       }}
+//       onStateChange={state => {
+//         console.log('🧭 Navigation state changed:', JSON.stringify(state, null, 2));
+//       }}
+      
+//     >
+//       <AppNav />
+//     </NavigationContainer>
+//   );
+// }
+
+
+
+
+// import React, {useState, useContext, useEffect} from 'react';
+// import { DeviceEventEmitter, Platform } from 'react-native';
+// import { NavigationContainer } from '@react-navigation/native';
+// import AppNav from './navigation/public/AppNav';
+// import { AuthProvider } from './context/AuthContext';
+// import { LanguageProvider } from './context/LanguageContext';
+// import { SafeAreaProvider } from 'react-native-safe-area-context';
+// import { CleanerSelectionProvider } from './context/CleanerSelectionContext';
+// // import { STRIPE_PUBLIC_SECRET_KEY } from './secret';
+// import { StripeProvider } from '@stripe/stripe-react-native';
+// import { Provider as PaperProvider } from 'react-native-paper';
+// import { BookingProvider } from './context/BookingContext';
+// import { Text } from 'react-native';
+// // import * as Linking from 'expo-linking';
+// import { AuthContext } from './context/AuthContext';
+// // Import error handling components
+// import { ErrorProvider } from './context/ErrorContext';
+// import ErrorBoundary from './components/fallback/ErrorBoundary';
+// import GlobalErrorModal from './components/fallback/GlobalErrorModal';
+// // import NetworkListener from './components/fallback/NetworkListener';
+// import { navigationRef } from './utils/navigationRef';
+
+
+// import DevMenu from './components/fallback/DevMenu';
+// // import linking from './screens/sharedscreen/DeepLinking';
+
+// import { rootLinking } from './screens/sharedscreen/DeepLinking';
+// import i18n, { loadTranslations } from './i18n';
+// import userService from './services/connection/userService';
+// import { WebSocketProvider } from './context/WebsocketContext';
+// import { STRIPE_PUBLIC_SECRET_KEY } from './env';
+// import { useNotification } from './hooks/useNotification';
+
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// export default function App() {
+
+//   const { registerForPushNotificationsAsync } = useNotification();
+  
+//   const [showTestUI, setShowTestUI] = useState(false);
+//   const [ready, setReady] = useState(false); // ✅ ADD THIS
+
+//   useEffect(() => {
+//     fetchTranslations();
+//   }, []);
+
+
+// //   const clearAllTokens = async () => {
+// //     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+// //     console.log('Tokens cleared');
+// //   };
+
+// // useEffect(() => {
+// //   AsyncStorage.clear().then(() => console.log('Storage cleared'));
+// //   clearAllTokens()
+// // }, []);
+
+
+//   // const fetchTranslations = async () => {
+//   //   try {
+//   //     const res = await userService.getFullCopies(0, 500); // limit
+//   //     const data = res.data;
+  
+//   //     console.log("My copies", data);
+  
+//   //     loadTranslations(data);
+  
+//   //     // 🔥 force UI refresh
+//   //     i18n.reloadResources();
+//   //     i18n.changeLanguage(i18n.language);
+  
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //   }
+//   // };
+
+//   const fetchTranslations = async () => {
+//     try {
+//       const res = await userService.getFullCopies();
+//       const data = res.data;
+
+//       if (!data || !data.length) {
+//         console.warn("No translations loaded");
+//         setReady(true); // ⚠️ IMPORTANT so app doesn't hang
+//         return;
+//       }
+
+//       console.log("My copies", data);
+
+//       loadTranslations(data); // 🔥 inject into i18n
+
+//       setReady(true); // ✅ IMPORTANT
+//     } catch (err) {
+//       console.error(err);
+//       // fallback to local translations
+//       loadTranslations([]);
+//       setReady(true); // still allow app to load
+//     }
+//   };
+
+//   // ✅ BLOCK APP UNTIL TRANSLATIONS ARE READY
+//   if (!ready) {
+//     return <Text></Text>;
+//   }
+   
+//    return (
+   
+//     <SafeAreaProvider>
+//       <AuthProvider>
+//         <ErrorProvider>
+//           <ErrorBoundary>
+//             <LanguageProvider>
+//               <WebSocketProvider>
+//                 <StripeProvider publishableKey={STRIPE_PUBLIC_SECRET_KEY}>
+//                   <BookingProvider>
+//                     <PaperProvider>
+//                       <CleanerSelectionProvider>
+//                         <AppNavigationWrapper />
+//                         <GlobalErrorModal />
+//                       </CleanerSelectionProvider>
+//                     </PaperProvider>
+//                   </BookingProvider>
+//                 </StripeProvider>
+//               </WebSocketProvider>
+//             </LanguageProvider>
+//           </ErrorBoundary>
+//         </ErrorProvider>
+//       </AuthProvider> 
+//     </SafeAreaProvider>
+         
+//    );
+//  }
+ 
+
+// //  export const navigationRef = React.createRef();
+
+//  function AppNavigationWrapper() {
+//   const { userType, isLoading } = useContext(AuthContext); // 'host' or 'cleaner'
+
+//   // Wait until auth context is ready
+//   // if (isLoading) {
+//   //   return <Text>Loading...</Text>;
+//   // }
+
+//   // Fallback if no userType yet
+//   // const linkingConfig = userType === 'host' ? hostLinking : cleanerLinking;
+
+//   // return (
+//   //   <NavigationContainer
+//   //     // linking={linkingConfig}
+//   //     ref = {navigationRef}
+//   //     linking={rootLinking}
+      
+//   //     fallback={<Text></Text>}
+//   //     onReady={() => {
+//   //       console.log('Navigation is ready!');
+//   //     }}
+//   //     onStateChange={state => {
+//   //       console.log('🧭 Navigation state changed:', JSON.stringify(state, null, 2));
+//   //     }}
+      
+//   //   >
+//   //     <AppNav />
+//   //   </NavigationContainer>
+//   // );
+
+//   return (
+//     <NavigationContainer>
+//       <AppNav />   
+//     </NavigationContainer>
+//   );
+
+// }
+
+
 import React, {useState, useContext, useEffect} from 'react';
-import { DeviceEventEmitter, Platform } from 'react-native';
+import { DeviceEventEmitter, Platform, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNav from './navigation/public/AppNav';
 import { AuthProvider } from './context/AuthContext';
@@ -30,6 +421,7 @@ import userService from './services/connection/userService';
 import { WebSocketProvider } from './context/WebsocketContext';
 import { STRIPE_PUBLIC_SECRET_KEY } from './env';
 import { useNotification } from './hooks/useNotification';
+import COLORS from './constants/colors';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -39,40 +431,13 @@ export default function App() {
   
   const [showTestUI, setShowTestUI] = useState(false);
   const [ready, setReady] = useState(false); // ✅ ADD THIS
-
+  
+ 
   useEffect(() => {
     fetchTranslations();
   }, []);
 
-
-//   const clearAllTokens = async () => {
-//     await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
-//     console.log('Tokens cleared');
-//   };
-
-// useEffect(() => {
-//   AsyncStorage.clear().then(() => console.log('Storage cleared'));
-//   clearAllTokens()
-// }, []);
-
-
-  // const fetchTranslations = async () => {
-  //   try {
-  //     const res = await userService.getFullCopies(0, 500); // limit
-  //     const data = res.data;
   
-  //     console.log("My copies", data);
-  
-  //     loadTranslations(data);
-  
-  //     // 🔥 force UI refresh
-  //     i18n.reloadResources();
-  //     i18n.changeLanguage(i18n.language);
-  
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
 
   const fetchTranslations = async () => {
     try {
@@ -135,11 +500,17 @@ export default function App() {
 //  export const navigationRef = React.createRef();
 
  function AppNavigationWrapper() {
-  const { userType, isLoading } = useContext(AuthContext); // 'host' or 'cleaner'
+  // const { userType, isLoading } = useContext(AuthContext); // 'host' or 'cleaner'
+  const { userType, isLoading, userToken } = useContext(AuthContext);
 
   // Wait until auth context is ready
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
   }
 
   // Fallback if no userType yet
@@ -165,3 +536,16 @@ export default function App() {
   );
 }
 
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+});

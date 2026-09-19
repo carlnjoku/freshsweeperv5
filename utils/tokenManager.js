@@ -20,6 +20,7 @@ export const getRefreshToken = async () => {
   return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
 };
 
+
 export const clearTokens = async () => {
   await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
   await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);

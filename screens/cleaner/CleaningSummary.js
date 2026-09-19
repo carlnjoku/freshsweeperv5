@@ -1,427 +1,1392 @@
-import React, { useState, useContext } from 'react';
-import { View, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
-import { Text, Button, Card } from 'react-native-paper';
+import React, {
+  useState,
+  useContext,
+} from 'react';
+
+import {
+  View,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
+
+import {
+  Text,
+  Button,
+  Card,
+} from 'react-native-paper';
+
 import COLORS from '../../constants/colors';
 import { AuthContext } from '../../context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import GroupActions from '../../components/cleaner/GroupActions';
 import { minutesToDuration } from '../../utils/minuteToDuration';
 import TermsConditions from './TermsConditions';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
 
 const { width } = Dimensions.get('window');
 
-export default function CleaningSummary({ schedule_status, checklist, assignedTo, handleAccept }) {
-  const { currency } = useContext(AuthContext);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [acceptModalVisible, setAcceptModalVisible] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+export default function CleaningSummary({
+  schedule_status,
+  checklist,
+  assignedTo,
+  handleAccept,
+  isEditable = true,
+}) {
+  const { currency } =
+    useContext(AuthContext);
 
-  console.log("Checklistoooo", checklist)
-  
-  // Function to convert group names to appropriate labels
-  const getGroupLabel = (groupKey, totalGroups) => {
-    // If there's only one group, label it as "Full Cleaning"
+  const [modalVisible, setModalVisible] =
+    useState(false);
+
+  const [
+    acceptModalVisible,
+    setAcceptModalVisible,
+  ] = useState(false);
+
+  const [selectedGroup, setSelectedGroup] =
+    useState(null);
+
+  console.log(
+    'Checklistoooo',
+    checklist
+  );
+
+  // ============================================================
+  // GROUP LABEL
+  // ============================================================
+  //
+  // Database values remain:
+  //
+  // group_a
+  // group_b
+  // group_c
+  //
+  // But the user sees:
+  //
+  // Cleaner Team A
+  // Cleaner Team B
+  // Cleaner Team C
+  //
+  // If there is only one group, we display:
+  //
+  // Full Cleaning
+  //
+  // ============================================================
+
+  const getGroupLabel = (
+    groupKey,
+    totalGroups
+  ) => {
+    // Single group = complete cleaning assignment
     if (totalGroups === 1) {
-      return tSafe('full_cleaning', 'Full Cleaning');
+      return tSafe(
+        'full_cleaning',
+        'Full Cleaning'
+      );
     }
-    
-    // For multiple groups, use Cleaner A, Cleaner B, etc.
-    const groupNumber = groupKey.split('_')[1];
-    switch (groupNumber) {
-      case '1':
-        return tSafe('cleaner_a', 'Cleaner A');
-      case '2':
-        return tSafe('cleaner_b', 'Cleaner B');
-      case '3':
-        return tSafe('cleaner_c', 'Cleaner C');
-      case '4':
-        return tSafe('cleaner_d', 'Cleaner D');
-      default:
-        return `${tSafe('cleaner', 'Cleaner')} ${groupNumber}`;
+
+    if (!groupKey) {
+      return tSafe(
+        'cleaner_team',
+        'Cleaner Team'
+      );
     }
+
+    /*
+     * Expected values:
+     *
+     * group_a
+     * group_b
+     * group_c
+     * group_d
+     *
+     * We take everything after the last "_".
+     */
+
+    const parts =
+      String(groupKey).split('_');
+
+    const groupIdentifier =
+      parts.length > 1
+        ? parts[parts.length - 1]
+        : groupKey;
+
+    /*
+     * Convert:
+     *
+     * a -> A
+     * b -> B
+     * c -> C
+     *
+     * This also makes the function work
+     * with group_1, group_2, etc.
+     */
+
+    const teamIdentifier =
+      String(groupIdentifier)
+        .charAt(0)
+        .toUpperCase() +
+      String(groupIdentifier)
+        .slice(1);
+
+    return `${tSafe(
+      'cleaner_team',
+      'Cleaner Team'
+    )} ${teamIdentifier}`;
   };
 
-  const processChecklistData = (checklist, assignedTo = []) => {
+  // ============================================================
+  // PROCESS CHECKLIST
+  // ============================================================
+
+  const processChecklistData = (
+    checklist,
+    assignedTo = []
+  ) => {
     try {
       const groups = [];
-  
-      if (!checklist || typeof checklist !== "object") {
+
+      if (
+        !checklist ||
+        typeof checklist !== 'object'
+      ) {
         return groups;
       }
-  
-      const totalGroups = Object.keys(checklist).length;
-  
+
+      const totalGroups =
+        Object.keys(checklist).length;
+
       for (const groupKey in checklist) {
-        if (!checklist.hasOwnProperty(groupKey)) continue;
-  
-        const group = checklist[groupKey];
-        if (typeof group !== "object" || group === null) continue;
-  
+        if (
+          !Object.prototype.hasOwnProperty.call(
+            checklist,
+            groupKey
+          )
+        ) {
+          continue;
+        }
+
+        const group =
+          checklist[groupKey];
+
+        if (
+          typeof group !== 'object' ||
+          group === null
+        ) {
+          continue;
+        }
+
         const roomTypes = {};
-        const rooms = Array.isArray(group.rooms) ? group.rooms : [];
+
+        const rooms = Array.isArray(
+          group.rooms
+        )
+          ? group.rooms
+          : [];
+
         const details =
-          typeof group.details === "object" && group.details !== null
+          typeof group.details ===
+            'object' &&
+          group.details !== null
             ? group.details
             : {};
-  
+
+        // ======================================================
         // Count rooms by type
+        // ======================================================
+
         rooms.forEach((room) => {
-          if (typeof room === "string") {
-            const roomType = room.split("_")[0];
-            roomTypes[roomType] = (roomTypes[roomType] || 0) + 1;
+          if (
+            typeof room === 'string'
+          ) {
+            const roomType =
+              room.split('_')[0];
+
+            roomTypes[roomType] =
+              (roomTypes[roomType] || 0) +
+              1;
           }
         });
-  
+
+        // ======================================================
         // Count total tasks
+        // ======================================================
+
         let taskCount = 0;
-        for (const roomType in details) {
-          if (!details.hasOwnProperty(roomType)) continue;
-  
+
+        for (
+          const roomType in details
+        ) {
           if (
-            roomType !== "Extra" &&
-            details[roomType] &&
-            typeof details[roomType] === "object" &&
-            Array.isArray(details[roomType].tasks)
+            !Object.prototype.hasOwnProperty.call(
+              details,
+              roomType
+            )
           ) {
-            taskCount += details[roomType].tasks.length;
+            continue;
+          }
+
+          if (
+            roomType !== 'Extra' &&
+            details[roomType] &&
+            typeof details[roomType] ===
+              'object' &&
+            Array.isArray(
+              details[roomType].tasks
+            )
+          ) {
+            taskCount +=
+              details[roomType].tasks.length;
           }
         }
-  
-        // Add extras if they exist
+
+        // ======================================================
+        // Add extras
+        // ======================================================
+
         if (
           details.Extra &&
-          typeof details.Extra === "object" &&
-          Array.isArray(details.Extra.tasks)
+          typeof details.Extra ===
+            'object' &&
+          Array.isArray(
+            details.Extra.tasks
+          )
         ) {
-          taskCount += details.Extra.tasks.filter(
-            (task) => task && task.value
-          ).length;
+          taskCount +=
+            details.Extra.tasks.filter(
+              (task) =>
+                task &&
+                task.value
+            ).length;
         }
-  
-        // 🔑 Find matching assignedTo entry by group name
-        const assignedInfo = assignedTo.find((a) => a.group === groupKey) || {};
+
+        // ======================================================
+        // Find matching assignedTo entry
+        // ======================================================
+
+        const assignedInfo =
+          assignedTo.find(
+            (assignment) =>
+              assignment?.group ===
+              groupKey
+          ) || {};
+
+        // ======================================================
+        // Build group
+        // ======================================================
+
         groups.push({
+          // IMPORTANT:
+          // Keep original backend value.
           name: groupKey,
-          groupLabel: getGroupLabel(groupKey, totalGroups),
+
+          // UI-friendly label.
+          groupLabel:
+            getGroupLabel(
+              groupKey,
+              totalGroups
+            ),
+
           taskCount,
-          roomCount: rooms.length,
+
+          roomCount:
+            rooms.length,
+
           roomTypes,
-          price: typeof group.price === "number" ? group.price : 0,
-          extras: Array.isArray(group.extras) ? group.extras : [],
-          details: details,
-          totalTime: typeof group.totalTime === "number" ? group.totalTime : 0,
-          rooms: rooms,
-          // 🔑 Merge assignedTo info
-          status: assignedInfo.status || "open",
-          cleanerId: assignedInfo.cleanerId || null,
+
+          price:
+            typeof group.price ===
+            'number'
+              ? group.price
+              : 0,
+
+          extras:
+            Array.isArray(
+              group.extras
+            )
+              ? group.extras
+              : [],
+
+          details,
+
+          totalTime:
+            typeof group.totalTime ===
+            'number'
+              ? group.totalTime
+              : 0,
+
+          rooms,
+
+          // ====================================================
+          // Assigned cleaner information
+          // ====================================================
+
+          status:
+            assignedInfo.status ||
+            'open',
+
+          cleanerId:
+            assignedInfo.cleanerId ||
+            null,
         });
       }
-  
+
       return groups;
+
     } catch (error) {
-      console.error("Error processing checklist data:", error);
+      console.error(
+        'Error processing checklist data:',
+        error
+      );
+
       return [];
     }
   };
 
+  // ============================================================
+  // SUMMARY DATA
+  // ============================================================
 
+  const summaryData =
+    processChecklistData(
+      checklist,
+      assignedTo
+    );
 
-  const summaryData = processChecklistData(checklist, assignedTo);
+  console.log(
+    'Summary data',
+    JSON.stringify(
+      summaryData,
+      null,
+      2
+    )
+  );
 
-  console.log("Summary data", JSON.stringify(summaryData, null, 2))
-  console.log(assignedTo)
+  console.log(
+    'AssignedTo',
+    assignedTo
+  );
+
+  // ============================================================
+  // DETAILS MODAL
+  // ============================================================
 
   const openModal = (group) => {
     setSelectedGroup(group);
     setModalVisible(true);
   };
 
-  const openAcceptModal = (group) => {
+  // ============================================================
+  // ACCEPT MODAL
+  // ============================================================
+
+  const openAcceptModal = (
+    group
+  ) => {
     setSelectedGroup(group);
     setAcceptModalVisible(true);
   };
 
-  const handleAcceptConfirm = (group) => {
-    console.log('Accepted:', group.name);
-    const acceptance = 1
-    handleAccept(group, acceptance);
-    setAcceptModalVisible(false);
+  // ============================================================
+  // CONFIRM ACCEPT
+  // ============================================================
+
+  const handleAcceptConfirm = (
+    group
+  ) => {
+    console.log(
+      'Accepted:',
+      group.name
+    );
+
+    const acceptance = 1;
+
+    handleAccept(
+      group,
+      acceptance
+    );
+
+    setAcceptModalVisible(
+      false
+    );
   };
 
+  // ============================================================
+  // DECLINE
+  // ============================================================
 
-  const handleDecline = (group) => {
-    console.log('Declined:', group.name);
-    const acceptance = 0
-    handleAccept(group, acceptance);
-    // Add your decline logic here
+  const handleDecline = (
+    group
+  ) => {
+    console.log(
+      'Declined:',
+      group.name
+    );
+
+    const acceptance = 0;
+
+    handleAccept(
+      group,
+      acceptance
+    );
   };
 
-  // Content for Rules and Penalties Modal
-  const renderRulesAndPenaltiesContent = () => (
-    <TermsConditions />
-  );
+  // ============================================================
+  // RULES / PENALTIES
+  // ============================================================
 
-  const formatRoomTypes = (roomTypes) => {
-    if (!roomTypes || typeof roomTypes !== 'object') return tSafe('no_rooms', 'No rooms');
-    
-    return Object.entries(roomTypes)
-      .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+  const renderRulesAndPenaltiesContent =
+    () => (
+      <TermsConditions />
+    );
+
+  // ============================================================
+  // ROOM TYPES
+  // ============================================================
+
+  const formatRoomTypes = (
+    roomTypes
+  ) => {
+    if (
+      !roomTypes ||
+      typeof roomTypes !==
+        'object'
+    ) {
+      return tSafe(
+        'no_rooms',
+        'No rooms'
+      );
+    }
+
+    return Object.entries(
+      roomTypes
+    )
+      .map(
+        ([type, count]) =>
+          `${count} ${type}${
+            count > 1
+              ? 's'
+              : ''
+          }`
+      )
       .join(', ');
   };
 
-  const formatRoomCounts = (rooms) => {
+  // ============================================================
+  // ROOM COUNTS
+  // ============================================================
+
+  const formatRoomCounts = (
+    rooms
+  ) => {
     const roomCounts = {};
-    rooms.forEach(room => {
-      const roomType = room.split('_')[0];
-      roomCounts[roomType] = (roomCounts[roomType] || 0) + 1;
-    });
-    
-    return Object.entries(roomCounts)
-      .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+
+    if (!Array.isArray(rooms)) {
+      return tSafe(
+        'no_rooms',
+        'No rooms'
+      );
+    }
+
+    rooms.forEach(
+      (room) => {
+        if (
+          typeof room !==
+          'string'
+        ) {
+          return;
+        }
+
+        const roomType =
+          room.split('_')[0];
+
+        roomCounts[roomType] =
+          (roomCounts[roomType] ||
+            0) +
+          1;
+      }
+    );
+
+    return Object.entries(
+      roomCounts
+    )
+      .map(
+        ([type, count]) =>
+          `${count} ${type}${
+            count > 1
+              ? 's'
+              : ''
+          }`
+      )
       .join(', ');
   };
 
-  const renderTaskItem = (task) => (
-    <View key={task.id} style={styles.taskItem}>
-      <MaterialIcons 
-        name="fiber-manual-record" 
-        size={10} 
-        color={COLORS.primary} 
+  // ============================================================
+  // TASK ITEM
+  // ============================================================
+
+  const renderTaskItem = (
+    task
+  ) => (
+    <View
+      key={task.id}
+      style={styles.taskItem}
+    >
+      <MaterialIcons
+        name="fiber-manual-record"
+        size={10}
+        color={
+          COLORS.primary
+        }
       />
-      <Text style={styles.taskText}>{task.label}</Text>
+
+      <Text
+        style={
+          styles.taskText
+        }
+      >
+        {task.label}
+      </Text>
     </View>
   );
 
-  const renderRoomTasks = (roomData, roomType) => {
-    const tasks = roomData.tasks || [];
-    const halfIndex = Math.ceil(tasks.length / 2);
-    const leftColumn = tasks.slice(0, halfIndex);
-    const rightColumn = tasks.slice(halfIndex);
-    
+  // ============================================================
+  // ROOM TASKS
+  // ============================================================
+
+  const renderRoomTasks = (
+    roomData,
+    roomType
+  ) => {
+    const tasks =
+      roomData.tasks || [];
+
+    const halfIndex =
+      Math.ceil(
+        tasks.length / 2
+      );
+
+    const leftColumn =
+      tasks.slice(
+        0,
+        halfIndex
+      );
+
+    const rightColumn =
+      tasks.slice(
+        halfIndex
+      );
+
     return (
-      <View style={styles.twoColumnContainer}>
-        <View style={styles.column}>
-          {leftColumn.map(task => renderTaskItem(task))}
+      <View
+        style={
+          styles.twoColumnContainer
+        }
+      >
+        <View
+          style={
+            styles.column
+          }
+        >
+          {leftColumn.map(
+            (task) =>
+              renderTaskItem(
+                task
+              )
+          )}
         </View>
-        <View style={styles.column}>
-          {rightColumn.map(task => renderTaskItem(task))}
+
+        <View
+          style={
+            styles.column
+          }
+        >
+          {rightColumn.map(
+            (task) =>
+              renderTaskItem(
+                task
+              )
+          )}
         </View>
       </View>
     );
   };
 
-  const renderModalContent = () => {
-    if (!selectedGroup) return null;
-    
-    return (
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>
-            {selectedGroup.groupLabel} - {tSafe('details', 'Details')}
-          </Text>
-          <Button 
-            icon="close" 
-            onPress={() => setModalVisible(false)}
-            style={styles.closeButton}
-          />
-        </View>
-        
-        <ScrollView style={styles.modalContent}>
-          <View style={styles.modalSection}>
-            <Text style={styles.sectionTitle}>{tSafe('overview', 'Overview')}</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{tSafe('total_time', 'Total Time:')}</Text>
-              <Text style={styles.infoValue}>
-                {selectedGroup.totalTime} {tSafe('minutes', 'minutes')}
+  // ============================================================
+  // DETAILS MODAL CONTENT
+  // ============================================================
+
+  const renderModalContent =
+    () => {
+      if (!selectedGroup) {
+        return null;
+      }
+
+      return (
+        <View
+          style={
+            styles.modalContainer
+          }
+        >
+          {/* Modal Header */}
+
+          <View
+            style={
+              styles.modalHeader
+            }
+          >
+            <Text
+              style={
+                styles.modalTitle
+              }
+            >
+              {selectedGroup.groupLabel}
+              {' - '}
+              {tSafe(
+                'details',
+                'Details'
+              )}
+            </Text>
+
+            <Button
+              icon="close"
+              onPress={() =>
+                setModalVisible(
+                  false
+                )
+              }
+              style={
+                styles.closeButton
+              }
+            />
+          </View>
+
+          {/* Modal Content */}
+
+          <ScrollView
+            style={
+              styles.modalContent
+            }
+          >
+            <View
+              style={
+                styles.modalSection
+              }
+            >
+              {/* Overview */}
+
+              <Text
+                style={
+                  styles.sectionTitle
+                }
+              >
+                {tSafe(
+                  'overview',
+                  'Overview'
+                )}
               </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{tSafe('price', 'Price:')}</Text>
-              <Text style={styles.totalFee}>
-                {currency}{selectedGroup.price.toFixed(2)}
-              </Text>
-            </View>
-            
-            <Text style={styles.sectionTitle}>{tSafe('rooms_tasks', 'Rooms & Tasks')}</Text>
-            
-            <View style={styles.groupContainer}>
-              <View style={styles.groupHeader}>
-                <Text style={styles.groupTitle}>{selectedGroup.groupLabel}</Text>
-                <View style={styles.groupPriceTime}>
-                  <View style={styles.timeBadge}>
-                    <Text style={styles.timeText}>
-                      {selectedGroup.totalTime} {tSafe('mins', 'mins')}
-                    </Text>
-                  </View>
-                  <View style={styles.priceBadge}>
-                    <Text style={styles.priceText}>
-                      {currency}{selectedGroup.price.toFixed(2)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>{tSafe('rooms', 'Rooms:')}</Text>
-                <Text style={styles.infoValue}>
-                  {formatRoomCounts(selectedGroup.rooms)}
+
+              {/* Total Time */}
+
+              <View
+                style={
+                  styles.infoRow
+                }
+              >
+                <Text
+                  style={
+                    styles.infoLabel
+                  }
+                >
+                  {tSafe(
+                    'total_time',
+                    'Total Time:'
+                  )}
+                </Text>
+
+                <Text
+                  style={
+                    styles.infoValue
+                  }
+                >
+                  {
+                    selectedGroup.totalTime
+                  }{' '}
+                  {tSafe(
+                    'minutes',
+                    'minutes'
+                  )}
                 </Text>
               </View>
 
-              {selectedGroup.extras && selectedGroup.extras.length > 0 && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{tSafe('extras', 'Extras:')}</Text>
-                  <Text style={styles.infoValue}>
-                    {selectedGroup.extras.join(', ')}
+              {/* Price */}
+
+              <View
+                style={
+                  styles.infoRow
+                }
+              >
+                <Text
+                  style={
+                    styles.infoLabel
+                  }
+                >
+                  {tSafe(
+                    'price',
+                    'Price:'
+                  )}
+                </Text>
+
+                <Text
+                  style={
+                    styles.totalFee
+                  }
+                >
+                  {currency}
+                  {selectedGroup.price.toFixed(
+                    2
+                  )}
+                </Text>
+              </View>
+
+              {/* Rooms and Tasks */}
+
+              <Text
+                style={
+                  styles.sectionTitle
+                }
+              >
+                {tSafe(
+                  'rooms_tasks',
+                  'Rooms & Tasks'
+                )}
+              </Text>
+
+              <View
+                style={
+                  styles.groupContainer
+                }
+              >
+                {/* Group Header */}
+
+                <View
+                  style={
+                    styles.groupHeader
+                  }
+                >
+                  <Text
+                    style={
+                      styles.groupTitle
+                    }
+                  >
+                    {
+                      selectedGroup.groupLabel
+                    }
+                  </Text>
+
+                  <View
+                    style={
+                      styles.groupPriceTime
+                    }
+                  >
+                    <View
+                      style={
+                        styles.timeBadge
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.timeText
+                        }
+                      >
+                        {
+                          selectedGroup.totalTime
+                        }{' '}
+                        {tSafe(
+                          'mins',
+                          'mins'
+                        )}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={
+                        styles.priceBadge
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.priceText
+                        }
+                      >
+                        {currency}
+                        {selectedGroup.price.toFixed(
+                          2
+                        )}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Rooms */}
+
+                <View
+                  style={
+                    styles.infoRow
+                  }
+                >
+                  <Text
+                    style={
+                      styles.infoLabel
+                    }
+                  >
+                    {tSafe(
+                      'rooms',
+                      'Rooms:'
+                    )}
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.infoValue
+                    }
+                  >
+                    {formatRoomCounts(
+                      selectedGroup.rooms
+                    )}
                   </Text>
                 </View>
-              )}
-              
-              {Object.entries(selectedGroup.details).map(([roomType, roomData]) => {
-                if (!roomData.tasks || !Array.isArray(roomData.tasks)) return null;
-                
-                return (
-                  <View key={`${roomType}`} style={styles.roomTasks}>
-                    <Text style={styles.roomTitle}>{roomType}:</Text>
-                    {renderRoomTasks(roomData, roomType)}
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        </ScrollView>
-        
-        {/* <View style={styles.modalFooter}>
-          <Button 
-            mode="contained" 
-            onPress={() => {
-              setModalVisible(false);
-              openAcceptModal(selectedGroup);
-            }}
-            style={styles.modalActionButton}
-          >
-            {tSafe('accept_this_task', 'Accept This Task')}
-          </Button>
-        </View> */}
-      </View>
-    );
-  };
 
-  if (summaryData.length === 0) {
+                {/* Extras */}
+
+                {selectedGroup
+                  .extras &&
+                  selectedGroup
+                    .extras
+                    .length >
+                    0 && (
+                    <View
+                      style={
+                        styles.infoRow
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.infoLabel
+                        }
+                      >
+                        {tSafe(
+                          'extras',
+                          'Extras:'
+                        )}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.infoValue
+                        }
+                      >
+                        {selectedGroup.extras.join(
+                          ', '
+                        )}
+                      </Text>
+                    </View>
+                  )}
+
+                {/* Room Tasks */}
+
+                {Object.entries(
+                  selectedGroup.details
+                ).map(
+                  ([
+                    roomType,
+                    roomData,
+                  ]) => {
+                    if (
+                      !roomData.tasks ||
+                      !Array.isArray(
+                        roomData.tasks
+                      )
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <View
+                        key={
+                          roomType
+                        }
+                        style={
+                          styles.roomTasks
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.roomTitle
+                          }
+                        >
+                          {
+                            roomType
+                          }
+                          :
+                        </Text>
+
+                        {renderRoomTasks(
+                          roomData,
+                          roomType
+                        )}
+                      </View>
+                    );
+                  }
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      );
+    };
+
+  // ============================================================
+  // EMPTY STATE
+  // ============================================================
+
+  if (
+    summaryData.length ===
+    0
+  ) {
     return (
-      <View style={styles.emptyState}>
-        <MaterialIcons name="cleaning-services" size={48} color={COLORS.gray} />
-        <Text style={styles.emptyStateText}>{tSafe('no_cleaning_tasks', 'No cleaning tasks available')}</Text>
+      <View
+        style={
+          styles.emptyState
+        }
+      >
+        <MaterialIcons
+          name="cleaning-services"
+          size={48}
+          color={
+            COLORS.gray
+          }
+        />
+
+        <Text
+          style={
+            styles.emptyStateText
+          }
+        >
+          {tSafe(
+            'no_cleaning_tasks',
+            'No cleaning tasks available'
+          )}
+        </Text>
       </View>
     );
   }
 
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>{tSafe('available_cleaning_tasks', 'Available Cleaning Tasks')}</Text>
-      <Text style={styles.subheader}>
-        {summaryData.length === 1 
-          ? tSafe('complete_cleaning_assignment', 'Complete cleaning assignment')
-          : tSafe('tasks_assigned_to_different_cleaners', 'Tasks have been assigned to different cleaners for efficiency')}
-      </Text>
-      
-      {summaryData.map((item) => (
-        <Card key={item.name} style={styles.card}>
-          <Card.Content>
-            <View style={styles.cardHeader}>
-              <Text style={styles.groupName}>{item.groupLabel}</Text>
-              <Text style={styles.price}>{currency}{item.price.toFixed(2)}</Text>
-            </View>
-            
-            <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <MaterialIcons name="list" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>
-                  {item.taskCount} {tSafe('tasks', 'tasks')}
-                </Text>
-              </View>
-              <View style={styles.stat}>
-                <MaterialIcons name="home" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>
-                  {item.roomCount} {tSafe('rooms', 'rooms')}
-                </Text>
-              </View>
-              <View style={styles.stat}>
-                <MaterialIcons name="access-time" size={16} color={COLORS.primary} />
-                <Text style={styles.statText}>{minutesToDuration(item.totalTime)}</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.description}>
-              {tSafe('includes_cleaning_of', 'Includes cleaning of')} {formatRoomTypes(item.roomTypes)}
-              {item.extras.length > 0 ? `${tSafe('plus', ', plus ')}${item.extras.join(', ')}` : ''}.
-            </Text>
-            
-            <View style={styles.buttonRow}>
-              <GroupActions
-                status={item?.status}
-                schedule_status={schedule_status}
-                onAccept={() => openAcceptModal(item)}
-                onDecline={() => handleDecline(item)}
-                onDetails={() => openModal(item)}
-              />
-            </View>
-          </Card.Content>
-        </Card>
-      ))}
-      
-      {/* Details Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+    <View
+      style={
+        styles.container
+      }
+    >
+      {/* ====================================================== */}
+      {/* HEADER */}
+      {/* ====================================================== */}
+
+      <Text
+        style={
+          styles.header
+        }
       >
-        <View style={styles.modalOverlay}>
+        {tSafe(
+          'available_cleaning_tasks',
+          'Available Cleaning Tasks'
+        )}
+      </Text>
+
+      <Text
+        style={
+          styles.subheader
+        }
+      >
+        {summaryData.length ===
+        1
+          ? tSafe(
+              'complete_cleaning_assignment',
+              'Complete cleaning assignment'
+            )
+          : tSafe(
+              'tasks_assigned_to_different_cleaners',
+              'Tasks have been assigned to different cleaner teams for efficiency'
+            )}
+      </Text>
+
+      {/* ====================================================== */}
+      {/* GROUP CARDS */}
+      {/* ====================================================== */}
+
+      {summaryData.map(
+        (item) => (
+          <Card
+            key={
+              item.name
+            }
+            style={
+              styles.card
+            }
+          >
+            <Card.Content>
+
+              {/* ================================================= */}
+              {/* CARD HEADER */}
+              {/* ================================================= */}
+
+              <View
+                style={
+                  styles.cardHeader
+                }
+              >
+                <Text
+                  style={
+                    styles.groupName
+                  }
+                >
+                  {
+                    item.groupLabel
+                  }
+                </Text>
+
+                <Text
+                  style={
+                    styles.price
+                  }
+                >
+                  {currency}
+                  {item.price.toFixed(
+                    2
+                  )}
+                </Text>
+              </View>
+
+              {/* ================================================= */}
+              {/* STATS */}
+              {/* ================================================= */}
+
+              <View
+                style={
+                  styles.statsRow
+                }
+              >
+                {/* Tasks */}
+
+                <View
+                  style={
+                    styles.stat
+                  }
+                >
+                  <MaterialIcons
+                    name="list"
+                    size={16}
+                    color={
+                      COLORS.primary
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.statText
+                    }
+                  >
+                    {
+                      item.taskCount
+                    }{' '}
+                    {tSafe(
+                      'tasks',
+                      'tasks'
+                    )}
+                  </Text>
+                </View>
+
+                {/* Rooms */}
+
+                <View
+                  style={
+                    styles.stat
+                  }
+                >
+                  <MaterialIcons
+                    name="home"
+                    size={16}
+                    color={
+                      COLORS.primary
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.statText
+                    }
+                  >
+                    {
+                      item.roomCount
+                    }{' '}
+                    {tSafe(
+                      'rooms',
+                      'rooms'
+                    )}
+                  </Text>
+                </View>
+
+                {/* Time */}
+
+                <View
+                  style={
+                    styles.stat
+                  }
+                >
+                  <MaterialIcons
+                    name="access-time"
+                    size={16}
+                    color={
+                      COLORS.primary
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.statText
+                    }
+                  >
+                    {minutesToDuration(
+                      item.totalTime
+                    )}
+                  </Text>
+                </View>
+              </View>
+
+              {/* ================================================= */}
+              {/* DESCRIPTION */}
+              {/* ================================================= */}
+
+              <Text
+                style={
+                  styles.description
+                }
+              >
+                {tSafe(
+                  'includes_cleaning_of',
+                  'Includes cleaning of'
+                )}{' '}
+                {formatRoomTypes(
+                  item.roomTypes
+                )}
+
+                {item.extras
+                  .length >
+                  0
+                  ? `${tSafe(
+                      'plus',
+                      ', plus '
+                    )}${item.extras.join(
+                      ', '
+                    )}`
+                  : ''}
+                .
+              </Text>
+
+              {/* ================================================= */}
+              {/* ACTIONS */}
+              {/* ================================================= */}
+
+              <View
+                style={
+                  styles.buttonRow
+                }
+              >
+                <GroupActions
+                  status={
+                    item?.status
+                  }
+                  schedule_status={
+                    schedule_status
+                  }
+                  onAccept={() =>
+                    openAcceptModal(
+                      item
+                    )
+                  }
+                  onDecline={() =>
+                    handleDecline(
+                      item
+                    )
+                  }
+                  onDetails={() =>
+                    openModal(
+                      item
+                    )
+                  }
+                  disabled={
+                    !isEditable
+                  }
+                />
+              </View>
+
+            </Card.Content>
+          </Card>
+        )
+      )}
+
+      {/* ====================================================== */}
+      {/* DETAILS MODAL */}
+      {/* ====================================================== */}
+
+      <Modal
+        visible={
+          modalVisible
+        }
+        transparent={
+          true
+        }
+        animationType="slide"
+        onRequestClose={() =>
+          setModalVisible(
+            false
+          )
+        }
+      >
+        <View
+          style={
+            styles.modalOverlay
+          }
+        >
           {renderModalContent()}
         </View>
       </Modal>
 
-      {/* Accept Rules Modal */}
+      {/* ====================================================== */}
+      {/* ACCEPT RULES MODAL */}
+      {/* ====================================================== */}
+
       <Modal
-        visible={acceptModalVisible}
-        transparent={true}
+        visible={
+          acceptModalVisible
+        }
+        transparent={
+          true
+        }
         animationType="slide"
-        onRequestClose={() => setAcceptModalVisible(false)}
+        onRequestClose={() =>
+          setAcceptModalVisible(
+            false
+          )
+        }
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.rulesModalContainer}>
-            <View style={styles.rulesModalHeader}>
-              <Text style={styles.rulesModalTitle}>{tSafe('accept_cleaning_task', 'Accept Cleaning Task')}</Text>
-              <Button 
-                icon="close" 
-                onPress={() => setAcceptModalVisible(false)}
-                style={styles.closeButton}
+        <View
+          style={
+            styles.modalOverlay
+          }
+        >
+          <View
+            style={
+              styles.rulesModalContainer
+            }
+          >
+
+            {/* Rules Header */}
+
+            <View
+              style={
+                styles.rulesModalHeader
+              }
+            >
+              <Text
+                style={
+                  styles.rulesModalTitle
+                }
               >
-                {tSafe('close', 'Close')}
+                {tSafe(
+                  'accept_cleaning_task',
+                  'Accept Cleaning Task'
+                )}
+              </Text>
+
+              <Button
+                icon="close"
+                onPress={() =>
+                  setAcceptModalVisible(
+                    false
+                  )
+                }
+                style={
+                  styles.closeButton
+                }
+              >
+                {tSafe(
+                  'close',
+                  'Close'
+                )}
               </Button>
             </View>
-            
+
+            {/* Terms */}
+
             {renderRulesAndPenaltiesContent()}
-            
-            <View style={styles.rulesModalFooter}>
-              <Button 
-                mode="outlined" 
-                onPress={() => setAcceptModalVisible(false)}
-                style={[styles.rulesButton, styles.cancelButton]}
-                labelStyle={styles.cancelButtonText}
+
+            {/* Footer */}
+
+            <View
+              style={
+                styles.rulesModalFooter
+              }
+            >
+
+              <Button
+                mode="outlined"
+                onPress={() =>
+                  setAcceptModalVisible(
+                    false
+                  )
+                }
+                style={[
+                  styles.rulesButton,
+                  styles.cancelButton,
+                ]}
+                labelStyle={
+                  styles.cancelButtonText
+                }
               >
-                {tSafe('cancel', 'Cancel')}
+                {tSafe(
+                  'cancel',
+                  'Cancel'
+                )}
               </Button>
-              <Button 
-                mode="contained" 
-                onPress={() => handleAcceptConfirm(selectedGroup)}
-                style={[styles.rulesButton, styles.agreeButton]}
-                labelStyle={styles.agreeButtonText}
+
+              <Button
+                mode="contained"
+                onPress={() =>
+                  handleAcceptConfirm(
+                    selectedGroup
+                  )
+                }
+                style={[
+                  styles.rulesButton,
+                  styles.agreeButton,
+                ]}
+                labelStyle={
+                  styles.agreeButtonText
+                }
               >
-                {tSafe('i_agree_and_accept', 'I Agree & Accept')}
+                {tSafe(
+                  'i_agree_and_accept',
+                  'I Agree & Accept'
+                )}
               </Button>
+
             </View>
           </View>
         </View>
@@ -430,349 +1395,1273 @@ export default function CleaningSummary({ schedule_status, checklist, assignedTo
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  header: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 4,
-    color: COLORS.dark,
-  },
-  subheader: {
-    fontSize: 14,
-    marginBottom: 20,
-    color: COLORS.gray,
-    lineHeight: 20,
-  },
-  card: {
-    marginBottom: 16,
-    borderRadius: 12,
-    backgroundColor: 'white',
-    elevation: 1,
-    shadowColor: '#ddd',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  groupName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.dark,
-  },
-  price: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: COLORS.gray,
-  },
-  description: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  acceptButton: {
-    backgroundColor: COLORS.primary,
-  },
-  declineButton: {
-    borderColor: COLORS.grayLight,
-  },
-  acceptButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  declineButtonText: {
-    color: COLORS.gray,
-    fontWeight: '600',
-  },
-  detailsButtonText: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: COLORS.gray,
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    width: '100%',
-    maxHeight: '80%',
-    overflow: 'hidden',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.dark,
-    flex: 1,
-  },
-  closeButton: {
-    margin: -10,
-  },
-  modalContent: {
-    padding: 20,
-  },
-  modalSection: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: COLORS.dark,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  infoLabel: {
-    fontSize: 15,
-    color: COLORS.gray,
-  },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: COLORS.dark,
-  },
-  totalFee: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  groupContainer: {
-    backgroundColor: '#f9f9ff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  groupTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.dark,
-  },
-  groupPriceTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  timeBadge: {
-    backgroundColor: '#e6f2ff',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  timeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.primary,
-  },
-  priceBadge: {
-    backgroundColor: '#e6f7e9',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  priceText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.success,
-  },
-  roomTasks: {
-    marginBottom: 16,
-  },
-  roomTitle: {
-    fontSize: 15,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: COLORS.primary,
-  },
-  twoColumnContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  column: {
-    width: '48%',
-  },
-  taskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  taskText: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: COLORS.dark,
-    flexShrink: 1,
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  modalActionButton: {
-    borderRadius: 12,
-    paddingVertical: 6,
-    backgroundColor: COLORS.primary
-  },
-  // Rules Modal Styles
-  rulesModalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    width: '100%',
-    maxHeight: '85%',
-    overflow: 'hidden',
-  },
-  rulesModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  rulesModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.dark,
-    flex: 1,
-  },
-  rulesContent: {
-    padding: 20,
-    maxHeight: 400,
-  },
-  rulesTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.primary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  rulesText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: COLORS.dark,
-  },
-  penaltyText: {
-    fontWeight: '600',
-    color: '#dc3545',
-  },
-  agreementSection: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: '#e7f3ff',
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#007bff',
-  },
-  agreementText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: COLORS.dark,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  rulesModalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    gap: 12,
-  },
-  rulesButton: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 6,
-  },
-  cancelButton: {
-    borderColor: COLORS.gray,
-  },
-  cancelButtonText: {
-    color: COLORS.gray,
-    fontWeight: '600',
-  },
-  agreeButton: {
-    backgroundColor: COLORS.primary,
-  },
-  agreeButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-});
+// ============================================================
+// STYLES
+// ============================================================
+
+const styles =
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 1,
+      backgroundColor:
+        '#FAFAFA',
+    },
+
+    header: {
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: 4,
+      color: COLORS.dark,
+    },
+
+    subheader: {
+      fontSize: 14,
+      marginBottom: 20,
+      color: COLORS.gray,
+      lineHeight: 20,
+    },
+
+    card: {
+      marginBottom: 16,
+      borderRadius: 12,
+      backgroundColor:
+        'white',
+      elevation: 1,
+      shadowColor:
+        '#ddd',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 1,
+    },
+
+    cardHeader: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      alignItems:
+        'center',
+      marginBottom: 16,
+    },
+
+    groupName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: COLORS.dark,
+    },
+
+    price: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: COLORS.primary,
+    },
+
+    statsRow: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      marginBottom: 16,
+      paddingHorizontal: 4,
+    },
+
+    stat: {
+      flexDirection:
+        'row',
+      alignItems:
+        'center',
+    },
+
+    statText: {
+      marginLeft: 6,
+      fontSize: 14,
+      color: COLORS.gray,
+    },
+
+    description: {
+      fontSize: 14,
+      color: COLORS.dark,
+      marginBottom: 20,
+      lineHeight: 20,
+    },
+
+    buttonRow: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+    },
+
+    button: {
+      flex: 1,
+      marginHorizontal: 4,
+    },
+
+    acceptButton: {
+      backgroundColor:
+        COLORS.primary,
+    },
+
+    declineButton: {
+      borderColor:
+        COLORS.grayLight,
+    },
+
+    acceptButtonText: {
+      color: 'white',
+      fontWeight: '600',
+    },
+
+    declineButtonText: {
+      color: COLORS.gray,
+      fontWeight: '600',
+    },
+
+    detailsButtonText: {
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+
+    emptyState: {
+      flex: 1,
+      justifyContent:
+        'center',
+      alignItems:
+        'center',
+      padding: 40,
+    },
+
+    emptyStateText: {
+      fontSize: 16,
+      color: COLORS.gray,
+      marginTop: 16,
+      textAlign:
+        'center',
+    },
+
+    // ========================================================
+    // DETAILS MODAL
+    // ========================================================
+
+    modalOverlay: {
+      flex: 1,
+      backgroundColor:
+        'rgba(0,0,0,0.5)',
+      justifyContent:
+        'center',
+      alignItems:
+        'center',
+      padding: 20,
+    },
+
+    modalContainer: {
+      backgroundColor:
+        'white',
+      borderRadius: 16,
+      width: '100%',
+      maxHeight: '80%',
+      overflow:
+        'hidden',
+    },
+
+    modalHeader: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      alignItems:
+        'center',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor:
+        '#f0f0f0',
+    },
+
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: COLORS.dark,
+      flex: 1,
+    },
+
+    closeButton: {
+      margin: -10,
+    },
+
+    modalContent: {
+      padding: 20,
+    },
+
+    modalSection: {
+      marginBottom: 16,
+    },
+
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 16,
+      color: COLORS.dark,
+    },
+
+    infoRow: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      marginBottom: 12,
+    },
+
+    infoLabel: {
+      fontSize: 15,
+      color: COLORS.gray,
+    },
+
+    infoValue: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: COLORS.dark,
+    },
+
+    totalFee: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: COLORS.primary,
+    },
+
+    groupContainer: {
+      backgroundColor:
+        '#f9f9ff',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
+
+    groupHeader: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      alignItems:
+        'center',
+      marginBottom: 12,
+    },
+
+    groupTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: COLORS.dark,
+      flex: 1,
+    },
+
+    groupPriceTime: {
+      flexDirection:
+        'row',
+      alignItems:
+        'center',
+      gap: 8,
+    },
+
+    timeBadge: {
+      backgroundColor:
+        '#e6f2ff',
+      borderRadius: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+    },
+
+    timeText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: COLORS.primary,
+    },
+
+    priceBadge: {
+      backgroundColor:
+        '#e6f7e9',
+      borderRadius: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+    },
+
+    priceText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: COLORS.success,
+    },
+
+    roomTasks: {
+      marginBottom: 16,
+    },
+
+    roomTitle: {
+      fontSize: 15,
+      fontWeight: '500',
+      marginBottom: 8,
+      color: COLORS.primary,
+    },
+
+    twoColumnContainer: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      marginTop: 8,
+    },
+
+    column: {
+      width: '48%',
+    },
+
+    taskItem: {
+      flexDirection:
+        'row',
+      alignItems:
+        'center',
+      marginBottom: 8,
+    },
+
+    taskText: {
+      fontSize: 14,
+      marginLeft: 8,
+      color: COLORS.dark,
+      flexShrink: 1,
+    },
+
+    modalFooter: {
+      padding: 20,
+      borderTopWidth: 1,
+      borderTopColor:
+        '#f0f0f0',
+    },
+
+    modalActionButton: {
+      borderRadius: 12,
+      paddingVertical: 6,
+      backgroundColor:
+        COLORS.primary,
+    },
+
+    // ========================================================
+    // RULES MODAL
+    // ========================================================
+
+    rulesModalContainer: {
+      backgroundColor:
+        'white',
+      borderRadius: 16,
+      width: '100%',
+      maxHeight: '85%',
+      overflow:
+        'hidden',
+    },
+
+    rulesModalHeader: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      alignItems:
+        'center',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor:
+        '#f0f0f0',
+    },
+
+    rulesModalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: COLORS.dark,
+      flex: 1,
+    },
+
+    rulesContent: {
+      padding: 20,
+      maxHeight: 400,
+    },
+
+    rulesTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: COLORS.primary,
+      textAlign:
+        'center',
+      marginBottom: 20,
+    },
+
+    section: {
+      marginBottom: 20,
+      padding: 16,
+      backgroundColor:
+        '#f8f9fa',
+      borderRadius: 12,
+      borderLeftWidth: 4,
+      borderLeftColor:
+        COLORS.primary,
+    },
+
+    rulesText: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: COLORS.dark,
+    },
+
+    penaltyText: {
+      fontWeight: '600',
+      color: '#dc3545',
+    },
+
+    agreementSection: {
+      marginTop: 20,
+      padding: 16,
+      backgroundColor:
+        '#e7f3ff',
+      borderRadius: 12,
+      borderLeftWidth: 4,
+      borderLeftColor:
+        '#007bff',
+    },
+
+    agreementText: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: COLORS.dark,
+      fontStyle:
+        'italic',
+      textAlign:
+        'center',
+    },
+
+    rulesModalFooter: {
+      flexDirection:
+        'row',
+      justifyContent:
+        'space-between',
+      padding: 20,
+      borderTopWidth: 1,
+      borderTopColor:
+        '#f0f0f0',
+      gap: 12,
+    },
+
+    rulesButton: {
+      flex: 1,
+      borderRadius: 12,
+      paddingVertical: 6,
+    },
+
+    cancelButton: {
+      borderColor:
+        COLORS.gray,
+    },
+
+    cancelButtonText: {
+      color: COLORS.gray,
+      fontWeight: '600',
+    },
+
+    agreeButton: {
+      backgroundColor:
+        COLORS.primary,
+    },
+
+    agreeButtonText: {
+      color: 'white',
+      fontWeight: '600',
+    },
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useContext } from 'react';
+// import { View, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
+// import { Text, Button, Card } from 'react-native-paper';
+// import COLORS from '../../constants/colors';
+// import { AuthContext } from '../../context/AuthContext';
+// import { MaterialIcons } from '@expo/vector-icons';
+// import GroupActions from '../../components/cleaner/GroupActions';
+// import { minutesToDuration } from '../../utils/minuteToDuration';
+// import TermsConditions from './TermsConditions';
+// import { tSafe } from '../../utils/tSafe'; // added import
+
+// const { width } = Dimensions.get('window');
+
+// export default function CleaningSummary({ schedule_status, checklist, assignedTo, handleAccept, isEditable = true }) {
+//   const { currency } = useContext(AuthContext);
+//   const [modalVisible, setModalVisible] = useState(false);
+//   const [acceptModalVisible, setAcceptModalVisible] = useState(false);
+//   const [selectedGroup, setSelectedGroup] = useState(null);
+
+//   console.log("Checklistoooo", checklist)
+  
+//   // Function to convert group names to appropriate labels
+//   const getGroupLabel = (groupKey, totalGroups) => {
+//     // If there's only one group, label it as "Full Cleaning"
+//     if (totalGroups === 1) {
+//       return tSafe('full_cleaning', 'Full Cleaning');
+//     }
+    
+//     // For multiple groups, use Cleaner A, Cleaner B, etc.
+//     const groupNumber = groupKey.split('_')[1];
+//     switch (groupNumber) {
+//       case '1':
+//         return tSafe('cleaner_a', 'Cleaner A');
+//       case '2':
+//         return tSafe('cleaner_b', 'Cleaner B');
+//       case '3':
+//         return tSafe('cleaner_c', 'Cleaner C');
+//       case '4':
+//         return tSafe('cleaner_d', 'Cleaner D');
+//       default:
+//         return `${tSafe('cleaner', 'Cleaner')} ${groupNumber}`;
+//     }
+//   };
+
+//   const processChecklistData = (checklist, assignedTo = []) => {
+//     try {
+//       const groups = [];
+  
+//       if (!checklist || typeof checklist !== "object") {
+//         return groups;
+//       }
+  
+//       const totalGroups = Object.keys(checklist).length;
+  
+//       for (const groupKey in checklist) {
+//         if (!checklist.hasOwnProperty(groupKey)) continue;
+  
+//         const group = checklist[groupKey];
+//         if (typeof group !== "object" || group === null) continue;
+  
+//         const roomTypes = {};
+//         const rooms = Array.isArray(group.rooms) ? group.rooms : [];
+//         const details =
+//           typeof group.details === "object" && group.details !== null
+//             ? group.details
+//             : {};
+  
+//         // Count rooms by type
+//         rooms.forEach((room) => {
+//           if (typeof room === "string") {
+//             const roomType = room.split("_")[0];
+//             roomTypes[roomType] = (roomTypes[roomType] || 0) + 1;
+//           }
+//         });
+  
+//         // Count total tasks
+//         let taskCount = 0;
+//         for (const roomType in details) {
+//           if (!details.hasOwnProperty(roomType)) continue;
+  
+//           if (
+//             roomType !== "Extra" &&
+//             details[roomType] &&
+//             typeof details[roomType] === "object" &&
+//             Array.isArray(details[roomType].tasks)
+//           ) {
+//             taskCount += details[roomType].tasks.length;
+//           }
+//         }
+  
+//         // Add extras if they exist
+//         if (
+//           details.Extra &&
+//           typeof details.Extra === "object" &&
+//           Array.isArray(details.Extra.tasks)
+//         ) {
+//           taskCount += details.Extra.tasks.filter(
+//             (task) => task && task.value
+//           ).length;
+//         }
+  
+//         // 🔑 Find matching assignedTo entry by group name
+//         const assignedInfo = assignedTo.find((a) => a.group === groupKey) || {};
+//         groups.push({
+//           name: groupKey,
+//           groupLabel: getGroupLabel(groupKey, totalGroups),
+//           taskCount,
+//           roomCount: rooms.length,
+//           roomTypes,
+//           price: typeof group.price === "number" ? group.price : 0,
+//           extras: Array.isArray(group.extras) ? group.extras : [],
+//           details: details,
+//           totalTime: typeof group.totalTime === "number" ? group.totalTime : 0,
+//           rooms: rooms,
+//           // 🔑 Merge assignedTo info
+//           status: assignedInfo.status || "open",
+//           cleanerId: assignedInfo.cleanerId || null,
+//         });
+//       }
+  
+//       return groups;
+//     } catch (error) {
+//       console.error("Error processing checklist data:", error);
+//       return [];
+//     }
+//   };
+
+
+
+//   const summaryData = processChecklistData(checklist, assignedTo);
+
+//   console.log("Summary data", JSON.stringify(summaryData, null, 2))
+//   console.log(assignedTo)
+
+//   const openModal = (group) => {
+//     setSelectedGroup(group);
+//     setModalVisible(true);
+//   };
+
+//   const openAcceptModal = (group) => {
+//     setSelectedGroup(group);
+//     setAcceptModalVisible(true);
+//   };
+
+//   const handleAcceptConfirm = (group) => {
+//     console.log('Accepted:', group.name);
+//     const acceptance = 1
+//     handleAccept(group, acceptance);
+//     setAcceptModalVisible(false);
+//   };
+
+
+//   const handleDecline = (group) => {
+//     console.log('Declined:', group.name);
+//     const acceptance = 0
+//     handleAccept(group, acceptance);
+//     // Add your decline logic here
+//   };
+
+//   // Content for Rules and Penalties Modal
+//   const renderRulesAndPenaltiesContent = () => (
+//     <TermsConditions />
+//   );
+
+//   const formatRoomTypes = (roomTypes) => {
+//     if (!roomTypes || typeof roomTypes !== 'object') return tSafe('no_rooms', 'No rooms');
+    
+//     return Object.entries(roomTypes)
+//       .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+//       .join(', ');
+//   };
+
+//   const formatRoomCounts = (rooms) => {
+//     const roomCounts = {};
+//     rooms.forEach(room => {
+//       const roomType = room.split('_')[0];
+//       roomCounts[roomType] = (roomCounts[roomType] || 0) + 1;
+//     });
+    
+//     return Object.entries(roomCounts)
+//       .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+//       .join(', ');
+//   };
+
+//   const renderTaskItem = (task) => (
+//     <View key={task.id} style={styles.taskItem}>
+//       <MaterialIcons 
+//         name="fiber-manual-record" 
+//         size={10} 
+//         color={COLORS.primary} 
+//       />
+//       <Text style={styles.taskText}>{task.label}</Text>
+//     </View>
+//   );
+
+//   const renderRoomTasks = (roomData, roomType) => {
+//     const tasks = roomData.tasks || [];
+//     const halfIndex = Math.ceil(tasks.length / 2);
+//     const leftColumn = tasks.slice(0, halfIndex);
+//     const rightColumn = tasks.slice(halfIndex);
+    
+//     return (
+//       <View style={styles.twoColumnContainer}>
+//         <View style={styles.column}>
+//           {leftColumn.map(task => renderTaskItem(task))}
+//         </View>
+//         <View style={styles.column}>
+//           {rightColumn.map(task => renderTaskItem(task))}
+//         </View>
+//       </View>
+//     );
+//   };
+
+//   const renderModalContent = () => {
+//     if (!selectedGroup) return null;
+    
+//     return (
+//       <View style={styles.modalContainer}>
+//         <View style={styles.modalHeader}>
+//           <Text style={styles.modalTitle}>
+//             {selectedGroup.groupLabel} - {tSafe('details', 'Details')}
+//           </Text>
+//           <Button 
+//             icon="close" 
+//             onPress={() => setModalVisible(false)}
+//             style={styles.closeButton}
+//           />
+//         </View>
+        
+//         <ScrollView style={styles.modalContent}>
+//           <View style={styles.modalSection}>
+//             <Text style={styles.sectionTitle}>{tSafe('overview', 'Overview')}</Text>
+//             <View style={styles.infoRow}>
+//               <Text style={styles.infoLabel}>{tSafe('total_time', 'Total Time:')}</Text>
+//               <Text style={styles.infoValue}>
+//                 {selectedGroup.totalTime} {tSafe('minutes', 'minutes')}
+//               </Text>
+//             </View>
+//             <View style={styles.infoRow}>
+//               <Text style={styles.infoLabel}>{tSafe('price', 'Price:')}</Text>
+//               <Text style={styles.totalFee}>
+//                 {currency}{selectedGroup.price.toFixed(2)}
+//               </Text>
+//             </View>
+            
+//             <Text style={styles.sectionTitle}>{tSafe('rooms_tasks', 'Rooms & Tasks')}</Text>
+            
+//             <View style={styles.groupContainer}>
+//               <View style={styles.groupHeader}>
+//                 <Text style={styles.groupTitle}>{selectedGroup.groupLabel}</Text>
+//                 <View style={styles.groupPriceTime}>
+//                   <View style={styles.timeBadge}>
+//                     <Text style={styles.timeText}>
+//                       {selectedGroup.totalTime} {tSafe('mins', 'mins')}
+//                     </Text>
+//                   </View>
+//                   <View style={styles.priceBadge}>
+//                     <Text style={styles.priceText}>
+//                       {currency}{selectedGroup.price.toFixed(2)}
+//                     </Text>
+//                   </View>
+//                 </View>
+//               </View>
+              
+//               <View style={styles.infoRow}>
+//                 <Text style={styles.infoLabel}>{tSafe('rooms', 'Rooms:')}</Text>
+//                 <Text style={styles.infoValue}>
+//                   {formatRoomCounts(selectedGroup.rooms)}
+//                 </Text>
+//               </View>
+
+//               {selectedGroup.extras && selectedGroup.extras.length > 0 && (
+//                 <View style={styles.infoRow}>
+//                   <Text style={styles.infoLabel}>{tSafe('extras', 'Extras:')}</Text>
+//                   <Text style={styles.infoValue}>
+//                     {selectedGroup.extras.join(', ')}
+//                   </Text>
+//                 </View>
+//               )}
+              
+//               {Object.entries(selectedGroup.details).map(([roomType, roomData]) => {
+//                 if (!roomData.tasks || !Array.isArray(roomData.tasks)) return null;
+                
+//                 return (
+//                   <View key={`${roomType}`} style={styles.roomTasks}>
+//                     <Text style={styles.roomTitle}>{roomType}:</Text>
+//                     {renderRoomTasks(roomData, roomType)}
+//                   </View>
+//                 );
+//               })}
+//             </View>
+//           </View>
+//         </ScrollView>
+        
+//         {/* <View style={styles.modalFooter}>
+//           <Button 
+//             mode="contained" 
+//             onPress={() => {
+//               setModalVisible(false);
+//               openAcceptModal(selectedGroup);
+//             }}
+//             style={styles.modalActionButton}
+//           >
+//             {tSafe('accept_this_task', 'Accept This Task')}
+//           </Button>
+//         </View> */}
+//       </View>
+//     );
+//   };
+
+//   if (summaryData.length === 0) {
+//     return (
+//       <View style={styles.emptyState}>
+//         <MaterialIcons name="cleaning-services" size={48} color={COLORS.gray} />
+//         <Text style={styles.emptyStateText}>{tSafe('no_cleaning_tasks', 'No cleaning tasks available')}</Text>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.header}>{tSafe('available_cleaning_tasks', 'Available Cleaning Tasks')}</Text>
+//       <Text style={styles.subheader}>
+//         {summaryData.length === 1 
+//           ? tSafe('complete_cleaning_assignment', 'Complete cleaning assignment')
+//           : tSafe('tasks_assigned_to_different_cleaners', 'Tasks have been assigned to different cleaners for efficiency')}
+//       </Text>
+      
+//       {summaryData.map((item) => (
+//         <Card key={item.name} style={styles.card}>
+//           <Card.Content>
+//             <View style={styles.cardHeader}>
+//               <Text style={styles.groupName}>{item.groupLabel}</Text>
+//               <Text style={styles.price}>{currency}{item.price.toFixed(2)}</Text>
+//             </View>
+            
+//             <View style={styles.statsRow}>
+//               <View style={styles.stat}>
+//                 <MaterialIcons name="list" size={16} color={COLORS.primary} />
+//                 <Text style={styles.statText}>
+//                   {item.taskCount} {tSafe('tasks', 'tasks')}
+//                 </Text>
+//               </View>
+//               <View style={styles.stat}>
+//                 <MaterialIcons name="home" size={16} color={COLORS.primary} />
+//                 <Text style={styles.statText}>
+//                   {item.roomCount} {tSafe('rooms', 'rooms')}
+//                 </Text>
+//               </View>
+//               <View style={styles.stat}>
+//                 <MaterialIcons name="access-time" size={16} color={COLORS.primary} />
+//                 <Text style={styles.statText}>{minutesToDuration(item.totalTime)}</Text>
+//               </View>
+//             </View>
+            
+//             <Text style={styles.description}>
+//               {tSafe('includes_cleaning_of', 'Includes cleaning of')} {formatRoomTypes(item.roomTypes)}
+//               {item.extras.length > 0 ? `${tSafe('plus', ', plus ')}${item.extras.join(', ')}` : ''}.
+//             </Text>
+            
+//             <View style={styles.buttonRow}>
+//               <GroupActions
+//                 status={item?.status}
+//                 schedule_status={schedule_status}
+//                 onAccept={() => openAcceptModal(item)}
+//                 onDecline={() => handleDecline(item)}
+//                 onDetails={() => openModal(item)}
+//                 disabled={!isEditable} 
+//               />
+//             </View>
+//           </Card.Content>
+//         </Card>
+//       ))}
+      
+//       {/* Details Modal */}
+//       <Modal
+//         visible={modalVisible}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setModalVisible(false)}
+//       >
+//         <View style={styles.modalOverlay}>
+//           {renderModalContent()}
+//         </View>
+//       </Modal>
+
+//       {/* Accept Rules Modal */}
+//       <Modal
+//         visible={acceptModalVisible}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setAcceptModalVisible(false)}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.rulesModalContainer}>
+//             <View style={styles.rulesModalHeader}>
+//               <Text style={styles.rulesModalTitle}>{tSafe('accept_cleaning_task', 'Accept Cleaning Task')}</Text>
+//               <Button 
+//                 icon="close" 
+//                 onPress={() => setAcceptModalVisible(false)}
+//                 style={styles.closeButton}
+//               >
+//                 {tSafe('close', 'Close')}
+//               </Button>
+//             </View>
+            
+//             {renderRulesAndPenaltiesContent()}
+            
+//             <View style={styles.rulesModalFooter}>
+//               <Button 
+//                 mode="outlined" 
+//                 onPress={() => setAcceptModalVisible(false)}
+//                 style={[styles.rulesButton, styles.cancelButton]}
+//                 labelStyle={styles.cancelButtonText}
+//               >
+//                 {tSafe('cancel', 'Cancel')}
+//               </Button>
+//               <Button 
+//                 mode="contained" 
+//                 onPress={() => handleAcceptConfirm(selectedGroup)}
+//                 style={[styles.rulesButton, styles.agreeButton]}
+//                 labelStyle={styles.agreeButtonText}
+//               >
+//                 {tSafe('i_agree_and_accept', 'I Agree & Accept')}
+//               </Button>
+//             </View>
+//           </View>
+//         </View>
+//       </Modal>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: 1,
+//     backgroundColor: '#FAFAFA',
+//   },
+//   header: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     marginBottom: 4,
+//     color: COLORS.dark,
+//   },
+//   subheader: {
+//     fontSize: 14,
+//     marginBottom: 20,
+//     color: COLORS.gray,
+//     lineHeight: 20,
+//   },
+//   card: {
+//     marginBottom: 16,
+//     borderRadius: 12,
+//     backgroundColor: 'white',
+//     elevation: 1,
+//     shadowColor: '#ddd',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.05,
+//     shadowRadius: 1,
+//   },
+//   cardHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   groupName: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//   },
+//   price: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: COLORS.primary,
+//   },
+//   statsRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 16,
+//     paddingHorizontal: 4,
+//   },
+//   stat: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   statText: {
+//     marginLeft: 6,
+//     fontSize: 14,
+//     color: COLORS.gray,
+//   },
+//   description: {
+//     fontSize: 14,
+//     color: COLORS.dark,
+//     marginBottom: 20,
+//     lineHeight: 20,
+//   },
+//   buttonRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//   },
+//   button: {
+//     flex: 1,
+//     marginHorizontal: 4,
+//   },
+//   acceptButton: {
+//     backgroundColor: COLORS.primary,
+//   },
+//   declineButton: {
+//     borderColor: COLORS.grayLight,
+//   },
+//   acceptButtonText: {
+//     color: 'white',
+//     fontWeight: '600',
+//   },
+//   declineButtonText: {
+//     color: COLORS.gray,
+//     fontWeight: '600',
+//   },
+//   detailsButtonText: {
+//     color: COLORS.primary,
+//     fontWeight: '600',
+//   },
+//   emptyState: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 40,
+//   },
+//   emptyStateText: {
+//     fontSize: 16,
+//     color: COLORS.gray,
+//     marginTop: 16,
+//     textAlign: 'center',
+//   },
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(0,0,0,0.5)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   modalContainer: {
+//     backgroundColor: 'white',
+//     borderRadius: 16,
+//     width: '100%',
+//     maxHeight: '80%',
+//     overflow: 'hidden',
+//   },
+//   modalHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     padding: 20,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0f0f0',
+//   },
+//   modalTitle: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: COLORS.dark,
+//     flex: 1,
+//   },
+//   closeButton: {
+//     margin: -10,
+//   },
+//   modalContent: {
+//     padding: 20,
+//   },
+//   modalSection: {
+//     marginBottom: 16,
+//   },
+//   sectionTitle: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     marginBottom: 16,
+//     color: COLORS.dark,
+//   },
+//   infoRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 12,
+//   },
+//   infoLabel: {
+//     fontSize: 15,
+//     color: COLORS.gray,
+//   },
+//   infoValue: {
+//     fontSize: 15,
+//     fontWeight: '500',
+//     color: COLORS.dark,
+//   },
+//   totalFee: {
+//     fontSize: 16,
+//     fontWeight: '700',
+//     color: COLORS.primary,
+//   },
+//   groupContainer: {
+//     backgroundColor: '#f9f9ff',
+//     borderRadius: 12,
+//     padding: 16,
+//     marginBottom: 16,
+//   },
+//   groupHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   groupTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//   },
+//   groupPriceTime: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 8,
+//   },
+//   timeBadge: {
+//     backgroundColor: '#e6f2ff',
+//     borderRadius: 8,
+//     paddingVertical: 4,
+//     paddingHorizontal: 10,
+//   },
+//   timeText: {
+//     fontSize: 14,
+//     fontWeight: '500',
+//     color: COLORS.primary,
+//   },
+//   priceBadge: {
+//     backgroundColor: '#e6f7e9',
+//     borderRadius: 8,
+//     paddingVertical: 4,
+//     paddingHorizontal: 10,
+//   },
+//   priceText: {
+//     fontSize: 14,
+//     fontWeight: '500',
+//     color: COLORS.success,
+//   },
+//   roomTasks: {
+//     marginBottom: 16,
+//   },
+//   roomTitle: {
+//     fontSize: 15,
+//     fontWeight: '500',
+//     marginBottom: 8,
+//     color: COLORS.primary,
+//   },
+//   twoColumnContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginTop: 8,
+//   },
+//   column: {
+//     width: '48%',
+//   },
+//   taskItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 8,
+//   },
+//   taskText: {
+//     fontSize: 14,
+//     marginLeft: 8,
+//     color: COLORS.dark,
+//     flexShrink: 1,
+//   },
+//   modalFooter: {
+//     padding: 20,
+//     borderTopWidth: 1,
+//     borderTopColor: '#f0f0f0',
+//   },
+//   modalActionButton: {
+//     borderRadius: 12,
+//     paddingVertical: 6,
+//     backgroundColor: COLORS.primary
+//   },
+//   // Rules Modal Styles
+//   rulesModalContainer: {
+//     backgroundColor: 'white',
+//     borderRadius: 16,
+//     width: '100%',
+//     maxHeight: '85%',
+//     overflow: 'hidden',
+//   },
+//   rulesModalHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     padding: 20,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0f0f0',
+//   },
+//   rulesModalTitle: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: COLORS.dark,
+//     flex: 1,
+//   },
+//   rulesContent: {
+//     padding: 20,
+//     maxHeight: 400,
+//   },
+//   rulesTitle: {
+//     fontSize: 22,
+//     fontWeight: '700',
+//     color: COLORS.primary,
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   section: {
+//     marginBottom: 20,
+//     padding: 16,
+//     backgroundColor: '#f8f9fa',
+//     borderRadius: 12,
+//     borderLeftWidth: 4,
+//     borderLeftColor: COLORS.primary,
+//   },
+//   sectionTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: COLORS.dark,
+//     marginBottom: 8,
+//   },
+//   rulesText: {
+//     fontSize: 14,
+//     lineHeight: 20,
+//     color: COLORS.dark,
+//   },
+//   penaltyText: {
+//     fontWeight: '600',
+//     color: '#dc3545',
+//   },
+//   agreementSection: {
+//     marginTop: 20,
+//     padding: 16,
+//     backgroundColor: '#e7f3ff',
+//     borderRadius: 12,
+//     borderLeftWidth: 4,
+//     borderLeftColor: '#007bff',
+//   },
+//   agreementText: {
+//     fontSize: 14,
+//     lineHeight: 20,
+//     color: COLORS.dark,
+//     fontStyle: 'italic',
+//     textAlign: 'center',
+//   },
+//   rulesModalFooter: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     padding: 20,
+//     borderTopWidth: 1,
+//     borderTopColor: '#f0f0f0',
+//     gap: 12,
+//   },
+//   rulesButton: {
+//     flex: 1,
+//     borderRadius: 12,
+//     paddingVertical: 6,
+//   },
+//   cancelButton: {
+//     borderColor: COLORS.gray,
+//   },
+//   cancelButtonText: {
+//     color: COLORS.gray,
+//     fontWeight: '600',
+//   },
+//   agreeButton: {
+//     backgroundColor: COLORS.primary,
+//   },
+//   agreeButtonText: {
+//     color: 'white',
+//     fontWeight: '600',
+//   },
+// });

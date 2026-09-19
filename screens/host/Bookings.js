@@ -481,6 +481,478 @@
 
 
 
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import React, { useEffect, useState, useCallback, useContext } from 'react';
+// import {
+//   SafeAreaView,
+//   StyleSheet,
+//   Text,
+//   StatusBar,
+//   Alert,
+//   Linking,
+//   FlatList,
+//   ScrollView,
+//   Modal,
+//   Image,
+//   View,
+//   TouchableOpacity,
+//   ActivityIndicator,
+// } from 'react-native';
+// import CalendarView from '../../components/shared/CalendarView';
+// import FloatingButton from '../../components/shared/FloatingButton';
+// import COLORS from '../../constants/colors';
+// import ROUTES from '../../constants/routes';
+// import NewBooking from './NewBooking';
+// import userService from '../../services/connection/userService';
+// import { AuthContext } from '../../context/AuthContext';
+// import Upcoming from './BookingTabs/Upcoming';
+// import Ongoing from './BookingTabs/Ongoing';
+// import History from './BookingTabs/History';
+// import { useFocusEffect } from '@react-navigation/native';
+// import { useBookingContext } from '../../context/BookingContext';
+// import EditSchedule from './EditSchedule';
+// import { tSafe } from '../../utils/tSafe'; // added import
+
+// const parseLocalDate = (dateStr) => {
+//   const [year, month, day] = dateStr.split('-').map(Number);
+//   return new Date(year, month - 1, day); // local midnight
+// };
+
+// const parseLocalDateTime = (date, time) => {
+//   const [y, m, d] = date.split('-').map(Number);
+//   const [hh, mm] = time.split(':').map(Number);
+//   return new Date(y, m - 1, d, hh, mm);
+// };
+
+// export default function Bookings({ navigation }) {
+//   const { currentUserId, geolocationData } = useContext(AuthContext);
+
+//   const {
+//     handleEdit,
+//     modalVisible,
+//     modalEVisible,
+//     openModal,
+//     setOpenModal,
+//     handleCreateSchedule,
+//     handleEditSchedule,
+//   } = useBookingContext();
+
+//   console.log('Open Modal State:', modalEVisible);
+
+//   // const[openModal, setOpenModal] = useState(false)
+//   const [schedules, setSchedules] = useState([]);
+//   const [upcoming_schedules, setUpComingSchedules] = useState([]);
+//   const [ongoing_schedules, setOnGoingSchedules] = useState([]);
+//   const [completed_schedules, setCompletedSchedules] = useState([]);
+//   const [apartments, setApartments] = useState([]);
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [future_schedules, setFutureSchedules] = useState([]);
+//   const [loading, setLoading] = useState(false);
+
+//   const fetchSchedules = async () => {
+//     setLoading(true);
+
+//     try {
+//       const response = await userService.getSchedulesByHostId(currentUserId);
+//       const res = response.data;
+
+//       setSchedules(res);
+
+//       /* ------------------------------
+//          UPCOMING SCHEDULES (FUTURE)
+//       --------------------------------*/
+//       const upcomingSchedules = res
+//         .filter((schedule) => {
+//           const scheduleDateTime = parseLocalDateTime(
+//             schedule.schedule.cleaning_date,
+//             schedule.schedule.cleaning_time
+//           );
+
+//           const isValidStatus =
+//             schedule.status === 'pending_payment' ||
+//             schedule.status === "upcoming"
+
+//           return isValidStatus && scheduleDateTime >= new Date();
+//         })
+//         .sort((a, b) => {
+//           return (
+//             parseLocalDateTime(
+//               a.schedule.cleaning_date,
+//               a.schedule.cleaning_time
+//             ) -
+//             parseLocalDateTime(
+//               b.schedule.cleaning_date,
+//               b.schedule.cleaning_time
+//             )
+//           );
+//         });
+
+//       setUpComingSchedules(upcomingSchedules);
+
+//       /* ------------------------------
+//          ONGOING SCHEDULES
+//       --------------------------------*/
+//       const onGoing = res.filter(
+//         (schedule) =>
+//           schedule.status === 'in_progress' ||
+//           schedule.status === 'approved_payment_cleaners'
+//       );
+
+//       setOnGoingSchedules(onGoing);
+
+//       /* ------------------------------
+//          COMPLETED SCHEDULES
+//       --------------------------------*/
+//       const completed = res.filter(
+//         (schedule) =>
+//           schedule.status === 'completed' || schedule.status === 'uncompleted'
+//       );
+
+//       setCompletedSchedules(completed);
+
+//       /* ------------------------------
+//          CALENDAR FUTURE DATES
+//       --------------------------------*/
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+
+//       const futureDates = res
+//         .filter((schedule) => {
+//           const scheduleDate = parseLocalDate(schedule.schedule.cleaning_date);
+//           return scheduleDate > today && schedule.status === 'pending_payment';
+//         })
+//         .map((schedule) =>
+//           parseLocalDate(schedule.schedule.cleaning_date).toDateString()
+//         );
+
+//       setFutureSchedules(futureDates);
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // const fetchApartments = async () => {
+//   //   setLoading(true);
+//   //   try {
+//   //     const response = await userService.getApartment(currentUserId);
+//   //     const res = response.data;
+
+//   //     if (res.length < 1) {
+//   //       navigation.navigate(ROUTES.host_home_tab);
+//   //     }
+//   //     setApartments(res);
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+//   const fetchApartments = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await userService.getApartment(currentUserId);
+//       const res = response.data;
+  
+//       if (!res || res.length < 1) {
+//         // Show alert before redirecting
+//         Alert.alert(
+//           tSafe('property_required_title', 'Property Required'),
+//           tSafe(
+//             'property_required_message',
+//             'You need to add at least one property before you can schedule cleaning. Please add a property first.'
+//           ),
+//           [
+//             {
+//               text: tSafe('ok', 'OK'),
+//               onPress: () => navigation.navigate(ROUTES.host_home_tab),
+//             },
+//           ],
+//           { cancelable: false }
+//         );
+//         return; // Stop further execution
+//       }
+  
+//       setApartments(res);
+//     } catch (err) {
+//       console.error('Error fetching apartments:', err);
+//       Alert.alert(
+//         tSafe('error_title', 'Error'),
+//         tSafe('property_load_error', 'Failed to load your properties. Please try again.')
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     const unsubscribe = navigation.addListener('tabPress', () => {
+//       // fetchApartments();
+//       fetchSchedules();
+//     });
+//     return unsubscribe; // Cleanup on unmount
+//   }, [navigation, currentStep]);
+
+//   // Refresh data every time the screen is focused
+//   useFocusEffect(
+//     useCallback(() => {
+//       fetchSchedules();
+//       fetchApartments();
+//     }, [navigation])
+//   );
+
+//   const handleOpenCreateBooking = () => {
+//     setOpenModal(true);
+//   };
+//   const handleCloseCreateBooking = () => {
+//     // handleCreateSchedule(false);
+//     // setTimeout(() => {
+//     //   resetFormData();
+//     // }, 300);
+//     const handleCreateSchedule = (shouldOpen = true) => {
+//       setModalVisible(false);   // ❗ close the modal
+//       if (!shouldOpen) {
+//         resetFormData();
+//       }
+//     };
+//   };
+
+//   const handleCloseEditBooking = () => {
+//     handleEditSchedule(false)
+//   }
+
+//   const onUpcomingSchedule = () => {
+//     setCurrentStep(1);
+//   };
+
+//   const onOngoingSchedule = () => {
+//     setCurrentStep(2);
+//   };
+
+//   console.log("Geolocationssssss------PT", geolocationData)
+
+//   return (
+//     <View
+//       style={{
+//         backgroundColor: COLORS.backgroundColor,
+//         flex: 1,
+//         margin: 0,
+//         marginTop: 0,
+//       }}
+//     >
+//       <StatusBar
+//         translucent
+//         backgroundColor={COLORS.primary}
+//         barStyle="dark-content"
+//       />
+//       {/* <StatusBar translucent={false} backgroundColor={COLORS.primary}  barStyle="light-content"/> */}
+//       <View style={{ backgroundColor: COLORS.primary }}>
+//         <View style={{ margin: 20 }}>
+//           <CalendarView
+//             title={tSafe('my_schedule', 'My schedule')}
+//             future_schedule_dates={future_schedules}
+//             openUpcomingTab={onUpcomingSchedule}
+//             openOngoingTab={onOngoingSchedule}
+//           />
+//         </View>
+//       </View>
+
+//       <View style={styles.container2}>
+//         <View style={styles.tabsContainer}>
+//           <TouchableOpacity
+//             style={[
+//               styles.tab,
+//               { borderBottomColor: currentStep == 1 ? COLORS.primary : '#f0f0f0' },
+//             ]}
+//             onPress={() => setCurrentStep(1)}
+//           >
+//             <MaterialCommunityIcons
+//               name="calendar-blank"
+//               size={24}
+//               color={currentStep === 1 ? COLORS.primary : COLORS.gray}
+//             />
+//             <Text style={styles.tab_text}>{tSafe('up_coming', 'Up Coming')} </Text>
+//           </TouchableOpacity>
+//           <TouchableOpacity
+//             style={[
+//               styles.tab,
+//               { borderBottomColor: currentStep == 2 ? COLORS.primary : '#f0f0f0' },
+//             ]}
+//             onPress={() => setCurrentStep(2)}
+//           >
+//             <MaterialCommunityIcons
+//               name="progress-clock"
+//               size={24}
+//               color={currentStep === 2 ? COLORS.primary : COLORS.gray}
+//             />
+//             <Text style={styles.tab_text}>{tSafe('in_progress', 'In Progress')}</Text>
+//           </TouchableOpacity>
+//           <TouchableOpacity
+//             style={[
+//               styles.tab,
+//               { borderBottomColor: currentStep == 3 ? COLORS.primary : '#f0f0f0' },
+//             ]}
+//             onPress={() => setCurrentStep(3)}
+//           >
+//             <MaterialCommunityIcons
+//               name="history"
+//               size={24}
+//               color={currentStep === 3 ? COLORS.primary : COLORS.gray}
+//             />
+//             <Text style={styles.tab_text}>{tSafe('history', 'History')}</Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         {loading ? (
+//           <ActivityIndicator
+//             size="large"
+//             color={COLORS.primary}
+//             style={{ marginTop: 20 }}
+//           />
+//         ) : (
+//           <View style={styles.container}>
+//             {currentStep === 1 && (
+//               <Upcoming
+//                 schedules={upcoming_schedules}
+//                 currency={geolocationData?.currency_symbol}
+//                 handleEditSchedule={handleEdit}
+//               />
+//             )}
+//             {currentStep === 2 && <Ongoing schedules={ongoing_schedules} />}
+//             {currentStep === 3 && <History schedules={completed_schedules} />}
+//           </View>
+//         )}
+
+//         {apartments.length > 0 && (
+//           <TouchableOpacity
+//             style={styles.floatingButton}
+//             onPress={() => handleCreateSchedule(true)}
+//           >
+//             <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+//             <Text style={styles.floatingButtonText}>
+//               {tSafe('new_schedule', 'New Schedule')}
+//             </Text>
+//           </TouchableOpacity>
+//         )}
+//       </View>
+
+//       <Modal
+//         visible={modalEVisible}
+//         animationType="slide"
+//         transparent={false} // 👈 important
+//         presentationStyle="fullScreen"
+//         // onRequestClose={onClose} // Handle hardware back button on Android
+//       >
+//         <EditSchedule close_modal={handleCloseEditBooking}  mode="edit" />
+//       </Modal>
+
+//       <Modal
+//         visible={modalVisible}
+//         animationType="slide"
+//         // onRequestClose={onClose} // Handle hardware back button on Android
+//       >
+//         <NewBooking close_modal={handleCloseCreateBooking} mode="create" />
+//       </Modal>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   // container:{
+//   //   flex:1,
+//   //   backgroundColor:COLORS.backgroundColor,
+//   //   padding:10
+//   // },
+//   container2: {
+//     flex: 1,
+//     margin: 0,
+//   },
+//   colorcode: {
+//     marginBottom: 20,
+//   },
+//   item_separator: {
+//     marginTop: 5,
+//     marginBottom: 5,
+//     height: 1,
+//     width: '100%',
+//     backgroundColor: '#E4E4E4',
+//   },
+//   empty_listing: {
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginTop: '50%',
+//   },
+//   button: {
+//     padding: 10,
+//     borderRadius: 50,
+//     backgroundColor: COLORS.primary,
+//     marginTop: 20,
+//   },
+//   add_apartment_text: {
+//     color: COLORS.white,
+//   },
+//   tabsContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     alignItems: 'center',
+//     backgroundColor: '#ffffff',
+//     borderBottomWidth: 0,
+//     borderBottomColor: '#e9e9e9',
+//     elevation: 2,
+//   },
+//   tab: {
+//     borderBottomWidth: 3,
+//     borderBottomColor: COLORS.primary,
+//     alignItems: 'center',
+//     marginTop: 10,
+//     paddingHorizontal: 26,
+//   },
+//   tab_text: {
+//     marginBottom: 5,
+//   },
+//   navigation: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'flex-end',
+//     padding: 20,
+//     borderTopWidth: 1,
+//     borderTopColor: '#ccc',
+//   },
+//   arrowButton: {
+//     padding: 10,
+//   },
+//   floatingButton: {
+//     position: 'absolute',
+//     bottom: 30,
+//     right: 20,
+//     backgroundColor: COLORS.primary,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingHorizontal: 20,
+//     paddingVertical: 14,
+//     borderRadius: 30,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 8,
+//     elevation: 6,
+//   },
+//   floatingButtonText: {
+//     color: '#FFFFFF',
+//     fontSize: 15,
+//     fontWeight: '600',
+//     marginLeft: 8,
+//   },
+// });
+
+
+
+
+
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import {
@@ -488,6 +960,7 @@ import {
   StyleSheet,
   Text,
   StatusBar,
+  Alert,
   Linking,
   FlatList,
   ScrollView,
@@ -510,11 +983,12 @@ import History from './BookingTabs/History';
 import { useFocusEffect } from '@react-navigation/native';
 import { useBookingContext } from '../../context/BookingContext';
 import EditSchedule from './EditSchedule';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
+import PendingReview from './BookingTabs/PendingReview';
 
 const parseLocalDate = (dateStr) => {
   const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day); // local midnight
+  return new Date(year, month - 1, day);
 };
 
 const parseLocalDateTime = (date, time) => {
@@ -527,102 +1001,160 @@ export default function Bookings({ navigation }) {
   const { currentUserId, geolocationData } = useContext(AuthContext);
 
   const {
-    handleEdit,
     modalVisible,
     modalEVisible,
     openModal,
     setOpenModal,
     handleCreateSchedule,
+    handleEditSchedule,   // toggles modalEVisible
+    resetFormData,
   } = useBookingContext();
 
-  console.log('Open Modal State:', modalEVisible);
+  // 👇 NEW: local state for the schedule being edited
+  const [editScheduleData, setEditScheduleData] = useState(null);
 
-  // const[openModal, setOpenModal] = useState(false)
   const [schedules, setSchedules] = useState([]);
   const [upcoming_schedules, setUpComingSchedules] = useState([]);
   const [ongoing_schedules, setOnGoingSchedules] = useState([]);
-  const [completed_schedules, setCompletedSchedules] = useState([]);
+  const [history_schedules, setHistorySchedules] = useState([]);
+  const [pendingReviewSchedules, setPendingReviewSchedules] = useState([]);
   const [apartments, setApartments] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [future_schedules, setFutureSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch schedules (unchanged)
   const fetchSchedules = async () => {
     setLoading(true);
-
     try {
       const response = await userService.getSchedulesByHostId(currentUserId);
       const res = response.data;
-
       setSchedules(res);
 
-      /* ------------------------------
-         UPCOMING SCHEDULES (FUTURE)
-      --------------------------------*/
-      const upcomingSchedules = res
+      // const upcomingSchedules = res
+      //   .filter((schedule) => {
+      //     const scheduleDateTime = parseLocalDateTime(
+      //       schedule.schedule.cleaning_date,
+      //       schedule.schedule.cleaning_time
+      //     );
+      //     const isValidStatus =
+      //       schedule.status === 'pending_payment' ||
+      //       schedule.status === 'upcoming';
+      //     return isValidStatus && scheduleDateTime >= new Date();
+      //   })
+      //   .sort((a, b) => {
+      //     return (
+      //       parseLocalDateTime(a.schedule.cleaning_date, a.schedule.cleaning_time) -
+      //       parseLocalDateTime(b.schedule.cleaning_date, b.schedule.cleaning_time)
+      //     );
+      //   });
+      // setUpComingSchedules(upcomingSchedules);
+
+      // // Helper for datetime
+      // const getScheduleDateTime = (schedule) => {
+      //   const date =
+      //     schedule.cleaning_date || schedule.schedule?.cleaning_date;
+      //   const time =
+      //     schedule.cleaning_time ||
+      //     schedule.schedule?.cleaning_time ||
+      //     "00:00:00";
+
+      //   return new Date(`${date}T${time}`);
+      // };
+
+      
+      // // Upcoming (future only)
+      // const upcomingSchedulesFiltered = res
+      // .filter((schedule) => {
+      //   const scheduleDateTime = getScheduleDateTime(schedule);
+      //   const now = new Date();
+
+      //   const isValidStatus =
+      //     schedule.status === "pending_payment" ||
+      //     schedule.status === "upcoming" ||
+      //     schedule.status === "approved" 
+
+      //   return isValidStatus
+      // })
+      // .sort((a, b) => {
+      //   return getScheduleDateTime(a) - getScheduleDateTime(b);
+      // });
+      
+      // setUpComingSchedules(upcomingSchedulesFiltered);
+
+
+      // Helper for datetime
+      const getScheduleDateTime = (schedule) => {
+        const date =
+          schedule.cleaning_date || schedule.schedule?.cleaning_date;
+        const time =
+          schedule.cleaning_time ||
+          schedule.schedule?.cleaning_time ||
+          "00:00:00";
+
+        return new Date(`${date}T${time}`);
+      };
+
+      // Upcoming (future only)
+      const upcomingSchedulesFiltered = res
         .filter((schedule) => {
-          const scheduleDateTime = parseLocalDateTime(
-            schedule.schedule.cleaning_date,
-            schedule.schedule.cleaning_time
-          );
+          const scheduleDateTime = getScheduleDateTime(schedule);
+          const now = new Date();
 
           const isValidStatus =
-            schedule.status === 'pending_payment' ||
-            schedule.status === "upcoming"
+            schedule.status === "upcoming" ||
+            schedule.status === "pending_payment" ||
+            schedule.status === "payment_confirmed" ||
+            schedule.status === "open" ||
+            schedule.status === "approved";
 
-          return isValidStatus && scheduleDateTime >= new Date();
+          // ✅ Must have a valid status AND the schedule date/time must be in the future
+          return isValidStatus && scheduleDateTime > now;
         })
         .sort((a, b) => {
-          return (
-            parseLocalDateTime(
-              a.schedule.cleaning_date,
-              a.schedule.cleaning_time
-            ) -
-            parseLocalDateTime(
-              b.schedule.cleaning_date,
-              b.schedule.cleaning_time
-            )
-          );
+          return getScheduleDateTime(a) - getScheduleDateTime(b);
         });
 
-      setUpComingSchedules(upcomingSchedules);
+      setUpComingSchedules(upcomingSchedulesFiltered);
 
-      /* ------------------------------
-         ONGOING SCHEDULES
-      --------------------------------*/
+
       const onGoing = res.filter(
         (schedule) =>
-          schedule.status === 'in_progress' ||
-          schedule.status === 'approved_payment_cleaners'
+        schedule.status?.toLowerCase() === 'in_progress' ||
+        schedule.status?.toLowerCase() === 'approved_payment_cleaners'
+        
       );
 
       setOnGoingSchedules(onGoing);
 
-      /* ------------------------------
-         COMPLETED SCHEDULES
-      --------------------------------*/
-      const completed = res.filter(
-        (schedule) =>
-          schedule.status === 'completed' || schedule.status === 'uncompleted'
-      );
 
-      setCompletedSchedules(completed);
+      const hSchedules = res.filter(schedule => {
+        const status = schedule.status?.toLowerCase();
+        return ["completed", "approved", "payment_released", "uncompleted", "cancelled"].includes(status);
+      });
 
-      /* ------------------------------
-         CALENDAR FUTURE DATES
-      --------------------------------*/
+      setHistorySchedules(hSchedules);
+
+      const pendingReviewSchedules = res.filter(schedule => {
+        // If overall status is pending_review
+        if (schedule.status?.toLowerCase() === 'pending_review') return true;
+        
+        // Or if any cleaner has pending_review status
+        return schedule.assignedTo?.some(
+          cleaner => cleaner.status?.toLowerCase() === 'pending_review'
+        );
+      });
+      
+      setPendingReviewSchedules(pendingReviewSchedules);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       const futureDates = res
         .filter((schedule) => {
           const scheduleDate = parseLocalDate(schedule.schedule.cleaning_date);
           return scheduleDate > today && schedule.status === 'pending_payment';
         })
-        .map((schedule) =>
-          parseLocalDate(schedule.schedule.cleaning_date).toDateString()
-        );
-
+        .map((schedule) => parseLocalDate(schedule.schedule.cleaning_date).toDateString());
       setFutureSchedules(futureDates);
     } catch (err) {
       console.error(err);
@@ -636,27 +1168,43 @@ export default function Bookings({ navigation }) {
     try {
       const response = await userService.getApartment(currentUserId);
       const res = response.data;
-
-      if (res.length < 1) {
-        navigation.navigate(ROUTES.host_home_tab);
+      if (!res || res.length < 1) {
+        Alert.alert(
+          tSafe('property_required_title', 'Property Required'),
+          tSafe(
+            'property_required_message',
+            'You need to add at least one property before you can schedule cleaning. Please add a property first.'
+          ),
+          [
+            {
+              text: tSafe('ok', 'OK'),
+              onPress: () => navigation.navigate(ROUTES.host_home_tab),
+            },
+          ],
+          { cancelable: false }
+        );
+        return;
       }
       setApartments(res);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching apartments:', err);
+      Alert.alert(
+        tSafe('error_title', 'Error'),
+        tSafe('property_load_error', 'Failed to load your properties. Please try again.')
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  
   useEffect(() => {
     const unsubscribe = navigation.addListener('tabPress', () => {
-      fetchApartments();
       fetchSchedules();
     });
-    return unsubscribe; // Cleanup on unmount
+    return unsubscribe;
   }, [navigation, currentStep]);
 
-  // Refresh data every time the screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchSchedules();
@@ -664,47 +1212,38 @@ export default function Bookings({ navigation }) {
     }, [navigation])
   );
 
-  const handleOpenCreateBooking = () => {
-    setOpenModal(true);
+  // 👇 NEW: handler to open edit modal with a specific schedule
+  const openEditModal = (schedule) => {
+    setEditScheduleData(schedule);         // store the schedule
+    handleEditSchedule(true);              // open the modal
   };
+
+  // 👇 UPDATED: close modal and clear the stored schedule
+  const handleCloseEditBooking = () => {
+    handleEditSchedule(false);              // close modal
+    setEditScheduleData(null);              // clear the stored schedule
+  };
+
   const handleCloseCreateBooking = () => {
-    // handleCreateSchedule(false);
-    // setTimeout(() => {
-    //   resetFormData();
-    // }, 300);
-    const handleCreateSchedule = (shouldOpen = true) => {
-      setModalVisible(false);   // ❗ close the modal
-      if (!shouldOpen) {
-        resetFormData();
-      }
-    };
+    handleCreateSchedule(false);
+    // if you have resetFormData from context, you can call it here
+    // resetFormData();
   };
 
-  const onUpcomingSchedule = () => {
-    setCurrentStep(1);
+  const handleStatusUpdate = (scheduleId, newStatus) => {
+    // Refetch schedules to update the list
+    fetchSchedules();
   };
 
-  const onOngoingSchedule = () => {
-    setCurrentStep(2);
-  };
+  const onUpcomingSchedule = () => setCurrentStep(1);
+  const onOngoingSchedule = () => setCurrentStep(2);
 
-  console.log("Geolocationssssss------PT", geolocationData)
+  
+  console.log("M---------------P", editScheduleData)
 
   return (
-    <View
-      style={{
-        backgroundColor: COLORS.backgroundColor,
-        flex: 1,
-        margin: 0,
-        marginTop: 0,
-      }}
-    >
-      <StatusBar
-        translucent
-        backgroundColor={COLORS.primary}
-        barStyle="dark-content"
-      />
-      {/* <StatusBar translucent={false} backgroundColor={COLORS.primary}  barStyle="light-content"/> */}
+    <View style={{ flex: 1, backgroundColor: COLORS.backgroundColor }}>
+      <StatusBar translucent backgroundColor={COLORS.primary} barStyle="dark-content" />
       <View style={{ backgroundColor: COLORS.primary }}>
         <View style={{ margin: 20 }}>
           <CalendarView
@@ -721,7 +1260,7 @@ export default function Bookings({ navigation }) {
           <TouchableOpacity
             style={[
               styles.tab,
-              { borderBottomColor: currentStep == 1 ? COLORS.primary : '#f0f0f0' },
+              { borderBottomColor: currentStep === 1 ? COLORS.primary : '#f0f0f0' },
             ]}
             onPress={() => setCurrentStep(1)}
           >
@@ -730,12 +1269,12 @@ export default function Bookings({ navigation }) {
               size={24}
               color={currentStep === 1 ? COLORS.primary : COLORS.gray}
             />
-            <Text style={styles.tab_text}>{tSafe('up_coming', 'Up Coming')} </Text>
+            <Text style={styles.tab_text}>{tSafe('up_coming', 'Up Coming')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.tab,
-              { borderBottomColor: currentStep == 2 ? COLORS.primary : '#f0f0f0' },
+              { borderBottomColor: currentStep === 2 ? COLORS.primary : '#f0f0f0' },
             ]}
             onPress={() => setCurrentStep(2)}
           >
@@ -749,36 +1288,50 @@ export default function Bookings({ navigation }) {
           <TouchableOpacity
             style={[
               styles.tab,
-              { borderBottomColor: currentStep == 3 ? COLORS.primary : '#f0f0f0' },
+              { borderBottomColor: currentStep === 3 ? COLORS.primary : '#f0f0f0' },
             ]}
             onPress={() => setCurrentStep(3)}
           >
             <MaterialCommunityIcons
-              name="history"
+              name="clock-alert-outline"
               size={24}
               color={currentStep === 3 ? COLORS.primary : COLORS.gray}
+            />
+            <Text style={styles.tab_text}>{tSafe('pending_review_tab', 'Pending Review')}</Text>
+            
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              { borderBottomColor: currentStep === 4 ? COLORS.primary : '#f0f0f0' },
+            ]}
+            onPress={() => setCurrentStep(4)}
+          >
+            <MaterialCommunityIcons
+              name="history"
+              size={24}
+              color={currentStep === 4 ? COLORS.primary : COLORS.gray}
             />
             <Text style={styles.tab_text}>{tSafe('history', 'History')}</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-            style={{ marginTop: 20 }}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
         ) : (
           <View style={styles.container}>
             {currentStep === 1 && (
               <Upcoming
                 schedules={upcoming_schedules}
                 currency={geolocationData?.currency_symbol}
-                handleEditSchedule={handleEdit}
+                // 👇 pass the new handler instead of the raw context function
+                handleEditSchedule={openEditModal}
               />
             )}
             {currentStep === 2 && <Ongoing schedules={ongoing_schedules} />}
-            {currentStep === 3 && <History schedules={completed_schedules} />}
+            {/* {currentStep === 3 && <PendingReview schedules={pendingReviewSchedules} />} */}
+            {currentStep === 3 && (<PendingReview schedules={pendingReviewSchedules} onStatusUpdate={handleStatusUpdate} />)}
+            {currentStep === 4 && <History schedules={history_schedules} />}
           </View>
         )}
 
@@ -795,20 +1348,24 @@ export default function Bookings({ navigation }) {
         )}
       </View>
 
+      {/* Edit Modal */}
       <Modal
         visible={modalEVisible}
         animationType="slide"
-        transparent={false} // 👈 important
+        transparent={false}
         presentationStyle="fullScreen"
-        // onRequestClose={onClose} // Handle hardware back button on Android
       >
-        <EditSchedule close_modal={handleCloseCreateBooking} mode="create" />
+        <EditSchedule
+          close_modal={handleCloseEditBooking}
+          selectedSchedule={editScheduleData}
+          mode="edit"
+        />
       </Modal>
 
+      {/* Create Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
-        // onRequestClose={onClose} // Handle hardware back button on Android
       >
         <NewBooking close_modal={handleCloseCreateBooking} mode="create" />
       </Modal>
@@ -817,40 +1374,8 @@ export default function Bookings({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  // container:{
-  //   flex:1,
-  //   backgroundColor:COLORS.backgroundColor,
-  //   padding:10
-  // },
-  container2: {
-    flex: 1,
-    margin: 0,
-  },
-  colorcode: {
-    marginBottom: 20,
-  },
-  item_separator: {
-    marginTop: 5,
-    marginBottom: 5,
-    height: 1,
-    width: '100%',
-    backgroundColor: '#E4E4E4',
-  },
-  empty_listing: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: '50%',
-  },
-  button: {
-    padding: 10,
-    borderRadius: 50,
-    backgroundColor: COLORS.primary,
-    marginTop: 20,
-  },
-  add_apartment_text: {
-    color: COLORS.white,
-  },
+  container: { flex: 1 },
+  container2: { flex: 1, margin: 0 },
   tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -865,22 +1390,9 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.primary,
     alignItems: 'center',
     marginTop: 10,
-    paddingHorizontal: 26,
+    paddingHorizontal: 5,
   },
-  tab_text: {
-    marginBottom: 5,
-  },
-  navigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-  },
-  arrowButton: {
-    padding: 10,
-  },
+  tab_text: { marginBottom: 5 },
   floatingButton: {
     position: 'absolute',
     bottom: 30,

@@ -29,16 +29,31 @@ export const getConversations = async (currentUserId, lang = 'en') => {
 
 
 // Create a new conversation
+// export const createConversation = async (currentUserId, otherUserId, schedule, scheduleId, cleaningFee, initialMessage) => {
+//     const res = await api.post(`/api/conversations?debug_user_id=${currentUserId}`, {
+//       otherUserId: otherUserId,
+//       schedule: schedule,
+//       scheduleId: scheduleId,
+//       cleaningFee: cleaningFee,
+//       initialMessage: initialMessage,
+//     });
+//     return res.data;
+//   };
+
 export const createConversation = async (currentUserId, otherUserId, schedule, scheduleId, cleaningFee, initialMessage) => {
-    const res = await api.post(`/api/conversations?debug_user_id=${currentUserId}`, {
+  const payload = {
       otherUserId: otherUserId,
       schedule: schedule,
       scheduleId: scheduleId,
       cleaningFee: cleaningFee,
       initialMessage: initialMessage,
-    });
-    return res.data;
   };
+
+  const response = await api.post('/api/conversations', payload, {
+      params: { debug_user_id: currentUserId }
+  });
+  return response.data;
+};
 
 
 // Fetch messages for a specific conversation

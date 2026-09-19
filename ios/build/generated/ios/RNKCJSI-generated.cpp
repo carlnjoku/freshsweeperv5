@@ -35,6 +35,13 @@ static jsi::Value __hostFunction_NativeKeyboardControllerCxxSpecJSI_preload(jsi:
   );
   return jsi::Value::undefined();
 }
+static jsi::Value __hostFunction_NativeKeyboardControllerCxxSpecJSI_setTranslucent(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  static_cast<NativeKeyboardControllerCxxSpecJSI *>(&turboModule)->setTranslucent(
+    rt,
+    count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asBool()
+  );
+  return jsi::Value::undefined();
+}
 static jsi::Value __hostFunction_NativeKeyboardControllerCxxSpecJSI_dismiss(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   static_cast<NativeKeyboardControllerCxxSpecJSI *>(&turboModule)->dismiss(
     rt,
@@ -77,6 +84,7 @@ NativeKeyboardControllerCxxSpecJSI::NativeKeyboardControllerCxxSpecJSI(std::shar
   methodMap_["setInputMode"] = MethodMetadata {1, __hostFunction_NativeKeyboardControllerCxxSpecJSI_setInputMode};
   methodMap_["setDefaultMode"] = MethodMetadata {0, __hostFunction_NativeKeyboardControllerCxxSpecJSI_setDefaultMode};
   methodMap_["preload"] = MethodMetadata {0, __hostFunction_NativeKeyboardControllerCxxSpecJSI_preload};
+  methodMap_["setTranslucent"] = MethodMetadata {1, __hostFunction_NativeKeyboardControllerCxxSpecJSI_setTranslucent};
   methodMap_["dismiss"] = MethodMetadata {2, __hostFunction_NativeKeyboardControllerCxxSpecJSI_dismiss};
   methodMap_["setFocusTo"] = MethodMetadata {1, __hostFunction_NativeKeyboardControllerCxxSpecJSI_setFocusTo};
   methodMap_["viewPositionInWindow"] = MethodMetadata {1, __hostFunction_NativeKeyboardControllerCxxSpecJSI_viewPositionInWindow};

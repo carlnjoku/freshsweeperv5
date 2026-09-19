@@ -440,10 +440,30 @@ const History = ({ schedules, isLoading = false }) => {
   // Filter schedules based on selected filter
   const filteredSchedules = useMemo(() => {
     if (selectedFilter === tSafe('filter_all', 'All')) return schedules;
-    
-    // Add your date filtering logic here
-    // For now, returning all schedules as placeholder
-    return schedules;
+  
+    const now = new Date();
+    let days = 0;
+    if (selectedFilter === tSafe('filter_last_7_days', 'Last 7 days')) days = 7;
+    else if (selectedFilter === tSafe('filter_last_30_days', 'Last 30 days')) days = 30;
+    else if (selectedFilter === tSafe('filter_custom_range', 'Custom Range')) {
+      // Custom range – you can open a date picker and set start/end dates
+      return schedules; // placeholder
+    }
+  
+    const cutoffDate = new Date();
+    cutoffDate.setDate(now.getDate() - days);
+  
+    return schedules.filter(schedule => {
+      // Get the completion date (or fallback to cleaning date)
+      let dateStr = schedule.completed_on || schedule.schedule?.cleaning_date;
+      if (dateStr && typeof dateStr === 'object' && dateStr.$date) {
+        dateStr = dateStr.$date;
+      }
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return false;
+      return date >= cutoffDate;
+    });
   }, [schedules, selectedFilter]);
 
   // Determine which empty state to show
@@ -520,7 +540,7 @@ const History = ({ schedules, isLoading = false }) => {
       {/* Filter Section - Only show when there are schedules */}
       {schedules.length > 0 && (
         <Animatable.View 
-          animation="fadeInDown" 
+          animation="fadeInUp" 
           duration={400}
           delay={100}
           style={styles.filterContainer}

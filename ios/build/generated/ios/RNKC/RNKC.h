@@ -62,6 +62,7 @@ namespace JS {
 - (void)setInputMode:(double)mode;
 - (void)setDefaultMode;
 - (void)preload;
+- (void)setTranslucent:(BOOL)translucent;
 - (void)dismiss:(BOOL)keepFocus
        animated:(BOOL)animated;
 - (void)setFocusTo:(NSString *)direction;

@@ -398,6 +398,10 @@ import Notification from '../../components/shared/Notification';
 import PropertyGigs from '../../screens/cleaner/PropertyGigs';
 import { tSafe } from '../../utils/tSafe'; // added import
 import ChatConversation from '../../screens/sharedscreen/ChatConversation';
+import CustomBackButton from '../../components/shared/CustomBackButton';
+import ScheduleDateChange from '../../screens/cleaner/ScheduleDateChange';
+import ReplacementRequest from '../../screens/cleaner/ReplacementRequest';
+
 
 export default function MainCleanerStack() {
 
@@ -458,7 +462,8 @@ export default function MainCleanerStack() {
     return (
       <Stack.Navigator 
           screenOptions={{
-            headerTintColor:COLORS.white,
+            headerTintColor:'#000',
+            headerBackImage: ({ tintColor }) => <CustomBackButton tintColor={tintColor || '#333'} />,
             headerBackTitleVisible:false,
             headerBackTitle: '',
             headerStyle: {
@@ -495,14 +500,14 @@ export default function MainCleanerStack() {
           )}
        
 
-       <Stack.Screen 
-        name={ROUTES.cleaner_invite_gate}
-        component={InviteGate}
-        options={{
-          headerShown: false,
-          gestureEnabled: false, // Prevent going back during auto sign-in
-        }}
-      />
+          <Stack.Screen 
+            name={ROUTES.cleaner_invite_gate}
+            component={InviteGate}
+            options={{
+              headerShown: false,
+              gestureEnabled: false, // Prevent going back during auto sign-in
+            }}
+          />
         
        <Stack.Screen 
         name={ROUTES.cleaner_schedule_details_view}
@@ -542,6 +547,20 @@ export default function MainCleanerStack() {
               shadowRadius: 3, // Shadow radius for iOS
             },
         })}
+      />
+      <Stack.Screen
+          name={ROUTES.cleaner_schedule_date_change}
+          component={ScheduleDateChange}
+          options={{
+              title: "Schedule Date Change",
+          }}
+      />
+      <Stack.Screen
+        name={ROUTES.cleaner_replacement_request}
+        component={ReplacementRequest}
+        options={{
+          title: 'Replacement Request',
+        }}
       />
       <Stack.Screen 
           name={ROUTES.cleaner_property_preview}
@@ -712,19 +731,19 @@ export default function MainCleanerStack() {
             })}
         />
         <Stack.Screen
-                    name={ROUTES.cleaner_chat_conversation}
-                    component={ChatConversation}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        // header: () => <CustomChatHeader schedule={route.params.conversation} />,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
+            name={ROUTES.cleaner_chat_conversation}
+            component={ChatConversation}
+            options={({ route }) => ({
+                headerShown: true,
+                // header: () => <CustomChatHeader schedule={route.params.conversation} />,
+                headerTintColor: COLORS.white,
+                headerBackTitleVisible: false,
+                headerBackTitle: '',
+                headerStyle: {
+                    backgroundColor: COLORS.primary,
+                },
+            })}
+        />
 
       <Stack.Screen 
             name={ROUTES.notification}

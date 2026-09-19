@@ -409,6 +409,8 @@ import Notification from '../../components/shared/Notification';
 import { AuthContext } from '../../context/AuthContext';
 import TeamManagement from '../../screens/host/TeamManagement';
 import { tSafe } from '../../utils/tSafe'; // added import
+import TeamList from '../../screens/host/Team/TeamList';
+import CustomMenuButton from '../../components/shared/CustomMenuButton';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -524,9 +526,10 @@ const DrawerNavigator = () => {
         name={ROUTES.notification} 
         component={Notification} 
         options={{
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           title: tSafe('drawer_notifications', 'Notifications'),
-          headerTintColor: COLORS.gray,
+          headerTintColor: "#000",
           headerBackTitleVisible: true,
           headerStyle: {
             backgroundColor: '#fff',
@@ -548,6 +551,7 @@ const DrawerNavigator = () => {
         name={ROUTES.host_profile} 
         component={Profile} 
         options={{
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           title: tSafe('drawer_my_profile', 'My Profile'),
           headerTintColor: COLORS.gray,
@@ -579,8 +583,41 @@ const DrawerNavigator = () => {
         name={ROUTES.host_team} 
         component={TeamManagement} 
         options={{
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           title: tSafe('drawer_my_team', 'My Team'),
+          headerTintColor: COLORS.gray,
+          headerBackTitleVisible: true,
+          headerStyle: {
+            backgroundColor: '#fff',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOpacity: 0.3,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 3,
+          },
+          headerTitleStyle: {
+            fontWeight: '600',
+            fontSize: 16,
+            color: COLORS.gray,
+          },
+          drawerIcon: ({ focused, color, size }) => (
+            <DrawerIcon
+              IconComponent={MaterialCommunityIcons}
+              name="account-outline"
+              color={color}
+              size={20}
+            />
+          )
+        }}
+      />
+      <Drawer.Screen 
+        name={ROUTES.host_team_list} 
+        component={TeamList} 
+        options={{
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
+          headerShown: true,
+          title: tSafe('drawer_my_team_list', 'My Team List'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
           headerStyle: {
@@ -612,6 +649,7 @@ const DrawerNavigator = () => {
         component={PropertyStack} 
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_my_properties', 'My Properties'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -644,6 +682,7 @@ const DrawerNavigator = () => {
         component={Checklist} 
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_my_checklists', 'My Checklists'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -676,6 +715,7 @@ const DrawerNavigator = () => {
         component={PaymentHistory} 
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_payment_history', 'Payment History'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -708,6 +748,7 @@ const DrawerNavigator = () => {
         component={Support} 
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_support', 'Support'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -740,6 +781,7 @@ const DrawerNavigator = () => {
         component={Settings} 
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_settings', 'Settings'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,

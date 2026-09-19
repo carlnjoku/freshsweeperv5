@@ -37,6 +37,29 @@ export const formatDateToYYYYMMDD = (dateValue) => {
   }
 };
 
+
+
+export const formatTimeToHHMMSS = (timeValue) => {
+  if (!timeValue) return '';
+  if (typeof timeValue === 'string') {
+    // If it's an ISO string, extract time part
+    if (timeValue.includes('T')) {
+      const parts = timeValue.split('T');
+      return parts[1]?.split('.')[0] || '';
+    }
+    // If already HH:MM or HH:MM:SS
+    if (timeValue.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+      return timeValue;
+    }
+  }
+  // If it's a Date object or timestamp
+  const date = new Date(timeValue);
+  if (!isNaN(date.getTime())) {
+    return date.toTimeString().split(' ')[0];
+  }
+  return '';
+};
+
 export const isISOString = (dateString) => {
   return typeof dateString === 'string' && 
          dateString.includes('T') && 

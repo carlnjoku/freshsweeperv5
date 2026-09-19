@@ -1,3 +1,547 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+} from 'react-native';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import COLORS from '../../../constants/colors';
+
+const PaymentDetails = ({
+  cleaningServiceFee = 0,
+  cleanersWithFee = [],
+}) => {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  console.log(cleanersWithFee)
+  // Payment calculation
+  const subtotal =
+    cleanersWithFee.length > 0
+      ? cleanersWithFee.reduce(
+          (sum, cleaner) => sum + (Number(cleaner.fee) || 0),
+          0
+        )
+      : Number(cleaningServiceFee) || 0;
+
+  const serviceFee = subtotal * 0.1;
+  const total = subtotal + serviceFee;
+
+  const formatCurrency = (amount) =>
+    `$${(Number(amount) || 0).toFixed(2)}`;
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerIcon}>
+          <MaterialCommunityIcons
+            name="receipt"
+            size={22}
+            color={COLORS.primary}
+          />
+        </View>
+
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Payment Summary</Text>
+          <Text style={styles.subtitle}>
+            Review your cleaning service charges
+          </Text>
+        </View>
+      </View>
+
+      {/* Cleaner Charges */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Cleaning Service</Text>
+
+        <View style={styles.card}>
+          {cleanersWithFee.length > 0 ? (
+            cleanersWithFee.map((cleaner, index) => {
+              const name = cleaner.firstname
+                ? `${cleaner.firstname} ${cleaner.lastname || ''}`.trim()
+                : `Cleaner ${index + 1}`;
+
+              return (
+                <View
+                  key={cleaner.cleanerId || cleaner._id || index}
+                  style={[
+                    styles.cleanerRow,
+                    index !== cleanersWithFee.length - 1 &&
+                      styles.rowDivider,
+                  ]}
+                >
+                  <View style={styles.cleanerLeft}>
+                    <View style={styles.avatar}>
+                      <MaterialCommunityIcons
+                        name="account-outline"
+                        size={19}
+                        color={COLORS.primary}
+                      />
+                    </View>
+
+                    <View style={styles.cleanerInfo}>
+                      <Text style={styles.cleanerName} numberOfLines={1}>
+                        {name}
+                      </Text>
+
+                      {cleaner.group ? (
+                        <Text style={styles.groupLabel}>
+                          {cleaner.group.replace('_', ' ')}
+                        </Text>
+                      ) : (
+                        <Text style={styles.groupLabel}>
+                          Cleaning service
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+
+                  <Text style={styles.amount}>
+                    {formatCurrency(cleaner.fee)}
+                  </Text>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.cleanerRow}>
+              <View style={styles.cleanerLeft}>
+                <View style={styles.avatar}>
+                  <MaterialCommunityIcons
+                    name="home-clean"
+                    size={19}
+                    color={COLORS.primary}
+                  />
+                </View>
+
+                <View style={styles.cleanerInfo}>
+                  <Text style={styles.cleanerName}>
+                    Cleaning Service
+                  </Text>
+                  <Text style={styles.groupLabel}>
+                    Standard service
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.amount}>
+                {formatCurrency(subtotal)}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Charges */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Charges</Text>
+
+        <View style={styles.card}>
+          <View style={styles.chargeRow}>
+            <Text style={styles.chargeLabel}>Cleaning service</Text>
+            <Text style={styles.chargeValue}>
+              {formatCurrency(subtotal)}
+            </Text>
+          </View>
+
+          <View style={styles.chargeRow}>
+            <View style={styles.feeLabelContainer}>
+              <Text style={styles.chargeLabel}>Service fee</Text>
+
+              <TouchableOpacity
+                onPress={() => setModalVisible(true)}
+                style={styles.infoButton}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons
+                  name="info-outline"
+                  size={16}
+                  color={COLORS.primary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.chargeValue}>
+              {formatCurrency(serviceFee)}
+            </Text>
+          </View>
+
+          <View style={styles.separator} />
+
+          <View style={styles.totalRow}>
+            <View>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalCaption}>
+                Including service fee
+              </Text>
+            </View>
+
+            <Text style={styles.totalValue}>
+              {formatCurrency(total)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Secure Payment Notice */}
+      <View style={styles.secureNotice}>
+        <MaterialCommunityIcons
+          name="shield-check-outline"
+          size={20}
+          color="#16A34A"
+        />
+
+        <View style={styles.secureContent}>
+          <Text style={styles.secureTitle}>
+            Secure payment
+          </Text>
+          <Text style={styles.secureText}>
+            Your payment is securely processed and your payment
+            information is protected.
+          </Text>
+        </View>
+      </View>
+
+      {/* Service Fee Modal */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setModalVisible(false)}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.modalIcon}>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={25}
+                color={COLORS.primary}
+              />
+            </View>
+
+            <Text style={styles.modalTitle}>
+              Service Fee
+            </Text>
+
+            <Text style={styles.modalText}>
+              The 10% service fee covers operational costs,
+              secure payment processing, platform maintenance,
+              scheduling, and customer support.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.closeButtonText}>
+                Got it
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 20,
+  },
+
+  /* Header */
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 22,
+  },
+
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#EEF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+
+  title: {
+    fontSize: 21,
+    fontWeight: '700',
+    color: '#111827',
+    letterSpacing: -0.3,
+  },
+
+  subtitle: {
+    marginTop: 3,
+    fontSize: 13,
+    color: '#6B7280',
+  },
+
+  /* Sections */
+  section: {
+    marginBottom: 18,
+  },
+
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: 9,
+  },
+
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E8ECF2',
+
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowRadius: 10,
+
+    elevation: 2,
+  },
+
+  /* Cleaner Rows */
+  cleanerRow: {
+    minHeight: 70,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  rowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEF0F4',
+  },
+
+  cleanerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    paddingRight: 12,
+  },
+
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 11,
+  },
+
+  cleanerInfo: {
+    flex: 1,
+  },
+
+  cleanerName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+
+  groupLabel: {
+    marginTop: 3,
+    fontSize: 12,
+    color: '#8A94A6',
+    textTransform: 'capitalize',
+  },
+
+  amount: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+
+  /* Charges */
+  chargeRow: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  feeLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  chargeLabel: {
+    fontSize: 14,
+    color: '#667085',
+  },
+
+  chargeValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+
+  infoButton: {
+    width: 25,
+    height: 25,
+    marginLeft: 5,
+    borderRadius: 13,
+    backgroundColor: '#EEF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  separator: {
+    height: 1,
+    backgroundColor: '#E9EDF2',
+    marginVertical: 4,
+  },
+
+  /* Total */
+  totalRow: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+
+  totalCaption: {
+    marginTop: 3,
+    fontSize: 11,
+    color: '#8A94A6',
+  },
+
+  totalValue: {
+    fontSize: 25,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: -0.5,
+  },
+
+  /* Secure Notice */
+  secureNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
+    padding: 13,
+    marginTop: 2,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+
+  secureContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+
+  secureTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#166534',
+  },
+
+  secureText: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 16,
+    color: '#4B7A5A',
+  },
+
+  /* Modal */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 24,
+    alignItems: 'center',
+  },
+
+  modalIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: '#EEF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 10,
+  },
+
+  modalText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#667085',
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+
+  closeButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  closeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+});
+
+export default PaymentDetails;
+
+
+
+
+
+
+
 // import React, {useState} from 'react';
 // import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
 // import { MaterialIcons } from '@expo/vector-icons';
@@ -161,144 +705,144 @@
 
 
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-  ScrollView,
-  Linking,
-  Platform,
-  Share,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import COLORS from '../../../constants/colors';
-import userService from '../../../services/connection/userService';
+// import React, { useState, useEffect } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Modal,
+//   Pressable,
+//   ScrollView,
+//   Linking,
+//   Platform,
+//   Share,
+// } from 'react-native';
+// import { MaterialIcons } from '@expo/vector-icons';
+// import COLORS from '../../../constants/colors';
+// import userService from '../../../services/connection/userService';
 
 
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-// import RNHTMLtoPDF from 'react-native-html-to-pdf';
+// import * as FileSystem from 'expo-file-system';
+// import * as Sharing from 'expo-sharing';
+// // import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
-const PaymentDetails = ({ cleaningServiceFee, cleanersWithFee = [] }) => {
+// const PaymentDetails = ({ cleaningServiceFee, cleanersWithFee = [] }) => {
 
 
 
-  const [modalVisible, setModalVisible] = useState(false);
+//   const [modalVisible, setModalVisible] = useState(false);
 
-  const [cleaners, setCleaners] = useState([]);
-
-  
-
+//   const [cleaners, setCleaners] = useState([]);
 
   
 
+
   
 
-  // Payment calculation
-  const subtotal =
-    cleanersWithFee.length > 0
-      ? cleanersWithFee.reduce((sum, cleaner) => sum + (Number(cleaner.fee) || 0), 0)
-      : Number(cleaningServiceFee);
-  const serviceFee = subtotal * 0.1; // 10%
-  const total = subtotal + serviceFee;
+  
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Receipt Section */}
+//   // Payment calculation
+//   const subtotal =
+//     cleanersWithFee.length > 0
+//       ? cleanersWithFee.reduce((sum, cleaner) => sum + (Number(cleaner.fee) || 0), 0)
+//       : Number(cleaningServiceFee);
+//   const serviceFee = subtotal * 0.1; // 10%
+//   const total = subtotal + serviceFee;
+
+//   return (
+//     <ScrollView contentContainerStyle={styles.container}>
+//       {/* Receipt Section */}
     
 
-      {/* Payment Breakdown */}
-      <Text style={styles.breakdownHeader}>Payment Breakdown</Text>
+//       {/* Payment Breakdown */}
+//       <Text style={styles.breakdownHeader}>Payment Breakdown</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardHeader}>Cleaners</Text>
-        {cleanersWithFee.length > 0 ? (
-          cleanersWithFee.map((cleaner, index) => (
-            <View key={index} style={styles.row}>
-              <Text style={styles.label}>
-                {cleaner.firstname
-                  ? `${cleaner.firstname} ${cleaner.lastname || ''}`
-                  : `Cleaner ${index + 1}`}
-              </Text>
-              <Text style={styles.value}>${Number(cleaner.fee).toFixed(2)}</Text>
-            </View>
-          ))
-        ) : (
-          <View style={styles.row}>
-            <Text style={styles.label}>Cleaning Service</Text>
-            <Text style={styles.value}>${subtotal.toFixed(2)}</Text>
-          </View>
-        )}
-      </View>
+//       <View style={styles.card}>
+//         <Text style={styles.cardHeader}>Cleaners</Text>
+//         {cleanersWithFee.length > 0 ? (
+//           cleanersWithFee.map((cleaner, index) => (
+//             <View key={index} style={styles.row}>
+//               <Text style={styles.label}>
+//                 {cleaner.firstname
+//                   ? `${cleaner.firstname} ${cleaner.lastname || ''}`
+//                   : `Cleaner ${index + 1}`}
+//               </Text>
+//               <Text style={styles.value}>${Number(cleaner.fee).toFixed(2)}</Text>
+//             </View>
+//           ))
+//         ) : (
+//           <View style={styles.row}>
+//             <Text style={styles.label}>Cleaning Service</Text>
+//             <Text style={styles.value}>${subtotal.toFixed(2)}</Text>
+//           </View>
+//         )}
+//       </View>
 
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.label}>
-            Service Fee (10%)
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <MaterialIcons name="info-outline" size={18} color={COLORS.primary} style={styles.icon} />
-            </TouchableOpacity>
-          </Text>
-          <Text style={styles.value}>${serviceFee.toFixed(2)}</Text>
-        </View>
-      </View>
+//       <View style={styles.card}>
+//         <View style={styles.row}>
+//           <Text style={styles.label}>
+//             Service Fee (10%)
+//             <TouchableOpacity onPress={() => setModalVisible(true)}>
+//               <MaterialIcons name="info-outline" size={18} color={COLORS.primary} style={styles.icon} />
+//             </TouchableOpacity>
+//           </Text>
+//           <Text style={styles.value}>${serviceFee.toFixed(2)}</Text>
+//         </View>
+//       </View>
 
-      <View style={styles.totalCard}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-      </View>
+//       <View style={styles.totalCard}>
+//         <Text style={styles.totalLabel}>Total</Text>
+//         <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+//       </View>
 
-      {/* Modal */}
-      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Service Fee</Text>
-            <Text style={styles.modalText}>
-              The 10% service fee covers operational costs, secure payment processing, and platform maintenance to ensure seamless scheduling and support.
-            </Text>
-            <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
-  );
-};
+//       {/* Modal */}
+//       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalContent}>
+//             <Text style={styles.modalTitle}>Service Fee</Text>
+//             <Text style={styles.modalText}>
+//               The 10% service fee covers operational costs, secure payment processing, and platform maintenance to ensure seamless scheduling and support.
+//             </Text>
+//             <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+//               <Text style={styles.closeButtonText}>Close</Text>
+//             </Pressable>
+//           </View>
+//         </View>
+//       </Modal>
+//     </ScrollView>
+//   );
+// };
 
-const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 40, backgroundColor: '#f9f9f9' },
-  header: { fontSize: 22, fontWeight: '700', marginBottom: 16, color: '#111' },
-  breakdownHeader: { fontSize: 20, fontWeight: '700', marginVertical: 12, color: '#111' },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 3 },
-  cardHeader: { fontSize: 16, fontWeight: '600', marginBottom: 12, color: COLORS.primary },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  label: { fontSize: 15, color: '#555' },
-  value: { fontSize: 15, fontWeight: '600', color: '#111' },
-  totalCard: { backgroundColor: COLORS.white, borderRadius: 12, padding: 20, flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, elevation: 2 },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.gray },
-  totalValue: { fontSize: 18, fontWeight: '700', color: COLORS.gray },
-  icon: { marginLeft: 5 },
-  onlineButton: { marginTop: 20, backgroundColor: COLORS.primary, padding: 12, borderRadius: 8 },
-  pdfButton: { marginTop: 16, backgroundColor: '#4caf50', padding: 12, borderRadius: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '85%', backgroundColor: '#fff', borderRadius: 12, padding: 22, alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
-  modalText: { fontSize: 16, color: '#555', textAlign: 'center', marginBottom: 20 },
-  closeButton: { backgroundColor: COLORS.primary, borderRadius: 8, paddingVertical: 12, paddingHorizontal: 30 },
-  closeButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-});
+// const styles = StyleSheet.create({
+//   container: { padding: 16, paddingBottom: 40, backgroundColor: '#f9f9f9' },
+//   header: { fontSize: 22, fontWeight: '700', marginBottom: 16, color: '#111' },
+//   breakdownHeader: { fontSize: 20, fontWeight: '700', marginVertical: 12, color: '#111' },
+//   card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 3 },
+//   cardHeader: { fontSize: 16, fontWeight: '600', marginBottom: 12, color: COLORS.primary },
+//   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+//   label: { fontSize: 15, color: '#555' },
+//   value: { fontSize: 15, fontWeight: '600', color: '#111' },
+//   totalCard: { backgroundColor: COLORS.white, borderRadius: 12, padding: 20, flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, elevation: 2 },
+//   totalLabel: { fontSize: 18, fontWeight: '700', color: COLORS.gray },
+//   totalValue: { fontSize: 18, fontWeight: '700', color: COLORS.gray },
+//   icon: { marginLeft: 5 },
+//   onlineButton: { marginTop: 20, backgroundColor: COLORS.primary, padding: 12, borderRadius: 8 },
+//   pdfButton: { marginTop: 16, backgroundColor: '#4caf50', padding: 12, borderRadius: 8 },
+//   buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+//   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+//   modalContent: { width: '85%', backgroundColor: '#fff', borderRadius: 12, padding: 22, alignItems: 'center' },
+//   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
+//   modalText: { fontSize: 16, color: '#555', textAlign: 'center', marginBottom: 20 },
+//   closeButton: { backgroundColor: COLORS.primary, borderRadius: 8, paddingVertical: 12, paddingHorizontal: 30 },
+//   closeButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+// });
 
-export default PaymentDetails;
+// export default PaymentDetails;
 
 
 
-// import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// // import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // import {
 //   View,
 //   Text,

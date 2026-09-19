@@ -28,6 +28,7 @@ import NoScheduleMessage from '../../components/cleaner/NoScheduleMessage';
 import { get_clean_future_requests } from '../../utils/get_cleaner_future_request';
 import { useTranslation } from 'react-i18next';
 import InviteBanner from '../../components/cleaner/InviteBanner';
+import UpcomingSummaryCard from '../../components/shared/UpcomingSummaryCard';
 import { tSafe } from '../../utils/tSafe'; // added import
 
 
@@ -75,12 +76,13 @@ const Dashboard = () => {
   const checkPendingInvites = async () => {
     const response = await userService.getPendingInvites(currentUserId);
     if (response.data.length > 0) {
-      console.log('Pending---------DT', response.data);
+      // console.log('Pending---------DT', response.data);
       setPendingInvites(response.data);
       setInviteCount(response.data.length);
       setShowBanner(true);
     }
   };
+
 
   const handleAccept = () => {
     if (pendingInvites.length === 0) return;
@@ -371,11 +373,7 @@ const Dashboard = () => {
     );
   }
 
-  const renderUpcomingScheduleItem = ({ item }) => (
-    <View style={{ marginBottom: 12 }}>
-      <UpcomingScheduleListItem item={item} currency={currency}  />
-    </View>
-  );
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -459,8 +457,9 @@ const Dashboard = () => {
             color={COLORS.primary}
           />
         </View>
+        
 
-  
+        
 
         {/* Cleaning Requests Section */}
         {cleaning_requests.length > 0 && (
@@ -494,7 +493,7 @@ const Dashboard = () => {
             <FlatList
               data={pending_payment.slice(0, 3)}
               renderItem={({ item }) => (
-                <CleaningRequestItem item={{ item }} status={item.status} currency={currency} />
+                <CleaningRequestItem item={ item } status={item.status} currency={currency} />
               )}
               scrollEnabled={false}
               keyExtractor={(item) => item._id || item.id}
@@ -511,14 +510,15 @@ const Dashboard = () => {
               count={upcoming_schedule.length}
               onViewAll={() => navigation.navigate(ROUTES.cleaner_schedules)}
             />
-            <FlatList
+            <UpcomingSummaryCard schedules={upcoming_schedule}/>
+            {/* <FlatList
               data={upcoming_schedule.slice(0, 3)}
               // renderItem={({ item }) => <UpcomingScheduleListItem item={item} />}
               renderItem={renderUpcomingScheduleItem}
               scrollEnabled={false}
               keyExtractor={(item) => item._id || item.id}
               ItemSeparatorComponent={() => <View style={styles.listSeparator} />}
-            />
+            /> */}
           </View>
         )}
 

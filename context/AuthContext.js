@@ -1,3 +1,76 @@
+// // context/AuthContext.js
+// import React, { useState, useEffect, createContext } from 'react';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { navigationRef } from '../utils/navigationRef';
+
+// export const AuthContext = createContext();
+
+// export const AuthProvider = ({ children }) => {
+//   const [userToken, setUserToken] = useState(null);
+//   const [userType, setUserType] = useState(null);
+//   const [userId, setUserId] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   // ---- LOGIN ----
+//   const login = async (userData) => {
+//     const token = userData.token;
+//     const type = userData.userType;
+//     const id = userData._id;
+//     if (token) {
+//       await AsyncStorage.setItem('@auth_token', token);
+//       await AsyncStorage.setItem('@user_type', type);
+//       await AsyncStorage.setItem('@user_id', id);
+//       await AsyncStorage.setItem('@has_account', 'true'); // ✅ CRITICAL
+//       setUserToken(token);
+//       setUserType(type);
+//       setUserId(id);
+//     }
+//     setIsLoading(false);
+//   };
+
+//   // ---- LOGOUT ----
+//   const logout = async () => {
+//     await AsyncStorage.multiRemove([
+//       '@auth_token',
+//       '@user_type',
+//       '@user_id',
+//       // 🟢 DO NOT REMOVE @has_account
+//     ]);
+//     setUserToken(null);
+//     setUserType(null);
+//     setUserId(null);
+//     if (navigationRef.current) {
+//       navigationRef.current.reset({ index: 0, routes: [{ name: 'Public' }] });
+//     }
+//   };
+
+//   // ---- RESTORE (called on app start) ----
+//   const restore = async () => {
+//     const token = await AsyncStorage.getItem('@auth_token');
+//     const type = await AsyncStorage.getItem('@user_type');
+//     const id = await AsyncStorage.getItem('@user_id');
+//     if (token) {
+//       setUserToken(token);
+//       setUserType(type);
+//       setUserId(id);
+//     }
+//     setIsLoading(false);
+//   };
+
+//   useEffect(() => {
+//     restore();
+//   }, []);
+
+//   return (
+//     <AuthContext.Provider value={{ userToken, userType, userId, isLoading, login, logout }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+
+
+
 import React, {useEffect, useState, createContext} from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import fetchIPGeolocation from '../googlemap/geolocation';
@@ -215,20 +288,39 @@ export const AuthProvider = ({children}) => {
         updateFriendsListWithLastMessagesAndUnreadCounts(userId);
     }
 
-    const logout = async() => {
-        await clearTokens(); // clear tokens from storage
-        setUserToken(null);
-        setCurrentUser("");
-        setCurrentUserId("");
-        setUserType(null);
-        setIsVerified(false);
+    // AuthContext.js – replace the logout function
+    const logout = async () => {
         try {
-            await AsyncStorage.removeItem('@storage_Key');
-        } catch(e) {
-            console.error(e);
+          const before = await AsyncStorage.getItem('@onboarding_shown');
+          console.log('🔵 Onboarding flag BEFORE logout:', before);
+      
+          // Remove only auth keys – do NOT remove onboarding flag
+          await AsyncStorage.multiRemove([
+            '@auth_token',
+            '@refresh_token',     // if you have one
+            '@user_data',
+            '@user_type',
+            '@user_id',
+            '@storage_Key',       // your main stored object
+            // ⚠️ DO NOT include '@onboarding_shown' here!
+          ]);
+      
+          const after = await AsyncStorage.getItem('@onboarding_shown');
+          console.log('🔵 Onboarding flag AFTER logout:', after);
+      
+          // Clear state
+          setUserToken(null);
+          setCurrentUser("");
+          setCurrentUserId("");
+          setUserType(null);
+          setIsVerified(false);
+      
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
-    }
+      };
 
     const update_avatar = (new_avatar) => {
         setAvatar(new_avatar);

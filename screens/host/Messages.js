@@ -713,28 +713,31 @@ export default function Messages({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-      {renderHeader()}
-      {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading your conversations...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredConversations}
-          renderItem={renderItem}
-          ListEmptyComponent={emptyList}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} tintColor={COLORS.primary} />
-          }
-        />
-      )}
-    </SafeAreaView>
+    // <SafeAreaView style={styles.container}>
+    //   <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+    //   {renderHeader()}
+    //   {loading ? (
+    //     <View style={styles.loaderContainer}>
+    //       <ActivityIndicator size="large" color={COLORS.primary} />
+    //       <Text style={styles.loadingText}>Loading your conversations...</Text>
+    //     </View>
+    //   ) : (
+    //     <FlatList
+    //       data={filteredConversations}
+    //       renderItem={renderItem}
+    //       ListEmptyComponent={emptyList}
+    //       keyExtractor={(item) => item.id}
+    //       showsVerticalScrollIndicator={false}
+    //       contentContainerStyle={styles.listContent}
+    //       refreshControl={
+    //         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} tintColor={COLORS.primary} />
+    //       }
+    //     />
+    //   )}
+    // </SafeAreaView>
+    <View>
+      <Text>Hello family i just the memorandum of undestanding</Text>
+    </View>
   );
 }
 

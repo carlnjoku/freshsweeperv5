@@ -503,6 +503,7 @@ import Notification from '../../components/shared/Notification';
 import { AuthContext } from '../../context/AuthContext';
 import MyGigs from '../../screens/cleaner/MyGigs';
 import { tSafe } from '../../utils/tSafe'; // added import
+import CustomMenuButton from '../../components/shared/CustomMenuButton';
 
 // Reusable Icon Component with consistent padding
 const DrawerIcon = ({ IconComponent, name, color, size = 20 }) => (
@@ -588,6 +589,7 @@ const DrawerNavigator = () => {
         name={ROUTES.notification}
         component={Notification}
         options={{
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           title: tSafe('drawer_notifications', 'Notifications'),
           headerTintColor: COLORS.gray,
@@ -646,6 +648,7 @@ const DrawerNavigator = () => {
         component={Profile}
         options={{
           title: tSafe('drawer_my_profile', 'My Profile'),
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           headerTintColor: COLORS.white,
           headerBackTitleVisible: false,
@@ -669,6 +672,7 @@ const DrawerNavigator = () => {
         options={{
           headerShown: true,
           title: tSafe('drawer_my_gigs', 'My Gigs'),
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
           headerStyle: {
@@ -695,6 +699,7 @@ const DrawerNavigator = () => {
         component={Earnings}
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_my_earnings', 'My Earnings'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -722,6 +727,7 @@ const DrawerNavigator = () => {
         component={Settings}
         options={{
           headerShown: true,
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           title: tSafe('drawer_settings', 'Settings'),
           headerTintColor: COLORS.gray,
           headerBackTitleVisible: true,
@@ -749,6 +755,7 @@ const DrawerNavigator = () => {
         component={Support}
         options={{
           title: tSafe('drawer_support', 'Support'),
+          headerLeft: ({ tintColor }) => <CustomMenuButton tintColor={tintColor || '#333'} />,
           headerShown: true,
           headerTintColor: COLORS.white,
           headerBackTitleVisible: true,

@@ -78,6 +78,7 @@ export default function ScheduleDetailView({route}) {
     const kitchenSize = room_type_and_size.find(room => room.type === "Kitchen")?.size || 0;
     const livingroomSize = room_type_and_size.find(room => room.type === "Livingroom")?.size || 0;
 
+   
     
     useEffect(() => {
       fetchSchedule()
@@ -250,8 +251,8 @@ export default function ScheduleDetailView({route}) {
           scheduleId, 
           cancellationPayload
         );
-
-        if (response.success) {
+        
+        if (response.data.success) {
           let message = tSafe('assignment_cancelled_success', 'Your assignment has been cancelled successfully.');
           
           if (penaltyImpact && penaltyImpact.tier !== 'NONE') {

@@ -168,10 +168,10 @@ export default function Signup({navigation, route}) {
       isValid = false;
     }
 
-    if (!smsConsent) {
-      Alert.alert('Consent Required', 'You must agree to receive SMS messages to use this feature. You can opt out later by replying STOP.');
-      return false;
-    }
+    // if (!smsConsent) {
+    //   Alert.alert('Consent Required', 'You must agree to receive SMS messages to use this feature. You can opt out later by replying STOP.');
+    //   return false;
+    // }
 
     // Password validation
     if (!inputs.password) {
@@ -222,7 +222,7 @@ export default function Signup({navigation, route}) {
       aboutme: null, // Send null if empty
       availability: null, // Send null if empty
       certification: [], // Empty array
-      sms_consent: smsConsent,   // ✅ store consent flag
+      // sms_consent: smsConsent,   // ✅ store consent flag
     };
     
     // If user entered aboutme text, include it
@@ -233,37 +233,39 @@ export default function Signup({navigation, route}) {
     console.log("Sending user data to backend:", JSON.stringify(userData, null, 2));
     
     userService.createUser(userData)
-      .then(response => {
+      .then(async (response) => {   // 🟢 ADD 'async' HERE
         setLoading(false);
         console.log("Response status:", response.status);
         console.log("Response data:", response.data);
         
         if (response.status === 200 || response.status === 201) {
           const user = response.data;
-          writeUserData(user)
+          writeUserData(user);
+          
+          // 🟢 NOW THIS WORKS
+          await AsyncStorage.setItem('@has_account', 'true');
+          
           // Navigate to login with email
           navigation.navigate(ROUTES.signin, { 
             email: user.email,
             message: 'Account created successfully. Please login.'
           });
 
-          // 🔹 Optional: accept invite immediately if you want auto-login
+          // Optional: accept invite
           if (inviteToken) {
             const payload = {
-              token:inviteToken,
-              cleanerId:user._id
-            }
+              token: inviteToken,
+              cleanerId: user._id
+            };
             try {
-              
-                // registerForPushNotificationsAsync(user._id); // Register token
-                const inviteResp =  userService.acceptInviteOnSignup(payload);
-                // navigation.navigate('PropertyDetails', { propertyId: inviteResp.propertyId });
+              const inviteResp = await userService.acceptInviteOnSignup(payload);
             } catch (err) {
-                console.error("Failed to accept invite:", err);
+              console.error("Failed to accept invite:", err);
             }
-        }
+          }
         }
       })
+  
       .catch(err => {
         setLoading(false);
         console.error("Signup error:", err);
@@ -320,6 +322,9 @@ export default function Signup({navigation, route}) {
     i18n.changeLanguage(langCode);
     changeLanguage(langCode);
   };
+
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -391,43 +396,8 @@ export default function Signup({navigation, route}) {
             keyboardType="email-address"
             left={<TextInput.Icon icon="email-outline" style={styles.inputIcon} />}
           />
-          
-          <TextInput
-            label="Mobile Phone"
-            placeholder="(123) 456-7890"
-            mode="outlined"
-            outlineColor="#D8D8D8"
-            activeOutlineColor={COLORS.primary}
-            value={phoneNumber} // Display formatted
-            left={<TextInput.Icon icon="phone-outline" style={styles.inputIcon} />}
-            onChangeText={handlePhoneChange} // Use the phone-specific handler
-            keyboardType="phone-pad"
-            style={styles.input}
-            onFocus={() => handleError(null, 'phone')}
-            error={errors.phone}
-            maxLength={14} // (123) 456-7890 = 14 chars
-          />
-          
-          <Text style={styles.phoneHelperText}>
-            Phone number is optional. We'll use it for account verification and important updates.
-          </Text>
-          {/* SMS Opt-in Checkbox */}
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => setSmsConsent(!smsConsent)}
-              style={styles.checkbox}
-            >
-              <View style={[styles.checkboxBox, smsConsent && styles.checkboxChecked]}>
-                {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
-              </View>
-              <Text style={styles.checkboxLabel}>
-              SMS notifications are optional. By checking this box, you agree to receive SMS messages from FreshSweeper regarding job alerts, booking updates, account notifications, and service-related messages. Message frequency varies. Message and data rates may apply. Reply STOP to opt out at any time.
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          <TextInput
+
+<TextInput
             mode="outlined"
             label="Password"
             placeholder="Create your password"
@@ -449,8 +419,76 @@ export default function Signup({navigation, route}) {
             }
           />
           
+          <TextInput
+            label="Enter your mobile phone number"
+            placeholder="(123) 456-7890"
+            mode="outlined"
+            outlineColor="#D8D8D8"
+            activeOutlineColor={COLORS.primary}
+            value={phoneNumber} // Display formatted
+            left={<TextInput.Icon icon="phone-outline" style={styles.inputIcon} />}
+            onChangeText={handlePhoneChange} // Use the phone-specific handler
+            keyboardType="phone-pad"
+            style={styles.input}
+            onFocus={() => handleError(null, 'phone')}
+            error={errors.phone}
+            maxLength={14} // (123) 456-7890 = 14 chars
+          />
+          
+         
+          <Text style={styles.phoneHelperText}>
+          {/* We’ll send a one-time verification code to verify your phone number. */}
+          </Text>
+          {/* <Text style={styles.phoneHelperText}>
+          By providing your phone number, you agree to receive a one-time verification code from FreshSweeper to verify your account. Message and data rates may apply.
+          </Text> */}
+          {/* <Text style={styles.phoneHelperText}>
+            Phone number is optional. We'll use it for account verification and important updates.
+          </Text> */}
+          {/* SMS Opt-in Checkbox */}
+          <View style={styles.checkboxContainer}>
+            {/* <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setSmsConsent(!smsConsent)}
+              style={styles.checkbox}
+            >
+              <View style={[styles.checkboxBox, smsConsent && styles.checkboxChecked]}>
+                {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
+              </View> 
+               <Text style={styles.checkboxLabel}>
+               Optional: I agree to receive SMS updates from FreshSweeper about job alerts, booking updates, and service notifications. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe.
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setSmsConsent(!smsConsent)}
+              style={styles.checkbox}
+            >
+              <View style={[styles.checkboxBox, smsConsent && styles.checkboxChecked]}>
+                {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
+              </View> 
+               <Text style={styles.checkboxLabel}>
+               By continuing, you agree to our Terms of Service and Privacy Policy.
+              </Text>
+            </TouchableOpacity> */}
+            {/* <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setSmsConsent(!smsConsent)}
+              style={styles.checkbox}
+            >
+              <View style={[styles.checkboxBox, smsConsent && styles.checkboxChecked]}>
+                {smsConsent && <Text style={styles.checkboxTick}>✓</Text>}
+              </View> 
+               <Text style={styles.checkboxLabel}>
+              SMS notifications are optional. By checking this box, you agree to receive SMS messages from FreshSweeper regarding job alerts, booking updates, account notifications, and service-related messages. Message frequency varies. Message and data rates may apply. Reply STOP to opt out at any time.
+              </Text>
+            </TouchableOpacity> */}
+          </View>
+          
+          
+          
           <Button 
-            title="Create Account" 
+            title="Continue" 
             loading={loading} 
             onPress={validate} 
           />

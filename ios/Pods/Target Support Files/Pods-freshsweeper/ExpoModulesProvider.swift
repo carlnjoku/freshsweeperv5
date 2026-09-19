@@ -22,7 +22,6 @@ import ExpoFont
 import ExpoHaptics
 import ExpoImage
 import ExpoImagePicker
-import ExpoKeepAwake
 import ExpoLinearGradient
 import ExpoLinking
 import ExpoLocation
@@ -53,7 +52,6 @@ public class ExpoModulesProvider: ModulesProvider {
       HapticsModule.self,
       ImageModule.self,
       ImagePickerModule.self,
-      KeepAwakeModule.self,
       LinearGradientModule.self,
       ExpoLinkingModule.self,
       LocationModule.self,

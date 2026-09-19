@@ -541,6 +541,7 @@ export default function SchedulePreview({ route }) {
   const kitchenSize = roomTypeAndSize.find(r => r.type === 'Kitchen')?.size || 0;
   const livingroomSize = roomTypeAndSize.find(r => r.type === 'Livingroom')?.size || 0;
 
+  const isEditable = schedule_status === 'pending' || schedule_status === 'open';
 
   // Map static image
   useEffect(() => {
@@ -621,6 +622,7 @@ export default function SchedulePreview({ route }) {
   };
 
   const handleAccept = (group, acceptance) => {
+    
     const data = {
       cleanerId: currentUserId,
       scheduleId,
@@ -628,9 +630,12 @@ export default function SchedulePreview({ route }) {
       acceptance,
       group: group.name,
     };
+    
+    console.log("Submit data", data)
     userService.acceptCleaningRequest(data).then(() => {
       navigation.navigate(ROUTES.cleaner_dashboard);
     });
+   
   };
 
   const handleDecline = () => {
@@ -770,7 +775,9 @@ export default function SchedulePreview({ route }) {
             assignedTo={assignedTo} 
             handleAccept={handleAccept} 
             schedule_status={schedule_status}
+            isEditable={isEditable}
           />
+
         </ScrollView>
       </View>
     </SafeAreaView>

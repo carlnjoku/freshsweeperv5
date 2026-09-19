@@ -24,7 +24,7 @@ import userService from '../../services/connection/userService';
 import { tSafe } from '../../utils/tSafe'; // added import
 
 export default function ICalendar({ route }) {
-  const { property } = route.params;
+  const { property, linkedCleaners } = route.params;
   const navigation = useNavigation();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -121,8 +121,9 @@ export default function ICalendar({ route }) {
 
   const fetchCleaners = async () => {
     try {
-      const response = await userService.getAllCleaners();
-      setCleaners(response.data);
+      // const response = await userService.getAllCleaners();
+      console.log(property?.preferredCleaners)
+      setCleaners(property?.preferredCleaners);
     } catch (error) {
       console.error('Error fetching cleaners:', error);
       Alert.alert(tSafe('error_title', 'Error'), tSafe('failed_load_cleaners', 'Failed to load cleaners'));
@@ -425,7 +426,7 @@ export default function ICalendar({ route }) {
           setSelectedCalendar(null);
         }}
         onSave={handleSaveSync}
-        cleaners={cleaners}
+        cleaners={linkedCleaners}
         aptId={property._id}
         preselectedPlatform={selectedPlatform}
         existingCalendar={selectedCalendar}

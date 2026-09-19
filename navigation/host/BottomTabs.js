@@ -247,7 +247,7 @@ const MessageStack = () => (
   <Stack.Navigator
     screenOptions={{
       ...TransitionPresets.FadeFromBottomAndroid,
-      headerTintColor: COLORS.gray,
+      headerTintColor: '#000',
       headerBackTitleVisible: false,
       headerStyle: {
         backgroundColor: '#fff',
@@ -297,6 +297,19 @@ const BottomTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarLabelPosition: 'below-icon',   // 👈 Forces icon above label
+        tabBarStyle: {
+          height: 70,                        // 👈 Adjust height to accommodate stacked layout
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+        },
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarIcon: ({ color, focused }) => {
@@ -374,7 +387,7 @@ const BottomTabs = () => {
         options={{
           headerShown: false,
           title: "",
-          headerTintColor: COLORS.gray,
+          headerTintColor: "#000",
           headerBackTitleVisible: false,
         }}
       />
@@ -384,7 +397,7 @@ const BottomTabs = () => {
         options={({ navigation }) => ({
           headerShown: false,
           title: "",
-          headerTintColor: COLORS.gray,
+          headerTintColor: "#000",
           headerBackTitleVisible: false,
           headerStyle: {
             backgroundColor: COLORS.primary,

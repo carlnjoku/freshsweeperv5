@@ -4772,9 +4772,12 @@ export default function EditChecklist() {
               onInfoPress={() => setShowTooltip(true)}
               isEditing={true}
               existingChecklistData={checklistData?.checklist || null}
+              savedTotalFee={checklistData?.totalFee || 0}
               key={`room-picker-${checklistId}-${hasLoadedData}`}
             />
           )}
+
+          
 
           {hasLoadedData && !selectedApartment && (
             <View style={styles.warningContainer}>

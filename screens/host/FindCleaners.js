@@ -1,33 +1,28 @@
 // import React, { useState, useEffect, useCallback, useContext } from 'react';
-// import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Modal,  ActivityIndicator } from 'react-native';
+// import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Modal, Alert, RefreshControl } from 'react-native';
+// import { useFocusEffect } from '@react-navigation/native';
 // import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 // import { Feather, MaterialIcons } from '@expo/vector-icons';
 // import moment from 'moment';
 // import userService from '../../services/connection/userService';
 // import { AuthContext } from '../../context/AuthContext';
 // import COLORS from '../../constants/colors';
-// import CleanerItem from '../../components/cleaner/CleanerItem';
-// // import { HomeSkeleton } from '../../components/skeleton/HomeSkeleton';
 // import { HomeSkeleton } from '../../components/shared/skeleton/HomeSkeleton';
-// import { calculateOverallRating } from '../../utils/calculate_overall_rating';
 // import * as Animatable from 'react-native-animatable';
 // import { AntDesign } from '@expo/vector-icons';
-// import { Avatar, TextInput, Menu, List, Button, Chip} from 'react-native-paper';
-// // import ScheduleCard from '../../components/ScheduleCard';
-// import ScheduleCard from '../../components/shared/ScheduleCard';
+// import { Chip } from 'react-native-paper';
 // import ROUTES from '../../constants/routes';
-// // import GoogleMapAndUsers from '../../components/shared/GoogleMapAndUsers';
 // import CustomHeader from '../../components/shared/CustomHeader';
 // import { useBookingContext } from '../../context/BookingContext';
 // import NewBooking from './NewBooking';
 // import CleanerCard from '../../components/cleaner/CleanerCard';
-// import ScheduleCar from '../../components/shared/ScheduleCar';
+// import { tSafe } from '../../utils/tSafe';
+// import CleanerCardSkeleton from '../../components/cleaner/CleanerCardSkeleton';
 
 // const FindCleaners = ({ navigation }) => {
 //   const { currentUserId, currentUser } = useContext(AuthContext);
-//   const { modalVisible, handleCreateSchedule }  = useBookingContext();
+//   const { modalVisible, handleCreateSchedule } = useBookingContext();
 
-  
 //   const [currentStep, setCurrentStep] = useState(1);
 //   const [selectedProperty, setSelectedProperty] = useState(null);
 //   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -35,47 +30,44 @@
 //   const [schedules, setSchedules] = useState([]);
 //   const [cleaners, setCleaners] = useState([]);
 //   const [loading, setLoading] = useState(false);
+//   const [refreshing, setRefreshing] = useState(false);
 
 //   const genericArray = new Array(5).fill(null);
 
-//   // // Fetch initial data
-//   // useEffect(() => {
-//   //   const fetchData = async () => {
-//   //     try {
-//   //       const [apartmentsRes] = await Promise.all([
-//   //         userService.getApartment(currentUserId),
-//   //       ]);
-//   //       setApartments(apartmentsRes.data);
-//   //     } catch (error) {
-//   //       console.error('Error fetching data:', error);
-//   //     }
-//   //   };
-//   //   fetchData();
-//   // }, [currentUserId]);
-
+//   // ---------- Initial Data Fetch ----------
 //   useEffect(() => {
 //     const fetchData = async () => {
 //       try {
 //         const [apartmentsRes] = await Promise.all([
 //           userService.getApartment(currentUserId),
 //         ]);
-        
+  
 //         if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
-//           navigation.replace(ROUTES.host_dashboard); // Redirect to dashboard
+//           Alert.alert(
+//             'Property Required',
+//             'You need to add at least one property before you can find cleaners. Please add a property first.',
+//             [
+//               {
+//                 text: 'OK',
+//                 onPress: () => navigation.replace(ROUTES.host_dashboard),
+//               },
+//             ],
+//             { cancelable: false }
+//           );
 //           return;
 //         }
   
 //         setApartments(apartmentsRes.data);
 //       } catch (error) {
-//         console.error('Error fetching datas:', error);
+//         console.error('Error fetching data:', error);
+//         Alert.alert('Error', 'Failed to load your properties. Please try again.');
 //       }
 //     };
-    
+  
 //     fetchData();
 //   }, [currentUserId, navigation]);
 
-
-//   // Fetch schedules when property is selected
+//   // ---------- Fetch schedules when property is selected ----------
 //   useEffect(() => {
 //     const fetchPropertySchedules = async () => {
 //       if (!selectedProperty) return;
@@ -86,22 +78,15 @@
 //           item => item.schedule.apartment_name === selectedProperty.apt_name
 //         );
 
-//         console.log(JSON.stringify(filtered, null, 2))
 //         const upcomingSchedules = filtered.filter(schedule => {
-//           const cleaningDate = schedule.schedule.cleaning_date; // e.g. "2025-07-10"
-//           const cleaningTime = schedule.schedule.cleaning_time; // e.g. "14:00:00"
-        
+//           const cleaningDate = schedule.schedule.cleaning_date;
+//           const cleaningTime = schedule.schedule.cleaning_time;
 //           if (!cleaningDate || !cleaningTime) return false;
-        
 //           const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
-//           // console.log(cleaningDateTime.isSameOrAfter(moment()))
 //           return cleaningDateTime.isSameOrAfter(moment());
 //         });
         
 //         setSchedules(upcomingSchedules);
-//         // Clear selected schedule when property changes
-
-        
 //         setSelectedSchedule(null);
 //       } catch (error) {
 //         console.error('Error fetching schedules:', error);
@@ -111,42 +96,103 @@
 //     fetchPropertySchedules();
 //   }, [selectedProperty, currentUserId]);
 
-//   // Fetch cleaners when schedule is selected
+//   // ---------- Fetch cleaners when schedule is selected ----------
 //   useEffect(() => {
-//     const fetchScheduleCleaners = async () => {
-//       if (!selectedSchedule) return;
-      
-//       setLoading(true);
+//     if (!selectedSchedule) return;
+  
+//     setLoading(true);
+  
+//     const timeout = setTimeout(async () => {
 //       try {
-        
 //         const cleanersRes = await userService.findCleaners(selectedSchedule._id);
 //         setCleaners(cleanersRes.data);
-//         console.log("My cleeeeeeeeeeeeeeeaners",cleanersRes.data)
 //       } catch (error) {
 //         console.error('Error fetching cleaners:', error);
 //       } finally {
 //         setLoading(false);
 //       }
-//     };
-    
-   
-//     const timeout = setTimeout(() => {
-//       fetchScheduleCleaners();
-//     }, 2000);
+//     }, 4000);
   
-//     return () => clearTimeout(timeout); // Cleanup function tos clear timeout if `selectedSchedule` changes before timeout completes
+//     return () => {
+//       clearTimeout(timeout);
+//       setLoading(false);
+//     };
 //   }, [selectedSchedule]);
 
-//   // Add this cleanup effect
-// useEffect(() => {
-//   return () => {
-//       // Reset state when component unmounts
+//   // ---------- SILENT REFRESH on focus (no loading indicators) ----------
+//   useFocusEffect(
+//     useCallback(() => {
+//       const refreshData = async () => {
+//         try {
+//           // 1. Refresh apartments silently
+//           const apartmentsRes = await userService.getApartment(currentUserId);
+//           if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
+//             setApartments([]);
+//             setSelectedProperty(null);
+//             setSelectedSchedule(null);
+//             setCurrentStep(1);
+//             return;
+//           }
+          
+//           const newApartments = apartmentsRes.data;
+//           setApartments(newApartments);
+
+//           // 2. If a property is selected, check if it still exists
+//           if (selectedProperty) {
+//             const stillExists = newApartments.some(apt => apt._id === selectedProperty._id);
+//             if (!stillExists) {
+//               setSelectedProperty(null);
+//               setSelectedSchedule(null);
+//               setCurrentStep(1);
+//               return;
+//             }
+            
+//             // Property still exists – refresh its schedules
+//             const schedulesRes = await userService.getUpcomingSchedulesByHostId(currentUserId);
+//             const filtered = schedulesRes.data.filter(
+//               item => item.schedule.apartment_name === selectedProperty.apt_name
+//             );
+//             const upcomingSchedules = filtered.filter(schedule => {
+//               const cleaningDate = schedule.schedule.cleaning_date;
+//               const cleaningTime = schedule.schedule.cleaning_time;
+//               if (!cleaningDate || !cleaningTime) return false;
+//               const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
+//               return cleaningDateTime.isSameOrAfter(moment());
+//             });
+//             setSchedules(upcomingSchedules);
+
+//             // If selectedSchedule no longer exists, deselect it
+//             if (selectedSchedule) {
+//               const scheduleStillExists = upcomingSchedules.some(s => s._id === selectedSchedule._id);
+//               if (!scheduleStillExists) {
+//                 setSelectedSchedule(null);
+//                 // Stay on step 2 but with no schedule selected
+//               }
+//             }
+//           } else {
+//             // No property selected – ensure step 1
+//             setCurrentStep(1);
+//             setSelectedSchedule(null);
+//           }
+//         } catch (error) {
+//           console.error('Error refreshing data:', error);
+//         }
+//       };
+
+//       refreshData();
+//     }, [currentUserId, selectedProperty, selectedSchedule])
+//   );
+
+//   // ---------- Cleanup on unmount ----------
+//   useEffect(() => {
+//     return () => {
 //       setCurrentStep(1);
 //       setSelectedProperty(null);
 //       setSelectedSchedule(null);
-//   };
-// }, []);
+//     };
+//   }, []);
 
+//   // ---------- Navigation handlers ----------
 //   const handleStepNavigation = () => {
 //     if (currentStep === 1 && selectedProperty) {
 //       setCurrentStep(2);
@@ -157,65 +203,48 @@
 //   };
 
 //   const handleCloseCreateBooking = () => {
-//     handleCreateSchedule(false)
-//   }
+//     handleCreateSchedule(false);
+//   };
 
+//   // ---------- Render functions ----------
 //   const renderPropertyItem = ({ item }) => (
 //     <View style={{marginHorizontal:15}}>
-//     <TouchableOpacity
-//       style={[
-//         styles.card,
-//         selectedProperty?._id === item._id && styles.selectedCard
-//       ]}
-//       onPress={() => setSelectedProperty(item)}
-//     >
-      
-//       {selectedProperty?._id === item._id && (
-//         <View style={styles.checkBadge}>
-//           <Feather name="check" size={16} color="white" />
+//       <TouchableOpacity
+//         style={[
+//           styles.card,
+//           selectedProperty?._id === item._id && styles.selectedCard
+//         ]}
+//         onPress={() => setSelectedProperty(item)}
+//       >
+//         {selectedProperty?._id === item._id && (
+//           <View style={styles.checkBadge}>
+//             <Feather name="check" size={16} color="white" />
+//           </View>
+//         )}
+
+//         <View style={styles.itemContent}>
+//           <View style={{marginRight:10}}>
+//             <AntDesign name="home" size={40} color={COLORS.gray}/>
+//           </View>
+//           <View style={{width:'85%'}}>
+//             <Text style={styles.cardTitle}>{item.apt_name}</Text>
+//             <Text style={styles.address}>{item.address}</Text>
+//           </View>
 //         </View>
-//       )}
 
-//       <View style={styles.itemContent}>
-//         <View style={{marginRight:10}}>
-//           <AntDesign name="home" size={40} color={COLORS.gray}/>
+//         <View style={styles.room_type_container}>
+//           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
+//             {item.roomDetails[0]?.['number'] || 0} {item.roomDetails[0]?.['type'] || ''}
+//           </Chip>
+//           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
+//             {item.roomDetails[1]?.['number'] || 0} {item.roomDetails[1]?.['type'] || ''}
+//           </Chip>
+//           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
+//             {item.roomDetails[2]?.['number'] || 0} {item.roomDetails[2]?.['type'] || ''}
+//           </Chip>
 //         </View>
-//         <View style={{width:'85%'}}>
-//           <Text style={styles.cardTitle}>{item.apt_name}</Text>
-//           <Text style={styles.address}>{item.address}</Text>
-//         </View>
-//       </View>
-
-//       <View style={styles.room_type_container}>
-
-//         <Chip
-//           mode="flat"
-//           style={styles.activeChip}
-//           textStyle={styles.textChip}
-//         >
-//           {item.roomDetails[0]['number']} {item.roomDetails[0]['type']}
-//         </Chip>
-//         <Chip
-//           mode="flat"
-//           style={styles.activeChip}
-//           textStyle={styles.textChip}
-//         >
-//           {item.roomDetails[1]['number']} {item.roomDetails[1]['type']}
-//         </Chip>
-//         <Chip
-//           mode="flat"
-//           style={styles.activeChip}
-//           textStyle={styles.textChip}
-//         >
-//           {item.roomDetails[2]['number']} {item.roomDetails[2]['type']}
-//         </Chip>
-
-    
-//       </View>
-//     </TouchableOpacity>
-    
+//       </TouchableOpacity>
 //     </View>
- 
 //   );
 
 //   const renderScheduleItem = ({ item }) => {
@@ -225,130 +254,127 @@
 //       dayName: moment(item.schedule.cleaning_date).format('dddd')
 //     };
 //     return (
-//     <View style={{marginHorizontal:15}}>
-
-//     <TouchableOpacity
-//       style={[
-//         styles.card,
-//         styles.scheduleCard,
-//         selectedSchedule?._id === item._id && styles.selectedCard
-//       ]}
-//       onPress={() => setSelectedSchedule(item)}
-//     >
-//       <View style={styles.scheduleDetails}>
-//         {/* <View style={styles.scheduleIcon}>
-//           <Feather name="calendar" size={24} color={COLORS.primary} />
-//         </View> */}
-
-//         <View style={[styles.dateBadge, { backgroundColor: COLORS.primary }]}>
-//           <Text style={styles.day}>{dateBadge.day}</Text>
-//           <Text style={styles.month}>{dateBadge.month}</Text>
-//         </View>
-//         <View>
-//           <Text style={styles.cardTitle}>
-//           {dateBadge.dayName}
-//           </Text>
-//           {/* <Text style={styles.cardSubtitle}>
-//             {moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}
-//           </Text> */}
-
-//           <View style={styles.row}>
-//            <MaterialIcons name="schedule" size={18} color={COLORS.light_gray} />
-//            <Text style={styles.infoText}>
-//            {moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')} - {moment(item.schedule.cleaning_end_time, 'h:mm:ss A').format('h:mm A') || 'TBD' }
-//            </Text>
-//          </View>
-//          <View style={styles.row}>
-//            <MaterialIcons name="location-on" size={18} color={COLORS.light_gray} />
-//            <Text style={styles.address}>{item.schedule.address}</Text>
-//          </View>
-//          {/* <Text style={styles.address}>{item.schedule.address}</Text> */}
-//         </View>
+//       <View style={{marginHorizontal:15}}>
+//         <TouchableOpacity
+//           style={[
+//             styles.card,
+//             styles.scheduleCard,
+//             selectedSchedule?._id === item._id && styles.selectedCard
+//           ]}
+//           onPress={() => setSelectedSchedule(item)}
+//         >
+//           <View style={styles.scheduleDetails}>
+//             <View style={[styles.dateBadge, { backgroundColor: COLORS.primary }]}>
+//               <Text style={styles.day}>{dateBadge.day}</Text>
+//               <Text style={styles.month}>{dateBadge.month}</Text>
+//             </View>
+//             <View>
+//               <Text style={styles.cardTitle}>{dateBadge.dayName}</Text>
+//               <View style={styles.row}>
+//                 <MaterialIcons name="schedule" size={18} color={COLORS.light_gray} />
+//                 <Text style={styles.infoText}>
+//                   {moment(item.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')} - {moment(item.schedule.cleaning_end_time, 'h:mm:ss A').format('h:mm A') || 'TBD'}
+//                 </Text>
+//               </View>
+//               <View style={styles.row}>
+//                 <MaterialIcons name="location-on" size={18} color={COLORS.light_gray} />
+//                 <Text style={styles.address}>{item.schedule.address}</Text>
+//               </View>
+//             </View>
+//           </View>
+//           {selectedSchedule?._id === item._id && (
+//             <View style={styles.checkBadge}>
+//               <Feather name="check" size={16} color="white" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
 //       </View>
-//       {selectedSchedule?._id === item._id && (
-//         <View style={styles.checkBadge}>
-//           <Feather name="check" size={16} color="white" />
-//         </View>
-//       )}
-//     </TouchableOpacity>
-//     </View>
-//     )
+//     );
 //   };
 
 //   const renderCleanerItem = ({ item }) => {
-//     console.log("My itemssss",selectedSchedule)
-//     return (<View style={{margin:10}}>
-//       {/* <CleanerItem 
-//         item={item}
-//         selected_schedule={selectedSchedule}
-//         selected_scheduleId={selectedSchedule._id}
-//         hostId={currentUserId}
-//         hostFname = {currentUser.firstname}
-//         hostLname = {currentUser.lastname}
-//       /> */}
-//       <CleanerCard
-//         item={item}
-//         onPress={() =>
-//           navigation.navigate(ROUTES.cleaner_profile_info, {
-//             item: item,
-//             selected_schedule: selectedSchedule,
-//             selected_scheduleId: selectedSchedule._id,
-//             hostId: item,
-//             requestId: item._id,
-//             hostFname: item.firstname,
-//             hostLname: item.lastname,
-//             distanceFromApartment: item.distanceFromApartment
-//           })
-//         }
-//       />
-//     </View>)
-// };
+//     return (
+//       <View style={{margin:10}}>
+//         <CleanerCard
+//           item={item}
+//           onPress={() =>
+//             navigation.navigate(ROUTES.cleaner_profile_info, {
+//               item: item,
+//               selected_schedule: selectedSchedule,
+//               selected_scheduleId: selectedSchedule._id,
+//               hostId: item,
+//               requestId: item._id,
+//               hostFname: item.firstname,
+//               hostLname: item.lastname,
+//               distanceFromApartment: item.distanceFromApartment
+//             })
+//           }
+//         />
+//       </View>
+//     );
+//   };
 
+//   // ---------- Render ----------
 //   return (
 //     <View style={styles.container}>
-//       {/* Header */}
-//       {/* <View style={styles.header}>
-//         <TouchableOpacity onPress={() => currentStep > 1 ? setCurrentStep(s => s - 1) : navigation.goBack()}>
-//           <Feather name="arrow-left" size={24} color={COLORS.dark} />
-//         </TouchableOpacity>
-//         <View style={styles.stepIndicatorContainer}>
-//           {[1, 2, 3].map(step => (
-//             <View
-//               key={step}
-//               style={[
-//                 styles.stepIndicator,
-//                 currentStep >= step && styles.activeStepIndicator
-//               ]}
-//             />
-//           ))}
-//         </View>
-//       </View> */}
-
 //       <CustomHeader 
 //         navigation={navigation}
 //         currentStep={currentStep}
 //         setCurrentStep={setCurrentStep}
 //       />
 
-    
-//       {/* <ScheduleCar
-//         schedule={{
-//           cleaning_date: '2025-07-18',
-//           cleaning_time: '10:00 AM',
-//           cleaning_end_time: '12:00 PM',
-//           apartment: {
-//             name: 'Downtown Loft',
-//             address: '45 Beacon Street, Boston, MA',
-//           },
-//           cleaner: {
-//             firstname: 'Sarah',
-//             lastname: 'Connor',
-//           },
-//         }}
-//       /> */}
-
-//       {/* Content */}
-//       <ScrollView contentContainerStyle={styles.content}>
+//       <ScrollView 
+//         contentContainerStyle={styles.content}
+//         refreshControl={
+//           <RefreshControl
+//             refreshing={refreshing}
+//             onRefresh={async () => {
+//               setRefreshing(true);
+//               try {
+//                 // Force refresh: reload apartments and schedules
+//                 const apartmentsRes = await userService.getApartment(currentUserId);
+//                 if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
+//                   Alert.alert(
+//                     'Property Required',
+//                     'You need to add at least one property before you can find cleaners.',
+//                     [{ text: 'OK', onPress: () => navigation.replace(ROUTES.host_dashboard) }],
+//                     { cancelable: false }
+//                   );
+//                   setRefreshing(false);
+//                   return;
+//                 }
+//                 setApartments(apartmentsRes.data);
+//                 if (selectedProperty) {
+//                   const schedulesRes = await userService.getUpcomingSchedulesByHostId(currentUserId);
+//                   const filtered = schedulesRes.data.filter(
+//                     item => item.schedule.apartment_name === selectedProperty.apt_name
+//                   );
+//                   const upcomingSchedules = filtered.filter(schedule => {
+//                     const cleaningDate = schedule.schedule.cleaning_date;
+//                     const cleaningTime = schedule.schedule.cleaning_time;
+//                     if (!cleaningDate || !cleaningTime) return false;
+//                     const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
+//                     return cleaningDateTime.isSameOrAfter(moment());
+//                   });
+//                   setSchedules(upcomingSchedules);
+//                   if (selectedSchedule) {
+//                     const stillExists = upcomingSchedules.some(s => s._id === selectedSchedule._id);
+//                     if (!stillExists) setSelectedSchedule(null);
+//                   }
+//                 } else {
+//                   setSchedules([]);
+//                   setSelectedSchedule(null);
+//                   setCurrentStep(1);
+//                 }
+//               } catch (error) {
+//                 console.error('Pull-to-refresh error:', error);
+//               } finally {
+//                 setRefreshing(false);
+//               }
+//             }}
+//           />
+//         }
+//       >
 //         {currentStep === 1 && (
 //           <Animated.View entering={FadeIn} exiting={FadeOut}>
 //             <FlatList
@@ -365,13 +391,12 @@
 //             {schedules.length === 0 ? (
 //               <View style={styles.emptyState}>
 //                 <Feather name="calendar" size={40} color={COLORS.gray} />
-//                 <Text style={styles.emptyText}>No available schedules for this property</Text>
+//                 <Text style={styles.emptyText}>{tSafe('no_available_schedules', 'No available schedules for this property')}</Text>
 //                 <TouchableOpacity
-//                   style= {styles.createScheduleButton}
+//                   style={styles.createScheduleButton}
 //                   onPress={() => handleCreateSchedule(true)}
-//                   // onPress = {console.log("open modal")}
 //                 >
-//                   <Text style={{color:'white'}}>Create Schedule</Text>
+//                   <Text style={{color:'white'}}>{tSafe('create_schedule', 'Create Schedule')}</Text>
 //                 </TouchableOpacity>
 //               </View>
 //             ) : (
@@ -387,50 +412,25 @@
 
 //         {currentStep === 3 && (
 //           <Animated.View entering={SlideInRight} exiting={SlideOutLeft}>
-//             {/* <GoogleMapAndUsers
-//               users={cleaners}
-//               apartment_name={selectedProperty?.apt_name}
-//               apartment_address={selectedProperty?.address}
-//               apartment_latitude={selectedProperty?.latitude}
-//               apartment_longitude={selectedProperty?.longitude}
-//             /> */}
-//             {/* Location & Calendar Blockss */}
-//                <View style={styles.location_calendar_block}>
-//                  <View style={styles.calender}>
-//                    <Text style={{ fontSize: 12 }}>
-//                      {moment(selectedSchedule.schedule.cleaning_date).format('ddd MMM DD')}
-//                    </Text>
-//                    <Text style={{ fontSize: 11 }}>{selectedSchedule.schedule.cleaning_time}</Text>
-//                  </View>
-
-//                  <View style={styles.addre1}>
-//                    <Text style={styles.headline1}>{selectedProperty.apt_name}</Text>
-//                    <Text style={styles.tagline1}>{selectedProperty.address}</Text>
-//                  </View>
-//                </View>
+//             <View style={styles.location_calendar_block}>
+//               <View style={styles.calender}>
+//                 <Text style={{ fontSize: 12 }}>
+//                   {moment(selectedSchedule.schedule.cleaning_date).format('ddd MMM DD')}
+//                 </Text>
+//                 <Text style={{ fontSize: 11 }}>{selectedSchedule.schedule.cleaning_time}</Text>
+//               </View>
+//               <View style={styles.addre1}>
+//                 <Text style={styles.headline1}>{selectedProperty.apt_name}</Text>
+//                 <Text style={styles.tagline1}>{selectedProperty.address}</Text>
+//               </View>
+//             </View>
 //             {loading ? (
 //               <View>
-//                 <View>
-//                     <HomeSkeleton width="100%" height={300} />
+//                 <View style={{ marginTop: 16 }}>
+//                   {[...Array(5)].map((_, index) => (
+//                     <CleanerCardSkeleton key={index} />
+//                   ))}
 //                 </View>
-//                 {genericArray.map((item, index) => (
-//                   <Animatable.View animation="slideInLeft" duration={550}>
-                  
-//                   <View style={{flexDirection: 'row', paddingVertical:5}}>
-//                     {<View style={{flex: 0.18}}>
-//                       <HomeSkeleton width={50} height={50} variant="circle" />
-//                     </View>
-//                     }
-//                     {<View style={{flex: 0.8}}>
-//                       <HomeSkeleton width="80%" height={12} />
-//                       <HomeSkeleton width={160} height={10} />
-//                       <HomeSkeleton width={120} height={8}  /> 
-//                     </View>
-//                     }
-//                   </View>
-//                   </Animatable.View>
-//                 ))}
-  
 //               </View>
 //             ) : (
 //               <FlatList
@@ -438,7 +438,7 @@
 //                 renderItem={renderCleanerItem}
 //                 keyExtractor={item => item._id}
 //                 ListEmptyComponent={
-//                   <Text style={styles.emptyText}>No available cleaners found</Text>
+//                   <Text style={styles.emptyText}>{tSafe('no_available_cleaners', 'No available cleaners found')}</Text>
 //                 }
 //                 scrollEnabled={false}
 //               />
@@ -447,42 +447,33 @@
 //         )}
 //       </ScrollView>
 
-//       {/* Footer Navigation */}
-//       {currentStep < 3 && (
+//       {/* 🔥 Footer Navigation – only shows when selection is made */}
+//       {(currentStep === 1 && selectedProperty) || (currentStep === 2 && selectedSchedule) ? (
 //         <TouchableOpacity
-//         style={[
-//           styles.nextButton,
-//           (currentStep === 1 && !selectedProperty) || 
-//           (currentStep === 2 && (schedules.length === 0 || !selectedSchedule)) && 
-//           styles.disabledButton
-//         ]}
-//         disabled={
-//           (currentStep === 1 && !selectedProperty) || 
-//           (currentStep === 2 && (schedules.length === 0 || !selectedSchedule))
-//         }
-//         onPress={handleStepNavigation}
-//       >
-//         <Text style={styles.buttonText}>
-//           {currentStep === 1 ? 'Next: Choose Schedule' : 'Find Cleaners'}
-//         </Text>
-//         <Feather name="arrow-right" size={20} color="white" />
-//       </TouchableOpacity>
-//       )}
+//           style={styles.nextButton}
+//           onPress={handleStepNavigation}
+//         >
+//           <Text style={styles.buttonText}>
+//             {currentStep === 1 ? tSafe('next_choose_schedule', 'Next: Choose Schedule') : tSafe('find_cleaners', 'Find Cleaners')}
+//           </Text>
+//           <Feather name="arrow-right" size={20} color="white" />
+//         </TouchableOpacity>
+//       ) : null}
 
-//             <Modal 
-//               visible={modalVisible}
-//               animationType="slide" 
-//               // onRequestClose={onClose} // Handle hardware back button on Android
-//             >
-//               <NewBooking 
-//                 close_modal={handleCloseCreateBooking}
-//                 mode="create"
-//               />
-//             </Modal>
+//       <Modal 
+//         visible={modalVisible}
+//         animationType="slide" 
+//       >
+//         <NewBooking 
+//           close_modal={handleCloseCreateBooking}
+//           mode="create"
+//         />
+//       </Modal>
 //     </View>
 //   );
 // };
 
+// // Styles remain unchanged (same as before)
 // const styles = StyleSheet.create({
 //   container: {
 //     flex: 1,
@@ -522,7 +513,6 @@
 //     fontSize: 20,
 //     fontWeight: '600',
 //     color: COLORS.dark,
-//     // marginBottom: 24,
 //     marginHorizontal:15,
 //     marginVertical:20
 //   },
@@ -609,7 +599,7 @@
 //     flex:0.8,
 //     paddingHorizontal:10
 //   },
-//     calender:{
+//   calender:{
 //     flex:0.2,
 //     padding:10,
 //     backgroundColor:COLORS.light_gray_1,
@@ -617,7 +607,7 @@
 //     borderTopLeftRadius:5,
 //     alignItems:'center'
 //   },
-//     headline1: {
+//   headline1: {
 //     fontSize: 16,
 //     fontWeight: '500',
 //     marginBottom: 0,
@@ -648,12 +638,11 @@
 //   activeChip: {
 //     backgroundColor: COLORS.light_gray_1,
 //     borderRadius:50
-//     // borderColor:COLORS.black,
 //   },
 //   textChip: {
 //     fontSize: 12,
 //     fontWeight: '400',
-//     color: COLORS.gray, // Custom text color
+//     color: COLORS.gray,
 //   },
 //   itemContent:{
 //     flexDirection:'row',
@@ -708,29 +697,26 @@
 
 // export default FindCleaners;
 
-
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Modal, Alert, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
 import COLORS from '../../constants/colors';
-import CleanerItem from '../../components/cleaner/CleanerItem';
 import { HomeSkeleton } from '../../components/shared/skeleton/HomeSkeleton';
-import { calculateOverallRating } from '../../utils/calculate_overall_rating';
 import * as Animatable from 'react-native-animatable';
 import { AntDesign } from '@expo/vector-icons';
-import { Avatar, TextInput, Menu, List, Button, Chip } from 'react-native-paper';
-import ScheduleCard from '../../components/shared/ScheduleCard';
+import { Chip } from 'react-native-paper';
 import ROUTES from '../../constants/routes';
 import CustomHeader from '../../components/shared/CustomHeader';
 import { useBookingContext } from '../../context/BookingContext';
 import NewBooking from './NewBooking';
 import CleanerCard from '../../components/cleaner/CleanerCard';
-import ScheduleCar from '../../components/shared/ScheduleCar';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
+import CleanerCardSkeleton from '../../components/cleaner/CleanerCardSkeleton';
 
 const FindCleaners = ({ navigation }) => {
   const { currentUserId, currentUser } = useContext(AuthContext);
@@ -743,31 +729,53 @@ const FindCleaners = ({ navigation }) => {
   const [schedules, setSchedules] = useState([]);
   const [cleaners, setCleaners] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // --- Status state ---
+  const [cleanerStatuses, setCleanerStatuses] = useState({});
+  const [statusCounts, setStatusCounts] = useState({
+    notified: 0,
+    pending: 0,
+    accepted: 0,
+    declined: 0
+  });
 
   const genericArray = new Array(5).fill(null);
 
+  // ---------- Initial Data Fetch ----------
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [apartmentsRes] = await Promise.all([
           userService.getApartment(currentUserId),
         ]);
-        
+  
         if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
-          navigation.replace(ROUTES.host_dashboard); // Redirect to dashboard
+          Alert.alert(
+            'Property Required',
+            'You need to add at least one property before you can find cleaners. Please add a property first.',
+            [
+              {
+                text: 'OK',
+                onPress: () => navigation.replace(ROUTES.host_dashboard),
+              },
+            ],
+            { cancelable: false }
+          );
           return;
         }
   
         setApartments(apartmentsRes.data);
       } catch (error) {
-        console.error('Error fetching datas:', error);
+        console.error('Error fetching data:', error);
+        Alert.alert('Error', 'Failed to load your properties. Please try again.');
       }
     };
-    
+  
     fetchData();
   }, [currentUserId, navigation]);
 
-  // Fetch schedules when property is selected
+  // ---------- Fetch schedules when property is selected ----------
   useEffect(() => {
     const fetchPropertySchedules = async () => {
       if (!selectedProperty) return;
@@ -778,13 +786,10 @@ const FindCleaners = ({ navigation }) => {
           item => item.schedule.apartment_name === selectedProperty.apt_name
         );
 
-        console.log(JSON.stringify(filtered, null, 2))
         const upcomingSchedules = filtered.filter(schedule => {
           const cleaningDate = schedule.schedule.cleaning_date;
           const cleaningTime = schedule.schedule.cleaning_time;
-        
           if (!cleaningDate || !cleaningTime) return false;
-        
           const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
           return cleaningDateTime.isSameOrAfter(moment());
         });
@@ -799,30 +804,138 @@ const FindCleaners = ({ navigation }) => {
     fetchPropertySchedules();
   }, [selectedProperty, currentUserId]);
 
-  // Fetch cleaners when schedule is selected
+  // ---------- Fetch cleaners + statuses when schedule is selected ----------
   useEffect(() => {
-    const fetchScheduleCleaners = async () => {
-      if (!selectedSchedule) return;
-      
-      setLoading(true);
+    if (!selectedSchedule) return;
+  
+    setLoading(true);
+  
+    const timeout = setTimeout(async () => {
       try {
+        // 1. Fetch cleaners
         const cleanersRes = await userService.findCleaners(selectedSchedule._id);
         setCleaners(cleanersRes.data);
-        console.log("My cleeeeeeeeeeeeeeeaners",cleanersRes.data)
+
+        // 2. Fetch schedule details for statuses
+        const scheduleRes = await userService.getScheduleById(selectedSchedule._id);
+        const notified = scheduleRes.data.notified_cleaners || [];
+
+        // Build status map
+        const statusMap = {};
+        notified.forEach(item => {
+          statusMap[item.cleanerId] = item.status || 'pending';
+        });
+        setCleanerStatuses(statusMap);
+
+        // Compute counts
+        const counts = { notified: 0, pending: 0, accepted: 0, declined: 0 };
+        notified.forEach(item => {
+          const s = item.status || 'pending';
+          if (counts[s] !== undefined) counts[s]++;
+        });
+        setStatusCounts(counts);
+
       } catch (error) {
-        console.error('Error fetching cleaners:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
-    };
-    
-    const timeout = setTimeout(() => {
-      fetchScheduleCleaners();
     }, 2000);
   
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      setLoading(false);
+    };
   }, [selectedSchedule]);
 
+  // ---------- Auto-refresh statuses every 10 seconds ----------
+  useEffect(() => {
+    if (!selectedSchedule || loading) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const scheduleRes = await userService.getScheduleById(selectedSchedule._id);
+        const notified = scheduleRes.data.notified_cleaners || [];
+
+        const statusMap = {};
+        notified.forEach(item => {
+          statusMap[item.cleanerId] = item.status || 'pending';
+        });
+        setCleanerStatuses(statusMap);
+
+        const counts = { notified: 0, pending: 0, accepted: 0, declined: 0 };
+        notified.forEach(item => {
+          const s = item.status || 'pending';
+          if (counts[s] !== undefined) counts[s]++;
+        });
+        setStatusCounts(counts);
+      } catch (e) {
+        // silent fail – will retry next interval
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedSchedule, loading]);
+
+  // ---------- SILENT REFRESH on focus ----------
+  useFocusEffect(
+    useCallback(() => {
+      const refreshData = async () => {
+        try {
+          const apartmentsRes = await userService.getApartment(currentUserId);
+          if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
+            setApartments([]);
+            setSelectedProperty(null);
+            setSelectedSchedule(null);
+            setCurrentStep(1);
+            return;
+          }
+          
+          const newApartments = apartmentsRes.data;
+          setApartments(newApartments);
+
+          if (selectedProperty) {
+            const stillExists = newApartments.some(apt => apt._id === selectedProperty._id);
+            if (!stillExists) {
+              setSelectedProperty(null);
+              setSelectedSchedule(null);
+              setCurrentStep(1);
+              return;
+            }
+            
+            const schedulesRes = await userService.getUpcomingSchedulesByHostId(currentUserId);
+            const filtered = schedulesRes.data.filter(
+              item => item.schedule.apartment_name === selectedProperty.apt_name
+            );
+            const upcomingSchedules = filtered.filter(schedule => {
+              const cleaningDate = schedule.schedule.cleaning_date;
+              const cleaningTime = schedule.schedule.cleaning_time;
+              if (!cleaningDate || !cleaningTime) return false;
+              const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
+              return cleaningDateTime.isSameOrAfter(moment());
+            });
+            setSchedules(upcomingSchedules);
+
+            if (selectedSchedule) {
+              const scheduleStillExists = upcomingSchedules.some(s => s._id === selectedSchedule._id);
+              if (!scheduleStillExists) {
+                setSelectedSchedule(null);
+              }
+            }
+          } else {
+            setCurrentStep(1);
+            setSelectedSchedule(null);
+          }
+        } catch (error) {
+          console.error('Error refreshing data:', error);
+        }
+      };
+
+      refreshData();
+    }, [currentUserId, selectedProperty, selectedSchedule])
+  );
+
+  // ---------- Cleanup on unmount ----------
   useEffect(() => {
     return () => {
       setCurrentStep(1);
@@ -831,6 +944,7 @@ const FindCleaners = ({ navigation }) => {
     };
   }, []);
 
+  // ---------- Navigation handlers ----------
   const handleStepNavigation = () => {
     if (currentStep === 1 && selectedProperty) {
       setCurrentStep(2);
@@ -844,6 +958,7 @@ const FindCleaners = ({ navigation }) => {
     handleCreateSchedule(false);
   };
 
+  // ---------- Render functions ----------
   const renderPropertyItem = ({ item }) => (
     <View style={{marginHorizontal:15}}>
       <TouchableOpacity
@@ -871,13 +986,13 @@ const FindCleaners = ({ navigation }) => {
 
         <View style={styles.room_type_container}>
           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
-            {item.roomDetails[0]['number']} {item.roomDetails[0]['type']}
+            {item.roomDetails[0]?.['number'] || 0} {item.roomDetails[0]?.['type'] || ''}
           </Chip>
           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
-            {item.roomDetails[1]['number']} {item.roomDetails[1]['type']}
+            {item.roomDetails[1]?.['number'] || 0} {item.roomDetails[1]?.['type'] || ''}
           </Chip>
           <Chip mode="flat" style={styles.activeChip} textStyle={styles.textChip}>
-            {item.roomDetails[2]['number']} {item.roomDetails[2]['type']}
+            {item.roomDetails[2]?.['number'] || 0} {item.roomDetails[2]?.['type'] || ''}
           </Chip>
         </View>
       </TouchableOpacity>
@@ -930,10 +1045,15 @@ const FindCleaners = ({ navigation }) => {
   };
 
   const renderCleanerItem = ({ item }) => {
+    const cleanerId = item._id;
+    const status = cleanerStatuses[cleanerId] || 'pending'; // default to pending
+   
+
     return (
       <View style={{margin:10}}>
         <CleanerCard
           item={item}
+          status={status}
           onPress={() =>
             navigation.navigate(ROUTES.cleaner_profile_info, {
               item: item,
@@ -951,6 +1071,7 @@ const FindCleaners = ({ navigation }) => {
     );
   };
 
+  // ---------- Render ----------
   return (
     <View style={styles.container}>
       <CustomHeader 
@@ -959,7 +1080,74 @@ const FindCleaners = ({ navigation }) => {
         setCurrentStep={setCurrentStep}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              try {
+                // Force refresh: reload apartments and schedules
+                const apartmentsRes = await userService.getApartment(currentUserId);
+                if (!apartmentsRes.data || apartmentsRes.data.length === 0) {
+                  Alert.alert(
+                    'Property Required',
+                    'You need to add at least one property before you can find cleaners.',
+                    [{ text: 'OK', onPress: () => navigation.replace(ROUTES.host_dashboard) }],
+                    { cancelable: false }
+                  );
+                  setRefreshing(false);
+                  return;
+                }
+                setApartments(apartmentsRes.data);
+                if (selectedProperty) {
+                  const schedulesRes = await userService.getUpcomingSchedulesByHostId(currentUserId);
+                  const filtered = schedulesRes.data.filter(
+                    item => item.schedule.apartment_name === selectedProperty.apt_name
+                  );
+                  const upcomingSchedules = filtered.filter(schedule => {
+                    const cleaningDate = schedule.schedule.cleaning_date;
+                    const cleaningTime = schedule.schedule.cleaning_time;
+                    if (!cleaningDate || !cleaningTime) return false;
+                    const cleaningDateTime = moment(`${cleaningDate} ${cleaningTime}`, 'YYYY-MM-DD HH:mm:ss');
+                    return cleaningDateTime.isSameOrAfter(moment());
+                  });
+                  setSchedules(upcomingSchedules);
+                  if (selectedSchedule) {
+                    const stillExists = upcomingSchedules.some(s => s._id === selectedSchedule._id);
+                    if (!stillExists) setSelectedSchedule(null);
+                  }
+                  // Also refresh statuses for the selected schedule
+                  if (selectedSchedule) {
+                    const scheduleRes = await userService.getScheduleById(selectedSchedule._id);
+                    const notified = scheduleRes.data.notified_cleaners || [];
+                    const statusMap = {};
+                    notified.forEach(item => {
+                      statusMap[item.cleanerId] = item.status || 'pending';
+                    });
+                    setCleanerStatuses(statusMap);
+                    const counts = { notified: 0, pending: 0, accepted: 0, declined: 0 };
+                    notified.forEach(item => {
+                      const s = item.status || 'pending';
+                      if (counts[s] !== undefined) counts[s]++;
+                    });
+                    setStatusCounts(counts);
+                  }
+                } else {
+                  setSchedules([]);
+                  setSelectedSchedule(null);
+                  setCurrentStep(1);
+                }
+              } catch (error) {
+                console.error('Pull-to-refresh error:', error);
+              } finally {
+                setRefreshing(false);
+              }
+            }}
+          />
+        }
+      >
         {currentStep === 1 && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <FlatList
@@ -1009,24 +1197,27 @@ const FindCleaners = ({ navigation }) => {
                 <Text style={styles.tagline1}>{selectedProperty.address}</Text>
               </View>
             </View>
+
+            {/* ----- Status Summary ----- */}
+            <View style={styles.statusSummary}>
+              <Text style={styles.summaryText}>
+                Notified: <Text style={styles.summaryCount}>{statusCounts.notified}</Text>
+              </Text>
+              <Text style={styles.summaryText}>
+                Pending: <Text style={styles.summaryCount}>{statusCounts.pending}</Text>
+              </Text>
+              <Text style={styles.summaryText}>
+                Accepted: <Text style={styles.summaryCount}>{statusCounts.accepted}</Text>
+              </Text>
+              <Text style={styles.summaryText}>
+                Declined: <Text style={styles.summaryCount}>{statusCounts.declined}</Text>
+              </Text>
+            </View>
+
             {loading ? (
-              <View>
-                <View>
-                  <HomeSkeleton width="100%" height={300} />
-                </View>
-                {genericArray.map((item, index) => (
-                  <Animatable.View animation="slideInLeft" duration={550} key={index}>
-                    <View style={{flexDirection: 'row', paddingVertical:5}}>
-                      <View style={{flex: 0.18}}>
-                        <HomeSkeleton width={50} height={50} variant="circle" />
-                      </View>
-                      <View style={{flex: 0.8}}>
-                        <HomeSkeleton width="80%" height={12} />
-                        <HomeSkeleton width={160} height={10} />
-                        <HomeSkeleton width={120} height={8} />
-                      </View>
-                    </View>
-                  </Animatable.View>
+              <View style={{ marginTop: 16 }}>
+                {[...Array(5)].map((_, index) => (
+                  <CleanerCardSkeleton key={index} />
                 ))}
               </View>
             ) : (
@@ -1044,19 +1235,10 @@ const FindCleaners = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Footer Navigation */}
-      {currentStep < 3 && (
+      {/* Footer Navigation – only shows when selection is made */}
+      {(currentStep === 1 && selectedProperty) || (currentStep === 2 && selectedSchedule) ? (
         <TouchableOpacity
-          style={[
-            styles.nextButton,
-            (currentStep === 1 && !selectedProperty) || 
-            (currentStep === 2 && (schedules.length === 0 || !selectedSchedule)) && 
-            styles.disabledButton
-          ]}
-          disabled={
-            (currentStep === 1 && !selectedProperty) || 
-            (currentStep === 2 && (schedules.length === 0 || !selectedSchedule))
-          }
+          style={styles.nextButton}
           onPress={handleStepNavigation}
         >
           <Text style={styles.buttonText}>
@@ -1064,7 +1246,7 @@ const FindCleaners = ({ navigation }) => {
           </Text>
           <Feather name="arrow-right" size={20} color="white" />
         </TouchableOpacity>
-      )}
+      ) : null}
 
       <Modal 
         visible={modalVisible}
@@ -1079,6 +1261,7 @@ const FindCleaners = ({ navigation }) => {
   );
 };
 
+// ---------- Styles ----------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1168,9 +1351,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
-  },
-  disabledButton: {
-    backgroundColor: COLORS.lightGray,
   },
   buttonText: {
     color: COLORS.white,
@@ -1291,12 +1471,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
-    
   },
   infoText: {
     marginLeft: 6,
     fontSize: 14,
     color: COLORS.gray,
+  },
+
+  // ----- Status Summary styles -----
+  statusSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  summaryCount: {
+    fontWeight: '700',
+    color: '#1E1E2F',
   },
 });
 

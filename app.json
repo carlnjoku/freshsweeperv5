@@ -2,13 +2,14 @@
   "expo": {
     "name": "freshsweeper",
     "slug": "freshsweeperv5",
+    "displayName": "Freshsweeper",
     "owner": "freshsweeper",
     "scheme": "com.flavoursoft.freshsweeperv5",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "plugins": [
       [
         "expo-image-picker",
@@ -33,26 +34,53 @@
           "defaultChannel": "default"
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash.png",
+          "imageWidth": 1000,
+          "resizeMode": "contain"
+        }
+      ],
       "@react-native-google-signin/google-signin",
       [
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "16.0"
+            "deploymentTarget": "16.0",
+            "infoPlist": {
+              "NSLocationWhenInUseUsageDescription": "We need your location to verify address details."
+            }
           },
           "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "compileSdkVersion": 36,     
+            "targetSdkVersion": 36,   
+            "kotlinVersion": "1.9.25", 
+            "extraDependencies": [
+              "com.stripe:stripe-android-push-provisioning:20.35.0"
+            ],
+            "permissions": [
+              "ACCESS_FINE_LOCATION"
+            ],
+            "proguardRules": "-dontwarn com.stripe.android.pushProvisioning.**\n-dontwarn com.gemalto.jp2.**\n-dontwarn com.tom_roush.pdfbox.**\n-keep class com.stripe.android.pushProvisioning.** { *; }\n-keep class com.gemalto.jp2.** { *; }\n-keep class com.tom_roush.pdfbox.** { *; }"
           }
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.flavoursoft.freshsweeperv5",
+          "enableGooglePay": true
         }
       ]
     ],
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": ["**/*"],
+   
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.flavoursoft.freshsweeperv5",
@@ -60,7 +88,11 @@
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone for video.",
-        "UIBackgroundModes": ["remote-notification"],
+        "NSLocationWhenInUseUsageDescription": "This app needs your location to find nearby cleaners and show property addresses.",
+        "NSLocationAlwaysUsageDescription": "This app needs your location to send job updates and track cleaner progress.",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
@@ -98,3 +130,5 @@
     }
   }
 }
+
+

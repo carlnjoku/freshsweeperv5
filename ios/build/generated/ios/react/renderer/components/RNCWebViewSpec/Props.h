@@ -471,6 +471,7 @@ class RNCWebViewProps final : public ViewProps {
   bool pagingEnabled{false};
   bool pullToRefreshEnabled{false};
   bool refreshControlLightMode{false};
+  bool removeIosKeyboardObserver{false};
   bool scrollEnabled{true};
   bool sharedCookiesEnabled{false};
   bool textInteractionEnabled{true};

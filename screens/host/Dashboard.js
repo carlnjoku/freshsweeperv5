@@ -12,7 +12,8 @@ import {
   Button,
   RefreshControl,
   FlatList,
-  StatusBar
+  StatusBar,
+
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -49,7 +50,7 @@ const Dashboard = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { currentUser, currentUserId, currency, geolocationData, notificationUnreadCount } = useContext(AuthContext);
-  const { handleEdit, modalVisible, modalEVisible, openModal, setOpenModal, handleCreateSchedule } = useBookingContext();
+  const { handleEdit, modalVisible, modalEVisible, openModal, setOpenModal,  handleCreateSchedule } = useBookingContext();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -161,7 +162,8 @@ const Dashboard = () => {
         .filter(
           (schedule) =>
             (schedule.status === "completed" ||
-              schedule.status === "in_progress") &&
+              schedule.status === "in_progress" ||
+              schedule.status === "pending_review") &&
             Array.isArray(schedule.assignedTo) &&
             schedule.assignedTo.some(
               (cleaner) => cleaner.status === "pending_review"
@@ -177,6 +179,8 @@ const Dashboard = () => {
       setFilteredPendingCompletionApprovalSchedules(
         pendingCompletionApprovalSchedules
       );
+
+    
 
       // Helper for datetime
       const getScheduleDateTime = (schedule) => {
@@ -332,6 +336,7 @@ const Dashboard = () => {
     );
   };
 
+  const { logout } = useContext(AuthContext);
   const renderUpcomingSchedules = () => {
     if (upcomingSchedules.length === 0) return null;
 
@@ -477,7 +482,27 @@ const Dashboard = () => {
 
         <View style={styles.content}>
 
-       
+        <TouchableOpacity
+            mode="contained"
+            icon="account-switch"
+            onPress={() =>
+              navigation.navigate("ReplacementCleaner", {
+                scheduleId: "6aa7090f84561dfddeffb35e",
+                requestId: "6aa925de05f0dcb8da4f8047",
+                cleanerId: "6a36d65bcb95fa4bb078f333",
+              })
+
+            }
+
+            style={{ marginTop: 20 }}
+
+          >
+            <Text>
+              Test Replacement Cleaner
+            </Text>
+
+          </TouchableOpacity>
+
 
           {/* Summary Cards */}
           {renderSummaryCards()}
@@ -490,7 +515,7 @@ const Dashboard = () => {
           
 
           {/* Upcoming Schedules */}
-          {renderUpcomingSchedules()}
+          {/* {renderUpcomingSchedules()} */}
 
           {/* Properties Section */}
           {renderPropertySection()}

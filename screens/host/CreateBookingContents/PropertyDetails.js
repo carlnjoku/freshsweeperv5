@@ -1530,112 +1530,252 @@ export default function PropertyDetails({
     }
   }, [currentUserId]);
 
-  // Memoize checkApartmentChecklist function
+
   const checkApartmentChecklist = useCallback(async (apartmentId) => {
     if (!apartmentId) return;
-    
+  
     setCheckingChecklist(true);
+  
     try {
       const apartmentResponse = await userService.getApartmentById(apartmentId);
       const apartment = apartmentResponse.data;
-      
+  
       console.log("[PropertyDetails] Apartment data:", {
         id: apartment._id,
         checklists: apartment.checklists,
         default_checklist: apartment.default_checklist
       });
-      
-      let newChecklistStatus = {
-        hasChecklist: false,
-        checklistId: null,
-        checklistName: null,
-        checklistTasks: []
-      };
-      
-      let formDataUpdates = {
+  
+      // The property can have multiple checklists.
+      // PropertyDetails should ONLY attach the available checklist IDs.
+      // The user will select the actual checklist later in CleaningTask.js.
+      const formDataUpdates = {
         checklists: apartment.checklists || [],
         default_checklist: apartment.default_checklist || null,
+  
+        // IMPORTANT:
+        // Do NOT automatically select the first/default checklist here.
+        // CleaningTask.js will set these when the user selects a checklist.
         checklistId: null,
         checklistName: null,
         checklistTasks: []
       };
-      
-      // Check if apartment has checklists
-      if (apartment.checklists && apartment.checklists.length > 0) {
-        const checklist = apartment.default_checklist 
-          ? apartment.checklists.find(c => c._id === apartment.default_checklist)
-          : apartment.checklists[0];
-        
-        if (checklist) {
-          newChecklistStatus = {
-            hasChecklist: true,
-            checklistId: checklist._id,
-            checklistName: checklist.checklistName,
-            checklistTasks: checklist.checklist?.tasks || []
-          };
-          
-          formDataUpdates = {
-            ...formDataUpdates,
-            checklistId: checklist._id,
-            checklistName: checklist.checklistName,
-            checklistTasks: checklist.checklist?.tasks || []
-          };
-        }
-      }
-      
-      // Update checklist status
-      setChecklistStatus(newChecklistStatus);
-      
-      // Update form data in a single batch
+  
+      // Update checklist status for the property.
+      // This only tells us whether the property has checklists.
+      // It does NOT select one.
+      setChecklistStatus({
+        hasChecklist: (apartment.checklists || []).length > 0,
+        checklistId: null,
+        checklistName: null,
+        checklistTasks: []
+      });
+  
+      // Update booking form with the property's checklist array.
       setFormData(prev => ({
         ...prev,
         ...formDataUpdates
       }));
-      
+  
+      console.log("[PropertyDetails] Checklist data attached to form:", {
+        checklists: formDataUpdates.checklists,
+        default_checklist: formDataUpdates.default_checklist,
+        checklistId: formDataUpdates.checklistId
+      });
+  
     } catch (error) {
-      console.error('Error checking checklist:', error);
+      console.error(
+        "[PropertyDetails] Error checking checklist:",
+        error
+      );
+  
       setChecklistStatus({
         hasChecklist: false,
         checklistId: null,
         checklistName: null,
         checklistTasks: []
       });
+  
+      // Clear checklist information if the apartment lookup fails.
+      setFormData(prev => ({
+        ...prev,
+        checklists: [],
+        default_checklist: null,
+        checklistId: null,
+        checklistName: null,
+        checklistTasks: []
+      }));
+  
     } finally {
       setCheckingChecklist(false);
     }
-  }, []); // Empty dependency array since we don't use external dependencies
+  }, []);
+
+  // Memoize checkApartmentChecklist function
+  // const checkApartmentChecklist = useCallback(async (apartmentId) => {
+  //   if (!apartmentId) return;
+    
+  //   setCheckingChecklist(true);
+  //   try {
+  //     const apartmentResponse = await userService.getApartmentById(apartmentId);
+  //     const apartment = apartmentResponse.data;
+      
+  //     console.log("[PropertyDetails] Apartment data:", {
+  //       id: apartment._id,
+  //       checklists: apartment.checklists,
+  //       default_checklist: apartment.default_checklist
+  //     });
+      
+  //     let newChecklistStatus = {
+  //       hasChecklist: false,
+  //       checklistId: null,
+  //       checklistName: null,
+  //       checklistTasks: []
+  //     };
+      
+  //     let formDataUpdates = {
+  //       checklists: apartment.checklists || [],
+  //       default_checklist: apartment.default_checklist || null,
+  //       checklistId: null,
+  //       checklistName: null,
+  //       checklistTasks: []
+  //     };
+      
+  //     // Check if apartment has checklists
+  //     if (apartment.checklists && apartment.checklists.length > 0) {
+  //       const checklist = apartment.default_checklist 
+  //         ? apartment.checklists.find(c => c._id === apartment.default_checklist)
+  //         : apartment.checklists[0];
+        
+  //       if (checklist) {
+  //         newChecklistStatus = {
+  //           hasChecklist: true,
+  //           checklistId: checklist._id,
+  //           checklistName: checklist.checklistName,
+  //           checklistTasks: checklist.checklist?.tasks || []
+  //         };
+          
+  //         formDataUpdates = {
+  //           ...formDataUpdates,
+  //           checklistId: checklist._id,
+  //           checklistName: checklist.checklistName,
+  //           checklistTasks: checklist.checklist?.tasks || []
+  //         };
+  //       }
+  //     }
+      
+  //     // Update checklist status
+  //     setChecklistStatus(newChecklistStatus);
+      
+  //     // Update form data in a single batch
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       ...formDataUpdates
+  //     }));
+      
+  //   } catch (error) {
+  //     console.error('Error checking checklist:', error);
+  //     setChecklistStatus({
+  //       hasChecklist: false,
+  //       checklistId: null,
+  //       checklistName: null,
+  //       checklistTasks: []
+  //     });
+  //   } finally {
+  //     setCheckingChecklist(false);
+  //   }
+  // }, []); // Empty dependency array since we don't use external dependencies
 
   // Memoize handleApartmentChange
+  // const handleApartmentChange = useCallback((apartment) => {
+  //   if (!apartment) return;
+    
+  //   const cleaningFee = calculateCleaningPrice(apartment.roomDetails);
+  //   const cleaningTime = calculateRoomCleaningTime(apartment.roomDetails);
+
+  //   const updatedFormData = {
+  //     address: apartment.address,
+  //     aptId: apartment._id,
+  //     apartment_name: apartment.apt_name,
+  //     apartment_latitude: apartment.latitude,
+  //     apartment_longitude: apartment.longitude,
+  //     selected_apt_room_type_and_size: apartment.roomDetails,
+  //     regular_cleaning_fee: cleaningFee,
+  //     regular_cleaning_time: cleaningTime,
+  //     total_cleaning_fee: cleaningFee,
+  //     total_cleaning_time: cleaningTime,
+  //     expected_cleaners: 1,
+  //     group_task: false,
+  //     checklists: apartment.checklists || [],
+  //     default_checklist: apartment.default_checklist || null,
+  //     checklistId: null,
+  //     checklistName: null,
+  //     checklistTasks: []
+  //   };
+    
+  //   // Update form data
+  //   setFormData(updatedFormData);
+    
+  //   // Notify parent that property changed
+  //   if (onPropertyChange) {
+  //     onPropertyChange(updatedFormData);
+  //   }
+  // }, [setFormData, onPropertyChange]);
+
+
   const handleApartmentChange = useCallback((apartment) => {
     if (!apartment) return;
-    
+  
     const cleaningFee = calculateCleaningPrice(apartment.roomDetails);
     const cleaningTime = calculateRoomCleaningTime(apartment.roomDetails);
-
+  
+    const checklists = apartment.checklists || [];
+  
+    const selectedChecklistId =
+      apartment.default_checklist ||
+      checklists[0] ||
+      null;
+  
     const updatedFormData = {
       address: apartment.address,
       aptId: apartment._id,
       apartment_name: apartment.apt_name,
       apartment_latitude: apartment.latitude,
       apartment_longitude: apartment.longitude,
+  
       selected_apt_room_type_and_size: apartment.roomDetails,
+  
       regular_cleaning_fee: cleaningFee,
       regular_cleaning_time: cleaningTime,
+  
       total_cleaning_fee: cleaningFee,
       total_cleaning_time: cleaningTime,
+  
       expected_cleaners: 1,
       group_task: false,
-      checklists: apartment.checklists || [],
-      default_checklist: apartment.default_checklist || null,
-      checklistId: null,
+  
+      // ALL checklists attached to property
+      checklists,
+  
+      // Property default checklist
+      default_checklist:
+        apartment.default_checklist || null,
+  
+      // Selected checklist for this booking
+      checklistId: selectedChecklistId,
+  
+      // These will be populated after checklist details are resolved
       checklistName: null,
       checklistTasks: []
     };
-    
-    // Update form data
+  
+    console.log(
+      '[PropertyDetails] Selected property form data:',
+      JSON.stringify(updatedFormData, null, 2)
+    );
+  
     setFormData(updatedFormData);
-    
-    // Notify parent that property changed
+  
     if (onPropertyChange) {
       onPropertyChange(updatedFormData);
     }

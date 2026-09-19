@@ -5,7 +5,6 @@ import userService from './userService';
 import moment from 'moment';
 
 export const fetchDashboardData = async (currentUserId) => {
-    alert(currentUserId)
   try {
     const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
     alert("Hey")

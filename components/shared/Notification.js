@@ -252,6 +252,24 @@ const Notification = () => {
         }
         
         break;
+      // === CLEANER INVITE NOTIFICATIONS ===
+      case 'cleaner_date_change':
+        if (currentUser.userType === 'cleaner') {
+          navigation.navigate(ROUTES.cleaner_schedule_date_change, { 
+            notificationId: _id,
+            propertyId:propertyId,
+            scheduleId: metadata.screen_params.scheduleId,
+            requestId: metadata.screen_params.requestId,
+            cleanerId: metadata.screen_params.cleanerId,
+            oldCleaningDate: metadata.screen_params.oldCleaningDate,
+            newCleaningDate: metadata.screen_params.newCleaningDate,
+            propertyName: metadata.screen_params.propertyName,
+            cleaningTime: metadata.screen_params.cleaningTime,
+            group: metadata.screen_params.group,
+          });
+        }
+        
+        break;
 
       // === SYSTEM & ALERT NOTIFICATIONS ===
       case 'system_alert':
@@ -302,6 +320,95 @@ const Notification = () => {
           propertyId: metadata?.screen_params?.propertyId,
           notificationId: _id
         });
+        break;
+      
+      // === CLEANER DATE CHANGE ===
+      case 'cleaner_date_change':
+        if (currentUser.userType === 'cleaner') {
+          navigation.navigate(ROUTES.cleaner_schedule_date_change, {
+            notificationId: _id,
+            propertyId: propertyId,
+            scheduleId: metadata?.screen_params?.scheduleId,
+            requestId: metadata?.screen_params?.requestId,
+            cleanerId: metadata?.screen_params?.cleanerId,
+            oldCleaningDate: metadata?.screen_params?.oldCleaningDate,
+            newCleaningDate: metadata?.screen_params?.newCleaningDate,
+            propertyName: metadata?.screen_params?.propertyName,
+            cleaningTime: metadata?.screen_params?.cleaningTime,
+            group: metadata?.screen_params?.group,
+          });
+        }
+        break;
+
+
+      // === CLEANER REPLACEMENT REQUEST ===
+      case 'replacement_cleaner_request':
+        if (currentUser.userType === 'cleaner') {
+          navigation.navigate(ROUTES.cleaner_replacement_request, {
+            notificationId: _id,
+
+            // IMPORTANT: this is the CHILD replacement request ID
+            scheduleId:
+              metadata?.screen_params?.scheduleId ||
+              metadata?.schedule_id,
+
+            requestId:
+              metadata?.screen_params?.requestId,
+
+            cleanerId:
+              metadata?.screen_params?.cleanerId,
+
+            oldCleaningDate:
+              metadata?.screen_params?.oldCleaningDate,
+
+            newCleaningDate:
+              metadata?.screen_params?.newCleaningDate,
+
+            propertyName:
+              metadata?.screen_params?.propertyName,
+
+            cleaningTime:
+              metadata?.screen_params?.cleaningTime,
+
+            group:
+              metadata?.screen_params?.group,
+          });
+        }
+        break;
+
+
+      // === HOST CLEANER UNAVAILABLE / REPLACEMENT REQUIRED ===
+      case 'cleaner_unavailable_date_change':
+        if (currentUser.userType === 'host') {
+          navigation.navigate(ROUTES.replacement_cleaner, {
+            notificationId: _id,
+
+            scheduleId:
+              metadata?.screen_params?.scheduleId ||
+              metadata?.schedule_id,
+
+            requestId:
+              metadata?.screen_params?.requestId,
+
+            cleanerId:
+              metadata?.screen_params?.cleanerId,
+
+            oldCleaningDate:
+              metadata?.screen_params?.oldCleaningDate,
+
+            newCleaningDate:
+              metadata?.screen_params?.newCleaningDate,
+
+            propertyName:
+              metadata?.screen_params?.propertyName,
+
+            cleaningTime:
+              metadata?.screen_params?.cleaningTime,
+
+            group:
+              metadata?.screen_params?.group,
+          });
+        }
         break;
 
       // Default case for unknown types
