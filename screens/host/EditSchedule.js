@@ -1939,6 +1939,32 @@ const EditSchedule = ({ close_modal, selectedSchedule: propSchedule }) => {
   const [actualChecklist, setActualChecklist] = useState(null);
   const [originalSchedule, setOriginalSchedule] = useState(null);
 
+  // Same rules as the backend
+const LOCKED_STATUSES = [
+  'accepted',
+  'in_progress',
+  'pending_review',
+  'completed',
+  'reviewed',
+  'cancelled',
+];
+
+const OPEN_EDITABLE_FIELDS = new Set([
+  'cleaning_date',
+  'cleaning_time',
+  'checklistId',
+  'regular_cleaning',
+  'extra',
+  'total_cleaning_fee',
+  'total_cleaning_time',
+  'cleaning_end_time',
+  'selected_apt_room_type_and_size',
+]);
+
+const DATE_TIME_FIELDS = new Set([
+  'cleaning_date',
+  'cleaning_time',
+]);
 
   // const SCHEDULE_KEYS = [
   //   'aptId',
@@ -2018,24 +2044,38 @@ const EditSchedule = ({ close_modal, selectedSchedule: propSchedule }) => {
   const validateForm = (isFormValid) => setIsValid(isFormValid);
 
   // --- Detect changes including checklist change ---
+  // const detectChanges = (original, updated) => {
+  //   const changes = {
+  //     dateChanged: false,
+  //     timeChanged: false,
+  //     feeChanged: false,
+  //     extraTasksChanged: false,
+  //     checklistChanged: false,
+  //   };
+
+  //   if (original) {
+  //     changes.dateChanged = original.cleaning_date !== updated.cleaning_date;
+  //     changes.timeChanged = original.cleaning_time !== updated.cleaning_time;
+  //     changes.feeChanged = original.total_cleaning_fee !== updated.total_cleaning_fee;
+  //     changes.extraTasksChanged = JSON.stringify(original.extra || []) !== JSON.stringify(updated.extra || []);
+  //     changes.checklistChanged = String(original?.checklistId || '') !== String(updated?.checklistId || '');
+  //   }
+
+  //   return changes;
+  // };
+
   const detectChanges = (original, updated) => {
-    const changes = {
-      dateChanged: false,
-      timeChanged: false,
-      feeChanged: false,
-      extraTasksChanged: false,
-      checklistChanged: false,
+    if (!original) return {
+      dateChanged: false, timeChanged: false, feeChanged: false,
+      extraTasksChanged: false, checklistChanged: false,
     };
-
-    if (original) {
-      changes.dateChanged = original.cleaning_date !== updated.cleaning_date;
-      changes.timeChanged = original.cleaning_time !== updated.cleaning_time;
-      changes.feeChanged = original.total_cleaning_fee !== updated.total_cleaning_fee;
-      changes.extraTasksChanged = JSON.stringify(original.extra || []) !== JSON.stringify(updated.extra || []);
-      changes.checklistChanged = String(original?.checklistId || '') !== String(updated?.checklistId || '');
-    }
-
-    return changes;
+    return {
+      dateChanged: String(original.cleaning_date || '') !== String(updated.cleaning_date || ''),
+      timeChanged: String(original.cleaning_time || '') !== String(updated.cleaning_time || ''),
+      feeChanged: Number(original.total_cleaning_fee || 0) !== Number(updated.total_cleaning_fee || 0),
+      extraTasksChanged: JSON.stringify(original.extra || []) !== JSON.stringify(updated.extra || []),
+      checklistChanged: String(original.checklistId || '') !== String(updated.checklistId || ''),
+    };
   };
 
   console.log("My editable form data --------------- MT", formData)
@@ -2223,43 +2263,232 @@ const EditSchedule = ({ close_modal, selectedSchedule: propSchedule }) => {
   //   }
   // };
 
+  // const handleSubmit = async () => {
+  //   setIsSubmitting(true);
+  
+  //   try {
+  //     const schedule = propSchedule || contextSchedule;
+  
+  //     if (!schedule) {
+  //       throw new Error('No schedule selected for editing');
+  //     }
+  
+  //     const scheduleId =
+  //       typeof schedule._id === 'string'
+  //         ? schedule._id
+  //         : schedule._id.toString();
+  
+  //     const disallowedStatuses = ['completed', 'reviewed', 'cancelled'];
+  
+  //     if (disallowedStatuses.includes(schedule.status)) {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: tSafe('edit_not_allowed', 'Edit Not Allowed'),
+  //         text2: tSafe(
+  //           'schedule_completed',
+  //           'This schedule cannot be edited because it is already completed or paid.'
+  //         ),
+  //       });
+  
+  //       setIsSubmitting(false);
+  //       return;
+  //     }
+  
+  //     // 1. Get the checklist
+  //     let checklistToSend = actualChecklist;
+  
+  //     if (!checklistToSend && formData.checklistId) {
+  //       const response = await userService.getChecklist(formData.checklistId);
+  
+  //       if (response.status === 200) {
+  //         checklistToSend = response.data.data;
+  //         setActualChecklist(checklistToSend);
+  //       } else {
+  //         throw new Error('Failed to fetch checklist');
+  //       }
+  //     }
+  
+  //     if (!checklistToSend) {
+  //       throw new Error('No checklist available for this property');
+  //     }
+  
+  //     // 2. Add extra tasks to checklist
+  //     const updatedChecklist = addExtraCleaningTasks(
+  //       checklistToSend,
+  //       formData.extra
+  //     );
+  
+  //     // 3. IMPORTANT: checklistId must be included here
+  //     const SCHEDULE_KEYS = [
+  //       'aptId',
+  //       'apartment_name',
+  //       'address',
+  //       'apartment_latitude',
+  //       'apartment_longitude',
+  //       'cleaning_date',
+  //       'cleaning_time',
+  //       'cleaning_end_time',
+  //       'total_cleaning_fee',
+  //       'total_cleaning_time',
+  //       'selected_apt_room_type_and_size',
+  //       'regular_cleaning',
+  //       'extra',
+  //       'checklistId', // <-- ADD THIS
+  //     ];
+  
+  //     // 4. Build schedulePayload
+  //     const schedulePayload = {};
+  
+  //     SCHEDULE_KEYS.forEach(key => {
+  //       if (formData[key] !== undefined && formData[key] !== null) {
+  //         let value = formData[key];
+  
+  //         if (key === 'cleaning_time') {
+  //           value = formatTimeToHHMMSS(value);
+  //         } else if (key === 'cleaning_date') {
+  //           value = formatDateToYYYYMMDD(value);
+  //         }
+  
+  //         schedulePayload[key] = value;
+  //       }
+  //     });
+  
+  //     // 5. Detect changes AFTER schedulePayload exists
+  //     const changes = detectChanges(
+  //       schedule.schedule || schedule,
+  //       schedulePayload
+  //     );
+  
+  //     console.log('CHECKLIST DEBUG:', {
+  //       originalChecklistId: (schedule.schedule || schedule).checklistId,
+  //       newChecklistId: schedulePayload.checklistId,
+  //       checklistChanged: changes.checklistChanged,
+  //     });
+  
+  //     // 6. Determine notification behavior
+  //     const status = schedule.status;
+  //     // alert(status)
+  //     let notifyMode = 'none';
+      
+  
+  //     if (['accepted', 'in_progress', 'pending_review'].includes(status)) {
+  //       if (
+  //         changes.dateChanged ||
+  //         changes.timeChanged ||
+  //         // changes.feeChanged ||
+  //         changes.extraTasksChanged ||
+  //         changes.checklistChanged
+  //       ) {
+  //         notifyMode = 'update';
+  //       }
+  //     } else if (status === 'upcoming') {
+  //       if (
+  //         changes.dateChanged ||
+  //         changes.timeChanged ||
+  //         changes.checklistChanged
+  //       ) {
+  //         notifyMode = 'update';
+  //       }
+  //     } else if (status === 'open') {
+  //       if (
+  //         changes.dateChanged ||
+  //         changes.timeChanged ||
+  //         changes.checklistChanged
+  //       ) {
+  //         notifyMode = 'broadcast';
+  //       }
+  //     }
+  //     console.log("Changeeeeeeeees", changes)
+  //     console.log(schedulePayload)
+
+      
+  
+  //     // 7. Build final request
+  //     const data = {
+  //       // hostInfo: currentUser,
+  //       schedule: schedulePayload,
+  //       checklist: updatedChecklist,
+  //       before_photos: before_photos,
+  //       // status: schedule.status,
+  //       // changes: changes,
+  //       // notifyMode: notifyMode,
+  //     };
+  
+  //     // console.log('EDIT DATA:', JSON.stringify(data, null, 2));
+  
+  //     // 8. Send update
+  //     const response = await userService.updateSchedule(
+  //       scheduleId,
+  //       data
+  //     );
+  
+  //     if (response.status === 200) {
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: tSafe(
+  //           'schedule_updated',
+  //           'Schedule updated successfully'
+  //         ),
+  //       });
+  
+  //       setTimeout(() => {
+  //         handleClose();
+  //         setIsSubmitting(false);
+  //         navigation.navigate(ROUTES.host_bookings);
+  //       }, 1500);
+  //     } else {
+  //       throw new Error('Failed to update schedule');
+  //     }
+  //   } catch (err) {
+  //     console.error('Update error:', err);
+  
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: tSafe('error_title', 'Something went wrong'),
+  //       text2: tSafe('try_again', 'Please try again'),
+  //     });
+  
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
   
     try {
       const schedule = propSchedule || contextSchedule;
-  
-      if (!schedule) {
-        throw new Error('No schedule selected for editing');
-      }
+      if (!schedule) throw new Error('No schedule selected for editing');
   
       const scheduleId =
-        typeof schedule._id === 'string'
-          ? schedule._id
-          : schedule._id.toString();
+        typeof schedule._id === 'string' ? schedule._id : schedule._id.toString();
   
-      const disallowedStatuses = ['completed', 'reviewed', 'cancelled'];
-  
-      if (disallowedStatuses.includes(schedule.status)) {
+      // ---- 1. Block locked statuses (matches backend) ----
+      if (LOCKED_STATUSES.includes(schedule.status)) {
         Toast.show({
           type: 'error',
           text1: tSafe('edit_not_allowed', 'Edit Not Allowed'),
           text2: tSafe(
-            'schedule_completed',
-            'This schedule cannot be edited because it is already completed or paid.'
+            'schedule_locked',
+            `This schedule cannot be edited while its status is '${schedule.status}'.`
           ),
         });
-  
         setIsSubmitting(false);
         return;
       }
   
-      // 1. Get the checklist
+      // ---- 2. Determine which fields the backend will accept ----
+      const allowedFields =
+        schedule.status === 'open' ? OPEN_EDITABLE_FIELDS : DATE_TIME_FIELDS;
+  
+      // ---- 3. Fetch checklist only when it is actually editable ----
       let checklistToSend = actualChecklist;
+      const wantsChecklistEdit =
+        allowedFields.has('checklistId') && formData.checklistId;
   
-      if (!checklistToSend && formData.checklistId) {
+      if (wantsChecklistEdit && !checklistToSend) {
         const response = await userService.getChecklist(formData.checklistId);
-  
         if (response.status === 200) {
           checklistToSend = response.data.data;
           setActualChecklist(checklistToSend);
@@ -2268,140 +2497,71 @@ const EditSchedule = ({ close_modal, selectedSchedule: propSchedule }) => {
         }
       }
   
-      if (!checklistToSend) {
-        throw new Error('No checklist available for this property');
-      }
+      const updatedChecklist = checklistToSend
+        ? addExtraCleaningTasks(checklistToSend, formData.extra)
+        : undefined;
   
-      // 2. Add extra tasks to checklist
-      const updatedChecklist = addExtraCleaningTasks(
-        checklistToSend,
-        formData.extra
-      );
-  
-      // 3. IMPORTANT: checklistId must be included here
-      const SCHEDULE_KEYS = [
-        'aptId',
-        'apartment_name',
-        'address',
-        'apartment_latitude',
-        'apartment_longitude',
-        'cleaning_date',
-        'cleaning_time',
-        'cleaning_end_time',
-        'total_cleaning_fee',
-        'total_cleaning_time',
-        'selected_apt_room_type_and_size',
-        'regular_cleaning',
-        'extra',
-        'checklistId', // <-- ADD THIS
-      ];
-  
-      // 4. Build schedulePayload
+      // ---- 4. Build payload from ALLOWED fields only ----
       const schedulePayload = {};
+      allowedFields.forEach((key) => {
+        const raw = formData[key];
+        if (raw === undefined || raw === null) return;
   
-      SCHEDULE_KEYS.forEach(key => {
-        if (formData[key] !== undefined && formData[key] !== null) {
-          let value = formData[key];
+        let value = raw;
+        if (key === 'cleaning_time') value = formatTimeToHHMMSS(value);
+        else if (key === 'cleaning_date') value = formatDateToYYYYMMDD(value);
+        else if (key === 'checklistId') value = String(value);
   
-          if (key === 'cleaning_time') {
-            value = formatTimeToHHMMSS(value);
-          } else if (key === 'cleaning_date') {
-            value = formatDateToYYYYMMDD(value);
-          }
-  
-          schedulePayload[key] = value;
-        }
+        schedulePayload[key] = value;
       });
   
-      // 5. Detect changes AFTER schedulePayload exists
-      const changes = detectChanges(
-        schedule.schedule || schedule,
-        schedulePayload
-      );
-  
-      console.log('CHECKLIST DEBUG:', {
-        originalChecklistId: (schedule.schedule || schedule).checklistId,
-        newChecklistId: schedulePayload.checklistId,
-        checklistChanged: changes.checklistChanged,
+      // ---- 5. Detect changes against ORIGINAL schedule (not payload) ----
+      const originalData = schedule.schedule || schedule;
+      const changes = detectChanges(originalData, {
+        ...originalData,
+        ...schedulePayload,
       });
   
-      // 6. Determine notification behavior
-      const status = schedule.status;
+      // ---- 6. Notify mode (aligned with backend) ----
       let notifyMode = 'none';
-  
-      if (['accepted', 'in_progress', 'pending_review'].includes(status)) {
-        if (
-          changes.dateChanged ||
-          changes.timeChanged ||
-          changes.feeChanged ||
-          changes.extraTasksChanged ||
-          changes.checklistChanged
-        ) {
-          notifyMode = 'update';
-        }
-      } else if (status === 'upcoming') {
-        if (
-          changes.dateChanged ||
-          changes.timeChanged ||
-          changes.checklistChanged
-        ) {
-          notifyMode = 'update';
-        }
-      } else if (status === 'open') {
-        if (
-          changes.dateChanged ||
-          changes.timeChanged ||
-          changes.checklistChanged
-        ) {
-          notifyMode = 'broadcast';
-        }
+      if (schedule.status === 'open' && Object.values(changes).some(Boolean)) {
+        notifyMode = 'broadcast';
+      } else if (
+        (changes.dateChanged || changes.timeChanged) &&
+        ['upcoming', 'pending_payment', 'payment_confirmed'].includes(schedule.status)
+      ) {
+        notifyMode = 'update';
       }
   
-      // 7. Build final request
+      // ---- 7. Build request ----
       const data = {
-        // hostInfo: currentUser,
         schedule: schedulePayload,
-        checklist: updatedChecklist,
-        before_photos: before_photos,
-        // status: schedule.status,
-        // changes: changes,
-        // notifyMode: notifyMode,
+        ...(updatedChecklist && allowedFields.has('checklistId')
+          ? { checklist: updatedChecklist }
+          : {}),
+        before_photos,
       };
   
-      // console.log('EDIT DATA:', JSON.stringify(data, null, 2));
+      // ---- 8. Send ----
+      const response = await userService.updateSchedule(scheduleId, data);
+      if (response.status !== 200) throw new Error('Failed to update schedule');
   
-      // 8. Send update
-      const response = await userService.updateSchedule(
-        scheduleId,
-        data
-      );
-  
-      if (response.status === 200) {
-        Toast.show({
-          type: 'success',
-          text1: tSafe(
-            'schedule_updated',
-            'Schedule updated successfully'
-          ),
-        });
-  
-        setTimeout(() => {
-          handleClose();
-          setIsSubmitting(false);
-          navigation.navigate(ROUTES.host_bookings);
-        }, 1500);
-      } else {
-        throw new Error('Failed to update schedule');
-      }
+      Toast.show({
+        type: 'success',
+        text1: tSafe('schedule_updated', 'Schedule updated successfully'),
+      });
+      setTimeout(() => {
+        handleClose();
+        setIsSubmitting(false);
+        navigation.navigate(ROUTES.host_bookings);
+      }, 1500);
     } catch (err) {
       console.error('Update error:', err);
-  
       Toast.show({
         type: 'error',
         text1: tSafe('error_title', 'Something went wrong'),
         text2: tSafe('try_again', 'Please try again'),
       });
-  
       setIsSubmitting(false);
     }
   };

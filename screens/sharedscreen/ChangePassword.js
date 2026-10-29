@@ -1,78 +1,109 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { TextInput, Button, HelperText, Text } from 'react-native-paper';
-import userService from '../../services/connection/userService';
+import {
+  TextInput,
+  Button,
+  HelperText,
+} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import COLORS from '../../constants/colors';
+
+import userService from '../../services/connection/userService';
 import { AuthContext } from '../../context/AuthContext';
+import { useTheme } from '../../theme';
 
 const ChangePassword = () => {
+  const { theme } = useTheme();
+  const { currentUserId } = useContext(AuthContext);
 
-  const {currentUserId} = useContext(AuthContext)
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [user_token, setUserToken] = useState("");
 
-  const fetchToken = async() => {
-    const jsonValue = await AsyncStorage.getItem('@storage_Key');
-    if (jsonValue) {
-        const object = JSON.parse(jsonValue);
-        setUserToken(object.resp.token);
-    }
-  }
+  const styles = createStyles(theme);
 
-  useEffect(()=> {
-    fetchToken()
-  },[])
-  
-          
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Error', 'All fields are required.');
+      Alert.alert(
+        'Error',
+        'All fields are required.'
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New password and confirmation do not match.');
+      Alert.alert(
+        'Error',
+        'New password and confirmation do not match.'
+      );
       return;
     }
-    try{
-    const data = {
-        new_password:newPassword,
-        current_password:currentPassword,
-        userId:currentUserId
-    }
-    console.log(data)
-    userService.changePassword(data)
-    .then(response => {
-        const res = response.message
-        console.log('Password changed successfully');
-        Alert.alert('Success', 'Your password has been changed.');
-    })
-    // Handle password change logic here
-    }catch{
-        Alert.alert('Something Went Wrong', 'Please try again.');
+
+    try {
+      const data = {
+        new_password: newPassword,
+        current_password: currentPassword,
+        userId: currentUserId,
+      };
+
+      console.log(data);
+
+      const response = await userService.changePassword(data);
+
+      console.log('Password changed successfully', response);
+
+      Alert.alert(
+        'Success',
+        'Your password has been changed.'
+      );
+
+      // Clear password fields after successful update
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Change password error:', error);
+
+      Alert.alert(
+        'Something Went Wrong',
+        'Please try again.'
+      );
     }
   };
 
+  const passwordIcon = showPassword ? 'eye-off' : 'eye';
+
   return (
     <View style={styles.container}>
-      
+
       {/* Current Password */}
       <TextInput
         label="Current Password"
         value={currentPassword}
         onChangeText={setCurrentPassword}
         secureTextEntry={!showPassword}
-        autoCapitalize = "none"
+        autoCapitalize="none"
+        autoCorrect={false}
         mode="outlined"
         style={styles.input}
-        activeOutlineColor={COLORS.primary}
+        theme={{
+          roundness: 16,
+          colors: {
+            primary: theme.input.focus,
+            outline: theme.input.border,
+            background: theme.input.background,
+            text: theme.input.text,
+            placeholder: theme.input.placeholder,
+          },
+        }}
+        textColor={theme.input.text}
+        outlineColor={theme.input.border}
+        activeOutlineColor={theme.input.focus}
+        placeholderTextColor={theme.input.placeholder}
         right={
           <TextInput.Icon
-            icon={showPassword ? 'eye-off' : 'eye'}
+            icon={passwordIcon}
+            color={theme.icon.muted}
             onPress={() => setShowPassword(!showPassword)}
           />
         }
@@ -84,16 +115,31 @@ const ChangePassword = () => {
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry={!showPassword}
-        autoCapitalize = "none"
+        autoCapitalize="none"
+        autoCorrect={false}
         mode="outlined"
-        activeOutlineColor={COLORS.primary}
+        style={styles.input}
+        theme={{
+          roundness: 16,
+          colors: {
+            primary: theme.input.focus,
+            outline: theme.input.border,
+            background: theme.input.background,
+            text: theme.input.text,
+            placeholder: theme.input.placeholder,
+          },
+        }}
+        textColor={theme.input.text}
+        outlineColor={theme.input.border}
+        activeOutlineColor={theme.input.focus}
+        placeholderTextColor={theme.input.placeholder}
         right={
           <TextInput.Icon
-            icon={showPassword ? 'eye-off' : 'eye'}
+            icon={passwordIcon}
+            color={theme.icon.muted}
             onPress={() => setShowPassword(!showPassword)}
           />
         }
-        style={styles.input}
       />
 
       {/* Confirm Password */}
@@ -102,54 +148,93 @@ const ChangePassword = () => {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry={!showPassword}
-        autoCapitalize = "none"
+        autoCapitalize="none"
+        autoCorrect={false}
         mode="outlined"
-        activeOutlineColor={COLORS.primary}
+        style={styles.input}
+        theme={{
+          roundness: 16,
+          colors: {
+            primary: theme.input.focus,
+            outline: theme.input.border,
+            background: theme.input.background,
+            text: theme.input.text,
+            placeholder: theme.input.placeholder,
+          },
+        }}
+        textColor={theme.input.text}
+        outlineColor={theme.input.border}
+        activeOutlineColor={theme.input.focus}
+        placeholderTextColor={theme.input.placeholder}
         right={
           <TextInput.Icon
-            icon={showPassword ? 'eye-off' : 'eye'}
+            icon={passwordIcon}
+            color={theme.icon.muted}
             onPress={() => setShowPassword(!showPassword)}
           />
         }
-        style={styles.input}
       />
 
       {/* Validation Helper */}
-      <HelperText type="error" visible={newPassword !== confirmPassword && confirmPassword.length > 0}>
+      <HelperText
+        type="error"
+        visible={
+          newPassword !== confirmPassword &&
+          confirmPassword.length > 0
+        }
+        style={styles.helperText}
+      >
         New password and confirmation do not match
       </HelperText>
 
       {/* Submit Button */}
-      <Button mode="contained" onPress={handleChangePassword} style={styles.button}>
+      <Button
+        mode="contained"
+        onPress={handleChangePassword}
+        style={styles.button}
+        buttonColor={theme.button.primaryBackground}
+        textColor={theme.button.primaryText}
+        contentStyle={styles.buttonContent}
+        labelStyle={styles.buttonLabel}
+      >
         Update Password
       </Button>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: COLORS.primary,
-  },
-  input: {
-    width: "100%",
-    marginVertical: 8,
-    color:COLORS.gray, 
-    fontSize:16, 
-    backgroundColor:"#fff"
-  },
-});
+const createStyles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: theme.background.default,
+    },
+
+    input: {
+      width: '100%',
+      marginVertical: 8,
+      backgroundColor: theme.input.background,
+    },
+
+    helperText: {
+      color: theme.status.error,
+      marginTop: 2,
+    },
+
+    button: {
+      marginTop: 20,
+      borderRadius: 12,
+    },
+
+    buttonContent: {
+      minHeight: 48,
+    },
+
+    buttonLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  });
 
 export default ChangePassword;

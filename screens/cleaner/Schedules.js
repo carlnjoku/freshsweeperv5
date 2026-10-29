@@ -759,11 +759,238 @@
 
 
 // Schedules.js
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useEffect, useState, useContext, useCallback } from 'react';
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Modal } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import React, { useEffect, useState, useContext, useCallback } from 'react';
+// import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Modal } from 'react-native';
+// import CalendarView from '../../components/shared/CalendarView';
+// import COLORS from '../../constants/colors';
+// import Upcoming from './ScheduleTabs/Upcoming';
+// import Ongoing from './ScheduleTabs/Ongoing';
+// import History from './ScheduleTabs/History';
+// import Requests from './ScheduleTabs/Requests';
+// import userService from '../../services/connection/userService';
+// import { AuthContext } from '../../context/AuthContext';
+// import { tSafe } from '../../utils/tSafe';
+// import { useRoute } from '@react-navigation/native';
+// import { useFocusEffect } from '@react-navigation/native';
+
+// const parseLocalDate = (dateStr) => {
+//   if (!dateStr || typeof dateStr !== 'string') return null;
+//   const [year, month, day] = dateStr.split('-').map(Number);
+//   return new Date(year, month - 1, day);
+// };
+
+// export default function Schedules({ navigation }) {
+//   const { currentUserId } = useContext(AuthContext);
+//   const route = useRoute();
+
+//   const [openModal, setOpenModal] = useState(false);
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [future_schedules, setFutureSchedules] = useState([]);
+//   const [upcoming_schedules, setUpComingSchedules] = useState([]);
+//   const [ongoing_schedules, setOnGoingSchedules] = useState([]);
+//   const [history_schedules, setHistorySchedules] = useState([]);
+//   const [cleaning_requests, setCleaningRequests] = useState([]);
+
+//   // Set initial tab from navigation params
+//   useEffect(() => {
+//     const initialTab = route.params?.initialTab || 'upcoming';
+//     const tabMap = { 'requests': 0, 'upcoming': 1, 'ongoing': 2, 'history': 3 };
+//     setCurrentStep(tabMap[initialTab] || 1);
+//   }, [route.params?.initialTab]);
+
+//   useEffect(() => {
+//     fetchSchedules();
+//     fetchRequests();
+//   }, [navigation]);
+
+//    // Run when screen focuses
+//    useFocusEffect(
+//     useCallback(() => {
+//       fetchSchedules();
+//     }, [])
+//   );
+
+//   const fetchRequests = async () => {
+//     try {
+//       const res = await userService.getMyCleaningRequest(currentUserId);
+//       console.log("Requets---Y", res.data)
+//       setCleaningRequests(res.data || []);
+//     } catch (e) {
+//       console.log(e);
+//     }
+//   };
+
+//   const fetchSchedules = async () => {
+//     try {
+//       const res = await userService.getSchedulesAssignedToCleaner(currentUserId);
+//       const data = res.data;
+
+//       // ─── Requests ────────────────────────────────────────────────
+//       const requestsSchedules = data.filter(schedule => {
+//         const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
+//         const status = assignment?.status?.toLowerCase();
+//         return ["pending", "requested", "invited", "pending_acceptance"].includes(status);
+//       });
+
+//       // ─── Upcoming ────────────────────────────────────────────────
+//       const upcomingSchedules = data.filter(schedule => {
+//         const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
+//         const status = assignment?.status?.toLowerCase();
+//         return ["payment_confirmed"].includes(status);
+//       });
+
+//       // ─── Ongoing ─────────────────────────────────────────────────
+//       const ongoingSchedules = data.filter(schedule => {
+//         const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
+//         const status = assignment?.status?.toLowerCase();
+//         return ["in_progress", "pending_completion_approval"].includes(status);
+//       });
+
+//       // ✅ ─── History ─────────────────────────────────────────────────
+//       // ONLY: completed, uncompleted, pending_review
+//       const historySchedules = data.filter(schedule => {
+//         const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
+//         const status = assignment?.status?.toLowerCase();
+//         return ["approved", "completed", "uncompleted", "pending_review", "payment_released"].includes(status);
+//       });
+
+//       setUpComingSchedules(upcomingSchedules);
+//       setOnGoingSchedules(ongoingSchedules);
+//       setHistorySchedules(historySchedules);
+
+//       // ─── Calendar future dates ──────────────────────────────────
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+//       const futureDates = data
+//         .filter(schedule => {
+//           const dateStr = schedule?.schedule?.cleaning_date;
+//           const scheduleDate = parseLocalDate(dateStr);
+//           if (!scheduleDate) return false;
+//           const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
+//           const status = assignment?.status?.toLowerCase();
+//           return scheduleDate > today && ["accepted", "payment_confirmed", "scheduled"].includes(status);
+//         })
+//         .map(schedule => parseLocalDate(schedule.schedule.cleaning_date).toDateString());
+//       setFutureSchedules(futureDates);
+
+//     } catch (err) {
+//       console.error('Error fetching schedules:', err);
+//     }
+//   };
+
+//   const onRequestSchedule = () => setCurrentStep(0);
+//   const onUpcomingSchedule = () => setCurrentStep(1);
+//   const onOngoingSchedule = () => setCurrentStep(2);
+//   const onHistorySchedule = () => setCurrentStep(3);
+
+//   return (
+//     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+//       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+//       <View style={{ backgroundColor: COLORS.primary }}>
+//         <View style={{ margin: 20 }}>
+//           <CalendarView
+//             title={tSafe('my_schedules', 'My schedules')}
+//             openUpcomingTab={onUpcomingSchedule}
+//             openOngoingTab={onOngoingSchedule}
+//             future_schedule_dates={future_schedules}
+//           />
+//         </View>
+//       </View>
+
+//       <View style={styles.container2}>
+//         {/* Tabs */}
+//         <View style={styles.tabsContainer}>
+//           <TouchableOpacity
+//             style={[styles.tab, { borderBottomColor: currentStep === 0 ? COLORS.primary : "#f0f0f0" }]}
+//             onPress={onRequestSchedule}
+//           >
+//             <MaterialCommunityIcons name="email-outline" size={24} color={currentStep === 0 ? COLORS.primary : COLORS.gray} />
+//             <Text style={styles.tab_text}>{tSafe("requests", "Requests")}</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={[styles.tab, { borderBottomColor: currentStep === 1 ? COLORS.primary : "#f0f0f0" }]}
+//             onPress={onUpcomingSchedule}
+//           >
+//             <MaterialCommunityIcons name="calendar-blank" size={24} color={currentStep === 1 ? COLORS.primary : COLORS.gray} />
+//             <Text style={styles.tab_text}>{tSafe("up_coming", "Upcoming")}</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={[styles.tab, { borderBottomColor: currentStep === 2 ? COLORS.primary : "#f0f0f0" }]}
+//             onPress={onOngoingSchedule}
+//           >
+//             <MaterialCommunityIcons name="progress-clock" size={24} color={currentStep === 2 ? COLORS.primary : COLORS.gray} />
+//             <Text style={styles.tab_text}>{tSafe("in_progress", "In Progress")}</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={[styles.tab, { borderBottomColor: currentStep === 3 ? COLORS.primary : "#f0f0f0" }]}
+//             onPress={onHistorySchedule}
+//           >
+//             <MaterialCommunityIcons name="history" size={24} color={currentStep === 3 ? COLORS.primary : COLORS.gray} />
+//             <Text style={styles.tab_text}>{tSafe("history", "History")}</Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         <View style={styles.container}>
+//           {currentStep === 0 && <Requests requests={cleaning_requests} />}
+//           {currentStep === 1 && <Upcoming schedules={upcoming_schedules} />}
+//           {currentStep === 2 && <Ongoing schedules={ongoing_schedules} />}
+//           {currentStep === 3 && <History schedules={history_schedules} />}
+//         </View>
+//       </View>
+
+//       <Modal visible={openModal} animationType="slide" />
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: COLORS.white, padding: 0 },
+//   container2: { flex: 1, margin: 0 },
+//   tabsContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     alignItems: 'center',
+//     backgroundColor: '#ffffff',
+//     borderBottomWidth: 0,
+//     elevation: 2,
+//   },
+//   tab: {
+//     borderBottomWidth: 2,
+//     borderBottomColor: COLORS.primary,
+//     alignItems: 'center',
+//     marginTop: 10,
+//     paddingHorizontal: 10,
+//   },
+//   tab_text: { marginBottom: 5, fontSize:14 },
+// });
+
+
+
+import {
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
+
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useCallback,
+} from 'react';
+
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
+
 import CalendarView from '../../components/shared/CalendarView';
-import COLORS from '../../constants/colors';
 import Upcoming from './ScheduleTabs/Upcoming';
 import Ongoing from './ScheduleTabs/Ongoing';
 import History from './ScheduleTabs/History';
@@ -773,197 +1000,854 @@ import { AuthContext } from '../../context/AuthContext';
 import { tSafe } from '../../utils/tSafe';
 import { useRoute } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTheme } from '../../theme';
 
+
+/*
+ * ---------------------------------------------------------
+ * DATE HELPER
+ * ---------------------------------------------------------
+ *
+ * Creates a local date from YYYY-MM-DD without allowing
+ * timezone conversion to move the date backward.
+ */
 const parseLocalDate = (dateStr) => {
-  if (!dateStr || typeof dateStr !== 'string') return null;
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  if (
+    !dateStr ||
+    typeof dateStr !== 'string'
+  ) {
+    return null;
+  }
+
+  const [
+    year,
+    month,
+    day,
+  ] = dateStr
+    .split('-')
+    .map(Number);
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
 };
 
-export default function Schedules({ navigation }) {
-  const { currentUserId } = useContext(AuthContext);
+
+export default function Schedules({
+  navigation,
+}) {
+  const {
+    theme,
+    isDark,
+  } = useTheme();
+
+  const styles = createStyles(theme);
+
+  const {
+    currentUserId,
+  } = useContext(AuthContext);
+
   const route = useRoute();
 
-  const [openModal, setOpenModal] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [future_schedules, setFutureSchedules] = useState([]);
-  const [upcoming_schedules, setUpComingSchedules] = useState([]);
-  const [ongoing_schedules, setOnGoingSchedules] = useState([]);
-  const [history_schedules, setHistorySchedules] = useState([]);
-  const [cleaning_requests, setCleaningRequests] = useState([]);
+  const [
+    openModal,
+    setOpenModal,
+  ] = useState(false);
 
-  // Set initial tab from navigation params
+  const [
+    currentStep,
+    setCurrentStep,
+  ] = useState(1);
+
+  const [
+    future_schedules,
+    setFutureSchedules,
+  ] = useState([]);
+
+  const [
+    upcoming_schedules,
+    setUpComingSchedules,
+  ] = useState([]);
+
+  const [
+    ongoing_schedules,
+    setOnGoingSchedules,
+  ] = useState([]);
+
+  const [
+    history_schedules,
+    setHistorySchedules,
+  ] = useState([]);
+
+  const [
+    cleaning_requests,
+    setCleaningRequests,
+  ] = useState([]);
+
+
+  /*
+   * ---------------------------------------------------------
+   * INITIAL TAB
+   * ---------------------------------------------------------
+   */
+
   useEffect(() => {
-    const initialTab = route.params?.initialTab || 'upcoming';
-    const tabMap = { 'requests': 0, 'upcoming': 1, 'ongoing': 2, 'history': 3 };
-    setCurrentStep(tabMap[initialTab] || 1);
-  }, [route.params?.initialTab]);
+    const initialTab =
+      route.params?.initialTab ||
+      'upcoming';
+
+    const tabMap = {
+      requests: 0,
+      upcoming: 1,
+      ongoing: 2,
+      history: 3,
+    };
+
+    setCurrentStep(
+      tabMap[initialTab] ?? 1
+    );
+  }, [
+    route.params?.initialTab,
+  ]);
+
+
+  /*
+   * ---------------------------------------------------------
+   * INITIAL DATA FETCH
+   * ---------------------------------------------------------
+   */
 
   useEffect(() => {
     fetchSchedules();
     fetchRequests();
   }, [navigation]);
 
-   // Run when screen focuses
-   useFocusEffect(
+
+  /*
+   * ---------------------------------------------------------
+   * REFRESH WHEN SCREEN FOCUSES
+   * ---------------------------------------------------------
+   */
+
+  useFocusEffect(
     useCallback(() => {
       fetchSchedules();
     }, [])
   );
 
-  const fetchRequests = async () => {
-    try {
-      const res = await userService.getMyCleaningRequest(currentUserId);
-      console.log("Requets---Y", res.data)
-      setCleaningRequests(res.data || []);
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
-  const fetchSchedules = async () => {
-    try {
-      const res = await userService.getSchedulesAssignedToCleaner(currentUserId);
-      const data = res.data;
+  /*
+   * ---------------------------------------------------------
+   * FETCH CLEANING REQUESTS
+   * ---------------------------------------------------------
+   */
 
-      // ─── Requests ────────────────────────────────────────────────
-      const requestsSchedules = data.filter(schedule => {
-        const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
-        const status = assignment?.status?.toLowerCase();
-        return ["pending", "requested", "invited", "pending_acceptance"].includes(status);
-      });
+  const fetchRequests =
+    async () => {
+      try {
+        const res =
+          await userService
+            .getMyCleaningRequest(
+              currentUserId
+            );
 
-      // ─── Upcoming ────────────────────────────────────────────────
-      const upcomingSchedules = data.filter(schedule => {
-        const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
-        const status = assignment?.status?.toLowerCase();
-        return ["payment_confirmed"].includes(status);
-      });
+        console.log(
+          'Requets---Y',
+          res.data
+        );
 
-      // ─── Ongoing ─────────────────────────────────────────────────
-      const ongoingSchedules = data.filter(schedule => {
-        const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
-        const status = assignment?.status?.toLowerCase();
-        return ["in_progress", "pending_completion_approval"].includes(status);
-      });
+        setCleaningRequests(
+          res.data || []
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    };
 
-      // ✅ ─── History ─────────────────────────────────────────────────
-      // ONLY: completed, uncompleted, pending_review
-      const historySchedules = data.filter(schedule => {
-        const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
-        const status = assignment?.status?.toLowerCase();
-        return ["approved", "completed", "uncompleted", "pending_review", "payment_released"].includes(status);
-      });
 
-      setUpComingSchedules(upcomingSchedules);
-      setOnGoingSchedules(ongoingSchedules);
-      setHistorySchedules(historySchedules);
+  /*
+   * ---------------------------------------------------------
+   * FETCH SCHEDULES
+   * ---------------------------------------------------------
+   */
 
-      // ─── Calendar future dates ──────────────────────────────────
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const futureDates = data
-        .filter(schedule => {
-          const dateStr = schedule?.schedule?.cleaning_date;
-          const scheduleDate = parseLocalDate(dateStr);
-          if (!scheduleDate) return false;
-          const assignment = schedule.assignedTo?.find(c => c.cleanerId === currentUserId);
-          const status = assignment?.status?.toLowerCase();
-          return scheduleDate > today && ["accepted", "payment_confirmed", "scheduled"].includes(status);
-        })
-        .map(schedule => parseLocalDate(schedule.schedule.cleaning_date).toDateString());
-      setFutureSchedules(futureDates);
+  const fetchSchedules =
+    async () => {
+      try {
+        const res =
+          await userService
+            .getSchedulesAssignedToCleaner(
+              currentUserId
+            );
 
-    } catch (err) {
-      console.error('Error fetching schedules:', err);
-    }
-  };
+        const data =
+          res.data;
 
-  const onRequestSchedule = () => setCurrentStep(0);
-  const onUpcomingSchedule = () => setCurrentStep(1);
-  const onOngoingSchedule = () => setCurrentStep(2);
-  const onHistorySchedule = () => setCurrentStep(3);
+
+        /*
+         * ---------------------------------------------------
+         * REQUESTS
+         * ---------------------------------------------------
+         */
+
+        const requestsSchedules =
+          data.filter(
+            (schedule) => {
+              const assignment =
+                schedule.assignedTo?.find(
+                  (c) =>
+                    c.cleanerId ===
+                    currentUserId
+                );
+
+              const status =
+                assignment?.status
+                  ?.toLowerCase();
+
+              return [
+                'pending',
+                'requested',
+                'invited',
+                'pending_acceptance',
+              ].includes(status);
+            }
+          );
+
+
+        /*
+         * ---------------------------------------------------
+         * UPCOMING
+         * ---------------------------------------------------
+         */
+
+        const upcomingSchedules =
+          data.filter(
+            (schedule) => {
+              const assignment =
+                schedule.assignedTo?.find(
+                  (c) =>
+                    c.cleanerId ===
+                    currentUserId
+                );
+
+              const status =
+                assignment?.status
+                  ?.toLowerCase();
+
+              return [
+                'payment_confirmed',
+              ].includes(status);
+            }
+          );
+
+
+        /*
+         * ---------------------------------------------------
+         * ONGOING
+         * ---------------------------------------------------
+         */
+
+        const ongoingSchedules =
+          data.filter(
+            (schedule) => {
+              const assignment =
+                schedule.assignedTo?.find(
+                  (c) =>
+                    c.cleanerId ===
+                    currentUserId
+                );
+
+              const status =
+                assignment?.status
+                  ?.toLowerCase();
+
+              return [
+                'in_progress',
+                'pending_completion_approval',
+              ].includes(status);
+            }
+          );
+
+
+        /*
+         * ---------------------------------------------------
+         * HISTORY
+         * ---------------------------------------------------
+         *
+         * ONLY:
+         * completed
+         * uncompleted
+         * pending_review
+         */
+        const historySchedules =
+          data.filter(
+            (schedule) => {
+              const assignment =
+                schedule.assignedTo?.find(
+                  (c) =>
+                    c.cleanerId ===
+                    currentUserId
+                );
+
+              const status =
+                assignment?.status
+                  ?.toLowerCase();
+
+              return [
+                'approved',
+                'completed',
+                'uncompleted',
+                'pending_review',
+                'payment_released',
+              ].includes(status);
+            }
+          );
+
+
+        setUpComingSchedules(
+          upcomingSchedules
+        );
+
+        setOnGoingSchedules(
+          ongoingSchedules
+        );
+
+        setHistorySchedules(
+          historySchedules
+        );
+
+
+        /*
+         * ---------------------------------------------------
+         * CALENDAR FUTURE DATES
+         * ---------------------------------------------------
+         */
+
+        const today =
+          new Date();
+
+        today.setHours(
+          0,
+          0,
+          0,
+          0
+        );
+
+        const futureDates =
+          data
+            .filter(
+              (schedule) => {
+                const dateStr =
+                  schedule
+                    ?.schedule
+                    ?.cleaning_date;
+
+                const scheduleDate =
+                  parseLocalDate(
+                    dateStr
+                  );
+
+                if (!scheduleDate) {
+                  return false;
+                }
+
+                const assignment =
+                  schedule.assignedTo?.find(
+                    (c) =>
+                      c.cleanerId ===
+                      currentUserId
+                  );
+
+                const status =
+                  assignment?.status
+                    ?.toLowerCase();
+
+                return (
+                  scheduleDate >
+                    today &&
+                  [
+                    'accepted',
+                    'payment_confirmed',
+                    'scheduled',
+                  ].includes(status)
+                );
+              }
+            )
+            .map(
+              (schedule) =>
+                parseLocalDate(
+                  schedule
+                    .schedule
+                    .cleaning_date
+                ).toDateString()
+            );
+
+        setFutureSchedules(
+          futureDates
+        );
+
+      } catch (err) {
+        console.error(
+          'Error fetching schedules:',
+          err
+        );
+      }
+    };
+
+
+  /*
+   * ---------------------------------------------------------
+   * TAB HANDLERS
+   * ---------------------------------------------------------
+   */
+
+  const onRequestSchedule =
+    () => setCurrentStep(0);
+
+  const onUpcomingSchedule =
+    () => setCurrentStep(1);
+
+  const onOngoingSchedule =
+    () => setCurrentStep(2);
+
+  const onHistorySchedule =
+    () => setCurrentStep(3);
+
+
+  /*
+   * ---------------------------------------------------------
+   * TAB CONFIG
+   * ---------------------------------------------------------
+   *
+   * Keeps the visual state consistent and makes the tab
+   * styling easier to maintain.
+   */
+
+  const isRequests =
+    currentStep === 0;
+
+  const isUpcoming =
+    currentStep === 1;
+
+  const isOngoing =
+    currentStep === 2;
+
+  const isHistory =
+    currentStep === 3;
+
+
+  /*
+   * ---------------------------------------------------------
+   * RENDER
+   * ---------------------------------------------------------
+   */
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      <View style={{ backgroundColor: COLORS.primary }}>
-        <View style={{ margin: 20 }}>
+    <View
+      style={styles.screen}
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={
+          isDark
+            ? 'light-content'
+            : 'dark-content'
+        }
+      />
+
+      {/* -------------------------------------------------- */}
+      {/* CALENDAR HEADER */}
+      {/* -------------------------------------------------- */}
+
+      <View
+        style={
+          styles.calendarHeader
+        }
+      >
+        <View
+          style={
+            styles.calendarInner
+          }
+        >
           <CalendarView
-            title={tSafe('my_schedules', 'My schedules')}
-            openUpcomingTab={onUpcomingSchedule}
-            openOngoingTab={onOngoingSchedule}
-            future_schedule_dates={future_schedules}
+            title={tSafe(
+              'my_schedules',
+              'My schedules'
+            )}
+            openUpcomingTab={
+              onUpcomingSchedule
+            }
+            openOngoingTab={
+              onOngoingSchedule
+            }
+            future_schedule_dates={
+              future_schedules
+            }
           />
         </View>
       </View>
 
-      <View style={styles.container2}>
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
+
+      {/* -------------------------------------------------- */}
+      {/* MAIN CONTENT */}
+      {/* -------------------------------------------------- */}
+
+      <View
+        style={
+          styles.container2
+        }
+      >
+
+        {/* ------------------------------------------------ */}
+        {/* TABS */}
+        {/* ------------------------------------------------ */}
+
+        <View
+          style={
+            styles.tabsContainer
+          }
+        >
+
+          {/* REQUESTS */}
           <TouchableOpacity
-            style={[styles.tab, { borderBottomColor: currentStep === 0 ? COLORS.primary : "#f0f0f0" }]}
-            onPress={onRequestSchedule}
+            style={[
+              styles.tab,
+              isRequests &&
+                styles.tabActive,
+            ]}
+            onPress={
+              onRequestSchedule
+            }
+            activeOpacity={0.75}
           >
-            <MaterialCommunityIcons name="email-outline" size={24} color={currentStep === 0 ? COLORS.primary : COLORS.gray} />
-            <Text style={styles.tab_text}>{tSafe("requests", "Requests")}</Text>
+            <MaterialCommunityIcons
+              name="email-outline"
+              size={24}
+              color={
+                isRequests
+                  ? theme.brand.primary
+                  : theme.icon.muted
+              }
+            />
+
+            <Text
+              style={[
+                styles.tabText,
+                isRequests &&
+                  styles.tabTextActive,
+              ]}
+            >
+              {tSafe(
+                'requests',
+                'Requests'
+              )}
+            </Text>
           </TouchableOpacity>
 
+
+          {/* UPCOMING */}
           <TouchableOpacity
-            style={[styles.tab, { borderBottomColor: currentStep === 1 ? COLORS.primary : "#f0f0f0" }]}
-            onPress={onUpcomingSchedule}
+            style={[
+              styles.tab,
+              isUpcoming &&
+                styles.tabActive,
+            ]}
+            onPress={
+              onUpcomingSchedule
+            }
+            activeOpacity={0.75}
           >
-            <MaterialCommunityIcons name="calendar-blank" size={24} color={currentStep === 1 ? COLORS.primary : COLORS.gray} />
-            <Text style={styles.tab_text}>{tSafe("up_coming", "Upcoming")}</Text>
+            <MaterialCommunityIcons
+              name="calendar-blank"
+              size={24}
+              color={
+                isUpcoming
+                  ? theme.brand.primary
+                  : theme.icon.muted
+              }
+            />
+
+            <Text
+              style={[
+                styles.tabText,
+                isUpcoming &&
+                  styles.tabTextActive,
+              ]}
+            >
+              {tSafe(
+                'up_coming',
+                'Upcoming'
+              )}
+            </Text>
           </TouchableOpacity>
 
+
+          {/* ONGOING */}
           <TouchableOpacity
-            style={[styles.tab, { borderBottomColor: currentStep === 2 ? COLORS.primary : "#f0f0f0" }]}
-            onPress={onOngoingSchedule}
+            style={[
+              styles.tab,
+              isOngoing &&
+                styles.tabActive,
+            ]}
+            onPress={
+              onOngoingSchedule
+            }
+            activeOpacity={0.75}
           >
-            <MaterialCommunityIcons name="progress-clock" size={24} color={currentStep === 2 ? COLORS.primary : COLORS.gray} />
-            <Text style={styles.tab_text}>{tSafe("in_progress", "In Progress")}</Text>
+            <MaterialCommunityIcons
+              name="progress-clock"
+              size={24}
+              color={
+                isOngoing
+                  ? theme.brand.primary
+                  : theme.icon.muted
+              }
+            />
+
+            <Text
+              style={[
+                styles.tabText,
+                isOngoing &&
+                  styles.tabTextActive,
+              ]}
+            >
+              {tSafe(
+                'in_progress',
+                'In Progress'
+              )}
+            </Text>
           </TouchableOpacity>
 
+
+          {/* HISTORY */}
           <TouchableOpacity
-            style={[styles.tab, { borderBottomColor: currentStep === 3 ? COLORS.primary : "#f0f0f0" }]}
-            onPress={onHistorySchedule}
+            style={[
+              styles.tab,
+              isHistory &&
+                styles.tabActive,
+            ]}
+            onPress={
+              onHistorySchedule
+            }
+            activeOpacity={0.75}
           >
-            <MaterialCommunityIcons name="history" size={24} color={currentStep === 3 ? COLORS.primary : COLORS.gray} />
-            <Text style={styles.tab_text}>{tSafe("history", "History")}</Text>
+            <MaterialCommunityIcons
+              name="history"
+              size={24}
+              color={
+                isHistory
+                  ? theme.brand.primary
+                  : theme.icon.muted
+              }
+            />
+
+            <Text
+              style={[
+                styles.tabText,
+                isHistory &&
+                  styles.tabTextActive,
+              ]}
+            >
+              {tSafe(
+                'history',
+                'History'
+              )}
+            </Text>
           </TouchableOpacity>
+
         </View>
 
-        <View style={styles.container}>
-          {currentStep === 0 && <Requests requests={cleaning_requests} />}
-          {currentStep === 1 && <Upcoming schedules={upcoming_schedules} />}
-          {currentStep === 2 && <Ongoing schedules={ongoing_schedules} />}
-          {currentStep === 3 && <History schedules={history_schedules} />}
+
+        {/* ------------------------------------------------ */}
+        {/* TAB CONTENT */}
+        {/* ------------------------------------------------ */}
+
+        <View
+          style={
+            styles.container
+          }
+        >
+          {currentStep === 0 && (
+            <Requests
+              requests={
+                cleaning_requests
+              }
+            />
+          )}
+
+          {currentStep === 1 && (
+            <Upcoming
+              schedules={
+                upcoming_schedules
+              }
+            />
+          )}
+
+          {currentStep === 2 && (
+            <Ongoing
+              schedules={
+                ongoing_schedules
+              }
+            />
+          )}
+
+          {currentStep === 3 && (
+            <History
+              schedules={
+                history_schedules
+              }
+            />
+          )}
         </View>
       </View>
 
-      <Modal visible={openModal} animationType="slide" />
+
+      {/* -------------------------------------------------- */}
+      {/* MODAL */}
+      {/* -------------------------------------------------- */}
+
+      <Modal
+        visible={openModal}
+        animationType="slide"
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white, padding: 0 },
-  container2: { flex: 1, margin: 0 },
-  tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 0,
-    elevation: 2,
-  },
-  tab: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
-    alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
-  tab_text: { marginBottom: 5, fontSize:14 },
-});
+
+/*
+ * ---------------------------------------------------------
+ * THEMED STYLES
+ * ---------------------------------------------------------
+ */
+
+const createStyles = (theme) =>
+  StyleSheet.create({
+
+    /*
+     * Main screen
+     */
+    screen: {
+      flex: 1,
+      backgroundColor:
+        theme.background.default,
+    },
+
+    /*
+     * Calendar header.
+     *
+     * Uses the theme hero background so the calendar area
+     * remains visually strong in both light and dark mode.
+     */
+    calendarHeader: {
+      backgroundColor:
+        theme.hero.background,
+    },
+
+    calendarInner: {
+      margin: 20,
+    },
+
+    /*
+     * Main tab/content container
+     */
+    container2: {
+      flex: 1,
+      margin: 0,
+      backgroundColor:
+        theme.background.default,
+    },
+
+    /*
+     * Tab bar
+     */
+    tabsContainer: {
+      flexDirection: 'row',
+      justifyContent:
+        'space-around',
+      alignItems: 'center',
+
+      backgroundColor:
+        theme.surface.elevated,
+
+      borderBottomWidth: 1,
+      borderBottomColor:
+        theme.divider,
+
+      elevation: 2,
+
+      shadowColor:
+        theme.shadow.color,
+
+      shadowOpacity:
+        theme.shadow.opacity,
+
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+
+      shadowRadius: 4,
+    },
+
+    /*
+     * Individual tab
+     */
+    tab: {
+      flex: 1,
+
+      borderBottomWidth: 2,
+      borderBottomColor:
+        'transparent',
+
+      alignItems: 'center',
+
+      justifyContent:
+        'center',
+
+      marginTop: 10,
+
+      paddingHorizontal: 6,
+      paddingBottom: 5,
+      paddingTop: 2,
+    },
+
+    /*
+     * Active tab underline
+     */
+    tabActive: {
+      borderBottomColor:
+        theme.brand.primary,
+    },
+
+    /*
+     * Tab labels
+     */
+    tabText: {
+      marginTop: 2,
+      marginBottom: 2,
+      fontSize: 14,
+      color:
+        theme.text.secondary,
+      fontWeight: '500',
+    },
+
+    tabTextActive: {
+      color:
+        theme.brand.primary,
+      fontWeight: '700',
+    },
+
+    /*
+     * Schedule content
+     */
+    container: {
+      flex: 1,
+      backgroundColor:
+        theme.background.default,
+      padding: 0,
+    },
+  });

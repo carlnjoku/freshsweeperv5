@@ -1,23 +1,637 @@
-import React, { useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useState,
+} from "react";
+
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { Button, Card, Divider } from 'react-native-paper';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import userService from '../../services/connection/userService';
+  TouchableOpacity,
+} from "react-native";
 
-import COLORS from '../../constants/colors';
-import { tSafe } from '../../utils/tSafe';
+import {
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+
+import {
+  useRoute,
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import userService from "../../services/connection/userService";
+import { AuthContext } from "../../context/AuthContext";
+import { tSafe } from "../../utils/tSafe";
+
+import { useTheme } from "../../theme";
+import AppText from "../../ui/AppText";
+import AppCard from "../../ui/AppCard";
+import AppButton from "../../ui/AppButton";
+
+/* -------------------------------------------------------------------------- */
+/* HELPERS                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const formatGroup = (groupValue) => {
+  if (!groupValue) {
+    return "";
+  }
+
+  return String(groupValue)
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+/*
+ * YYYY-MM-DD is treated as a calendar date.
+ *
+ * Do NOT use:
+ * new Date("2026-09-15")
+ *
+ * because JavaScript treats that format as UTC and
+ * it can display as the previous day in US time zones.
+ */
+const formatDate = (date) => {
+  if (!date) {
+    return tSafe("na", "N/A");
+  }
+
+  if (
+    typeof date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(date)
+  ) {
+    const [year, month, day] = date
+      .split("-")
+      .map(Number);
+
+    const localDate = new Date(
+      year,
+      month - 1,
+      day
+    );
+
+    return localDate.toLocaleDateString(
+      "en-US",
+      {
+        weekday: "short",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }
+    );
+  }
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return String(date);
+  }
+
+  return parsed.toLocaleDateString(
+    "en-US",
+    {
+      weekday: "short",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }
+  );
+};
+
+/*
+ * Safely create a translucent color from a theme color.
+ *
+ * The theme normally provides hex values, but this prevents
+ * invalid strings if a theme value is ever changed.
+ */
+const withAlpha = (
+  color,
+  alphaHex,
+  fallback
+) => {
+  if (
+    typeof color === "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(color)
+  ) {
+    return `${color}${alphaHex}`;
+  }
+
+  return fallback || color;
+};
+
+/* -------------------------------------------------------------------------- */
+/* DATE COMPARISON                                                            */
+/* -------------------------------------------------------------------------- */
+
+const DateComparison = ({
+  oldCleaningDate,
+  newCleaningDate,
+  theme,
+}) => {
+  return (
+    <View
+      style={[
+        styles.dateComparison,
+        {
+          backgroundColor:
+            theme.surface.default,
+          borderColor:
+            theme.border.default,
+        },
+      ]}
+    >
+      {/* ORIGINAL DATE */}
+
+      <View style={styles.dateBlock}>
+        <View
+          style={[
+            styles.dateIcon,
+            {
+              backgroundColor:
+                theme.background.sunken,
+              borderColor:
+                theme.border.default,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="calendar-remove-outline"
+            size={20}
+            color={theme.icon.muted}
+          />
+        </View>
+
+        <AppText
+          variant="caption"
+          style={[
+            styles.dateLabel,
+            {
+              color: theme.text.muted,
+            },
+          ]}
+        >
+          {tSafe(
+            "previous_date",
+            "PREVIOUS DATE"
+          )}
+        </AppText>
+
+        <AppText
+          variant="body"
+          style={[
+            styles.oldDate,
+            {
+              color: theme.text.secondary,
+            },
+          ]}
+        >
+          {formatDate(oldCleaningDate)}
+        </AppText>
+      </View>
+
+      {/* CHANGE INDICATOR */}
+
+      <View
+        style={[
+          styles.dateArrow,
+          {
+            backgroundColor:
+              theme.brand.primary,
+            borderColor:
+              theme.brand.primary,
+          },
+        ]}
+      >
+        <MaterialIcons
+          name="arrow-forward"
+          size={19}
+          color={theme.icon.inverse}
+        />
+      </View>
+
+      {/* NEW DATE */}
+
+      <View style={styles.dateBlock}>
+        <View
+          style={[
+            styles.dateIcon,
+            {
+              backgroundColor:
+                withAlpha(
+                  theme.status.success,
+                  "18",
+                  theme.surface.selected
+                ),
+              borderColor:
+                withAlpha(
+                  theme.status.success,
+                  "35",
+                  theme.border.default
+                ),
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="calendar-check-outline"
+            size={20}
+            color={theme.status.success}
+          />
+        </View>
+
+        <AppText
+          variant="caption"
+          style={[
+            styles.dateLabel,
+            {
+              color:
+                theme.status.success,
+            },
+          ]}
+        >
+          {tSafe(
+            "new_date",
+            "NEW DATE"
+          )}
+        </AppText>
+
+        <AppText
+          variant="body"
+          style={[
+            styles.newDate,
+            {
+              color: theme.text.primary,
+            },
+          ]}
+        >
+          {formatDate(newCleaningDate)}
+        </AppText>
+      </View>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* STATUS CARD                                                                */
+/* -------------------------------------------------------------------------- */
+
+const ResponseStatusCard = ({
+  responseStatus,
+  newCleaningDate,
+  cleaningTime,
+  theme,
+}) => {
+  const isAvailable =
+    responseStatus === "available";
+
+  const color = isAvailable
+    ? theme.status.success
+    : theme.status.error;
+
+  const backgroundColor = isAvailable
+    ? withAlpha(
+        theme.status.success,
+        "10",
+        theme.surface.selected
+      )
+    : withAlpha(
+        theme.status.error,
+        "10",
+        theme.surface.selected
+      );
+
+  const borderColor = isAvailable
+    ? withAlpha(
+        theme.status.success,
+        "45",
+        theme.border.default
+      )
+    : withAlpha(
+        theme.status.error,
+        "45",
+        theme.border.default
+      );
+
+  return (
+    <View
+      style={[
+        styles.statusCard,
+        {
+          backgroundColor,
+          borderColor,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.statusIconContainer,
+          {
+            backgroundColor: withAlpha(
+              color,
+              "18",
+              theme.surface.selected
+            ),
+          },
+        ]}
+      >
+        <MaterialCommunityIcons
+          name={
+            isAvailable
+              ? "check-circle-outline"
+              : "close-circle-outline"
+          }
+          size={40}
+          color={color}
+        />
+      </View>
+
+      <AppText
+        variant="h2"
+        style={[
+          styles.statusTitle,
+          {
+            color: theme.text.primary,
+          },
+        ]}
+      >
+        {isAvailable
+          ? tSafe(
+              "date_change_accepted",
+              "Date Change Accepted"
+            )
+          : tSafe(
+              "date_change_unavailable",
+              "New Date Unavailable"
+            )}
+      </AppText>
+
+      <AppText
+        variant="body"
+        style={[
+          styles.statusMessage,
+          {
+            color: theme.text.secondary,
+          },
+        ]}
+      >
+        {isAvailable
+          ? tSafe(
+              "date_change_accepted_message",
+              "You have confirmed that you are available for the new cleaning date. You will remain assigned to this cleaning."
+            )
+          : tSafe(
+              "date_change_unavailable_message",
+              "You've let the host know that you can't make the new cleaning date. The host can now arrange a replacement."
+            )}
+      </AppText>
+
+      <View
+        style={[
+          styles.statusDateBox,
+          {
+            backgroundColor:
+              theme.surface.elevated,
+            borderColor:
+              theme.border.default,
+          },
+        ]}
+      >
+        <AppText
+          variant="caption"
+          style={[
+            styles.statusDateLabel,
+            {
+              color: theme.text.muted,
+            },
+          ]}
+        >
+          {tSafe(
+            "updated_cleaning_date",
+            "UPDATED CLEANING DATE"
+          )}
+        </AppText>
+
+        <AppText
+          variant="h3"
+          style={[
+            styles.statusDate,
+            {
+              color,
+            },
+          ]}
+        >
+          {formatDate(newCleaningDate)}
+        </AppText>
+
+        {!!cleaningTime && (
+          <AppText
+            variant="caption"
+            style={[
+              styles.statusTime,
+              {
+                color:
+                  theme.text.secondary,
+              },
+            ]}
+          >
+            {tSafe("at_time", "at")}{" "}
+            {cleaningTime}
+          </AppText>
+        )}
+      </View>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* INFORMATION CARD                                                           */
+/* -------------------------------------------------------------------------- */
+
+const InformationCard = ({
+  responseStatus,
+  theme,
+}) => {
+  const isAvailable =
+    responseStatus === "available";
+
+  const isUnavailable =
+    responseStatus === "unavailable";
+
+  return (
+    <AppCard
+      variant="bordered"
+      style={[
+        styles.infoCard,
+        {
+          backgroundColor:
+            theme.surface.selected,
+          borderColor:
+            theme.border.default,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.infoIcon,
+          {
+            backgroundColor:
+              theme.brand.primaryLight,
+          },
+        ]}
+      >
+        <MaterialCommunityIcons
+          name="information-outline"
+          size={21}
+          color={theme.brand.primary}
+        />
+      </View>
+
+      <View style={styles.infoContent}>
+        <AppText
+          variant="subtitle"
+          style={[
+            styles.infoTitle,
+            {
+              color: theme.text.primary,
+            },
+          ]}
+        >
+          {tSafe(
+            "what_happens_next",
+            "What happens next?"
+          )}
+        </AppText>
+
+        {responseStatus === "pending" && (
+          <>
+            <InfoBullet
+              text={tSafe(
+                "date_change_available_result",
+                "If you're available, you'll remain assigned to this cleaning."
+              )}
+              theme={theme}
+            />
+
+            <InfoBullet
+              text={tSafe(
+                "date_change_unavailable_result",
+                "If you're unavailable, the host will be notified."
+              )}
+              theme={theme}
+            />
+
+            <InfoBullet
+              text={tSafe(
+                "date_change_replacement_result",
+                "The host can then choose another cleaner for the cleaning."
+              )}
+              theme={theme}
+            />
+          </>
+        )}
+
+        {isAvailable && (
+          <>
+            <InfoBullet
+              icon="check"
+              iconColor={
+                theme.status.success
+              }
+              text={tSafe(
+                "date_change_accepted_next_step",
+                "The host has been notified that you are available for the new cleaning date."
+              )}
+              theme={theme}
+            />
+
+            <InfoBullet
+              text={tSafe(
+                "date_change_accepted_assignment",
+                "You will remain assigned to this cleaning."
+              )}
+              theme={theme}
+            />
+          </>
+        )}
+
+        {isUnavailable && (
+          <>
+            <InfoBullet
+              text={tSafe(
+                "date_change_unavailable_next_step",
+                "The host has been notified that you are unavailable."
+              )}
+              theme={theme}
+            />
+
+            <InfoBullet
+              text={tSafe(
+                "date_change_replacement_result",
+                "The host can now arrange another cleaner for the new date."
+              )}
+              theme={theme}
+            />
+          </>
+        )}
+      </View>
+    </AppCard>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* INFO BULLET                                                                */
+/* -------------------------------------------------------------------------- */
+
+const InfoBullet = ({
+  text,
+  theme,
+  icon = "circle",
+  iconColor,
+}) => {
+  return (
+    <View style={styles.infoBullet}>
+      <MaterialCommunityIcons
+        name={
+          icon === "check"
+            ? "check"
+            : "circle-small"
+        }
+        size={18}
+        color={
+          iconColor ||
+          theme.icon.muted
+        }
+        style={styles.infoBulletIcon}
+      />
+
+      <AppText
+        variant="caption"
+        style={[
+          styles.infoText,
+          {
+            color:
+              theme.text.secondary,
+          },
+        ]}
+      >
+        {text}
+      </AppText>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* MAIN SCREEN                                                                */
+/* -------------------------------------------------------------------------- */
 
 const ScheduleDateChange = () => {
-  const navigation = useNavigation();
   const route = useRoute();
+  const { theme } = useTheme();
 
   const {
     scheduleId,
@@ -30,1265 +644,1545 @@ const ScheduleDateChange = () => {
     group,
   } = route.params || {};
 
-  const [loading, setLoading] = useState(false);
+  const { currentUserId } =
+    useContext(AuthContext);
 
-  // null | available | unavailable
-  const [selectedResponse, setSelectedResponse] = useState(null);
+  const effectiveCleanerId =
+    cleanerId || currentUserId;
 
-  // pending | available | unavailable
-  const [responseStatus, setResponseStatus] = useState('pending');
-  const [requestStatus, setRequestStatus] = useState('loading');
+  const [loading, setLoading] =
+    useState(false);
 
+  const [selectedResponse, setSelectedResponse] =
+    useState(null);
 
-  
+  const [responseStatus, setResponseStatus] =
+    useState("pending");
 
-  // ---------------------------------------------------------
-  // Format group
-  // ---------------------------------------------------------
-  const formatGroup = (groupValue) => {
-    if (!groupValue) return '';
+  const [requestStatus, setRequestStatus] =
+    useState("loading");
 
-    return String(groupValue)
-      .replace(/[_-]+/g, ' ')
-      .trim()
-      .replace(/\b\w/g, (char) => char.toUpperCase());
-  };
+  /* ------------------------------------------------------------------------ */
+  /* FETCH REQUEST                                                             */
+  /* ------------------------------------------------------------------------ */
 
-  // ---------------------------------------------------------
-  // Format date
-  //
-  // IMPORTANT:
-  // YYYY-MM-DD is treated as a calendar date.
-  // We intentionally do NOT use:
-  //
-  // new Date("2026-09-15")
-  //
-  // because JavaScript interprets that as UTC midnight and
-  // it can display as September 14 in US timezones.
-  // ---------------------------------------------------------
-  
-  
-  const formatDate = (date) => {
-    if (!date) {
-      return tSafe('na', 'N/A');
-    }
-
-    if (
-      typeof date === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(date)
-    ) {
-      const [year, month, day] = date
-        .split('-')
-        .map(Number);
-
-      const localDate = new Date(
-        year,
-        month - 1,
-        day
-      );
-
-      return localDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    }
-
-    const parsed = new Date(date);
-
-    if (Number.isNaN(parsed.getTime())) {
-      return String(date);
-    }
-
-    return parsed.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchDateChangeRequest();
-    }, [requestId])
-  );
-
-  const fetchDateChangeRequest = async () => {
-    if (!requestId) {
-      console.warn('⚠️ No requestId provided');
-      return;
-    }
-  
-    try {
-      setLoading(true);
-  
-      console.log(
-        '📅 Fetching date change request:',
-        requestId
-      );
-  
-      const response =
-        await userService.getDateChangeRequest(requestId);
-  
-      console.log(
-        '✅ Date change request:',
-        response?.data
-      );
-  
-      const request = response?.data;
-  
-      if (!request) {
+  const fetchDateChangeRequest =
+    useCallback(async () => {
+      if (!requestId) {
         console.warn(
-          '⚠️ No date change request returned'
+          "No requestId provided"
         );
+
+        setRequestStatus("error");
         return;
       }
-  
-      // -------------------------------------------------------
-      // Database is the source of truth
-      // -------------------------------------------------------
-     
-      switch (request.status) {
-        case 'accepted':
-          setSelectedResponse('available');
-          setResponseStatus('available');
-  
-          console.log(
-            '✅ Cleaner is AVAILABLE'
+
+      try {
+        setLoading(true);
+        setRequestStatus("loading");
+
+        const response =
+          await userService.getDateChangeRequest(
+            requestId
           );
-          break;
-  
-        case 'declined':
-        case 'rejected':
-          setSelectedResponse('unavailable');
-          setResponseStatus('unavailable');
-  
-          console.log(
-            '❌ Cleaner is UNAVAILABLE'
-          );
-          break;
-  
-        case 'pending':
-        case 'open':
-          setSelectedResponse(null);
-          setResponseStatus('pending');
-  
-          console.log(
-            '⏳ Cleaner has not responded'
-          );
-          break;
-  
-        default:
-          console.warn(
-            '⚠️ Unknown request status:',
-            request.status
-          );
-  
-          setSelectedResponse(null);
-          setResponseStatus('pending');
-      }
-  
-    } catch (error) {
-      console.error(
-        '❌ Failed to fetch date change request:',
-        error?.response?.data || error
-      );
-  
-      Alert.alert(
-        tSafe(
-          'unable_to_load',
-          'Unable to Load'
-        ),
-        error?.response?.data?.detail ||
+
+        const request = response?.data;
+
+        if (!request) {
+          setRequestStatus("error");
+          return;
+        }
+
+        switch (request.status) {
+          case "accepted":
+            setSelectedResponse(
+              "available"
+            );
+            setResponseStatus(
+              "available"
+            );
+            break;
+
+          case "declined":
+          case "rejected":
+            setSelectedResponse(
+              "unavailable"
+            );
+            setResponseStatus(
+              "unavailable"
+            );
+            break;
+
+          case "pending":
+          case "open":
+            setSelectedResponse(null);
+            setResponseStatus(
+              "pending"
+            );
+            break;
+
+          default:
+            setSelectedResponse(null);
+            setResponseStatus(
+              "pending"
+            );
+        }
+
+        setRequestStatus("loaded");
+      } catch (error) {
+        console.error(
+          "Failed to fetch date change request:",
+          error?.response?.data || error
+        );
+
+        setRequestStatus("error");
+
+        Alert.alert(
           tSafe(
-            'failed_to_fetch_date_change',
-            'Unable to load the date change request.'
+            "unable_to_load",
+            "Unable to Load"
+          ),
+          error?.response?.data?.detail ||
+            error?.response?.data?.message ||
+            tSafe(
+              "failed_to_fetch_date_change",
+              "Unable to load the date change request."
+            )
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, [requestId]);
+
+  /* ------------------------------------------------------------------------ */
+  /* REFRESH ON FOCUS                                                          */
+  /* ------------------------------------------------------------------------ */
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDateChangeRequest();
+    }, [fetchDateChangeRequest])
+  );
+
+  /* ------------------------------------------------------------------------ */
+  /* RESPOND                                                                    */
+  /* ------------------------------------------------------------------------ */
+
+  const respondToDateChange =
+    async (acceptance) => {
+      if (
+        !scheduleId ||
+        !requestId ||
+        !effectiveCleanerId
+      ) {
+        Alert.alert(
+          tSafe(
+            "error_title",
+            "Error"
+          ),
+          tSafe(
+            "missing_date_change_information",
+            "The schedule information is missing. Please reopen the notification and try again."
           )
-      );
-  
-    } finally {
-      setLoading(false);
-    }
-  };
+        );
 
-  // ---------------------------------------------------------
-  // Submit date change response
-  // ---------------------------------------------------------
-  const respondToDateChange = async (acceptance) => {
-    if (!scheduleId || !requestId || !cleanerId) {
-      Alert.alert(
-        tSafe('error_title', 'Error'),
-        tSafe(
-          'missing_date_change_information',
-          'The schedule information is missing. Please reopen the notification and try again.'
-        )
-      );
+        return;
+      }
 
-      return;
-    }
+      if (loading) {
+        return;
+      }
 
-    if (loading) {
-      return;
-    }
+      const selectedStatus =
+        acceptance === 1
+          ? "available"
+          : "unavailable";
 
-    const selectedStatus =
-      acceptance === 1
-        ? 'available'
-        : 'unavailable';
-
-    console.log(
-      '========================================'
-    );
-
-    console.log(
-      '📅 CLEANING DATE CHANGE RESPONSE'
-    );
-
-    console.log(
-      '========================================'
-    );
-
-    console.log('Schedule ID:', scheduleId);
-    console.log('Request ID:', requestId);
-    console.log('Cleaner ID:', cleanerId);
-    console.log('Old Date:', oldCleaningDate);
-    console.log('New Date:', newCleaningDate);
-    console.log('Acceptance:', acceptance);
-    console.log('Selected Status:', selectedStatus);
-
-    
-
-    // -------------------------------------------------------
-    // IMPORTANT:
-    //
-    // Set the selected response BEFORE calling the API.
-    //
-    // This guarantees the UI knows what the cleaner selected.
-    // -------------------------------------------------------
-    setSelectedResponse(selectedStatus);
-
-    setLoading(true);
-
-    try {
-      const apiResponse =
-        await userService.replyToDateChang({
-          scheduleId,
-          requestId,
-          cleanerId,
-          acceptance,
-        });
-
-      console.log(
-        '✅ DATE CHANGE API RESPONSE:',
-        apiResponse
-      );
-
-      // -----------------------------------------------------
-      // IMPORTANT:
-      //
-      // We do NOT depend on apiResponse to determine the UI
-      // status.
-      //
-      // The cleaner selected the response locally, so we know
-      // exactly what should be displayed.
-      // -----------------------------------------------------
-      setResponseStatus(selectedStatus);
-
-      console.log(
-        '✅ UI RESPONSE STATUS:',
+      setSelectedResponse(
         selectedStatus
       );
 
-    } catch (error) {
-      console.error(
-        '❌ Error responding to cleaning date change:',
-        error?.response?.data || error
-      );
+      setLoading(true);
 
-      // Reset the UI because the server did not accept
-      // the response.
-      setSelectedResponse(null);
-      setResponseStatus('pending');
+      try {
+        await userService.replyToDateChang({
+          scheduleId,
+          requestId,
+          cleanerId: effectiveCleanerId,
+          acceptance,
+        });
 
-      const message =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        tSafe(
-          'failed_to_respond_to_date_change',
-          'Something went wrong while submitting your response. Please try again.'
+        setResponseStatus(
+          selectedStatus
+        );
+        setRequestStatus("loaded");
+      } catch (error) {
+        console.error(
+          "Error responding to cleaning date change:",
+          error?.response?.data || error
         );
 
-      Alert.alert(
-        tSafe(
-          'unable_to_submit',
-          'Unable to Submit'
-        ),
-        message
-      );
+        setSelectedResponse(null);
+        setResponseStatus("pending");
 
-    } finally {
-      setLoading(false);
-    }
-  };
+        const message =
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          tSafe(
+            "failed_to_respond_to_date_change",
+            "Something went wrong while submitting your response. Please try again."
+          );
 
-  // ---------------------------------------------------------
-  // Available button
-  // ---------------------------------------------------------
+        Alert.alert(
+          tSafe(
+            "unable_to_submit",
+            "Unable to Submit"
+          ),
+          message
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /* AVAILABLE                                                                 */
+  /* ------------------------------------------------------------------------ */
+
   const handleAvailable = () => {
     Alert.alert(
       tSafe(
-        'confirm_availability',
-        'Confirm Availability'
+        "confirm_availability",
+        "Confirm Availability"
       ),
       `${tSafe(
-        'available_for_new_date_question',
-        'Are you available for this cleaning on'
+        "available_for_new_date_question",
+        "Are you available for this cleaning on"
       )} ${formatDate(newCleaningDate)}${
         cleaningTime
-          ? ` ${tSafe('at_time', 'at')} ${cleaningTime}`
-          : ''
+          ? ` ${tSafe(
+              "at_time",
+              "at"
+            )} ${cleaningTime}`
+          : ""
       }?`,
       [
         {
           text: tSafe(
-            'cancel',
-            'Cancel'
+            "cancel",
+            "Cancel"
           ),
-          style: 'cancel',
+          style: "cancel",
         },
         {
           text: tSafe(
-            'yes_im_available',
+            "yes_im_available",
             "Yes, I'm Available"
           ),
-          onPress: () => {
-            respondToDateChange(1);
-          },
+          onPress: () =>
+            respondToDateChange(1),
         },
       ]
     );
   };
 
-  // ---------------------------------------------------------
-  // Unavailable button
-  // ---------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* UNAVAILABLE                                                               */
+  /* ------------------------------------------------------------------------ */
+
   const handleUnavailable = () => {
     Alert.alert(
       tSafe(
-        'cant_make_this_date',
+        "cant_make_this_date",
         "Can't Make This Date?"
       ),
       tSafe(
-        'date_change_unavailable_warning',
+        "date_change_unavailable_warning",
         "If you can't make the new date, the host will be notified and may need to find another cleaner."
       ),
       [
         {
           text: tSafe(
-            'go_back',
-            'Go Back'
+            "go_back",
+            "Go Back"
           ),
-          style: 'cancel',
+          style: "cancel",
         },
         {
           text: tSafe(
-            'yes_continue',
-            'Yes, Continue'
+            "yes_continue",
+            "Yes, Continue"
           ),
-          style: 'destructive',
-          onPress: () => {
-            respondToDateChange(0);
-          },
+          style: "destructive",
+          onPress: () =>
+            respondToDateChange(0),
         },
       ]
     );
   };
 
-  // ---------------------------------------------------------
-  // Render status card
-  // ---------------------------------------------------------
-  const renderStatusCard = () => {
-    const isAvailable =
-      responseStatus === 'available';
+  /* ------------------------------------------------------------------------ */
+  /* INITIAL LOADING                                                           */
+  /* ------------------------------------------------------------------------ */
 
+  if (requestStatus === "loading") {
     return (
-      <View
+      <SafeAreaView
         style={[
-          styles.statusCard,
-          isAvailable
-            ? styles.statusCardAvailable
-            : styles.statusCardUnavailable,
+          styles.safeArea,
+          {
+            backgroundColor:
+              theme.background.default,
+          },
         ]}
       >
-        {/* Status Icon */}
         <View
           style={[
-            styles.statusIconContainer,
-            isAvailable
-              ? styles.statusIconAvailable
-              : styles.statusIconUnavailable,
+            styles.loadingScreen,
+            {
+              backgroundColor:
+                theme.background.default,
+            },
           ]}
         >
-          <Text
-            style={[
-              styles.statusIcon,
-              isAvailable
-                ? styles.statusIconAvailableText
-                : styles.statusIconUnavailableText,
-            ]}
-          >
-            {isAvailable ? '✓' : '×'}
-          </Text>
-        </View>
-
-        {/* Status Title */}
-        <Text style={styles.statusTitle}>
-          {isAvailable
-            ? tSafe(
-                'date_change_accepted',
-                'Date Change Accepted'
-              )
-            : tSafe(
-                'date_change_unavailable',
-                'New Date Unavailable'
-              )}
-        </Text>
-
-        {/* Status Message */}
-        <Text style={styles.statusMessage}>
-          {isAvailable
-            ? tSafe(
-                'date_change_accepted_message',
-                'You have confirmed that you are available for the new cleaning date. You will remain assigned to this cleaning.'
-              )
-            : tSafe(
-                'date_change_unavailable_message',
-                "You've let the host know that you can't make the new cleaning date. The host can now arrange a replacement."
-              )}
-        </Text>
-
-        {/* Updated Date */}
-        <View style={styles.statusDateBox}>
-          <Text style={styles.statusDateLabel}>
-            {tSafe(
-              'updated_cleaning_date',
-              'UPDATED CLEANING DATE'
-            )}
-          </Text>
-
-          <Text style={styles.statusDate}>
-            {formatDate(newCleaningDate)}
-          </Text>
-
-          {cleaningTime ? (
-            <Text style={styles.statusTime}>
-              {tSafe('at_time', 'at')}{' '}
-              {cleaningTime}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-    );
-  };
-
-  // ---------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
-
-        <View style={styles.header}>
-
           <View
             style={[
-              styles.iconContainer,
-              responseStatus === 'available'
-                ? styles.iconContainerAvailable
-                : responseStatus === 'unavailable'
-                  ? styles.iconContainerUnavailable
-                  : null,
+              styles.loadingIcon,
+              {
+                backgroundColor:
+                  theme.surface.selected,
+                borderColor:
+                  theme.border.default,
+              },
             ]}
           >
-            <Text style={styles.calendarIcon}>
-              {responseStatus === 'available'
-                ? '✓'
-                : responseStatus === 'unavailable'
-                  ? '×'
-                  : '📅'}
-            </Text>
+            <MaterialCommunityIcons
+              name="calendar-sync-outline"
+              size={38}
+              color={theme.brand.primary}
+            />
           </View>
 
-          <Text style={styles.title}>
-            {responseStatus === 'available'
+          <ActivityIndicator
+            size="large"
+            color={theme.brand.primary}
+            style={styles.loadingSpinner}
+          />
+
+          <AppText
+            variant="body"
+            style={[
+              styles.loadingScreenText,
+              {
+                color:
+                  theme.text.secondary,
+              },
+            ]}
+          >
+            {tSafe(
+              "loading_date_change",
+              "Loading date change..."
+            )}
+          </AppText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* ERROR STATE                                                               */
+  /* ------------------------------------------------------------------------ */
+
+  if (requestStatus === "error") {
+    return (
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          {
+            backgroundColor:
+              theme.background.default,
+          },
+        ]}
+      >
+        <View style={styles.errorScreen}>
+          <View
+            style={[
+              styles.errorIcon,
+              {
+                backgroundColor:
+                  withAlpha(
+                    theme.status.error,
+                    "15",
+                    theme.surface.selected
+                  ),
+                borderColor:
+                  withAlpha(
+                    theme.status.error,
+                    "35",
+                    theme.border.default
+                  ),
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={40}
+              color={theme.status.error}
+            />
+          </View>
+
+          <AppText
+            variant="h2"
+            style={[
+              styles.errorTitle,
+              {
+                color:
+                  theme.text.primary,
+              },
+            ]}
+          >
+            {tSafe(
+              "unable_to_load",
+              "Unable to Load"
+            )}
+          </AppText>
+
+          <AppText
+            variant="body"
+            style={[
+              styles.errorMessage,
+              {
+                color:
+                  theme.text.secondary,
+              },
+            ]}
+          >
+            {tSafe(
+              "failed_to_fetch_date_change",
+              "Unable to load the date change request."
+            )}
+          </AppText>
+
+          <AppButton
+            variant="primary"
+            onPress={
+              fetchDateChangeRequest
+            }
+            style={styles.retryButton}
+          >
+            {tSafe(
+              "try_again",
+              "Try Again"
+            )}
+          </AppButton>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* MAIN RENDER                                                               */
+  /* ------------------------------------------------------------------------ */
+
+  return (
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        {
+          backgroundColor:
+            theme.background.default,
+        },
+      ]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          {
+            backgroundColor:
+              theme.background.default,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ================================================================ */}
+        {/* HEADER                                                           */}
+        {/* ================================================================ */}
+
+        <View style={styles.header}>
+          <View
+            style={[
+              styles.headerIcon,
+              {
+                backgroundColor:
+                  responseStatus ===
+                  "available"
+                    ? withAlpha(
+                        theme.status.success,
+                        "15",
+                        theme.surface.selected
+                      )
+                    : responseStatus ===
+                        "unavailable"
+                      ? withAlpha(
+                          theme.status.error,
+                          "15",
+                          theme.surface.selected
+                        )
+                      : theme.surface.selected,
+                borderColor:
+                  responseStatus ===
+                  "available"
+                    ? withAlpha(
+                        theme.status.success,
+                        "35",
+                        theme.border.default
+                      )
+                    : responseStatus ===
+                        "unavailable"
+                      ? withAlpha(
+                          theme.status.error,
+                          "35",
+                          theme.border.default
+                        )
+                      : theme.border.default,
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={
+                responseStatus ===
+                "available"
+                  ? "check-circle-outline"
+                  : responseStatus ===
+                      "unavailable"
+                    ? "close-circle-outline"
+                    : "calendar-sync-outline"
+              }
+              size={39}
+              color={
+                responseStatus ===
+                "available"
+                  ? theme.status.success
+                  : responseStatus ===
+                      "unavailable"
+                    ? theme.status.error
+                    : theme.brand.primary
+              }
+            />
+          </View>
+
+          <AppText
+            variant="h1"
+            style={[
+              styles.title,
+              {
+                color:
+                  theme.text.primary,
+              },
+            ]}
+          >
+            {responseStatus ===
+            "available"
               ? tSafe(
-                  'date_change_accepted',
-                  'Date Change Accepted'
+                  "date_change_accepted",
+                  "Date Change Accepted"
                 )
-              : responseStatus === 'unavailable'
+              : responseStatus ===
+                  "unavailable"
                 ? tSafe(
-                    'date_change_unavailable',
-                    'New Date Unavailable'
+                    "date_change_unavailable",
+                    "New Date Unavailable"
                   )
                 : tSafe(
-                    'cleaning_date_changed',
-                    'Cleaning Date Changed'
+                    "cleaning_date_changed",
+                    "Cleaning Date Changed"
                   )}
-          </Text>
+          </AppText>
 
-          <Text style={styles.subtitle}>
-            {responseStatus === 'available'
+          <AppText
+            variant="body"
+            style={[
+              styles.subtitle,
+              {
+                color:
+                  theme.text.secondary,
+              },
+            ]}
+          >
+            {responseStatus ===
+            "available"
               ? tSafe(
-                  'date_change_accepted_header',
-                  'You confirmed that you are available for the updated cleaning date.'
+                  "date_change_accepted_header",
+                  "You confirmed that you are available for the updated cleaning date."
                 )
-              : responseStatus === 'unavailable'
+              : responseStatus ===
+                  "unavailable"
                 ? tSafe(
-                    'date_change_unavailable_header',
+                    "date_change_unavailable_header",
                     "You've let the host know that you can't make the updated cleaning date."
                   )
                 : tSafe(
-                    'cleaning_date_changed_description',
-                    "The guest's reservation has changed, so the cleaning date has been updated."
+                    "cleaning_date_changed_description",
+                    "The reservation has changed, so the cleaning date has been updated."
                   )}
-          </Text>
-
+          </AppText>
         </View>
 
-        {/* =====================================================
-            CLEANING DETAILS
-        ====================================================== */}
+        {/* ================================================================ */}
+        {/* CLEANING DETAILS                                                 */}
+        {/* ================================================================ */}
 
-        <Card style={styles.card}>
-          <Card.Content>
-
-            <Text style={styles.sectionLabel}>
-              {tSafe(
-                'cleaning_details',
-                'CLEANING DETAILS'
-              )}
-            </Text>
-
-            <Text style={styles.propertyName}>
-              {propertyName ||
-                tSafe(
-                  'cleaning',
-                  'Cleaning'
-                )}
-            </Text>
-
-            {group ? (
-              <View style={styles.detailRow}>
-
-                <Text style={styles.detailLabel}>
-                  {tSafe(
-                    'cleaning',
-                    'Cleaning'
-                  )}
-                </Text>
-
-                <Text style={styles.detailValue}>
-                  {formatGroup(group)}
-                </Text>
-
-              </View>
-            ) : null}
-
-            {cleaningTime ? (
-              <View style={styles.detailRow}>
-
-                <Text style={styles.detailLabel}>
-                  {tSafe(
-                    'time',
-                    'Time'
-                  )}
-                </Text>
-
-                <Text style={styles.detailValue}>
-                  {cleaningTime}
-                </Text>
-
-              </View>
-            ) : null}
-
-          </Card.Content>
-        </Card>
-
-        {/* =====================================================
-            DATE CHANGE
-        ====================================================== */}
-
-        <Card style={styles.card}>
-          <Card.Content>
-
-            <Text style={styles.sectionLabel}>
-              {tSafe(
-                'date_change',
-                'DATE CHANGE'
-              )}
-            </Text>
-
-            <View style={styles.dateContainer}>
-
-              {/* Previous Date */}
-              <View style={styles.dateColumn}>
-
-                <Text style={styles.dateLabel}>
-                  {tSafe(
-                    'previous_date',
-                    'PREVIOUS DATE'
-                  )}
-                </Text>
-
-                <Text style={styles.oldDate}>
-                  {formatDate(
-                    oldCleaningDate
-                  )}
-                </Text>
-
-              </View>
-
-              {/* Arrow */}
-              <View style={styles.arrowContainer}>
-
-                <Text style={styles.arrow}>
-                  →
-                </Text>
-
-              </View>
-
-              {/* New Date */}
-              <View style={styles.dateColumn}>
-
-                <Text style={styles.dateLabel}>
-                  {tSafe(
-                    'new_date',
-                    'NEW DATE'
-                  )}
-                </Text>
-
-                <Text style={styles.newDate}>
-                  {formatDate(
-                    newCleaningDate
-                  )}
-                </Text>
-
-              </View>
-
+        <AppCard
+          variant="bordered"
+          style={[
+            styles.card,
+            {
+              backgroundColor:
+                theme.card.background,
+              borderColor:
+                theme.card.border,
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[
+                styles.sectionIcon,
+                {
+                  backgroundColor:
+                    theme.surface.selected,
+                  borderColor:
+                    theme.border.default,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="broom"
+                size={21}
+                color={theme.brand.primary}
+              />
             </View>
 
-            <Divider style={styles.divider} />
-
-            <Text style={styles.explanation}>
-              {responseStatus === 'pending'
-                ? tSafe(
-                    'confirm_new_cleaning_date',
-                    'Please confirm whether you can still complete this cleaning on the new date.'
-                  )
-                : responseStatus === 'available'
-                  ? tSafe(
-                      'date_change_confirmed_explanation',
-                      'You have confirmed that you can complete this cleaning on the new date.'
-                    )
-                  : tSafe(
-                      'date_change_declined_explanation',
-                      "You have indicated that you cannot complete this cleaning on the new date."
-                    )}
-            </Text>
-
-          </Card.Content>
-        </Card>
-
-        {/* =====================================================
-            RESPONSE SECTION
-        ====================================================== */}
-
-        <View style={styles.responseSection}>
-
-          {responseStatus === 'pending' ? (
-            <>
-              <Text style={styles.responseTitle}>
-                {tSafe(
-                  'can_you_make_new_date',
-                  'Can you make the new date?'
-                )}
-              </Text>
-
-              <Text style={styles.responseSubtitle}>
-                {tSafe(
-                  'response_sent_to_host',
-                  'Your response will be sent to the host.'
-                )}
-              </Text>
-
-              {/* ---------------------------------------------
-                  AVAILABLE
-              ---------------------------------------------- */}
-
-              <Button
-                mode="contained"
-                onPress={handleAvailable}
-                disabled={loading}
-                loading={
-                  loading &&
-                  selectedResponse === 'available'
-                }
-                style={
-                  styles.availableButton
-                }
-                contentStyle={
-                  styles.buttonContent
-                }
-                labelStyle={
-                  styles.availableButtonLabel
-                }
-                icon="check"
+            <View
+              style={
+                styles.sectionHeaderContent
+              }
+            >
+              <AppText
+                variant="h3"
+                style={[
+                  styles.sectionTitle,
+                  {
+                    color:
+                      theme.text.primary,
+                  },
+                ]}
               >
                 {tSafe(
-                  'im_available',
-                  "I'm Available"
+                  "cleaning_details",
+                  "Cleaning Details"
                 )}
-              </Button>
+              </AppText>
 
-              {/* ---------------------------------------------
-                  UNAVAILABLE
-              ---------------------------------------------- */}
-
-              <Button
-                mode="outlined"
-                onPress={handleUnavailable}
-                disabled={loading}
-                loading={
-                  loading &&
-                  selectedResponse === 'unavailable'
-                }
-                style={
-                  styles.unavailableButton
-                }
-                contentStyle={
-                  styles.buttonContent
-                }
-                labelStyle={
-                  styles.unavailableButtonLabel
-                }
-                icon="close"
+              <AppText
+                variant="caption"
+                style={[
+                  styles.sectionSubtitle,
+                  {
+                    color:
+                      theme.text.muted,
+                  },
+                ]}
               >
                 {tSafe(
-                  'i_cant_make_this_date',
-                  "I Can't Make This Date"
+                  "schedule_information",
+                  "Schedule information"
                 )}
-              </Button>
-            </>
-          ) : (
-            <>
-              {/* ---------------------------------------------
-                  FINAL RESPONSE STATUS
-              ---------------------------------------------- */}
+              </AppText>
+            </View>
+          </View>
 
-              {renderStatusCard()}
-            </>
+          <AppText
+            variant="h3"
+            style={[
+              styles.propertyName,
+              {
+                color:
+                  theme.text.primary,
+              },
+            ]}
+          >
+            {propertyName ||
+              tSafe(
+                "cleaning",
+                "Cleaning"
+              )}
+          </AppText>
+
+          {group && (
+            <DetailRow
+              icon={
+                <MaterialCommunityIcons
+                  name="account-group-outline"
+                  size={19}
+                />
+              }
+              label={tSafe(
+                "cleaning_group",
+                "Cleaning Group"
+              )}
+              value={formatGroup(group)}
+              theme={theme}
+            />
           )}
 
-        </View>
+          {cleaningTime && (
+            <DetailRow
+              icon={
+                <MaterialIcons
+                  name="access-time"
+                  size={19}
+                />
+              }
+              label={tSafe(
+                "time",
+                "Time"
+              )}
+              value={cleaningTime}
+              theme={theme}
+            />
+          )}
+        </AppCard>
 
-        {/* =====================================================
-            INFORMATION
-        ====================================================== */}
+        {/* ================================================================ */}
+        {/* DATE CHANGE                                                      */}
+        {/* ================================================================ */}
 
-        <View style={styles.infoBox}>
+        <AppCard
+          variant="bordered"
+          style={[
+            styles.card,
+            {
+              backgroundColor:
+                theme.card.background,
+              borderColor:
+                theme.card.border,
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[
+                styles.sectionIcon,
+                {
+                  backgroundColor:
+                    theme.surface.selected,
+                  borderColor:
+                    theme.border.default,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="calendar-edit-outline"
+                size={21}
+                color={theme.brand.primary}
+              />
+            </View>
 
-          <Text style={styles.infoTitle}>
+            <View
+              style={
+                styles.sectionHeaderContent
+              }
+            >
+              <AppText
+                variant="h3"
+                style={[
+                  styles.sectionTitle,
+                  {
+                    color:
+                      theme.text.primary,
+                  },
+                ]}
+              >
+                {tSafe(
+                  "date_change",
+                  "Date Change"
+                )}
+              </AppText>
 
-            {responseStatus === 'pending'
+              <AppText
+                variant="caption"
+                style={[
+                  styles.sectionSubtitle,
+                  {
+                    color:
+                      theme.text.muted,
+                  },
+                ]}
+              >
+                {tSafe(
+                  "compare_schedule_dates",
+                  "Compare the original and updated dates"
+                )}
+              </AppText>
+            </View>
+          </View>
+
+          <DateComparison
+            oldCleaningDate={
+              oldCleaningDate
+            }
+            newCleaningDate={
+              newCleaningDate
+            }
+            theme={theme}
+          />
+
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor:
+                  theme.divider,
+              },
+            ]}
+          />
+
+          <AppText
+            variant="body"
+            style={[
+              styles.explanation,
+              {
+                color:
+                  theme.text.secondary,
+              },
+            ]}
+          >
+            {responseStatus ===
+            "pending"
               ? tSafe(
-                  'what_happens_next',
-                  'What happens next?'
+                  "confirm_new_cleaning_date",
+                  "Please confirm whether you can still complete this cleaning on the new date."
                 )
-              : responseStatus === 'available'
+              : responseStatus ===
+                  "available"
                 ? tSafe(
-                    'confirmed_what_happens_next',
-                    'What happens next?'
+                    "date_change_confirmed_explanation",
+                    "You have confirmed that you can complete this cleaning on the new date."
                   )
                 : tSafe(
-                    'unavailable_what_happens_next',
-                    'What happens next?'
+                    "date_change_declined_explanation",
+                    "You have indicated that you cannot complete this cleaning on the new date."
                   )}
+          </AppText>
+        </AppCard>
 
-          </Text>
+        {/* ================================================================ */}
+        {/* RESPONSE                                                         */}
+        {/* ================================================================ */}
 
-          {/* Pending */}
-          {responseStatus === 'pending' ? (
-            <>
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_available_result',
-                  "If you're available, you'll remain assigned to this cleaning."
-                )}
-              </Text>
-
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_unavailable_result',
-                  "If you're unavailable, the host will be notified."
-                )}
-              </Text>
-
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_replacement_result',
-                  'The host can then choose another cleaner for the cleaning.'
-                )}
-              </Text>
-            </>
-          ) : responseStatus === 'available' ? (
-
-            /* Available */
-            <>
-              <Text style={styles.infoText}>
-                ✓{' '}
-                {tSafe(
-                  'date_change_accepted_next_step',
-                  'The host has been notified that you are available for the new cleaning date.'
-                )}
-              </Text>
-
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_accepted_assignment',
-                  'You will remain assigned to this cleaning.'
-                )}
-              </Text>
-            </>
-
-          ) : (
-
-            /* Unavailable */
-            <>
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_unavailable_next_step',
-                  'The host has been notified that you are unavailable.'
-                )}
-              </Text>
-
-              <Text style={styles.infoText}>
-                •{' '}
-                {tSafe(
-                  'date_change_replacement_result',
-                  'The host can now arrange another cleaner for the new date.'
-                )}
-              </Text>
-            </>
-
-          )}
-
-        </View>
-
-        {/* =====================================================
-            LOADING
-        ====================================================== */}
-
-        {loading && (
-          <View style={styles.loadingContainer}>
-
-            <ActivityIndicator
-              size="small"
-              color={COLORS.primary}
-            />
-
-            <Text style={styles.loadingText}>
+        {responseStatus ===
+        "pending" ? (
+          <View style={styles.responseSection}>
+            <AppText
+              variant="h2"
+              style={[
+                styles.responseTitle,
+                {
+                  color:
+                    theme.text.primary,
+                },
+              ]}
+            >
               {tSafe(
-                'submitting_response',
-                'Submitting your response...'
+                "can_you_make_new_date",
+                "Can you make the new date?"
               )}
-            </Text>
+            </AppText>
 
+            <AppText
+              variant="body"
+              style={[
+                styles.responseSubtitle,
+                {
+                  color:
+                    theme.text.secondary,
+                },
+              ]}
+            >
+              {tSafe(
+                "response_sent_to_host",
+                "Your response will be sent to the host."
+              )}
+            </AppText>
+
+            <AppButton
+              variant="primary"
+              onPress={
+                handleAvailable
+              }
+              disabled={loading}
+              loading={
+                loading &&
+                selectedResponse ===
+                  "available"
+              }
+              icon="check"
+              style={
+                styles.responseButton
+              }
+            >
+              {tSafe(
+                "im_available",
+                "I'm Available"
+              )}
+            </AppButton>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={
+                handleUnavailable
+              }
+              disabled={loading}
+              style={[
+                styles.declineButton,
+                {
+                  backgroundColor:
+                    theme.surface.elevated,
+                  borderColor:
+                    theme.status.error,
+                  opacity:
+                    loading ? 0.55 : 1,
+                },
+              ]}
+            >
+              {loading &&
+              selectedResponse ===
+                "unavailable" ? (
+                <ActivityIndicator
+                  size="small"
+                  color={
+                    theme.status.error
+                  }
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color={
+                    theme.status.error
+                  }
+                />
+              )}
+
+              <AppText
+                variant="body"
+                style={[
+                  styles.declineButtonText,
+                  {
+                    color:
+                      theme.status.error,
+                  },
+                ]}
+              >
+                {tSafe(
+                  "i_cant_make_this_date",
+                  "I Can't Make This Date"
+                )}
+              </AppText>
+            </TouchableOpacity>
           </View>
+        ) : (
+          <ResponseStatusCard
+            responseStatus={
+              responseStatus
+            }
+            newCleaningDate={
+              newCleaningDate
+            }
+            cleaningTime={
+              cleaningTime
+            }
+            theme={theme}
+          />
         )}
 
+        {/* ================================================================ */}
+        {/* INFORMATION                                                      */}
+        {/* ================================================================ */}
+
+        <InformationCard
+          responseStatus={
+            responseStatus
+          }
+          theme={theme}
+        />
+
+        {/* ================================================================ */}
+        {/* SUBMITTING                                                       */}
+        {/* ================================================================ */}
+
+        {loading &&
+          responseStatus ===
+            "pending" && (
+            <View
+              style={[
+                styles.loadingContainer,
+                {
+                  backgroundColor:
+                    theme.surface.selected,
+                  borderColor:
+                    theme.border.default,
+                },
+              ]}
+            >
+              <ActivityIndicator
+                size="small"
+                color={
+                  theme.brand.primary
+                }
+              />
+
+              <AppText
+                variant="caption"
+                style={[
+                  styles.loadingText,
+                  {
+                    color:
+                      theme.text.secondary,
+                  },
+                ]}
+              >
+                {tSafe(
+                  "submitting_response",
+                  "Submitting your response..."
+                )}
+              </AppText>
+            </View>
+          )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/* DETAIL ROW                                                                 */
+/* -------------------------------------------------------------------------- */
+
+const DetailRow = ({
+  icon,
+  label,
+  value,
+  theme,
+}) => {
+  return (
+    <View
+      style={[
+        styles.detailRow,
+        {
+          borderTopColor:
+            theme.divider,
+        },
+      ]}
+    >
+      <View
+        style={styles.detailLabelContainer}
+      >
+        <View
+          style={[
+            styles.detailIcon,
+            {
+              backgroundColor:
+                theme.background.sunken,
+            },
+          ]}
+        >
+          {React.cloneElement(
+            icon,
+            {
+              color:
+                theme.icon.muted,
+            }
+          )}
+        </View>
+
+        <AppText
+          variant="caption"
+          style={[
+            styles.detailLabel,
+            {
+              color:
+                theme.text.muted,
+            },
+          ]}
+        >
+          {label}
+        </AppText>
+      </View>
+
+      <AppText
+        variant="body"
+        style={[
+          styles.detailValue,
+          {
+            color:
+              theme.text.primary,
+          },
+        ]}
+      >
+        {value}
+      </AppText>
+    </View>
+  );
+};
+
 export default ScheduleDateChange;
+
+/* -------------------------------------------------------------------------- */
+/* STYLES                                                                      */
+/* -------------------------------------------------------------------------- */
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
   },
 
   container: {
-    padding: 20,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 44,
   },
 
-  // =========================================================
-  // Header
-  // =========================================================
+  /* ---------------------------------------------------------------------- */
+  /* HEADER                                                                 */
+  /* ---------------------------------------------------------------------- */
 
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
+    paddingHorizontal: 12,
   },
 
-  iconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#e8f8ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-
-  iconContainerAvailable: {
-    backgroundColor: '#d9f3e2',
-  },
-
-  iconContainerUnavailable: {
-    backgroundColor: '#f8dddd',
-  },
-
-  calendarIcon: {
-    fontSize: 34,
-    fontWeight: '700',
+  headerIcon: {
+    width: 82,
+    height: 82,
+    borderRadius: 28,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
 
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#222',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
   subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#666',
-    textAlign: 'center',
-    maxWidth: 350,
+    marginTop: 9,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    maxWidth: 360,
   },
 
-  // =========================================================
-  // Cards
-  // =========================================================
+  /* ---------------------------------------------------------------------- */
+  /* CARDS                                                                  */
+  /* ---------------------------------------------------------------------- */
 
   card: {
-    marginBottom: 16,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-
-    borderWidth: 0,
-    borderColor: '#F0F2F4',
-
-    shadowColor: '#000',
-
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-
-    shadowOpacity: 0.01,
-    shadowRadius: 1,
-
-    elevation: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 17,
+    marginBottom: 15,
   },
 
-  sectionLabel: {
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  sectionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sectionHeaderContent: {
+    flex: 1,
+    marginLeft: 11,
+  },
+
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+  },
+
+  sectionSubtitle: {
+    marginTop: 3,
     fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    color: '#888',
-    marginBottom: 10,
   },
 
   propertyName: {
     fontSize: 19,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 14,
+    lineHeight: 24,
+    fontWeight: "800",
+    marginBottom: 3,
   },
+
+  /* ---------------------------------------------------------------------- */
+  /* DETAILS                                                                */
+  /* ---------------------------------------------------------------------- */
 
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderTopWidth: 1,
   },
 
-  detailLabel: {
-    fontSize: 14,
-    color: '#777',
-  },
-
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    maxWidth: '65%',
-    textAlign: 'right',
-  },
-
-  // =========================================================
-  // Date Change
-  // =========================================================
-
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-
-  dateColumn: {
+  detailLabelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
 
+  detailIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 9,
+  },
+
+  detailLabel: {
+    fontSize: 12,
+  },
+
+  detailValue: {
+    maxWidth: "50%",
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "right",
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* DATE COMPARISON                                                        */
+  /* ---------------------------------------------------------------------- */
+
+  dateComparison: {
+    minHeight: 132,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 13,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  dateBlock: {
+    flex: 1,
+    alignItems: "center",
+    minWidth: 0,
+  },
+
+  dateIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+
   dateLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.7,
-    color: '#888',
-    marginBottom: 6,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    marginBottom: 4,
+    textAlign: "center",
   },
 
   oldDate: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#666',
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    textAlign: "center",
   },
 
   newDate: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.primary,
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
-  arrowContainer: {
-    paddingHorizontal: 12,
-  },
-
-  arrow: {
-    fontSize: 25,
-    color: '#999',
+  dateArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 7,
   },
 
   divider: {
-    marginVertical: 15,
+    height: 1,
+    marginVertical: 17,
   },
 
   explanation: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 21,
-    color: '#666',
   },
 
-  // =========================================================
-  // Response
-  // =========================================================
+  /* ---------------------------------------------------------------------- */
+  /* RESPONSE                                                               */
+  /* ---------------------------------------------------------------------- */
 
   responseSection: {
-    marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   responseTitle: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: '#222',
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
     marginBottom: 5,
   },
 
   responseSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 15,
+  },
+
+  responseButton: {
+    marginBottom: 11,
+  },
+
+  declineButton: {
+    minHeight: 54,
+    borderWidth: 1.5,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+
+  declineButtonText: {
+    marginLeft: 8,
     fontSize: 14,
-    color: '#777',
-    marginBottom: 16,
+    fontWeight: "800",
   },
 
-  availableButton: {
-    borderRadius: 10,
-    marginBottom: 12,
-    backgroundColor: COLORS.primary,
-  },
-
-  unavailableButton: {
-    borderRadius: 10,
-    borderColor: COLORS.error,
-  },
-
-  buttonContent: {
-    height: 52,
-  },
-
-  availableButtonLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
-  },
-
-  unavailableButtonLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.error,
-  },
-
-  // =========================================================
-  // Status Card
-  // =========================================================
+  /* ---------------------------------------------------------------------- */
+  /* STATUS                                                                 */
+  /* ---------------------------------------------------------------------- */
 
   statusCard: {
-    borderRadius: 16,
-    padding: 22,
-    alignItems: 'center',
     borderWidth: 1,
-  },
-
-  statusCardAvailable: {
-    backgroundColor: '#f1fbf5',
-    borderColor: '#a9dfbc',
-  },
-
-  statusCardUnavailable: {
-    backgroundColor: '#fff5f5',
-    borderColor: '#edb5b5',
+    borderRadius: 20,
+    padding: 21,
+    marginBottom: 16,
+    alignItems: "center",
   },
 
   statusIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-
-  statusIconAvailable: {
-    backgroundColor: '#d9f3e2',
-  },
-
-  statusIconUnavailable: {
-    backgroundColor: '#f8dddd',
-  },
-
-  statusIcon: {
-    fontSize: 34,
-    fontWeight: '700',
-  },
-
-  statusIconAvailableText: {
-    color: '#218739',
-  },
-
-  statusIconUnavailableText: {
-    color: '#c62828',
+    width: 76,
+    height: 76,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
   },
 
   statusTitle: {
     fontSize: 21,
-    fontWeight: '700',
-    color: '#222',
-    textAlign: 'center',
-    marginBottom: 8,
+    lineHeight: 27,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
   statusMessage: {
-    fontSize: 14,
+    marginTop: 9,
+    fontSize: 13,
     lineHeight: 21,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 18,
+    textAlign: "center",
+    maxWidth: 340,
   },
 
   statusDateBox: {
-    width: '100%',
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 15,
     padding: 14,
-    alignItems: 'center',
+    marginTop: 18,
+    alignItems: "center",
   },
 
   statusDateLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    color: '#888',
-    marginBottom: 5,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.7,
   },
 
   statusDate: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primary,
+    marginTop: 5,
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
   statusTime: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 3,
+    marginTop: 4,
+    fontSize: 12,
   },
 
-  // =========================================================
-  // Information
-  // =========================================================
+  /* ---------------------------------------------------------------------- */
+  /* INFORMATION                                                            */
+  /* ---------------------------------------------------------------------- */
 
-  infoBox: {
-    backgroundColor: '#eef9fd',
-    borderRadius: 12,
-    padding: 16,
+  infoCard: {
+    flexDirection: "row",
+    borderRadius: 18,
+    padding: 15,
     marginBottom: 15,
   },
 
-  infoTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 10,
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  infoText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#555',
+  infoContent: {
+    flex: 1,
+    marginLeft: 11,
+  },
+
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 7,
+  },
+
+  infoBullet: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 5,
   },
 
-  // =========================================================
-  // Loading
-  // =========================================================
+  infoBulletIcon: {
+    marginTop: 1,
+    marginRight: 3,
+  },
+
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 19,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* LOADING                                                                */
+  /* ---------------------------------------------------------------------- */
 
   loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    marginBottom: 8,
   },
 
   loadingText: {
     marginLeft: 8,
-    fontSize: 13,
-    color: '#777',
+    fontSize: 12,
+  },
+
+  loadingScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+
+  loadingIcon: {
+    width: 84,
+    height: 84,
+    borderRadius: 28,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loadingSpinner: {
+    marginTop: 20,
+  },
+
+  loadingScreenText: {
+    marginTop: 11,
+    fontSize: 14,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* ERROR                                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  errorScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+
+  errorIcon: {
+    width: 84,
+    height: 84,
+    borderRadius: 28,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 17,
+  },
+
+  errorTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  errorMessage: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    maxWidth: 330,
+  },
+
+  retryButton: {
+    marginTop: 20,
+    minWidth: 150,
   },
 });
-
-
 
 
 // import React, { useState } from 'react';

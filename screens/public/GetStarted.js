@@ -1,1914 +1,10 @@
-
-
-
-
-// screens/public/GetStarted.js
-// import { 
-//   StyleSheet, 
-//   Text, 
-//   View, 
-//   TouchableOpacity, 
-//   StatusBar, 
-//   Alert,
-//   ActivityIndicator,
-//   Platform 
-// } from 'react-native';
-// import React, { useState, useEffect, useContext } from 'react';
-// import ROUTES from '../../constants/routes';
-// import COLORS from '../../constants/colors';
-// import { AuthContext } from '../../context/AuthContext';
-// import * as Animatable from 'react-native-animatable';
-// import RoleSelection from '../../components/shared/RoleSelection';
-// import { useNavigation } from '@react-navigation/native';
-// import * as AppleAuthentication from 'expo-apple-authentication';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import fetchIPGeolocation from '../../services/geolocation';
-
-// import * as WebBrowser from 'expo-web-browser';
-// import * as Google from 'expo-auth-session/providers/google';
-// import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-
-
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { db } from '../../services/firebase/config';
-// import {getDatabase, ref, set } from 'firebase/database';
-// import { useNotification } from '../../hooks/useNotification';
-// // import { navigationRef } from '../../App';
-// import { navigationRef } from '../../utils/navigationRef';
-// import { auth } from '../../services/firebase/config';
-
-// // Initialize WebBrowser for auth
-// WebBrowser.maybeCompleteAuthSession();
-// const GOOGLE_CLIENT_ID ="283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com";
-
-// const GetStarted = () => {
-//     const navigation = useNavigation();
-//     const { signupWithGoogle, signupWithApple, login, logout } = useContext(AuthContext);
-//     const [selectedRole, setSelectedRole] = useState(null);
-//     const [googleLoading, setGoogleLoading] = useState(false);
-//     const [appleLoading, setAppleLoading] = useState(false);
-//     const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
-//     const [geolocationData, setGeolocationData] = useState(null);
-//     const [fetchingLocation, setFetchingLocation] = useState(false);
-
-
-//     const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
-
-//     // ----------------------------
-//     // GOOGLE AUTH (FIXED)
-//     // ----------------------------
-//     const [request, response, promptAsync] = Google.useAuthRequest({
-//       iosClientId: GOOGLE_CLIENT_ID,
-//       androidClientId: GOOGLE_CLIENT_ID,
-//       webClientId: GOOGLE_CLIENT_ID,
-//     });
-//     // const [request, response, promptAsync] = Google.useAuthRequest({
-//     //     // For Expo Go development
-//     //     expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
-        
-//     //     // For standalone apps
-//     //     iosClientId: Platform.OS === 'ios' ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com' : undefined,
-//     //     androidClientId: Platform.OS === 'android' ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com' : undefined,
-        
-//     //     scopes: ['profile', 'email', 'openid'],
-//     // });
-
-//     // Fetch geolocation on mount
-//     useEffect(() => {
-//         fetchGeolocation();
-//         checkAppleAuthAvailability();
-//     }, []);
-
-    
-
-//   useEffect(() => {
-//     if (response?.type === 'success') {
-//       handleGoogleAuthResponse(response);
-//     }
-//   }, [response]);
-
-//     const fetchGeolocation = async () => {
-//         try {
-//             setFetchingLocation(true);
-//             const data = await fetchIPGeolocation();
-//             setGeolocationData(data);
-//             console.log("📍 Location fetched:", data);
-//         } catch (error) {
-//             console.error("Failed to fetch location:", error);
-//         } finally {
-//             setFetchingLocation(false);
-//         }
-//     };
-
-//     const fetchUserFirebaseData = async(uid, response) => {
-//       try {
-//           const mySnapshot = await get(ref(db, `users/${uid}`))
-//           setFBCurrentUser(mySnapshot.val())
-  
-//           const data_to_send = {
-//               resp: response,
-//               fbUser: mySnapshot.val(),
-//               expo_push_token: expoPushToken
-//           }
-          
-//           console.log("Firebase User collected:",data_to_send.fbUser)
-  
-//           login(data_to_send)
-  
-          
-//       } catch (error) {
-//           console.error("Error fetching Firebase data:", error);
-//           // Even if Firebase fails, still login the user
-//           const data_to_send = {
-//               resp: response,
-//               fbUser: null,
-//               expo_push_token: expoPushToken
-//           }
-//           login(data_to_send);
-//       }
-//   }
-
-//     const checkAppleAuthAvailability = async () => {
-//         if (Platform.OS === 'ios') {
-//             const isAvailable = await AppleAuthentication.isAvailableAsync();
-//             setAppleAuthAvailable(isAvailable);
-//         }
-//     };
-
-//     const handleRoleSelect = (role) => {
-//         console.log('Role selected:', role);
-//         setSelectedRole(role);
-//     };
-
-//     const handleEmailSignup = () => {
-//         if (!selectedRole) {
-//             Alert.alert('Select Role', 'Please select your role first');
-//             return;
-//         }
-//         console.log('Navigating to email signup with role:', selectedRole);
-//         navigation.navigate(ROUTES.signup, { 
-//             userType: selectedRole,
-//             geolocation: geolocationData
-//         });
-//     };
-
-    
-
-//     const handleGoogleSignIn = async () => {
-
-//       try {
-//         if (!selectedRole) {
-//           Alert.alert("Select Role", "Please select your role first");
-//           return;
-//         }
-    
-//         if (!request) {
-//           Alert.alert("Error", "Google Auth not ready");
-//           return;
-//         }
-    
-//         setGoogleLoading(true);
-//         await promptAsync();
-    
-//       } catch (error) {
-//         console.log("Prompt error:", error);
-//         Alert.alert("Error", "Google sign-in failed");
-//       } finally {
-    
-//         setGoogleLoading(false);
-    
-//       }
-    
-//     };
-
-//     const writeUserData = (userData) => {
-  
-//       try {
-//           // setDoc(doc(db, "userChats", userData._id), {});
-//           const userId = userData.userId;
-//           const firstname = userData.firstname;
-//           const lastname = userData.lastname;
-//           const email = userData.email;
-//           const avatar = ""
-//           const userRef = `users/${userId}`;
-//           const userDatabaseRef = ref(db, userRef);
-//           set(userDatabaseRef, {
-//             userId: userId,
-//             firstname:firstname,
-//             lastname:lastname,
-//             language:"en",
-//             email:email,
-//             avatar:avatar
-//           });
-  
-//           const unreadMsgRef = `unreadMessages/${userId}`;
-//           const unreadMsgDatabaseRef = ref(db, unreadMsgRef);
-
-//           set(unreadMsgDatabaseRef, {
-            
-//           })
-//           // alert("Data written successfully!");
-//       } catch (error) {
-//           console.error("Error writing data: ", error);
-//           // alert("An error occurred while writing data.");
-//       }
-  
-//     };
-
-//     const updateUser = (udata)=> {
-//       console.log(udata)
-//     }
-
-    
-
-//     const handleGoogleAuthResponse = async (response) => {
-//       try {
-//         setGoogleLoading(true);
-    
-//         const { authentication } = response;
-    
-//         const accessToken = authentication?.accessToken;
-//         const idToken = authentication?.idToken;
-    
-//         if (!accessToken || !idToken) {
-//           Alert.alert('Error', 'Google login failed: missing tokens');
-//           return;
-//         }
-    
-//         // 1. GET USER INFO FROM GOOGLE
-//         const userInfoResponse = await fetch(
-//           'https://www.googleapis.com/oauth2/v2/userinfo',
-//           {
-//             headers: {
-//               Authorization: `Bearer ${accessToken}`,
-//             },
-//           }
-//         );
-    
-//         if (!userInfoResponse.ok) {
-//           throw new Error('Failed to fetch user info from Google');
-//         }
-    
-//         const googleUser = await userInfoResponse.json();
-    
-//         // attach tokens
-//         googleUser.accessToken = accessToken;
-//         googleUser.idToken = idToken;
-//         googleUser.provider = 'google';
-    
-//         console.log('Google User:', googleUser.email);
-    
-//         // 2. FIREBASE AUTH (ONLY HERE — NOT IN USEEFFECT)
-//         const credential = GoogleAuthProvider.credential(idToken);
-//         const firebaseResult = await signInWithCredential(auth, credential);
-    
-//         const firebaseUser = firebaseResult.user;
-    
-//         console.log("Firebase user:", firebaseUser.email);
-    
-//         // 3. SEND TO YOUR BACKEND
-//         await handleGoogleBackendLogin(googleUser);
-    
-//       } catch (error) {
-//         console.log('Google sign-in error:', error);
-//         Alert.alert(
-//           'Google Sign-In Error',
-//           error.message || 'Unable to sign in with Google'
-//         );
-//       } finally {
-//         setGoogleLoading(false);
-//       }
-//     };
-    
-//     const handleGoogleBackendLogin = async (googleUser) => {
-//       // Move baseUrl outside try block so it's accessible in catch
-//       const baseUrl = 'https://www.freshsweeper.com';
-//       const endpoint = `${baseUrl}/api/auth/google_auth`;
-      
-//       try {
-//         const requestBody = {
-//           token: googleUser.idToken,
-//           userType: selectedRole
-//           // Note: Only send token and userType - backend gets email, name from Google token
-//         };
-    
-//         // LOG REQUEST DETAILS
-//         console.log('📤 SENDING GOOGLE LOGIN REQUEST:');
-//         console.log('========================================');
-//         console.log('Endpoint:', endpoint);
-//         console.log('Method: POST');
-//         console.log('Headers:', {
-//           'Content-Type': 'application/json'
-//         });
-//         console.log('Request Body:', JSON.stringify(requestBody, null, 2));
-//         console.log('Google User Info:', {
-//           email: googleUser.email,
-//           name: googleUser.name,
-//           id: googleUser.id,
-//           verified: googleUser.verified_email,
-//           picture: googleUser.picture,
-//           accessTokenLength: googleUser.accessToken?.length,
-//           idTokenLength: googleUser.idToken?.length
-//         });
-//         console.log('Selected Role:', selectedRole);
-//         console.log('========================================');
-        
-//         const startTime = Date.now();
-        
-//         // Make the API call with timeout
-//         const controller = new AbortController();
-//         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-//         let response;
-//         try {
-//           response = await fetch(endpoint, {
-//             method: 'POST',
-//             headers: {
-//               'Content-Type': 'application/json',
-//               'Accept': 'application/json',
-//             },
-//             body: JSON.stringify(requestBody),
-//             signal: controller.signal
-//           });
-//           console.log("Response status:", response.status);
-//         } catch (fetchError) {
-//           if (fetchError.name === 'AbortError') {
-//             throw new Error('Request timeout. Please check your connection and try again.');
-//           }
-//           throw fetchError;
-//         } finally {
-//           clearTimeout(timeoutId);
-//         }
-        
-//         const responseTime = Date.now() - startTime;
-        
-//         // LOG RESPONSE DETAILS
-//         console.log('📥 RECEIVED BACKEND RESPONSE:');
-//         console.log('========================================');
-//         console.log('Response Time:', `${responseTime}ms`);
-//         console.log('Status Code:', response.status);
-//         console.log('Status Text:', response.statusText);
-//         console.log('Response Headers:', Object.fromEntries([...response.headers.entries()]));
-        
-//         let responseData;
-//         try {
-//           responseData = await response.json();
-//           console.log('Response Data:', JSON.stringify(responseData, null, 2));
-//         } catch (parseError) {
-//           console.error('Failed to parse JSON response:', parseError);
-//           const textResponse = await response.text();
-//           console.log('Raw response:', textResponse);
-//           throw new Error(`Invalid server response: ${textResponse.substring(0, 100)}`);
-//         }
-        
-//         // Check for specific error structures
-//         if (responseData.detail) {
-//           console.log('Error Detail:', responseData.detail);
-//         }
-//         if (responseData.message) {
-//           console.log('Message:', responseData.message);
-//         }
-//         console.log('========================================');
-    
-//         if (response.ok) {
-//           // Handle both success and error responses from backend
-//           if (responseData.status === 'success') {
-//             // LOG SUCCESS DETAILS
-//             console.log('✅ GOOGLE SIGN-IN SUCCESSFUL:');
-//             console.log('User ID:', responseData.data?._id);
-//             console.log('User Type:', responseData.data?.userType);
-//             console.log('Token Present:', !!responseData.data?.token);
-//             console.log('Account Verification:', responseData.data?.account_verification);
-//             console.log('Onboarding Completed:', responseData.data?.onboarding_completed);
-//             console.log('Stripe Account ID:', responseData.data?.stripe_account_id);
-//             console.log('Phone Number:', responseData.data?.phone || 'Not set');
-//             console.log('========================================');
-            
-//             // Store backend tokens and user data
-//             if (responseData.data?.token) {
-//               await AsyncStorage.setItem('@auth_token', responseData.data.token);
-//               await AsyncStorage.setItem('@user_data', JSON.stringify(responseData.data));
-              
-//               // Also store in a more accessible way
-//               await AsyncStorage.setItem('@user_id', responseData.data._id);
-//               await AsyncStorage.setItem('@user_type', responseData.data.userType);
-//               await AsyncStorage.setItem('@user_email', responseData.data.email);
-//             }
-    
-//             console.log("USER RESPONSE")
-//             console.log(responseData.data)
-//             console.log("USER RESPONSE")
-
-//             // Extract data for firebase 
-//             // Prepare navigation data
-//             const navDataFb = {
-//               userId: responseData.data._id,
-//               userType: responseData.data.userType,
-//               email: responseData.data.email || googleUser.email,
-//               firstname: responseData.data.firstname || googleUser.given_name,
-//               lastname: responseData.data.lastname || googleUser.family_name,
-//             };
-//             // Create firebase account
-//             writeUserData(navDataFb)
-//             // Check if user has phone number
-//             const hasPhone = responseData.data?.phone && responseData.data.phone.trim().length > 0;
-            
-//             // Determine if user needs onboarding
-//             const isNewUser = !responseData.data?.account_verification || 
-//                              (responseData.data?.userType === 'cleaner' && 
-//                               !responseData.data?.onboarding_completed);
-    
-//             if (isNewUser) {
-//               console.log('🔄 New user detected...');
-              
-//               // Prepare navigation data
-//               const navData = {
-//                 userId: responseData.data._id,
-//                 userType: responseData.data.userType,
-//                 email: responseData.data.email || googleUser.email,
-//                 firstname: responseData.data.firstname || googleUser.given_name,
-//                 lastname: responseData.data.lastname || googleUser.family_name,
-//                 token: responseData.data.token,
-//                 googleUser: googleUser,
-//                 userData: responseData.data
-//               };
-              
-             
-//               // Add geolocation if available
-//               if (geolocationData) {
-//                 navData.geolocation = geolocationData;
-//               }
-    
-//               // Check if phone number is already set
-//               if (hasPhone) {
-//                 console.log('📱 User already has phone number, navigating directly to onboarding...');
-//                 alert(hasPhone)
-//                 // Update Firebase collection if needed
-//                 // writeUserData(navData);
-                
-//                 // Navigate directly to appropriate onboarding
-//                 const onboardingRoute = selectedRole === 'cleaner' 
-//                   ? ROUTES.cleaner_onboarding 
-//                   : ROUTES.host_onboarding;
-                
-//                 console.log('Navigating to:', onboardingRoute);
-//                 console.log('With data:', navData);
-                
-//                 navigation.navigate(onboardingRoute, navData);
-//               } else {
-//                 alert("No phone number yet")
-//                 console.log('📱 Phone number missing, navigating to phone capture...');
-                
-//                 // Navigate to phone capture screen first
-//                 navigation.navigate(ROUTES.phone_capture, navData);
-//               }
-//             } else {
-//               console.log('🏠 Existing user, checking if phone number is needed...');
-              
-//               // Check if existing user has phone number
-//               if (!hasPhone) {
-//                 console.log('📱 Existing user needs phone number, navigating to phone update...');
-                
-                
-//                 // Navigate to phone update screen
-//                 navigation.navigate(ROUTES.phone_capture, {
-//                   userId: responseData.data._id,
-//                   userType: responseData.data.userType,
-//                   email: responseData.data.email || googleUser.email,
-//                   firstName: responseData.data.firstname || googleUser.given_name,
-//                   lastName: responseData.data.lastname || googleUser.family_name,
-//                   token: responseData.data.token,
-//                   googleUser: googleUser,
-//                   userData: responseData.data,
-//                   geolocation: geolocationData,
-//                   isExistingUser: true // Flag to show different message
-//                 });
-//               } else {
-//                 console.log('🏠 Existing user has phone, navigating to dashboard...');
-                
-//                 // Store complete user data
-//                 await AsyncStorage.setItem('@complete_user_data', JSON.stringify(responseData.data));
-                
-//                 const uid = responseData.data._id
-//                 const resdata = responseData.data
-                
-                
-//                 registerForPushNotificationsAsync(uid)
-
-//                 fetchUserFirebaseData(uid, resdata)
-
-//                 if (navigationRef.current) {
-//                     navigationRef.current.reset({
-//                       index: 0,
-//                       routes: [{ name: resdata.userType === 'host' ? 'Host' : 'Cleaner' }],
-//                     });
-//                   } else {
-//                     console.error('❌ Navigation ref not available');
-//                   }
-//               }
-//             }
-//           } else {
-//             // Backend returned ok but with error status
-//             console.error('❌ BACKEND RETURNED ERROR STATUS:');
-//             console.error('Error Message:', responseData.message);
-//             console.error('Full Response:', responseData);
-            
-//             throw new Error(responseData.message || 'Google Sign-In failed on server');
-//           }
-//         } else {
-//           // HTTP error status (4xx or 5xx)
-//           console.error('❌ HTTP ERROR RESPONSE:');
-//           console.error('Status:', response.status);
-//           console.error('Error Data:', responseData);
-          
-//           let errorMessage = responseData.message || responseData.detail || 'Google Sign-In failed';
-          
-//           // Provide more specific error messages
-//           if (response.status === 401) {
-//             errorMessage = 'Invalid Google token. Please try signing in again.';
-//           } else if (response.status === 400) {
-//             errorMessage = responseData.detail || 'Invalid request. Please check your input.';
-//           } else if (response.status === 403) {
-//             errorMessage = 'Access denied. Please contact support.';
-//           } else if (response.status === 404) {
-//             errorMessage = 'Server endpoint not found. Please check the configuration.';
-//           } else if (response.status === 422) {
-//             errorMessage = 'Validation error. Please check your data.';
-//           } else if (response.status === 500) {
-//             errorMessage = `Server error: ${responseData.message || 'Please try again later.'}`;
-//           } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-//             errorMessage = 'Service temporarily unavailable. Please try again later.';
-//           }
-          
-//           throw new Error(errorMessage);
-//         }
-//       } catch (error) {
-//         console.error('🔥 GOOGLE SIGN-IN CATCH BLOCK ERROR:');
-//         console.error('Error Name:', error.name);
-//         console.error('Error Message:', error.message);
-//         console.error('Error Stack:', error.stack);
-        
-//         // Check for specific error types
-//         if (error.message.includes('Network request failed') || 
-//             error.message.includes('Failed to fetch') ||
-//             error.message.includes('TypeError: Network request failed')) {
-//           console.error('🌐 NETWORK ERROR DETECTED');
-//           console.error('Endpoint attempted:', endpoint);
-//           console.error('Possible causes:');
-//           console.error('1. Server is not running');
-//           console.error('2. Wrong URL/endpoint');
-//           console.error('3. Firewall blocking connection');
-//           console.error('4. CORS issue');
-//           console.error('5. SSL certificate issue (for HTTPS)');
-          
-//           Alert.alert(
-//             'Connection Error',
-//             `Cannot connect to server at ${baseUrl}. Please check:\n\n` +
-//             '1. Server is running\n' +
-//             '2. Correct URL/endpoint\n' +
-//             '3. Network connection\n' +
-//             '4. SSL certificate (for HTTPS)\n\n' +
-//             `Error: ${error.message}`
-//           );
-//         } else if (error.message.includes('timeout') || error.message.includes('AbortError')) {
-//           Alert.alert(
-//             'Timeout Error',
-//             'The request took too long to complete. Please check your internet connection and try again.'
-//           );
-//         } else if (error.message.includes('Invalid server response') || 
-//                    error.message.includes('JSON Parse error')) {
-//           Alert.alert(
-//             'Server Error',
-//             'The server returned an invalid response. Please contact support.'
-//           );
-//         } else {
-//           // Show user-friendly error message
-//           let userMessage = error.message;
-          
-//           // Make Google token errors more user-friendly
-//           if (error.message.includes('Google token') || 
-//               error.message.includes('Invalid token') ||
-//               error.message.includes('audience')) {
-//             userMessage = 'Google sign-in failed. Please try signing in with Google again.';
-//           }
-          
-//           Alert.alert(
-//             'Sign-In Error',
-//             userMessage || 'Unable to process Google Sign-In. Please try again.'
-//           );
-//         }
-//       } finally {
-//         setGoogleLoading(false);
-//         // Clear any stored temporary data
-//         await AsyncStorage.removeItem('@selected_user_type');
-//       }
-//     };
-
-
-
-
-//     const handleAppleSignIn = async () => {
-//       if (!selectedRole) {
-//           Alert.alert('Select Role', 'Please select your role first');
-//           return;
-//       }
-  
-//       if (fetchingLocation) {
-//           Alert.alert("Please wait", "Fetching your location...");
-//           return;
-//       }
-  
-//       setAppleLoading(true);
-//       try {
-//           const credential = await AppleAuthentication.signInAsync({
-//               requestedScopes: [
-//                   AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-//                   AppleAuthentication.AppleAuthenticationScope.EMAIL,
-//               ],
-//           });
-  
-//           console.log("Apple credential received:", credential);
-          
-//           // Send to backend
-//           await handleAppleBackendLogin(credential, selectedRole);
-          
-//       } catch (error) {
-//           if (error.code === 'ERR_CANCELED') {
-//               console.log('Apple Sign-In was canceled by user');
-//           } else {
-//               console.error('Apple Sign-In Error:', error);
-//               Alert.alert('Error', 'Apple Sign-In failed');
-//           }
-//       } finally {
-//           setAppleLoading(false);
-//       }
-//   };
-  
-//   // Add this function to handle backend communication
-//   const handleAppleBackendLogin = async (credential, userType) => {
-//       try {
-//           console.log("🍎 Sending Apple credential to backend...");
-          
-//           const baseUrl = 'https://www.freshsweeper.com';
-//           const endpoint = `${baseUrl}/api/auth/apple_auth`;
-          
-//           console.log("Endpoint:", endpoint);
-//           console.log("Apple credential:", {
-//               hasIdentityToken: !!credential.identityToken,
-//               hasAuthorizationCode: !!credential.authorizationCode,
-//               user: credential.user,
-//               fullName: credential.fullName,
-//               email: credential.email,
-//               realUserStatus: credential.realUserStatus
-//           });
-          
-//           // Prepare the request body matching your backend schema
-          
-//           const requestBody = {
-//             identityToken: credential.identityToken,
-//             authorizationCode: credential.authorizationCode,
-//             userType: userType,
-//             user: {
-//               id: credential.user,
-//               email: credential.email || null,
-//               firstname: credential.fullName?.givenName || "",
-//               lastname: credential.fullName?.familyName || "",
-//               fullname: `${credential.fullName?.givenName || ""} ${credential.fullName?.familyName || ""}`.trim()
-//             }
-//           };
-          
-//           console.log("Request body:", JSON.stringify(requestBody, null, 2));
-          
-//           const response = await fetch(endpoint, {
-//               method: 'POST',
-//               headers: {
-//                   'Content-Type': 'application/json',
-//                   'Accept': 'application/json',
-//               },
-//               body: JSON.stringify(requestBody),
-//           });
-  
-//           const responseText = await response.text();
-//           console.log("Raw response:", responseText);
-          
-//           let data;
-//           try {
-//               data = JSON.parse(responseText);
-//           } catch (parseError) {
-//               console.error("Failed to parse JSON response:", parseError);
-//               throw new Error(`Invalid server response: ${responseText.substring(0, 100)}`);
-//           }
-          
-//           console.log("Parsed backend response:", data);
-  
-//           if (response.ok && data.status === 'success') {
-//               const userData = data.data;
-              
-//               console.log("✅ Apple sign-in successful via backend");
-//               console.log("User ID:", userData._id);
-//               console.log("User Type:", userData.userType);
-              
-//               // Store backend tokens and user data
-//               if (userData.token) {
-//                   await AsyncStorage.setItem('@auth_token', userData.token);
-//                   await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
-//               }
-
-
-//               const hasPhone =
-//                 !!userData?.phone &&
-//                 userData.phone.trim().length > 0;
-
-//               const onboardingCompleted =
-//                 userData?.userType === 'cleaner'
-//                   ? userData?.onboarding_completed
-//                   : userData?.account_verification === 'active';
-
-//               const isNewUser = !onboardingCompleted || !hasPhone;
-
-
-//               if (isNewUser) {
-//                   console.log('🔄 New user detected...');
-                  
-//                   // Prepare navigation data
-//                   const navData = {
-//                       userId: userData._id,
-//                       userType: userData.userType,
-//                       email: userData.email || credential.email,
-//                       firstName: userData.firstname || credential.fullName?.givenName,
-//                       lastName: userData.lastname || credential.fullName?.familyName,
-//                       token: userData.token,
-//                       appleCredential: credential,
-//                       userData: userData
-//                   };
-                  
-//                   // Add geolocation if available
-//                   if (geolocationData) {
-//                       navData.geolocation = geolocationData;
-//                   }
-  
-//                   // Check if phone number is already set
-//                   if (hasPhone) {
-//                       console.log('📱 User already has phone number, navigating directly to onboarding...');
-                      
-//                       // Navigate directly to appropriate onboarding
-//                       const onboardingRoute = selectedRole === 'cleaner' 
-//                         ? ROUTES.cleaner_onboarding 
-//                         : ROUTES.host_home_tab;
-                      
-//                       console.log('Navigating to:', onboardingRoute);
-//                       navigation.navigate(onboardingRoute, navData);
-//                   } else {
-//                       console.log('📱 Phone number missing, navigating to phone capture...');
-//                       // Navigate to phone capture screen first
-//                       navigation.navigate(ROUTES.phone_capture, navData);
-//                   }
-//               } else {
-//                   console.log('🏠 Existing user, navigating to dashboard...');
-                  
-//                   // Store complete user data
-//                   await AsyncStorage.setItem('@complete_user_data', JSON.stringify(userData));
-                  
-//                   const uid = userData._id
-//                   const resdata = userData
-                 
-                  
-//                   registerForPushNotificationsAsync(uid)
-//                   fetchUserFirebaseData(uid, resdata)
-
-//                   if (navigationRef.current) {
-//                     navigationRef.current.reset({
-//                       index: 0,
-//                       routes: [{ name: resdata.userType === 'host' ? 'Host' : 'Cleaner' }],
-//                     });
-//                   } else {
-//                     console.error('❌ Navigation ref not available');
-//                   }
-//               }
-//           } else {
-//               let errorMessage = data.message || data.detail || 'Apple Sign-In failed';
-              
-//               // Handle specific backend errors
-//               if (errorMessage.includes('Email is required')) {
-//                   errorMessage = 'Apple Sign-In requires email permission. Please grant email access and try again.';
-//               } else if (errorMessage.includes('userType is required')) {
-//                   errorMessage = 'Please select your role (host or cleaner).';
-//               }
-              
-//               throw new Error(errorMessage);
-//           }
-//       } catch (error) {
-//           console.error('❌ Apple backend login error:', error);
-          
-//           let errorMessage = error.message || 'Unable to process Apple Sign-In. Please try again.';
-          
-//           // Handle network errors
-//           if (error.message.includes('Network request failed') || 
-//               error.message.includes('Failed to fetch')) {
-//               errorMessage = 'Network error. Please check your internet connection.';
-//           }
-          
-//           Alert.alert(
-//               'Apple Sign-In Error',
-//               errorMessage
-//           );
-//       }
-//   };
-
-//     // Helper to show location status
-//     const renderLocationStatus = () => {
-//         if (fetchingLocation) {
-//             return (
-//                 <View style={styles.locationStatus}>
-//                     <ActivityIndicator size="small" color={COLORS.primary} />
-//                     <Text style={styles.locationText}>Detecting your location...</Text>
-//                 </View>
-//             );
-//         }
-        
-//         if (geolocationData) {
-//             return (
-//                 <View style={[styles.locationStatus, styles.locationSuccess]}>
-//                     <MaterialCommunityIcons 
-//                         name="check-circle" 
-//                         size={16} 
-//                         color="#4CAF50" 
-//                     />
-//                     <Text style={styles.locationText}>
-//                         Location: {geolocationData.city}, {geolocationData.country}
-//                     </Text>
-//                 </View>
-//             );
-//         }
-        
-//         return null;
-//     };
-
-//     return (
-//         <View style={styles.container}>
-//             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-            
-//             <Animatable.View 
-//                 animation="slideInRight"
-//                 style={[styles.footer, {
-//                     backgroundColor: COLORS.white
-//                 }]}
-//             >
-//                 {/* Location status indicator */}
-//                 {renderLocationStatus()}
-                
-//                 {/* RoleSelection with onRoleSelect prop */}
-//                 <RoleSelection 
-//                     onRoleSelect={handleRoleSelect}
-//                     selectedRole={selectedRole}
-//                 />
-
-
-
-//                 {/* Authentication Buttons - Show immediately when role is selected */}
-//                 {selectedRole && (
-//                     <Animatable.View 
-//                         animation="fadeInUp"
-//                         duration={500}
-//                         style={styles.authButtons}
-//                     >
-//                         <TouchableOpacity
-//                             style={[styles.button, styles.emailButton]}
-//                             onPress={handleEmailSignup}
-//                             disabled={fetchingLocation}
-//                         >
-//                             <MaterialCommunityIcons 
-//                                 name="email-outline" 
-//                                 size={24} 
-//                                 color="#fff" 
-//                                 style={styles.buttonIcon}
-//                             />
-//                             <Text style={styles.buttonText}>
-//                                 Continue with Email
-//                             </Text>
-//                         </TouchableOpacity>
-
-//                         <View style={styles.divider}>
-//                             <View style={styles.dividerLine} />
-//                             <Text style={styles.dividerText}>OR</Text>
-//                             <View style={styles.dividerLine} />
-//                         </View>
-
-//                         {/* Google Sign-In Button */}
-//                         <TouchableOpacity
-//                             style={[styles.button, styles.googleButton]}
-//                             onPress={handleGoogleSignIn}
-//                             disabled={!request || googleLoading || fetchingLocation}
-//                         >
-//                             <View style={styles.buttonContent}>
-//                                 {googleLoading ? (
-//                                     <ActivityIndicator size="small" color="#4285F4" />
-//                                 ) : (
-//                                     <MaterialCommunityIcons 
-//                                         name="google" 
-//                                         size={24} 
-//                                         color="#4285F4" 
-//                                     />
-//                                 )}
-//                                 <Text style={[styles.buttonText, styles.googleButtonText]}>
-//                                     {googleLoading ? 'Signing in...' : 'Continue with Google'}
-//                                 </Text>
-//                             </View>
-//                         </TouchableOpacity>
-
-//                         {/* Apple Sign-In Button (iOS only) */}
-//                         {Platform.OS === 'ios' && appleAuthAvailable && (
-//                             <TouchableOpacity
-//                                 style={[styles.button, styles.appleButton]}
-//                                 onPress={handleAppleSignIn}
-//                                 disabled={appleLoading || fetchingLocation}
-//                             >
-//                                 <View style={styles.buttonContent}>
-//                                     {appleLoading ? (
-//                                         <ActivityIndicator size="small" color="#fff" />
-//                                     ) : (
-//                                         <MaterialCommunityIcons 
-//                                             name="apple" 
-//                                             size={24} 
-//                                             color="#fff" 
-//                                         />
-//                                     )}
-//                                     <Text style={[styles.buttonText, styles.appleButtonText]}>
-//                                         {appleLoading ? 'Signing in...' : 'Continue with Apple'}
-//                                     </Text>
-//                                 </View>
-//                             </TouchableOpacity>
-//                         )}
-
-//                         <TouchableOpacity
-//                             style={styles.loginLink}
-//                             onPress={() => navigation.navigate(ROUTES.login_options)}
-//                         >
-//                             <Text style={styles.loginText}>
-//                                 Already have an account?{' '}
-//                                 <Text style={styles.loginLinkText}>Log In</Text>
-//                             </Text>
-//                         </TouchableOpacity>
-//                     </Animatable.View>
-//                 )}
-//             </Animatable.View>
-//         </View>
-//     );
-// };
-
-// export default GetStarted;
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         backgroundColor: '#fff',
-//         justifyContent: 'center',
-//         padding: 20
-//     },
-//     footer: {
-//         flex: 1,
-//         justifyContent: 'center',
-//     },
-//     locationStatus: {
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         backgroundColor: '#F8F9FA',
-//         padding: 10,
-//         borderRadius: 8,
-//         marginBottom: 20,
-//         borderWidth: 1,
-//         borderColor: '#E9ECEF',
-//     },
-//     locationSuccess: {
-//         backgroundColor: '#E8F5E9',
-//         borderColor: '#C8E6C9',
-//     },
-//     locationText: {
-//         marginLeft: 8,
-//         color: '#495057',
-//         fontSize: 12,
-//         fontWeight: '500',
-//     },
-//     authButtons: {
-//         marginTop: 40,
-//     },
-//     button: {
-//         padding: 16,
-//         borderRadius: 12,
-//         alignItems: 'center',
-//         marginBottom: 12,
-//         flexDirection: 'row',
-//         justifyContent: 'center',
-//         shadowColor: '#000',
-//         shadowOffset: { width: 0, height: 2 },
-//         shadowOpacity: 0.1,
-//         shadowRadius: 4,
-//         elevation: 3,
-//     },
-//     emailButton: {
-//         backgroundColor: COLORS.primary,
-//     },
-//     googleButton: {
-//         backgroundColor: '#fff',
-//         borderWidth: 1,
-//         borderColor: '#ddd',
-//     },
-//     appleButton: {
-//         backgroundColor: '#000',
-//         borderWidth: 1,
-//         borderColor: '#000',
-//     },
-//     buttonContent: {
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//     },
-//     buttonIcon: {
-//         marginRight: 12,
-//     },
-//     buttonText: {
-//         fontSize: 16,
-//         fontWeight: '600',
-//         color: 'white',
-//     },
-//     googleButtonText: {
-//         color: '#3c4043',
-//         marginLeft: 12,
-//     },
-//     appleButtonText: {
-//         color: '#fff',
-//         marginLeft: 12,
-//     },
-//     divider: {
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//         marginVertical: 20,
-//     },
-//     dividerLine: {
-//         flex: 1,
-//         height: 1,
-//         backgroundColor: '#ddd',
-//     },
-//     dividerText: {
-//         marginHorizontal: 10,
-//         color: '#666',
-//         fontSize: 14,
-//         fontWeight: '500',
-//     },
-//     loginLink: {
-//         marginTop: 20,
-//         alignItems: 'center',
-//     },
-//     loginText: {
-//         color: '#666',
-//         fontSize: 14,
-//     },
-//     loginLinkText: {
-//         color: COLORS.primary,
-//         fontWeight: '600',
-//     },
-// });
-
-
-
-
-
-// import {
-//   StyleSheet,
-//   Text,
-//   View,
-//   TouchableOpacity,
-//   StatusBar,
-//   Alert,
-//   ActivityIndicator,
-//   Platform,
-// } from 'react-native';
-// import React, { useState, useEffect, useContext } from 'react';
-// import { useRoute } from '@react-navigation/native'; // <-- ADDED
-// import ROUTES from '../../constants/routes';
-// import COLORS from '../../constants/colors';
-// import { AuthContext } from '../../context/AuthContext';
-// import * as Animatable from 'react-native-animatable';
-// import RoleSelection from '../../components/shared/RoleSelection';
-// import { useNavigation } from '@react-navigation/native';
-// import * as AppleAuthentication from 'expo-apple-authentication';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import fetchIPGeolocation from '../../services/geolocation';
-
-// import * as WebBrowser from 'expo-web-browser';
-// import * as Google from 'expo-auth-session/providers/google';
-// import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { db } from '../../services/firebase/config';
-// import { getDatabase, ref, set } from 'firebase/database';
-// import { useNotification } from '../../hooks/useNotification';
-// import { navigationRef } from '../../utils/navigationRef';
-// import { auth } from '../../services/firebase/config';
-
-// WebBrowser.maybeCompleteAuthSession();
-// const GOOGLE_CLIENT_ID =
-//   '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com';
-
-// const GetStarted = () => {
-//   const navigation = useNavigation();
-//   const route = useRoute(); // <-- ADDED
-//   const params = route.params || {}; // <-- ADDED
-
-//   const { signupWithGoogle, signupWithApple, login, logout } = useContext(AuthContext);
-//   const [selectedRole, setSelectedRole] = useState(null);
-//   const [googleLoading, setGoogleLoading] = useState(false);
-//   const [appleLoading, setAppleLoading] = useState(false);
-//   const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
-//   const [geolocationData, setGeolocationData] = useState(null);
-//   const [fetchingLocation, setFetchingLocation] = useState(false);
-
-//   const { expoPushToken, registerForPushNotificationsAsync } = useNotification();
-
-//   const [request, response, promptAsync] = Google.useAuthRequest({
-//     iosClientId: GOOGLE_CLIENT_ID,
-//     androidClientId: GOOGLE_CLIENT_ID,
-//     webClientId: GOOGLE_CLIENT_ID,
-//   });
-
-//   // Fetch geolocation on mount
-//   useEffect(() => {
-//     fetchGeolocation();
-//     checkAppleAuthAvailability();
-//   }, []);
-
-//   // Handle Google response (if OAuth started from this screen)
-//   useEffect(() => {
-//     if (response?.type === 'success') {
-//       handleGoogleAuthResponse(response);
-//     }
-//   }, [response]);
-
-//   const fetchGeolocation = async () => {
-//     try {
-//       setFetchingLocation(true);
-//       const data = await fetchIPGeolocation();
-//       setGeolocationData(data);
-//       console.log('📍 Location fetched:', data);
-//     } catch (error) {
-//       console.error('Failed to fetch location:', error);
-//     } finally {
-//       setFetchingLocation(false);
-//     }
-//   };
-
-//   const fetchUserFirebaseData = async (uid, response) => {
-//     try {
-//       const mySnapshot = await get(ref(db, `users/${uid}`));
-//       setFBCurrentUser(mySnapshot.val());
-
-//       const data_to_send = {
-//         resp: response,
-//         fbUser: mySnapshot.val(),
-//         expo_push_token: expoPushToken,
-//       };
-
-//       console.log('Firebase User collected:', data_to_send.fbUser);
-
-//       login(data_to_send);
-//     } catch (error) {
-//       console.error('Error fetching Firebase data:', error);
-//       const data_to_send = {
-//         resp: response,
-//         fbUser: null,
-//         expo_push_token: expoPushToken,
-//       };
-//       login(data_to_send);
-//     }
-//   };
-
-//   const checkAppleAuthAvailability = async () => {
-//     if (Platform.OS === 'ios') {
-//       const isAvailable = await AppleAuthentication.isAvailableAsync();
-//       setAppleAuthAvailable(isAvailable);
-//     }
-//   };
-
-//   const handleRoleSelect = (role) => {
-//     console.log('Role selected:', role);
-//     setSelectedRole(role);
-//   };
-
-//   const handleEmailSignup = () => {
-//     if (!selectedRole) {
-//       Alert.alert('Select Role', 'Please select your role first');
-//       return;
-//     }
-//     console.log('Navigating to email signup with role:', selectedRole);
-//     navigation.navigate(ROUTES.signup, {
-//       userType: selectedRole,
-//       geolocation: geolocationData,
-//     });
-//   };
-
-//   // ----------------------------------------------------------
-//   // GOOGLE SIGN-IN (uses params if available, else new OAuth)
-//   // ----------------------------------------------------------
-//   const handleGoogleSignIn = async () => {
-//     try {
-//       if (!selectedRole) {
-//         Alert.alert('Select Role', 'Please select your role first');
-//         return;
-//       }
-//       if (!request) {
-//         Alert.alert('Error', 'Google Auth not ready');
-//         return;
-//       }
-//       setGoogleLoading(true);
-
-//       let googleUser;
-//       let idToken;
-
-//       // If we already have Google data from LoginOptions, use it
-//       if (params.googleUser && params.idToken) {
-//         googleUser = params.googleUser;
-//         idToken = params.idToken;
-//         await handleGoogleBackendLogin(googleUser, selectedRole);
-//       } else {
-//         // Otherwise start a new OAuth flow
-//         await promptAsync();
-//         // The response will be handled by the useEffect above
-//       }
-//     } catch (error) {
-//       console.log('Google sign-in error:', error);
-//       Alert.alert('Error', 'Google sign-in failed');
-//     } finally {
-//       setGoogleLoading(false);
-//     }
-//   };
-
-//   // ----------------------------------------------------------
-//   // Google Auth Response handler (for OAuth started here)
-//   // ----------------------------------------------------------
-//   const handleGoogleAuthResponse = async (response) => {
-//     try {
-//       setGoogleLoading(true);
-
-//       const { authentication } = response;
-//       const accessToken = authentication?.accessToken;
-//       const idToken = authentication?.idToken;
-
-//       if (!accessToken || !idToken) {
-//         Alert.alert('Error', 'Google login failed: missing tokens');
-//         return;
-//       }
-
-//       // 1. GET USER INFO FROM GOOGLE
-//       const userInfoResponse = await fetch(
-//         'https://www.googleapis.com/oauth2/v2/userinfo',
-//         {
-//           headers: {
-//             Authorization: `Bearer ${accessToken}`,
-//           },
-//         }
-//       );
-
-//       if (!userInfoResponse.ok) {
-//         throw new Error('Failed to fetch user info from Google');
-//       }
-
-//       const googleUser = await userInfoResponse.json();
-//       googleUser.accessToken = accessToken;
-//       googleUser.idToken = idToken;
-//       googleUser.provider = 'google';
-
-//       console.log('Google User:', googleUser.email);
-
-//       // 2. FIREBASE AUTH
-//       const credential = GoogleAuthProvider.credential(idToken);
-//       const firebaseResult = await signInWithCredential(auth, credential);
-//       const firebaseUser = firebaseResult.user;
-//       console.log('Firebase user:', firebaseUser.email);
-
-//       // 3. SEND TO BACKEND with selected role
-//       await handleGoogleBackendLogin(googleUser, selectedRole);
-//     } catch (error) {
-//       console.log('Google sign-in error:', error);
-//       Alert.alert(
-//         'Google Sign-In Error',
-//         error.message || 'Unable to sign in with Google'
-//       );
-//     } finally {
-//       setGoogleLoading(false);
-//     }
-//   };
-
-//   // ----------------------------------------------------------
-//   // GOOGLE BACKEND LOGIN (now accepts userType)
-//   // ----------------------------------------------------------
-//   // const handleGoogleBackendLogin = async (googleUser, userType) => {
-//   //   try {
-//   //     const baseUrl = 'https://www.freshsweeper.com';
-//   //     const endpoint = `${baseUrl}/api/auth/google_auth`;
-
-//   //     console.log('📤 SENDING GOOGLE LOGIN REQUEST:');
-//   //     console.log('Endpoint:', endpoint);
-//   //     console.log('User Type:', userType);
-
-//   //     const response = await fetch(endpoint, {
-//   //       method: 'POST',
-//   //       headers: {
-//   //         'Content-Type': 'application/json',
-//   //         Accept: 'application/json',
-//   //       },
-//   //       body: JSON.stringify({
-//   //         token: googleUser.idToken,
-//   //         userType: userType, // <-- USE DYNAMIC ROLE
-//   //       }),
-//   //     });
-
-//   //     const responseData = await response.json();
-
-//   //     if (response.ok) {
-//   //       if (responseData.status === 'success') {
-//   //         const userData = responseData.data;
-
-//   //         // Store tokens and user data
-//   //         await AsyncStorage.setItem('@auth_token', userData.token);
-//   //         await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
-//   //         await AsyncStorage.setItem('@user_type', userData.userType);
-//   //         await AsyncStorage.setItem('@user_id', userData._id);
-
-//   //         // Write to Firebase (if needed)
-//   //         writeUserData({
-//   //           userId: userData._id,
-//   //           userType: userData.userType,
-//   //           email: userData.email || googleUser.email,
-//   //           firstname: userData.firstname || googleUser.given_name,
-//   //           lastname: userData.lastname || googleUser.family_name,
-//   //         });
-
-//   //         const hasPhone = userData?.phone && userData.phone.trim().length > 0;
-//   //         const isNewUser =
-//   //           !userData?.account_verification ||
-//   //           (userData?.userType === 'cleaner' && !userData?.onboarding_completed);
-
-//   //         if (isNewUser) {
-//   //           const navData = {
-//   //             userId: userData._id,
-//   //             userType: userData.userType,
-//   //             email: userData.email || googleUser.email,
-//   //             firstname: userData.firstname || googleUser.given_name,
-//   //             lastname: userData.lastname || googleUser.family_name,
-//   //             token: userData.token,
-//   //             googleUser: googleUser,
-//   //             userData: userData,
-//   //           };
-//   //           if (geolocationData) navData.geolocation = geolocationData;
-
-//   //           if (hasPhone) {
-//   //             const onboardingRoute =
-//   //               selectedRole === 'cleaner'
-//   //                 ? ROUTES.cleaner_onboarding
-//   //                 : ROUTES.host_onboarding;
-//   //             navigation.navigate(onboardingRoute, navData);
-//   //           } else {
-//   //             navigation.navigate(ROUTES.phone_capture, navData);
-//   //           }
-//   //         } else {
-//   //           if (!hasPhone) {
-//   //             navigation.navigate(ROUTES.phone_capture, {
-//   //               userId: userData._id,
-//   //               userType: userData.userType,
-//   //               email: userData.email || googleUser.email,
-//   //               firstName: userData.firstname || googleUser.given_name,
-//   //               lastName: userData.lastname || googleUser.family_name,
-//   //               token: userData.token,
-//   //               googleUser: googleUser,
-//   //               userData: userData,
-//   //               geolocation: geolocationData,
-//   //               isExistingUser: true,
-//   //             });
-//   //           } else {
-//   //             await AsyncStorage.setItem(
-//   //               '@complete_user_data',
-//   //               JSON.stringify(userData)
-//   //             );
-//   //             const uid = userData._id;
-//   //             const resdata = userData;
-
-//   //             registerForPushNotificationsAsync(uid);
-//   //             fetchUserFirebaseData(uid, resdata);
-
-//   //             if (navigationRef.current) {
-//   //               navigationRef.current.reset({
-//   //                 index: 0,
-//   //                 routes: [
-//   //                   { name: resdata.userType === 'host' ? 'Host' : 'Cleaner' },
-//   //                 ],
-//   //               });
-//   //             } else {
-//   //               console.error('❌ Navigation ref not available');
-//   //             }
-//   //           }
-//   //         }
-//   //       } else {
-//   //         throw new Error(responseData.message || 'Google Sign-In failed');
-//   //       }
-//   //     } else {
-//   //       // Handle HTTP errors
-//   //       let errorMessage = responseData.message || responseData.detail;
-//   //       if (response.status === 400 && !userType) {
-//   //         errorMessage = 'Please select your role first.';
-//   //       }
-//   //       throw new Error(errorMessage || 'Google Sign-In failed');
-//   //     }
-//   //   } catch (error) {
-//   //     console.error('Google backend login error:', error);
-//   //     Alert.alert(
-//   //       'Sign-In Error',
-//   //       error.message || 'Unable to process Google Sign-In. Please try again.'
-//   //     );
-//   //   }
-//   // };
-
-
-//   const handleGoogleBackendLogin = async (idToken, userType, googleUser = null) => {
-//     try {
-//       const baseUrl = 'https://www.freshsweeper.com';
-//       const endpoint = `${baseUrl}/api/auth/google_auth`;
-  
-//       console.log('📤 SENDING GOOGLE LOGIN REQUEST:');
-//       console.log('Endpoint:', endpoint);
-//       console.log('User Type:', userType);
-//       console.log('Token length:', idToken?.length);
-  
-//       const response = await fetch(endpoint, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           Accept: 'application/json',
-//         },
-//         body: JSON.stringify({
-//           token: idToken,   // <-- now passed directly
-//           userType: userType,
-//         }),
-//       });
-  
-//       const data = await response.json();
-//       console.log('📥 Response:', data);
-  
-//       if (response.ok && data.status === 'success') {
-//         const userData = data.data;
-//         // ... store tokens, navigate (use the same success code as before)
-//         // Make sure to store the token, call writeUserData, etc.
-//       } else {
-//         // Extract error message
-//         const errorMsg = data.detail || data.message || 'Unknown error';
-//         throw new Error(`Google sign-in failed: ${errorMsg}`);
-//       }
-//     } catch (error) {
-//       console.error('❌ Google backend login error:', error);
-//       Alert.alert('Sign-In Error', error.message || 'Unable to process Google Sign-In.');
-//     }
-//   };
-
-//   // ----------------------------------------------------------
-//   // APPLE SIGN-IN (uses params if available, else new Apple Auth)
-//   // ----------------------------------------------------------
-//   const handleAppleSignIn = async () => {
-//     if (!selectedRole) {
-//       Alert.alert('Select Role', 'Please select your role first');
-//       return;
-//     }
-
-//     if (fetchingLocation) {
-//       Alert.alert('Please wait', 'Fetching your location...');
-//       return;
-//     }
-
-//     setAppleLoading(true);
-//     try {
-//       let credential;
-//       if (params.appleCredential) {
-//         credential = params.appleCredential;
-//       } else {
-//         credential = await AppleAuthentication.signInAsync({
-//           requestedScopes: [
-//             AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-//             AppleAuthentication.AppleAuthenticationScope.EMAIL,
-//           ],
-//         });
-//       }
-//       await handleAppleBackendLogin(credential, selectedRole);
-//     } catch (error) {
-//       if (error.code !== 'ERR_CANCELED') {
-//         Alert.alert('Error', 'Apple Sign-In failed');
-//       }
-//     } finally {
-//       setAppleLoading(false);
-//     }
-//   };
-
-//   // ----------------------------------------------------------
-//   // APPLE BACKEND LOGIN (now accepts userType)
-//   // ----------------------------------------------------------
-//   const handleAppleBackendLogin = async (credential, userType) => {
-//     try {
-//       console.log('🍎 Sending Apple credential to backend...');
-
-//       const baseUrl = 'https://www.freshsweeper.com';
-//       const endpoint = `${baseUrl}/api/auth/apple_auth`;
-
-//       const requestBody = {
-//         identityToken: credential.identityToken,
-//         authorizationCode: credential.authorizationCode,
-//         userType: userType, // <-- USE DYNAMIC ROLE
-//         user: {
-//           id: credential.user,
-//           email: credential.email || null,
-//           firstname: credential.fullName?.givenName || '',
-//           lastname: credential.fullName?.familyName || '',
-//           fullname:
-//             `${credential.fullName?.givenName || ''} ${credential.fullName?.familyName || ''}`.trim(),
-//         },
-//       };
-
-//       const response = await fetch(endpoint, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           Accept: 'application/json',
-//         },
-//         body: JSON.stringify(requestBody),
-//       });
-
-//       const data = await response.json();
-
-//       if (response.ok && data.status === 'success') {
-//         const userData = data.data;
-
-//         // Store tokens and user data
-//         await AsyncStorage.setItem('@auth_token', userData.token);
-//         await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
-//         await AsyncStorage.setItem('@user_type', userData.userType);
-//         await AsyncStorage.setItem('@user_id', userData._id);
-
-//         // Write to Firebase (if needed)
-//         writeUserData({
-//           userId: userData._id,
-//           userType: userData.userType,
-//           email: userData.email || credential.email,
-//           firstname: userData.firstname || credential.fullName?.givenName,
-//           lastname: userData.lastname || credential.fullName?.familyName,
-//         });
-
-//         const hasPhone = userData?.phone && userData.phone.trim().length > 0;
-//         const isNewUser =
-//           !userData?.account_verification ||
-//           (userData?.userType === 'cleaner' && !userData?.onboarding_completed);
-
-//         if (isNewUser) {
-//           const navData = {
-//             userId: userData._id,
-//             userType: userData.userType,
-//             email: userData.email || credential.email,
-//             firstName: userData.firstname || credential.fullName?.givenName,
-//             lastName: userData.lastname || credential.fullName?.familyName,
-//             token: userData.token,
-//             appleCredential: credential,
-//             userData: userData,
-//           };
-//           if (geolocationData) navData.geolocation = geolocationData;
-
-//           if (hasPhone) {
-//             const onboardingRoute =
-//               selectedRole === 'cleaner'
-//                 ? ROUTES.cleaner_onboarding
-//                 : ROUTES.host_onboarding;
-//             navigation.navigate(onboardingRoute, navData);
-//           } else {
-//             navigation.navigate(ROUTES.phone_capture, navData);
-//           }
-//         } else {
-//           if (!hasPhone) {
-//             navigation.navigate(ROUTES.phone_capture, {
-//               userId: userData._id,
-//               userType: userData.userType,
-//               email: userData.email || credential.email,
-//               firstName: userData.firstname || credential.fullName?.givenName,
-//               lastName: userData.lastname || credential.fullName?.familyName,
-//               token: userData.token,
-//               appleCredential: credential,
-//               userData: userData,
-//               geolocation: geolocationData,
-//               isExistingUser: true,
-//             });
-//           } else {
-//             await AsyncStorage.setItem(
-//               '@complete_user_data',
-//               JSON.stringify(userData)
-//             );
-//             const uid = userData._id;
-//             const resdata = userData;
-
-//             registerForPushNotificationsAsync(uid);
-//             fetchUserFirebaseData(uid, resdata);
-
-//             if (navigationRef.current) {
-//               navigationRef.current.reset({
-//                 index: 0,
-//                 routes: [
-//                   { name: resdata.userType === 'host' ? 'Host' : 'Cleaner' },
-//                 ],
-//               });
-//             } else {
-//               console.error('❌ Navigation ref not available');
-//             }
-//           }
-//         }
-//       } else {
-//         throw new Error(data.detail || data.message || 'Apple Sign-In failed');
-//       }
-//     } catch (error) {
-//       console.error('Apple backend login error:', error);
-//       Alert.alert(
-//         'Apple Sign-In Error',
-//         error.message || 'Unable to process Apple Sign-In.'
-//       );
-//     }
-//   };
-
-//   // Helper: write user data to Firebase
-//   const writeUserData = (userData) => {
-//     try {
-//       const userId = userData.userId;
-//       const firstname = userData.firstname || '';
-//       const lastname = userData.lastname || '';
-//       const email = userData.email || '';
-//       const userRef = `users/${userId}`;
-//       const userDatabaseRef = ref(db, userRef);
-//       set(userDatabaseRef, {
-//         userId: userId,
-//         firstname: firstname,
-//         lastname: lastname,
-//         language: 'en',
-//         email: email,
-//         avatar: '',
-//       });
-
-//       const unreadMsgRef = `unreadMessages/${userId}`;
-//       const unreadMsgDatabaseRef = ref(db, unreadMsgRef);
-//       set(unreadMsgDatabaseRef, {});
-//     } catch (error) {
-//       console.error('Error writing data: ', error);
-//     }
-//   };
-
-//   const renderLocationStatus = () => {
-//     if (fetchingLocation) {
-//       return (
-//         <View style={styles.locationStatus}>
-//           <ActivityIndicator size="small" color={COLORS.primary} />
-//           <Text style={styles.locationText}>Detecting your location...</Text>
-//         </View>
-//       );
-//     }
-//     if (geolocationData) {
-//       return (
-//         <View style={[styles.locationStatus, styles.locationSuccess]}>
-//           <MaterialCommunityIcons
-//             name="check-circle"
-//             size={16}
-//             color="#4CAF50"
-//           />
-//           <Text style={styles.locationText}>
-//             Location: {geolocationData.city}, {geolocationData.country}
-//           </Text>
-//         </View>
-//       );
-//     }
-//     return null;
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-
-//       <Animatable.View
-//         animation="slideInRight"
-//         style={[
-//           styles.footer,
-//           {
-//             backgroundColor: COLORS.white,
-//           },
-//         ]}
-//       >
-//         {renderLocationStatus()}
-
-//         <RoleSelection
-//           onRoleSelect={handleRoleSelect}
-//           selectedRole={selectedRole}
-//         />
-
-//         {selectedRole && (
-//           <Animatable.View
-//             animation="fadeInUp"
-//             duration={500}
-//             style={styles.authButtons}
-//           >
-//             <TouchableOpacity
-//               style={[styles.button, styles.emailButton]}
-//               onPress={handleEmailSignup}
-//               disabled={fetchingLocation}
-//             >
-//               <MaterialCommunityIcons
-//                 name="email-outline"
-//                 size={24}
-//                 color="#fff"
-//                 style={styles.buttonIcon}
-//               />
-//               <Text style={styles.buttonText}>Continue with Email</Text>
-//             </TouchableOpacity>
-
-//             <View style={styles.divider}>
-//               <View style={styles.dividerLine} />
-//               <Text style={styles.dividerText}>OR</Text>
-//               <View style={styles.dividerLine} />
-//             </View>
-
-//             {/* Google Sign-In Button */}
-//             <TouchableOpacity
-//               style={[styles.button, styles.googleButton]}
-//               onPress={handleGoogleSignIn}
-//               disabled={!request || googleLoading || fetchingLocation}
-//             >
-//               <View style={styles.buttonContent}>
-//                 {googleLoading ? (
-//                   <ActivityIndicator size="small" color="#4285F4" />
-//                 ) : (
-//                   <MaterialCommunityIcons
-//                     name="google"
-//                     size={24}
-//                     color="#4285F4"
-//                   />
-//                 )}
-//                 <Text style={[styles.buttonText, styles.googleButtonText]}>
-//                   {googleLoading ? 'Signing in...' : 'Continue with Google'}
-//                 </Text>
-//               </View>
-//             </TouchableOpacity>
-
-//             {/* Apple Sign-In Button (iOS only) */}
-//             {Platform.OS === 'ios' && appleAuthAvailable && (
-//               <TouchableOpacity
-//                 style={[styles.button, styles.appleButton]}
-//                 onPress={handleAppleSignIn}
-//                 disabled={appleLoading || fetchingLocation}
-//               >
-//                 <View style={styles.buttonContent}>
-//                   {appleLoading ? (
-//                     <ActivityIndicator size="small" color="#fff" />
-//                   ) : (
-//                     <MaterialCommunityIcons
-//                       name="apple"
-//                       size={24}
-//                       color="#fff"
-//                     />
-//                   )}
-//                   <Text style={[styles.buttonText, styles.appleButtonText]}>
-//                     {appleLoading ? 'Signing in...' : 'Continue with Apple'}
-//                   </Text>
-//                 </View>
-//               </TouchableOpacity>
-//             )}
-
-//             <TouchableOpacity
-//               style={styles.loginLink}
-//               onPress={() => navigation.navigate(ROUTES.login_options)}
-//             >
-//               <Text style={styles.loginText}>
-//                 Already have an account?{' '}
-//                 <Text style={styles.loginLinkText}>Log In</Text>
-//               </Text>
-//             </TouchableOpacity>
-//           </Animatable.View>
-//         )}
-//       </Animatable.View>
-//     </View>
-//   );
-// };
-
-// export default GetStarted;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//     justifyContent: 'center',
-//     padding: 20,
-//   },
-//   footer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//   },
-//   locationStatus: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     backgroundColor: '#F8F9FA',
-//     padding: 10,
-//     borderRadius: 8,
-//     marginBottom: 20,
-//     borderWidth: 1,
-//     borderColor: '#E9ECEF',
-//   },
-//   locationSuccess: {
-//     backgroundColor: '#E8F5E9',
-//     borderColor: '#C8E6C9',
-//   },
-//   locationText: {
-//     marginLeft: 8,
-//     color: '#495057',
-//     fontSize: 12,
-//     fontWeight: '500',
-//   },
-//   authButtons: {
-//     marginTop: 40,
-//   },
-//   button: {
-//     padding: 16,
-//     borderRadius: 12,
-//     alignItems: 'center',
-//     marginBottom: 12,
-//     flexDirection: 'row',
-//     justifyContent: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 3,
-//   },
-//   emailButton: {
-//     backgroundColor: COLORS.primary,
-//   },
-//   googleButton: {
-//     backgroundColor: '#fff',
-//     borderWidth: 1,
-//     borderColor: '#ddd',
-//   },
-//   appleButton: {
-//     backgroundColor: '#000',
-//     borderWidth: 1,
-//     borderColor: '#000',
-//   },
-//   buttonContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   buttonIcon: {
-//     marginRight: 12,
-//   },
-//   buttonText: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: 'white',
-//   },
-//   googleButtonText: {
-//     color: '#3c4043',
-//     marginLeft: 12,
-//   },
-//   appleButtonText: {
-//     color: '#fff',
-//     marginLeft: 12,
-//   },
-//   divider: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginVertical: 20,
-//   },
-//   dividerLine: {
-//     flex: 1,
-//     height: 1,
-//     backgroundColor: '#ddd',
-//   },
-//   dividerText: {
-//     marginHorizontal: 10,
-//     color: '#666',
-//     fontSize: 14,
-//     fontWeight: '500',
-//   },
-//   loginLink: {
-//     marginTop: 20,
-//     alignItems: 'center',
-//   },
-//   loginText: {
-//     color: '#666',
-//     fontSize: 14,
-//   },
-//   loginLinkText: {
-//     color: COLORS.primary,
-//     fontWeight: '600',
-//   },
-// });
-
-
-
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+} from 'react';
 
 import {
   StyleSheet,
@@ -1919,524 +15,3051 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  ScrollView,
+  RefreshControl
 } from 'react-native';
-import React, { useState, useEffect, useContext } from 'react';
-import { useRoute } from '@react-navigation/native';
-import ROUTES from '../../constants/routes';
-import COLORS from '../../constants/colors';
-import { AuthContext } from '../../context/AuthContext';
-import * as Animatable from 'react-native-animatable';
-import RoleSelection from '../../components/shared/RoleSelection';
-import { useNavigation } from '@react-navigation/native';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import fetchIPGeolocation from '../../services/geolocation';
 
+import {
+  useRoute,
+  useNavigation,
+} from '@react-navigation/native';
+
+import {
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
+
+import * as Animatable from 'react-native-animatable';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import * as Crypto from 'expo-crypto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from '../../services/firebase/config';
-import { ref, set, get } from 'firebase/database';
+
+import ROUTES from '../../constants/routes';
+import { AuthContext } from '../../context/AuthContext';
+import RoleSelection from '../../components/shared/RoleSelection';
+import fetchIPGeolocation from '../../services/geolocation';
 import { useNotification } from '../../hooks/useNotification';
 import { navigationRef } from '../../utils/navigationRef';
-import { auth } from '../../services/firebase/config';
+import { useTheme } from '../../theme';
 
 WebBrowser.maybeCompleteAuthSession();
+
 const GOOGLE_CLIENT_ID =
   '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com';
 
 const GetStarted = () => {
   const navigation = useNavigation();
   const route = useRoute();
+
   const params = route.params || {};
 
-  const { signupWithGoogle, signupWithApple, login, logout } = useContext(AuthContext);
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
-  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
-  const [geolocationData, setGeolocationData] = useState(null);
-  const [fetchingLocation, setFetchingLocation] = useState(false);
+  const {
+    login,
+  } = useContext(AuthContext);
 
-  const { expoPushToken, registerForPushNotificationsAsync } = useNotification();
+  const {
+    registerForPushNotificationsAsync,
+  } = useNotification();
 
-  // ========== GOOGLE AUTH WITH SCOPES ==========
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: GOOGLE_CLIENT_ID,
-    androidClientId: GOOGLE_CLIENT_ID,
-    webClientId: GOOGLE_CLIENT_ID,
-    scopes: ['profile', 'email', 'openid'],
+  const {
+    theme,
+    isDark,
+  } = useTheme();
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme]
+  );
+
+  /*
+   * ============================================================
+   * STATE
+   * ============================================================
+   */
+
+  const [
+    selectedRole,
+    setSelectedRole,
+  ] = useState(null);
+
+  const [
+    googleLoading,
+    setGoogleLoading,
+  ] = useState(false);
+
+  const [
+    appleLoading,
+    setAppleLoading,
+  ] = useState(false);
+
+  const [
+    appleAuthAvailable,
+    setAppleAuthAvailable,
+  ] = useState(false);
+
+  const [
+    geolocationData,
+    setGeolocationData,
+  ] = useState(null);
+
+  const [
+    fetchingLocation,
+    setFetchingLocation,
+  ] = useState(false);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
+
+
+  /*
+  * ============================================================
+  * PULL-TO-REFRESH
+  * ============================================================
+  */
+
+  const onRefresh = useCallback(async () => {
+    if (
+      refreshing ||
+      googleLoading ||
+      appleLoading
+    ) {
+      return;
+    }
+
+    setRefreshing(true);
+
+    try {
+      await Promise.all([
+        fetchGeolocation(),
+        checkAppleAuthAvailability(),
+      ]);
+    } catch (error) {
+      console.error(
+        '❌ GetStarted refresh error:',
+        error
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    refreshing,
+    googleLoading,
+    appleLoading,
+    fetchGeolocation,
+    checkAppleAuthAvailability,
+  ]);
+  /*
+   * ============================================================
+   * GOOGLE AUTH
+   * ============================================================
+   */
+
+  const [
+    request,
+    response,
+    promptAsync,
+  ] = Google.useAuthRequest({
+    iosClientId:
+      GOOGLE_CLIENT_ID,
+
+    androidClientId:
+      GOOGLE_CLIENT_ID,
+
+    webClientId:
+      GOOGLE_CLIENT_ID,
+
+    scopes: [
+      'profile',
+      'email',
+      'openid',
+    ],
+
     idToken: true,
   });
 
-  // Fetch geolocation
+  /*
+   * ============================================================
+   * INITIALIZATION
+   * ============================================================
+   */
+
+  const fetchGeolocation =
+    useCallback(async () => {
+      try {
+        setFetchingLocation(true);
+
+        const data =
+          await fetchIPGeolocation();
+
+        setGeolocationData(
+          data || null
+        );
+
+        console.log(
+          '📍 Location fetched:',
+          data
+        );
+      } catch (error) {
+        /*
+         * Location is supplemental.
+         * It must never block signup.
+         */
+        console.error(
+          '❌ Failed to fetch location:',
+          error
+        );
+
+        setGeolocationData(null);
+      } finally {
+        setFetchingLocation(false);
+      }
+    }, []);
+
+  const checkAppleAuthAvailability =
+    useCallback(async () => {
+      try {
+        if (Platform.OS !== 'ios') {
+          setAppleAuthAvailable(false);
+          return;
+        }
+
+        const available =
+          await AppleAuthentication.isAvailableAsync();
+
+        setAppleAuthAvailable(
+          Boolean(available)
+        );
+      } catch (error) {
+        console.error(
+          '❌ Error checking Apple availability:',
+          error
+        );
+
+        setAppleAuthAvailable(false);
+      }
+    }, []);
+
   useEffect(() => {
     fetchGeolocation();
     checkAppleAuthAvailability();
-  }, []);
+  }, [
+    fetchGeolocation,
+    checkAppleAuthAvailability,
+  ]);
 
-  // Handle Google OAuth response (if started from this screen)
+  // /*
+  //  * ============================================================
+  //  * GOOGLE RESPONSE
+  //  * ============================================================
+  //  *
+  //  * This only fires when Google authentication is
+  //  * initiated directly from GetStarted.
+  //  *
+  //  * If LoginOptions already authenticated the user,
+  //  * the existing Google credential is passed through
+  //  * route params and we do not authenticate again.
+  //  */
+
+  // useEffect(() => {
+  //   if (
+  //     response?.type ===
+  //     'success'
+  //   ) {
+  //     handleGoogleAuthResponse(
+  //       response
+  //     );
+
+  //     return;
+  //   }
+
+  //   if (
+  //     response?.type ===
+  //     'error'
+  //   ) {
+  //     console.error(
+  //       '❌ Google auth error:',
+  //       response.error
+  //     );
+
+  //     Alert.alert(
+  //       'Google Sign-In',
+  //       'Google authentication failed. Please try again.'
+  //     );
+
+  //     setGoogleLoading(false);
+  //   }
+  // }, [response]);
+
+  /*
+  * ============================================================
+  * GOOGLE RESPONSE
+  * ============================================================
+  */
+
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (!response) {
+      return;
+    }
+
+    if (response.type === 'success') {
       handleGoogleAuthResponse(response);
-    } else if (response?.type === 'error') {
-      console.error('❌ Google auth error:', response.error);
-      Alert.alert('Error', 'Google authentication failed.');
+      return;
+    }
+
+    if (response.type === 'cancel') {
+      console.log(
+        'ℹ️ Google authentication cancelled.'
+      );
+
       setGoogleLoading(false);
+      return;
+    }
+
+    if (response.type === 'dismiss') {
+      console.log(
+        'ℹ️ Google authentication dismissed.'
+      );
+
+      setGoogleLoading(false);
+      return;
+    }
+
+    if (response.type === 'error') {
+      console.error(
+        '❌ Google auth error:',
+        response.error
+      );
+
+      setGoogleLoading(false);
+
+      Alert.alert(
+        'Google Sign-In',
+        'Google authentication failed. Please try again.'
+      );
     }
   }, [response]);
 
-  const fetchGeolocation = async () => {
-    try {
-      setFetchingLocation(true);
-      const data = await fetchIPGeolocation();
-      setGeolocationData(data);
-      console.log('📍 Location fetched:', data);
-    } catch (error) {
-      console.error('Failed to fetch location:', error);
-    } finally {
-      setFetchingLocation(false);
-    }
-  };
+  /*
+   * ============================================================
+   * ROLE
+   * ============================================================
+   */
 
-  const checkAppleAuthAvailability = async () => {
-    if (Platform.OS === 'ios') {
-      const isAvailable = await AppleAuthentication.isAvailableAsync();
-      setAppleAuthAvailable(isAvailable);
-    }
-  };
+  const handleRoleSelect =
+    useCallback((role) => {
+      console.log(
+        '👤 Role selected:',
+        role
+      );
 
-  const handleRoleSelect = (role) => {
-    console.log('Role selected:', role);
-    setSelectedRole(role);
-  };
+      setSelectedRole(role);
+    }, []);
 
-  const handleEmailSignup = () => {
-    if (!selectedRole) {
-      Alert.alert('Select Role', 'Please select your role first');
+  /*
+   * ============================================================
+   * EMAIL SIGNUP
+   * ============================================================
+   */
+
+  const handleEmailSignup =
+    useCallback(() => {
+      if (!selectedRole) {
+        Alert.alert(
+          'Select Your Role',
+          'Please select whether you are a Host or Cleaner first.'
+        );
+
+        return;
+      }
+
+      if (fetchingLocation) {
+        Alert.alert(
+          'Please Wait',
+          'We are finishing your setup. Please try again in a moment.'
+        );
+
+        return;
+      }
+
+      navigation.navigate(
+        ROUTES.signup,
+        {
+          userType:
+            selectedRole,
+
+          geolocation:
+            geolocationData ||
+            null,
+        }
+      );
+    }, [
+      selectedRole,
+      fetchingLocation,
+      navigation,
+      geolocationData,
+    ]);
+
+  // /*
+  //  * ============================================================
+  //  * GOOGLE SIGN-IN
+  //  * ============================================================
+  //  */
+
+  // const handleGoogleSignIn =
+  //   async () => {
+  //     try {
+  //       if (!selectedRole) {
+  //         Alert.alert(
+  //           'Select Your Role',
+  //           'Please select whether you are a Host or Cleaner first.'
+  //         );
+
+  //         return;
+  //       }
+
+  //       if (fetchingLocation) {
+  //         Alert.alert(
+  //           'Please Wait',
+  //           'We are detecting your location. Please try again in a moment.'
+  //         );
+
+  //         return;
+  //       }
+
+  //       /*
+  //        * ======================================================
+  //        * IMPORTANT:
+  //        *
+  //        * If GetStarted was reached from LoginOptions because
+  //        * Google authentication already succeeded, DO NOT
+  //        * authenticate with Google again.
+  //        * ======================================================
+  //        */
+
+  //       if (
+  //         params.googleUser &&
+  //         params.idToken
+  //       ) {
+  //         console.log(
+  //           '🔵 Using existing Google credential from LoginOptions'
+  //         );
+
+  //         setGoogleLoading(true);
+
+  //         await handleGoogleBackendLogin(
+  //           params.idToken,
+  //           selectedRole,
+  //           params.googleUser
+  //         );
+
+  //         return;
+  //       }
+
+  //       if (!request) {
+  //         Alert.alert(
+  //           'Google Sign-In',
+  //           'Google authentication is not ready yet. Please try again.'
+  //         );
+
+  //         return;
+  //       }
+
+  //       setGoogleLoading(true);
+
+  //       await promptAsync();
+  //     } catch (error) {
+  //       console.error(
+  //         '❌ Google sign-in error:',
+  //         error
+  //       );
+
+  //       Alert.alert(
+  //         'Google Sign-In',
+  //         error?.message ||
+  //           'Google sign-in failed. Please try again.'
+  //       );
+
+  //       setGoogleLoading(false);
+  //     }
+  //   };
+
+
+  /*
+  * ============================================================
+  * GOOGLE SIGN-IN
+  * ============================================================
+  */
+
+  const handleGoogleSignIn = async () => {
+    if (
+      googleLoading ||
+      appleLoading
+    ) {
       return;
     }
-    navigation.navigate(ROUTES.signup, { userType: selectedRole, geolocation: geolocationData });
-  };
 
-  // ========== GOOGLE SIGN-IN HANDLER ==========
-  const handleGoogleSignIn = async () => {
     try {
       if (!selectedRole) {
-        Alert.alert('Select Role', 'Please select your role first');
+        Alert.alert(
+          'Select Your Role',
+          'Please select whether you are a Host or Cleaner first.'
+        );
         return;
       }
+
+      if (fetchingLocation) {
+        Alert.alert(
+          'Please Wait',
+          'We are detecting your location. Please try again in a moment.'
+        );
+        return;
+      }
+
+      /*
+      * --------------------------------------------------------
+      * EXISTING GOOGLE CREDENTIAL
+      * --------------------------------------------------------
+      */
+
+      if (
+        params.googleUser &&
+        params.idToken
+      ) {
+        console.log(
+          '🔵 Using existing Google credential from LoginOptions'
+        );
+
+        setGoogleLoading(true);
+
+        await handleGoogleBackendLogin(
+          params.idToken,
+          selectedRole,
+          params.googleUser
+        );
+
+        return;
+      }
+
+      /*
+      * --------------------------------------------------------
+      * CHECK GOOGLE REQUEST
+      * --------------------------------------------------------
+      */
+
       if (!request) {
-        Alert.alert('Error', 'Google Auth not ready');
+        Alert.alert(
+          'Google Sign-In',
+          'Google authentication is not ready yet. Please try again.'
+        );
+
         return;
       }
 
+      /*
+      * --------------------------------------------------------
+      * START GOOGLE AUTHENTICATION
+      * --------------------------------------------------------
+      */
+
       setGoogleLoading(true);
 
-      // Check if we have params from LoginOptions
-      if (params.googleUser && params.idToken) {
-        console.log('🔵 Using Google params from LoginOptions');
-        const idToken = params.idToken;
-        const googleUser = params.googleUser;
-        // Call backend with the existing idToken and selected role
-        await handleGoogleBackendLogin(idToken, selectedRole, googleUser);
-        setGoogleLoading(false);
-      } else {
-        // Start fresh OAuth flow
-        await promptAsync();
-        // The result will be handled by the useEffect above
-      }
-    } catch (error) {
-      console.error('❌ Google sign-in error:', error);
-      Alert.alert('Error', 'Google sign-in failed');
-      setGoogleLoading(false);
-    }
-  };
+      const result = await promptAsync();
 
-  // ========== HANDLE GOOGLE AUTH RESPONSE (from OAuth started here) ==========
-  const handleGoogleAuthResponse = async (response) => {
-    try {
-      setGoogleLoading(true);
-      const { authentication } = response;
-      const accessToken = authentication?.accessToken;
-      const idToken = authentication?.idToken;
+      console.log(
+        '🔵 Google authentication result:',
+        result?.type
+      );
 
-      if (!accessToken || !idToken) {
-        Alert.alert('Error', 'Google login failed: missing tokens');
+      /*
+      * --------------------------------------------------------
+      * HANDLE CANCELLATION
+      * --------------------------------------------------------
+      */
+
+      if (
+        result?.type === 'cancel' ||
+        result?.type === 'dismiss'
+      ) {
+        console.log(
+          'ℹ️ Google Sign-In cancelled by user.'
+        );
+
         setGoogleLoading(false);
         return;
       }
 
-      // Fetch user info
-      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
-      const googleUser = await userInfoResponse.json();
+      /*
+      * --------------------------------------------------------
+      * HANDLE AUTHENTICATION ERROR
+      * --------------------------------------------------------
+      */
 
-      // Firebase auth
-      const credential = GoogleAuthProvider.credential(idToken);
-      await signInWithCredential(auth, credential);
+      if (
+        result?.type === 'error'
+      ) {
+        console.error(
+          '❌ Google authentication error:',
+          result.error
+        );
 
-      // Backend with selected role
-      await handleGoogleBackendLogin(idToken, selectedRole, googleUser);
+        setGoogleLoading(false);
+
+        Alert.alert(
+          'Google Sign-In',
+          'Google authentication failed. Please try again.'
+        );
+
+        return;
+      }
+
+      /*
+      * --------------------------------------------------------
+      * SUCCESS
+      * --------------------------------------------------------
+      *
+      * The response useEffect handles successful authentication.
+      * Do not clear the loading state here because the response
+      * handler may still be processing the credentials.
+      * --------------------------------------------------------
+      */
     } catch (error) {
-      console.error('❌ Google auth response error:', error);
-      Alert.alert('Error', error.message || 'Google authentication failed');
-    } finally {
+      console.error(
+        '❌ Google sign-in error:',
+        error
+      );
+
       setGoogleLoading(false);
+
+      Alert.alert(
+        'Google Sign-In',
+        error?.message ||
+          'Google sign-in failed. Please try again.'
+      );
     }
   };
 
-  // ========== BACKEND LOGIN (with token) ==========
-  const handleGoogleBackendLogin = async (idToken, userType, googleUser = null) => {
-    try {
-      if (!idToken || typeof idToken !== 'string') {
-        throw new Error('Invalid idToken: ' + typeof idToken);
-      }
+  /*
+   * ============================================================
+   * GOOGLE AUTH RESPONSE
+   * ============================================================
+   */
 
-      const baseUrl = 'https://www.freshsweeper.com';
-      const endpoint = `${baseUrl}/api/auth/google_auth`;
+  const handleGoogleAuthResponse =
+    async (googleResponse) => {
+      try {
+        setGoogleLoading(true);
 
-      console.log('📤 SENDING GOOGLE LOGIN REQUEST:');
-      console.log('Endpoint:', endpoint);
-      console.log('User Type:', userType);
-      console.log('Token length:', idToken.length);
+        const authentication =
+          googleResponse?.authentication;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ token: idToken, userType }),
-      });
+        const accessToken =
+          authentication?.accessToken;
 
-      const data = await response.json();
-      console.log('📥 Response:', data);
+        const idToken =
+          authentication?.idToken;
 
-      if (response.ok && data.status === 'success') {
-        const userData = data.data;
-        await completeLogin(userData, googleUser);
-      } else {
-        let errorMsg = 'Unknown error';
-        if (data.detail) {
-          if (typeof data.detail === 'string') errorMsg = data.detail;
-          else if (Array.isArray(data.detail)) {
-            // Pydantic validation errors
-            errorMsg = data.detail.map(e => e.msg || e.message || e).join(', ');
-          } else if (data.detail.message) errorMsg = data.detail.message;
-          else errorMsg = JSON.stringify(data.detail);
-        } else if (data.message) {
-          errorMsg = data.message;
-        } else if (data.error) {
-          errorMsg = data.error;
+        if (
+          !accessToken ||
+          !idToken
+        ) {
+          throw new Error(
+            'Google authentication did not return the required credentials.'
+          );
         }
-        throw new Error(`Google sign-in failed: ${errorMsg}`);
+
+        const userInfoResponse =
+          await fetch(
+            'https://www.googleapis.com/oauth2/v2/userinfo',
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+        if (
+          !userInfoResponse.ok
+        ) {
+          throw new Error(
+            'Failed to retrieve your Google account information.'
+          );
+        }
+
+        const googleUser =
+          await userInfoResponse.json();
+
+        await handleGoogleBackendLogin(
+          idToken,
+          selectedRole,
+          googleUser
+        );
+      } catch (error) {
+        console.error(
+          '❌ Google auth response error:',
+          error
+        );
+
+        Alert.alert(
+          'Google Sign-In',
+          error?.message ||
+            'Google authentication failed.'
+        );
+      } finally {
+        setGoogleLoading(false);
       }
-    } catch (error) {
-      console.error('❌ Google backend login error:', error);
-      Alert.alert('Sign-In Error', error.message || 'Unable to process Google Sign-In.');
-    }
-  };
+    };
 
-  // ========== APPLE SIGN-IN ==========
-  const handleAppleSignIn = async () => {
-    if (!selectedRole) {
-      Alert.alert('Select Role', 'Please select your role first');
-      return;
-    }
-    if (fetchingLocation) {
-      Alert.alert('Please wait', 'Fetching your location...');
-      return;
-    }
+  /*
+   * ============================================================
+   * GOOGLE BACKEND LOGIN / SIGNUP
+   * ============================================================
+   */
 
-    setAppleLoading(true);
-    try {
-      let credential;
-      if (params.appleCredential) {
-        credential = params.appleCredential;
-      } else {
-        credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+  const handleGoogleBackendLogin =
+    async (
+      idToken,
+      userType,
+      googleUser = null
+    ) => {
+      try {
+        if (
+          !idToken ||
+          typeof idToken !==
+            'string'
+        ) {
+          throw new Error(
+            'Invalid Google authentication token.'
+          );
+        }
+
+        if (!userType) {
+          throw new Error(
+            'Please select your Host or Cleaner role first.'
+          );
+        }
+
+        const endpoint =
+          'https://www.freshsweeper.com/api/auth/google_auth';
+
+        console.log(
+          '📤 GOOGLE SIGNUP REQUEST'
+        );
+
+        console.log(
+          '👤 Role:',
+          userType
+        );
+
+        console.log(
+          '🔐 Token received:',
+          !!idToken
+        );
+
+        const response =
+          await fetch(
+            endpoint,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+
+                Accept:
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  token:
+                    idToken,
+
+                  userType,
+                }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        console.log(
+          '📥 GOOGLE RESPONSE:',
+          {
+            status:
+              data?.status,
+
+            needsRole:
+              data?.needs_role ||
+              data?.data?.needs_role ||
+              false,
+
+            hasUser:
+              !!data?.data,
+          }
+        );
+
+        /*
+         * ======================================================
+         * SUCCESS
+         * ======================================================
+         */
+
+        if (
+          response.ok &&
+          data?.status ===
+            'success' &&
+          data?.data
+        ) {
+          await completeLogin(
+            data.data,
+            googleUser
+          );
+
+          return;
+        }
+
+        /*
+         * ======================================================
+         * ROLE REQUIRED
+         *
+         * Normally GetStarted already has a role at this point,
+         * but we retain this handling for backend compatibility.
+         * ======================================================
+         */
+
+        if (
+          data?.status ===
+            'needs_role' ||
+          data?.needs_role ===
+            true ||
+          data?.data?.needs_role ===
+            true ||
+          data?.detail?.type ===
+            'ROLE_REQUIRED'
+        ) {
+          Alert.alert(
+            'Select Your Role',
+            'Please select whether you are a Host or Cleaner.'
+          );
+
+          return;
+        }
+
+        /*
+         * ======================================================
+         * ERROR
+         * ======================================================
+         */
+
+        let errorMessage =
+          'Google sign-in failed.';
+
+        if (
+          typeof data?.detail ===
+          'string'
+        ) {
+          errorMessage =
+            data.detail;
+        } else if (
+          Array.isArray(
+            data?.detail
+          )
+        ) {
+          errorMessage =
+            data.detail
+              .map(
+                (error) =>
+                  error?.msg ||
+                  error?.message ||
+                  String(error)
+              )
+              .join(', ');
+        } else if (
+          data?.detail?.message
+        ) {
+          errorMessage =
+            data.detail.message;
+        } else if (
+          data?.message
+        ) {
+          errorMessage =
+            data.message;
+        } else if (
+          data?.error
+        ) {
+          errorMessage =
+            data.error;
+        }
+
+        throw new Error(
+          errorMessage
+        );
+      } catch (error) {
+        console.error(
+          '❌ Google backend login error:',
+          error
+        );
+
+        Alert.alert(
+          'Google Sign-In',
+          error?.message ||
+            'Unable to process Google Sign-In.'
+        );
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+
+  /*
+   * ============================================================
+   * APPLE SIGN-IN
+   * ============================================================
+   */
+
+  const handleAppleSignIn =
+    async () => {
+      /*
+       * ========================================================
+       * EXISTING APPLE CREDENTIAL
+       *
+       * LoginOptions already authenticated this user.
+       *
+       * DO NOT AUTHENTICATE WITH APPLE AGAIN.
+       * ========================================================
+       */
+
+      if (params.appleSignup) {
+        if (!selectedRole) {
+          Alert.alert(
+            'Select Your Role',
+            'Please select whether you are a Host or Cleaner first.'
+          );
+
+          return;
+        }
+
+        await completePendingAppleSignup();
+
+        return;
+      }
+
+      if (!selectedRole) {
+        Alert.alert(
+          'Select Your Role',
+          'Please select whether you are a Host or Cleaner first.'
+        );
+
+        return;
+      }
+
+      if (fetchingLocation) {
+        Alert.alert(
+          'Please Wait',
+          'We are detecting your location. Please try again in a moment.'
+        );
+
+        return;
+      }
+
+      setAppleLoading(true);
+
+      try {
+        /*
+         * Fresh nonce for this Apple authentication.
+         */
+        const nonce =
+          await Crypto.randomUUID();
+
+        console.log(
+          '🍎 Starting Apple Sign-In'
+        );
+
+        console.log(
+          '👤 Selected role:',
+          selectedRole
+        );
+
+        const credential =
+          await AppleAuthentication.signInAsync(
+            {
+              requestedScopes: [
+                AppleAuthentication
+                  .AppleAuthenticationScope
+                  .FULL_NAME,
+
+                AppleAuthentication
+                  .AppleAuthenticationScope
+                  .EMAIL,
+              ],
+
+              nonce,
+            }
+          );
+
+        console.log(
+          '🍎 Apple authentication successful'
+        );
+
+        console.log(
+          '🍎 Apple credential summary:',
+          {
+            hasIdentityToken:
+              !!credential.identityToken,
+
+            hasAuthorizationCode:
+              !!credential.authorizationCode,
+
+            appleUserId:
+              credential.user,
+
+            hasEmail:
+              !!credential.email,
+
+            hasName:
+              !!(
+                credential.fullName
+                  ?.givenName ||
+                credential.fullName
+                  ?.familyName
+              ),
+          }
+        );
+
+        await handleAppleBackendLogin(
+          credential,
+          selectedRole,
+          nonce
+        );
+      } catch (error) {
+        /*
+         * User cancellation is expected.
+         */
+        if (
+          error?.code ===
+          'ERR_CANCELED'
+        ) {
+          return;
+        }
+
+        console.error(
+          '❌ Apple Sign-In error:',
+          error
+        );
+
+        Alert.alert(
+          'Apple Sign-In',
+          error?.message ||
+            'Apple Sign-In failed. Please try again.'
+        );
+      } finally {
+        setAppleLoading(false);
+      }
+    };
+
+  /*
+   * ============================================================
+   * APPLE BACKEND LOGIN / SIGNUP
+   * ============================================================
+   */
+
+  const handleAppleBackendLogin =
+    async (
+      credential,
+      userType,
+      nonce
+    ) => {
+      try {
+        if (
+          !credential?.identityToken
+        ) {
+          throw new Error(
+            'Apple did not return an identity token.'
+          );
+        }
+
+        const endpoint =
+          'https://www.freshsweeper.com/api/auth/apple_auth';
+
+        const payload = {
+          identityToken:
+            credential.identityToken,
+
+          authorizationCode:
+            credential.authorizationCode,
+
+          nonce,
+
+          userType:
+            userType || null,
+
+          user: {
+            id:
+              credential.user,
+
+            email:
+              credential.email ||
+              null,
+
+            firstname:
+              credential.fullName
+                ?.givenName ||
+              '',
+
+            lastname:
+              credential.fullName
+                ?.familyName ||
+              '',
+          },
+        };
+
+        console.log(
+          '📤 APPLE REQUEST START'
+        );
+
+        console.log(
+          '👤 Apple user:',
+          credential.user
+        );
+
+        console.log(
+          '👤 Role:',
+          userType ||
+            'not selected'
+        );
+
+        console.log(
+          '🔐 Has identity token:',
+          !!credential.identityToken
+        );
+
+        console.log(
+          '🔐 Has authorization code:',
+          !!credential.authorizationCode
+        );
+
+        const response =
+          await fetch(
+            endpoint,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+
+                Accept:
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify(
+                  payload
+                ),
+            }
+          );
+
+        const rawResponse =
+          await response.text();
+
+        let data;
+
+        try {
+          data =
+            JSON.parse(
+              rawResponse
+            );
+        } catch {
+          throw new Error(
+            `Apple authentication returned an invalid server response (${response.status}).`
+          );
+        }
+
+        console.log(
+          '📥 APPLE RESPONSE:',
+          {
+            status:
+              data?.status,
+
+            message:
+              data?.message,
+
+            needsRole:
+              data?.status ===
+                'needs_role' ||
+              data?.needs_role ===
+                true ||
+              data?.data?.needs_role ===
+                true,
+          }
+        );
+
+        /*
+         * ======================================================
+         * NEW APPLE USER
+         * ======================================================
+         *
+         * Normally this happens when LoginOptions is not the
+         * entry point and the backend asks us to collect role.
+         *
+         * IMPORTANT:
+         * Preserve the Apple credential.
+         */
+
+        if (
+          data?.status ===
+            'needs_role' ||
+          data?.needs_role ===
+            true ||
+          data?.data?.needs_role ===
+            true ||
+          data?.detail?.type ===
+            'ROLE_REQUIRED'
+        ) {
+          console.log(
+            '🆕 Apple account requires role selection'
+          );
+
+          navigation.navigate(
+            ROUTES.getting_started,
+            {
+              appleSignup: true,
+
+              appleCredential: {
+                user:
+                  credential.user,
+
+                email:
+                  credential.email ||
+                  null,
+
+                firstname:
+                  credential.fullName
+                    ?.givenName ||
+                  '',
+
+                lastname:
+                  credential.fullName
+                    ?.familyName ||
+                  '',
+
+                identityToken:
+                  credential.identityToken,
+
+                authorizationCode:
+                  credential.authorizationCode,
+              },
+
+              appleNonce:
+                nonce,
+
+              geolocation:
+                geolocationData ||
+                null,
+            }
+          );
+
+          return {
+            success: false,
+            needsRole: true,
+          };
+        }
+
+        /*
+         * ======================================================
+         * SUCCESS
+         * ======================================================
+         */
+
+        if (
+          response.ok &&
+          data?.status ===
+            'success' &&
+          data?.data
+        ) {
+          await completeLogin(
+            data.data
+          );
+
+          return {
+            success: true,
+            data:
+              data.data,
+          };
+        }
+
+        /*
+         * ======================================================
+         * ERROR
+         * ======================================================
+         */
+
+        const errorMessage =
+          typeof data?.detail ===
+          'string'
+            ? data.detail
+            : data?.detail
+                ?.message ||
+              data?.message ||
+              data?.error ||
+              `Apple Sign-In failed with HTTP ${response.status}`;
+
+        throw new Error(
+          errorMessage
+        );
+      } catch (error) {
+        console.error(
+          '❌ Apple backend error:',
+          error
+        );
+
+        throw error;
+      }
+    };
+
+  /*
+   * ============================================================
+   * COMPLETE PENDING APPLE SIGNUP
+   * ============================================================
+   *
+   * This is the important second half of:
+   *
+   * LoginOptions
+   *   → Apple
+   *   → backend says needs_role
+   *   → GetStarted
+   *   → user selects role
+   *   → backend creates account
+   *
+   * We do NOT ask Apple to authenticate again.
+   */
+
+  const completePendingAppleSignup =
+    async () => {
+      if (
+        !params.appleSignup ||
+        !params.appleCredential ||
+        !params.appleNonce
+      ) {
+        Alert.alert(
+          'Apple Sign-In',
+          'Your Apple signup session is incomplete. Please start again.'
+        );
+
+        return true;
+      }
+
+      if (!selectedRole) {
+        Alert.alert(
+          'Select Your Role',
+          'Please select whether you are a Host or Cleaner first.'
+        );
+
+        return true;
+      }
+
+      try {
+        setAppleLoading(true);
+
+        const credential = {
+          user:
+            params.appleCredential
+              .user,
+
+          email:
+            params.appleCredential
+              .email,
+
+          fullName: {
+            givenName:
+              params.appleCredential
+                .firstname ||
+              '',
+
+            familyName:
+              params.appleCredential
+                .lastname ||
+              '',
+          },
+
+          identityToken:
+            params.appleCredential
+              .identityToken,
+
+          authorizationCode:
+            params.appleCredential
+              .authorizationCode,
+        };
+
+        await handleAppleBackendLogin(
+          credential,
+          selectedRole,
+          params.appleNonce
+        );
+
+        return true;
+      } catch (error) {
+        console.error(
+          '❌ Pending Apple signup error:',
+          error
+        );
+
+        Alert.alert(
+          'Apple Sign-In',
+          error?.message ||
+            'Unable to complete Apple signup.'
+        );
+
+        return true;
+      } finally {
+        setAppleLoading(false);
+      }
+    };
+
+  /*
+   * ============================================================
+   * COMPLETE LOGIN
+   * ============================================================
+   *
+   * Shared by:
+   *
+   * Google
+   * Apple
+   *
+   * No Firebase.
+   */
+
+  const completeLogin =
+    async (
+      userData,
+      googleUser = null
+    ) => {
+      try {
+        console.log(
+          '🔐 COMPLETE LOGIN'
+        );
+
+        console.log(
+          '👤 User ID:',
+          userData?._id
+        );
+
+        console.log(
+          '👤 User Type:',
+          userData?.userType
+        );
+
+        console.log(
+          '📧 Email:',
+          userData?.email
+        );
+
+        console.log(
+          '🔐 Has access token:',
+          !!userData?.token
+        );
+
+        console.log(
+          '🔐 Has refresh token:',
+          !!userData?.refresh_token
+        );
+
+        /*
+         * --------------------------------------------------------
+         * VALIDATE
+         * --------------------------------------------------------
+         */
+
+        if (!userData) {
+          throw new Error(
+            'Authentication returned no user data.'
+          );
+        }
+
+        if (!userData.token) {
+          throw new Error(
+            'Authentication succeeded but no access token was returned.'
+          );
+        }
+
+        if (!userData._id) {
+          throw new Error(
+            'Authentication succeeded but no user ID was returned.'
+          );
+        }
+
+        if (!userData.userType) {
+          throw new Error(
+            'Authentication succeeded but no user type was returned.'
+          );
+        }
+
+        if (!userData.email) {
+          throw new Error(
+            'Authentication succeeded but no email was returned.'
+          );
+        }
+
+        /*
+         * --------------------------------------------------------
+         * SAVE SESSION
+         * --------------------------------------------------------
+         */
+
+        await AsyncStorage.setItem(
+          '@auth_token',
+          userData.token
+        );
+
+        if (
+          userData.refresh_token
+        ) {
+          await AsyncStorage.setItem(
+            '@refresh_token',
+            userData.refresh_token
+          );
+        }
+
+        await AsyncStorage.setItem(
+          '@user_data',
+          JSON.stringify(
+            userData
+          )
+        );
+
+        await AsyncStorage.setItem(
+          '@user_type',
+          userData.userType
+        );
+
+        await AsyncStorage.setItem(
+          '@user_id',
+          userData._id
+        );
+
+        console.log(
+          '💾 Authentication session saved'
+        );
+
+        /*
+         * --------------------------------------------------------
+         * AUTH CONTEXT
+         * --------------------------------------------------------
+         */
+
+        await login({
+          resp: userData,
+        });
+
+        console.log(
+          '✅ AuthContext session updated'
+        );
+
+        /*
+         * --------------------------------------------------------
+         * VERIFY SESSION
+         * --------------------------------------------------------
+         */
+
+        const [
+          savedToken,
+          savedRefreshToken,
+          savedUserData,
+          savedUserType,
+          savedUserId,
+        ] = await Promise.all([
+          AsyncStorage.getItem(
+            '@auth_token'
+          ),
+
+          AsyncStorage.getItem(
+            '@refresh_token'
+          ),
+
+          AsyncStorage.getItem(
+            '@user_data'
+          ),
+
+          AsyncStorage.getItem(
+            '@user_type'
+          ),
+
+          AsyncStorage.getItem(
+            '@user_id'
+          ),
+        ]);
+
+        console.log(
+          '🔐 SESSION VERIFIED:',
+          {
+            hasToken:
+              !!savedToken,
+
+            hasRefreshToken:
+              !!savedRefreshToken,
+
+            hasUserData:
+              !!savedUserData,
+
+            userType:
+              savedUserType,
+
+            userId:
+              savedUserId,
+          }
+        );
+
+        if (
+          !savedToken ||
+          !savedUserData ||
+          !savedUserType ||
+          !savedUserId
+        ) {
+          throw new Error(
+            'Authentication session could not be saved correctly.'
+          );
+        }
+
+        /*
+         * --------------------------------------------------------
+         * PHONE STATUS
+         * --------------------------------------------------------
+         */
+
+        const hasPhone =
+          typeof userData.phone ===
+            'string' &&
+          userData.phone
+            .trim()
+            .length > 0;
+
+        console.log(
+          '📱 Phone exists:',
+          hasPhone
+        );
+
+        /*
+         * --------------------------------------------------------
+         * PHONE CAPTURE
+         *
+         * Do NOT mark onboarding complete yet.
+         *
+         * PhoneCapture is responsible for completing
+         * onboarding after the phone has been saved.
+         * --------------------------------------------------------
+         */
+
+        if (!hasPhone) {
+          const navData = {
+            userId:
+              userData._id,
+
+            userType:
+              userData.userType,
+
+            email:
+              userData.email ||
+              googleUser?.email ||
+              '',
+
+            firstName:
+              userData.firstname ||
+              googleUser?.given_name ||
+              '',
+
+            lastName:
+              userData.lastname ||
+              googleUser?.family_name ||
+              '',
+
+            token:
+              userData.token,
+
+            refreshToken:
+              userData.refresh_token ||
+              '',
+
+            userData,
+
+            googleUser:
+              googleUser ||
+              null,
+
+            geolocation:
+              geolocationData ||
+              null,
+          };
+
+          console.log(
+            '📱 Initial setup required — navigating to PhoneCapture'
+          );
+
+          navigation.navigate(
+            ROUTES.phone_capture,
+            navData
+          );
+
+          return;
+        }
+
+        /*
+         * --------------------------------------------------------
+         * ONBOARDING COMPLETE
+         * --------------------------------------------------------
+         */
+
+        await AsyncStorage.setItem(
+          '@app_onboarding_completed',
+          'true'
+        );
+
+        /*
+         * Legacy compatibility.
+         */
+        await AsyncStorage.setItem(
+          '@app_onboarding_shown',
+          'true'
+        );
+
+        /*
+         * --------------------------------------------------------
+         * PUSH NOTIFICATIONS
+         * --------------------------------------------------------
+         */
+
+        try {
+          await registerForPushNotificationsAsync(
+            userData._id
+          );
+
+          console.log(
+            '✅ Push notification registration completed'
+          );
+        } catch (
+          notificationError
+        ) {
+          /*
+           * Never block login because push registration failed.
+           */
+          console.warn(
+            '⚠️ Push notification registration failed:',
+            notificationError?.message ||
+              notificationError
+          );
+        }
+
+        /*
+         * --------------------------------------------------------
+         * DESTINATION
+         * --------------------------------------------------------
+         */
+
+        const destination =
+          userData.userType ===
+          'host'
+            ? 'Host'
+            : 'Cleaner';
+
+        console.log(
+          '🏠 Login destination:',
+          destination
+        );
+
+        /*
+         * --------------------------------------------------------
+         * NAVIGATION
+         * --------------------------------------------------------
+         */
+
+        if (
+          navigationRef.isReady()
+        ) {
+          navigationRef.reset({
+            index: 0,
+
+            routes: [
+              {
+                name:
+                  destination,
+              },
+            ],
+          });
+
+          return;
+        }
+
+        console.warn(
+          '⚠️ navigationRef not ready — using local navigation'
+        );
+
+        navigation.reset({
+          index: 0,
+
+          routes: [
+            {
+              name:
+                destination,
+            },
           ],
         });
+      } catch (error) {
+        console.error(
+          '❌ Complete login error:',
+          error?.message ||
+            error
+        );
+
+        Alert.alert(
+          'Login Error',
+          error?.message ||
+            'Login failed. Please try again.'
+        );
       }
-      await handleAppleBackendLogin(credential, selectedRole);
-    } catch (error) {
-      if (error.code !== 'ERR_CANCELED') {
-        Alert.alert('Error', 'Apple Sign-In failed');
+    };
+
+  /*
+   * ============================================================
+   * LOCATION STATUS
+   * ============================================================
+   */
+
+  const renderLocationStatus =
+    () => {
+      if (fetchingLocation) {
+        return (
+          <View
+            style={
+              styles.locationStatus
+            }
+          >
+            <ActivityIndicator
+              size="small"
+              color={
+                theme.brand.primary
+              }
+            />
+
+            <Text
+              style={
+                styles.locationText
+              }
+            >
+              Detecting your location...
+            </Text>
+          </View>
+        );
       }
-    } finally {
-      setAppleLoading(false);
-    }
-  };
 
-  const handleAppleBackendLogin = async (credential, userType) => {
-    try {
-      const baseUrl = 'https://www.freshsweeper.com';
-      const endpoint = `${baseUrl}/api/auth/apple_auth`;
+      if (
+        geolocationData
+      ) {
+        const city =
+          geolocationData?.city;
 
-      const payload = {
-        identityToken: credential.identityToken,
-        authorizationCode: credential.authorizationCode,
-        userType,
-        user: {
-          id: credential.user,
-          email: credential.email || null,
-          firstname: credential.fullName?.givenName || '',
-          lastname: credential.fullName?.familyName || '',
-        },
-      };
+        const country =
+          geolocationData?.country;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+        if (
+          city ||
+          country
+        ) {
+          return (
+            <View
+              style={[
+                styles.locationStatus,
+                styles.locationSuccess,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="map-marker-check-outline"
+                size={17}
+                color={
+                  theme.status.success
+                }
+              />
 
-      const data = await response.json();
-      if (response.ok && data.status === 'success') {
-        await completeLogin(data.data);
-      } else {
-        throw new Error(data.detail || data.message || 'Apple Sign-In failed');
-      }
-    } catch (error) {
-      console.error('❌ Apple backend error:', error);
-      Alert.alert('Error', error.message || 'Unable to process Apple Sign-In.');
-    }
-  };
-
-  // ========== COMPLETE LOGIN (shared) ==========
-  const completeLogin = async (userData, googleUser = null) => {
-    try {
-      await AsyncStorage.setItem('@auth_token', userData.token);
-      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
-      await AsyncStorage.setItem('@user_type', userData.userType);
-      await AsyncStorage.setItem('@user_id', userData._id);
-      await AsyncStorage.setItem('@app_onboarding_shown', 'true');
-
-      // Write to Firebase (optional)
-      writeUserData({
-        userId: userData._id,
-        userType: userData.userType,
-        email: userData.email || (googleUser ? googleUser.email : ''),
-        firstname: userData.firstname || (googleUser ? googleUser.given_name : ''),
-        lastname: userData.lastname || (googleUser ? googleUser.family_name : ''),
-      });
-
-      // Check if phone is set
-      const hasPhone = userData?.phone && userData.phone.trim().length > 0;
-      const isNewUser = !userData?.account_verification ||
-        (userData?.userType === 'cleaner' && !userData?.onboarding_completed);
-
-      if (isNewUser) {
-        const navData = {
-          userId: userData._id,
-          userType: userData.userType,
-          email: userData.email || (googleUser ? googleUser.email : ''),
-          firstname: userData.firstname || (googleUser ? googleUser.given_name : ''),
-          lastname: userData.lastname || (googleUser ? googleUser.family_name : ''),
-          token: userData.token,
-          userData,
-        };
-        if (geolocationData) navData.geolocation = geolocationData;
-
-        if (hasPhone) {
-          const onboardingRoute = selectedRole === 'cleaner' ? ROUTES.cleaner_onboarding : ROUTES.host_home_tab;
-          navigation.navigate(onboardingRoute, navData);
-        } else {
-          navigation.navigate(ROUTES.phone_capture, navData);
-        }
-      } else {
-        // Existing user – go to main app
-        await registerForPushNotificationsAsync(userData._id);
-        await fetchUserFirebaseData(userData._id, userData);
-        if (navigationRef.current) {
-          navigationRef.current.reset({
-            index: 0,
-            routes: [{ name: userData.userType === 'host' ? 'Host' : 'Cleaner' }],
-          });
-        } else {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: userData.userType === 'host' ? 'Host' : 'Cleaner' }],
-          });
+              <Text
+                style={
+                  styles.locationText
+                }
+                numberOfLines={1}
+              >
+                {city ||
+                  'Location detected'}
+                {country
+                  ? `, ${country}`
+                  : ''}
+              </Text>
+            </View>
+          );
         }
       }
-    } catch (error) {
-      console.error('❌ Complete login error:', error);
-      Alert.alert('Error', 'Login failed. Please try again.');
-    }
-  };
 
-  // ========== HELPERS ==========
-  const writeUserData = (userData) => {
-    try {
-      const userRef = `users/${userData.userId}`;
-      set(ref(db, userRef), {
-        userId: userData.userId,
-        firstname: userData.firstname || '',
-        lastname: userData.lastname || '',
-        language: 'en',
-        email: userData.email || '',
-        avatar: '',
-      });
-      set(ref(db, `unreadMessages/${userData.userId}`), {});
-    } catch (error) {
-      console.error('Error writing user data:', error);
-    }
-  };
+      return null;
+    };
 
-  const fetchUserFirebaseData = async (uid, response) => {
-    try {
-      const snapshot = await get(ref(db, `users/${uid}`));
-      login({ resp: response, fbUser: snapshot.val(), expo_push_token: expoPushToken });
-    } catch (error) {
-      login({ resp: response, fbUser: null, expo_push_token: expoPushToken });
-    }
-  };
+  /*
+   * ============================================================
+   * COMPUTED UI STATE
+   * ============================================================
+   */
 
-  // ========== UI ==========
-  const renderLocationStatus = () => {
-    if (fetchingLocation) {
-      return (
-        <View style={styles.locationStatus}>
-          <ActivityIndicator size="small" color={COLORS.primary} />
-          <Text style={styles.locationText}>Detecting your location...</Text>
-        </View>
-      );
-    }
-    if (geolocationData) {
-      return (
-        <View style={[styles.locationStatus, styles.locationSuccess]}>
-          <MaterialCommunityIcons name="check-circle" size={16} color="#4CAF50" />
-          <Text style={styles.locationText}>
-            Location: {geolocationData.city}, {geolocationData.country}
-          </Text>
-        </View>
-      );
-    }
-    return null;
-  };
+  const hasRole =
+    Boolean(selectedRole);
+
+  const isAuthenticating =
+    googleLoading ||
+    appleLoading;
+
+  const isPendingAppleSignup =
+    Boolean(
+      params.appleSignup
+    );
+
+  const isPendingGoogleSignup =
+    Boolean(
+      params.googleUser &&
+      params.idToken
+    );
+
+  /*
+   * ============================================================
+   * UI
+   * ============================================================
+   */
 
   return (
-    <View style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+    <View
+      style={
+        styles.container
+      }
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle={
+          isDark
+            ? 'light-content'
+            : 'dark-content'
+        }
+      />
 
-      <Animatable.View animation="slideInRight" style={[styles.footer, { backgroundColor: COLORS.white }]}>
-        {renderLocationStatus()}
+      <ScrollView
+        contentContainerStyle={
+          styles.scrollContent
+        }
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.brand.primary}
+            colors={[theme.brand.primary]}
+            progressBackgroundColor={
+              theme.surface.elevated
+            }
+            enabled={!isAuthenticating}
+          />
+        }
+      >
+        <Animatable.View
+          animation="fadeIn"
+          duration={500}
+          style={
+            styles.content
+          }
+        >
+          {/* ================================================== */}
+          {/* HEADER */}
+          {/* ================================================== */}
 
-        <RoleSelection onRoleSelect={handleRoleSelect} selectedRole={selectedRole} />
-
-        {selectedRole && (
-          <Animatable.View animation="fadeInUp" duration={500} style={styles.authButtons}>
-            <TouchableOpacity
-              style={[styles.button, styles.emailButton]}
-              onPress={handleEmailSignup}
-              disabled={fetchingLocation}
+          <View
+            style={
+              styles.header
+            }
+          >
+            <View
+              style={
+                styles.brandIcon
+              }
             >
-              <MaterialCommunityIcons name="email-outline" size={24} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Continue with Email</Text>
-            </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} /><Text style={styles.dividerText}>OR</Text><View style={styles.dividerLine} />
+              <MaterialCommunityIcons
+                name="home-heart"
+                size={30}
+                color={
+                  theme.text.inverse
+                }
+              />
             </View>
 
-            <TouchableOpacity
-              style={[styles.button, styles.googleButton]}
-              onPress={handleGoogleSignIn}
-              disabled={!request || googleLoading || fetchingLocation}
+            <Text
+              style={
+                styles.eyebrow
+              }
             >
-              <View style={styles.buttonContent}>
-                {googleLoading ? (
-                  <ActivityIndicator size="small" color="#4285F4" />
-                ) : (
-                  <MaterialCommunityIcons name="google" size={24} color="#4285F4" />
-                )}
-                <Text style={[styles.buttonText, styles.googleButtonText]}>
-                  {googleLoading ? 'Signing in...' : 'Continue with Google'}
+              FRESHSWEEPER
+            </Text>
+
+            <Text
+              style={
+                styles.title
+              }
+            >
+              Let's get started
+            </Text>
+
+            <Text
+              style={
+                styles.subtitle
+              }
+            >
+              Choose how you'll use
+              Freshsweeper and create
+              your account.
+            </Text>
+          </View>
+
+          {/* ================================================== */}
+          {/* PENDING SOCIAL SIGNUP */}
+          {/* ================================================== */}
+
+          {(isPendingAppleSignup ||
+            isPendingGoogleSignup) && (
+            <View
+              style={
+                styles.socialContext
+              }
+            >
+              <MaterialCommunityIcons
+                name={
+                  isPendingAppleSignup
+                    ? 'apple'
+                    : 'google'
+                }
+                size={19}
+                color={
+                  isPendingAppleSignup
+                    ? theme.icon.default
+                    : theme.status.error
+                }
+              />
+
+              <View
+                style={
+                  styles.socialContextText
+                }
+              >
+                <Text
+                  style={
+                    styles.socialContextTitle
+                  }
+                >
+                  {isPendingAppleSignup
+                    ? 'Apple account verified'
+                    : 'Google account verified'}
+                </Text>
+
+                <Text
+                  style={
+                    styles.socialContextSubtitle
+                  }
+                >
+                  Select your role to continue
                 </Text>
               </View>
-            </TouchableOpacity>
+            </View>
+          )}
 
-            {Platform.OS === 'ios' && appleAuthAvailable && (
-              <TouchableOpacity
-                style={[styles.button, styles.appleButton]}
-                onPress={handleAppleSignIn}
-                disabled={appleLoading || fetchingLocation}
+          {/* ================================================== */}
+          {/* LOCATION */}
+          {/* ================================================== */}
+
+          {/* {renderLocationStatus()} */}
+
+          {/* ================================================== */}
+          {/* ROLE SELECTION */}
+          {/* ================================================== */}
+
+          <View
+            style={
+              styles.roleSection
+            }
+          >
+            <View
+              style={
+                styles.sectionHeader
+              }
+            >
+              <Text
+                style={
+                  styles.sectionTitle
+                }
               >
-                <View style={styles.buttonContent}>
-                  {appleLoading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <MaterialCommunityIcons name="apple" size={24} color="#fff" />
-                  )}
-                  <Text style={[styles.buttonText, styles.appleButtonText]}>
-                    {appleLoading ? 'Signing in...' : 'Continue with Apple'}
+                Choose your role
+              </Text>
+
+              <Text
+                style={
+                  styles.requiredText
+                }
+              >
+                Required
+              </Text>
+            </View>
+
+            <Text
+              style={
+                styles.sectionDescription
+              }
+            >
+              Select the option that best
+              describes how you'll use
+              Freshsweeper.
+            </Text>
+
+            <RoleSelection
+              onRoleSelect={
+                handleRoleSelect
+              }
+              selectedRole={
+                selectedRole
+              }
+            />
+          </View>
+
+          {/* ================================================== */}
+          {/* AUTH OPTIONS */}
+          {/* ================================================== */}
+
+          {hasRole && (
+            <Animatable.View
+              animation="fadeInUp"
+              duration={450}
+              style={
+                styles.authSection
+              }
+            >
+              <View
+                style={
+                  styles.selectedRoleBanner
+                }
+              >
+                <View
+                  style={
+                    styles.selectedRoleIcon
+                  }
+                >
+                  <MaterialCommunityIcons
+                    name={
+                      selectedRole ===
+                      'host'
+                        ? 'home-account'
+                        : 'broom'
+                    }
+                    size={19}
+                    color={
+                      theme.brand.primary
+                    }
+                  />
+                </View>
+
+                <View
+                  style={
+                    styles.selectedRoleContent
+                  }
+                >
+                  <Text
+                    style={
+                      styles.selectedRoleLabel
+                    }
+                  >
+                    Selected role
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.selectedRoleValue
+                    }
+                  >
+                    {selectedRole ===
+                    'host'
+                      ? 'Host'
+                      : 'Cleaner'}
                   </Text>
                 </View>
-              </TouchableOpacity>
-            )}
 
-            <TouchableOpacity style={styles.loginLink} onPress={() => navigation.navigate(ROUTES.login_options)}>
-              <Text style={styles.loginText}>
-                Already have an account? <Text style={styles.loginLinkText}>Log In</Text>
-              </Text>
-            </TouchableOpacity>
-          </Animatable.View>
-        )}
-      </Animatable.View>
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={21}
+                  color={
+                    theme.status.success
+                  }
+                />
+              </View>
+
+              {/* ================================================= */}
+              {/* EMAIL */}
+              {/* ================================================= */}
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                style={[
+                  styles.button,
+                  styles.emailButton,
+                ]}
+                onPress={
+                  handleEmailSignup
+                }
+                disabled={
+                  fetchingLocation ||
+                  isAuthenticating
+                }
+              >
+                <View
+                  style={
+                    styles.buttonContent
+                  }
+                >
+                  <View
+                    style={
+                      styles.primaryIconCircle
+                    }
+                  >
+                    <MaterialCommunityIcons
+                      name="email-outline"
+                      size={21}
+                      color={
+                        theme.brand.primary
+                      }
+                    />
+                  </View>
+
+                  <View
+                    style={
+                      styles.buttonTextContainer
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.emailButtonText
+                      }
+                    >
+                      Continue with Email
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.emailButtonSubtext
+                      }
+                    >
+                      Use your email and password
+                    </Text>
+                  </View>
+
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={22}
+                    color={
+                      theme.button.primaryText
+                    }
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* ================================================= */}
+              {/* DIVIDER */}
+              {/* ================================================= */}
+
+              <View
+                style={
+                  styles.divider
+                }
+              >
+                <View
+                  style={
+                    styles.dividerLine
+                  }
+                />
+
+                <View
+                  style={
+                    styles.dividerBadge
+                  }
+                >
+                  <Text
+                    style={
+                      styles.dividerText
+                    }
+                  >
+                    OR
+                  </Text>
+                </View>
+
+                <View
+                  style={
+                    styles.dividerLine
+                  }
+                />
+              </View>
+
+              {/* ================================================= */}
+              {/* GOOGLE */}
+              {/* ================================================= */}
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                style={[
+                  styles.button,
+                  styles.socialButton,
+                ]}
+                onPress={
+                  handleGoogleSignIn
+                }
+                disabled={
+                  !request ||
+                  googleLoading ||
+                  appleLoading ||
+                  fetchingLocation
+                }
+              >
+                <View
+                  style={
+                    styles.buttonContent
+                  }
+                >
+                  <View
+                    style={[
+                      styles.socialIconCircle,
+                      {
+                        backgroundColor:
+                          theme.background.sunken,
+                      },
+                    ]}
+                  >
+                    {googleLoading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={
+                          theme.status.error
+                        }
+                      />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name="google"
+                        size={21}
+                        color={
+                          theme.status.error
+                        }
+                      />
+                    )}
+                  </View>
+
+                  <View
+                    style={
+                      styles.buttonTextContainer
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.socialButtonTitle
+                      }
+                    >
+                      {googleLoading
+                        ? 'Creating account...'
+                        : 'Continue with Google'}
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.socialButtonSubtext
+                      }
+                    >
+                      Fast and secure
+                    </Text>
+                  </View>
+
+                  {!googleLoading && (
+                    <MaterialCommunityIcons
+                      name="chevron-right"
+                      size={22}
+                      color={
+                        theme.icon.muted
+                      }
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              {/* ================================================= */}
+              {/* APPLE */}
+              {/* ================================================= */}
+
+              {Platform.OS ===
+                'ios' &&
+                appleAuthAvailable && (
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    style={[
+                      styles.button,
+                      styles.appleButton,
+                    ]}
+                    onPress={
+                      handleAppleSignIn
+                    }
+                    disabled={
+                      appleLoading ||
+                      googleLoading ||
+                      fetchingLocation
+                    }
+                  >
+                    <View
+                      style={
+                        styles.buttonContent
+                      }
+                    >
+                      <View
+                        style={
+                          styles.appleIconCircle
+                        }
+                      >
+                        {appleLoading ? (
+                          <ActivityIndicator
+                            size="small"
+                            color="#FFFFFF"
+                          />
+                        ) : (
+                          <MaterialCommunityIcons
+                            name="apple"
+                            size={21}
+                            color="#FFFFFF"
+                          />
+                        )}
+                      </View>
+
+                      <View
+                        style={
+                          styles.buttonTextContainer
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.appleButtonTitle
+                          }
+                        >
+                          {appleLoading
+                            ? 'Creating account...'
+                            : 'Continue with Apple'}
+                        </Text>
+
+                        <Text
+                          style={
+                            styles.appleButtonSubtext
+                          }
+                        >
+                          Private and secure
+                        </Text>
+                      </View>
+
+                      {!appleLoading && (
+                        <MaterialCommunityIcons
+                          name="chevron-right"
+                          size={22}
+                          color={
+                            theme.icon.inverse
+                          }
+                        />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+              
+            </Animatable.View>
+          )}
+
+          {/* ================================================= */}
+              {/* LOGIN */}
+              {/* ================================================= */}
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={
+                  styles.loginLink
+                }
+                onPress={() =>
+                  navigation.navigate(
+                    ROUTES.login_options
+                  )
+                }
+                disabled={
+                  isAuthenticating
+                }
+              >
+                <Text
+                  style={
+                    styles.loginText
+                  }
+                >
+                  Already have an account?
+                </Text>
+
+                <Text
+                  style={
+                    styles.loginLinkText
+                  }
+                >
+                  Log In
+                </Text>
+              </TouchableOpacity>
+
+          {/* ================================================== */}
+          {/* FOOTER */}
+          {/* ================================================== */}
+
+          <View
+            style={
+              styles.footer
+            }
+          >
+            <MaterialCommunityIcons
+              name="shield-check-outline"
+              size={17}
+              color={
+                theme.status.success
+              }
+            />
+
+            <Text
+              style={
+                styles.footerText
+              }
+            >
+              Your account information
+              is securely protected.
+            </Text>
+          </View>
+        </Animatable.View>
+      </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', justifyContent: 'center', padding: 20 },
-  footer: { flex: 1, justifyContent: 'center' },
-  locationStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8F9FA',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-  },
-  locationSuccess: { backgroundColor: '#E8F5E9', borderColor: '#C8E6C9' },
-  locationText: { marginLeft: 8, color: '#495057', fontSize: 12, fontWeight: '500' },
-  authButtons: { marginTop: 40 },
-  button: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  emailButton: { backgroundColor: COLORS.primary },
-  googleButton: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd' },
-  appleButton: { backgroundColor: '#000', borderWidth: 1, borderColor: '#000' },
-  buttonContent: { flexDirection: 'row', alignItems: 'center' },
-  buttonIcon: { marginRight: 12 },
-  buttonText: { fontSize: 16, fontWeight: '600', color: 'white' },
-  googleButtonText: { color: '#3c4043', marginLeft: 12 },
-  appleButtonText: { color: '#fff', marginLeft: 12 },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#ddd' },
-  dividerText: { marginHorizontal: 10, color: '#666', fontSize: 14, fontWeight: '500' },
-  loginLink: { marginTop: 20, alignItems: 'center' },
-  loginText: { color: '#666', fontSize: 14 },
-  loginLinkText: { color: COLORS.primary, fontWeight: '600' },
-});
+/*
+ * ================================================================
+ * STYLES
+ * ================================================================
+ */
+
+const createStyles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor:
+        theme.background.default,
+    },
+
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+      paddingBottom: 30,
+    },
+
+    content: {
+      flex: 1,
+      width: '100%',
+      maxWidth: 520,
+      alignSelf: 'center',
+      justifyContent: 'center',
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * HEADER
+     * ------------------------------------------------------------
+     */
+
+    header: {
+      alignItems: 'center',
+      marginBottom: 25,
+    },
+
+    brandIcon: {
+      width: 62,
+      height: 62,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.brand.primary,
+
+      shadowColor:
+        theme.shadow.color,
+
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+
+      shadowOpacity:
+        theme.shadow.opacity,
+
+      shadowRadius: 8,
+
+      elevation: 3,
+    },
+
+    eyebrow: {
+      marginTop: 13,
+      fontSize: 10,
+      lineHeight: 14,
+      fontWeight: '800',
+      letterSpacing: 2,
+      color:
+        theme.brand.primary,
+    },
+
+    title: {
+      marginTop: 4,
+      fontSize: 29,
+      lineHeight: 35,
+      fontWeight: '800',
+      letterSpacing: -0.6,
+      color:
+        theme.text.primary,
+      textAlign: 'center',
+    },
+
+    subtitle: {
+      maxWidth: 370,
+      marginTop: 8,
+      fontSize: 14,
+      lineHeight: 21,
+      color:
+        theme.text.secondary,
+      textAlign: 'center',
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * SOCIAL CONTEXT
+     * ------------------------------------------------------------
+     */
+
+    socialContext: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 13,
+      marginBottom: 17,
+      borderRadius: 15,
+      backgroundColor:
+        theme.background.sunken,
+      borderWidth: 1,
+      borderColor:
+        theme.border.default,
+    },
+
+    socialContextText: {
+      flex: 1,
+      marginLeft: 10,
+    },
+
+    socialContextTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color:
+        theme.text.primary,
+    },
+
+    socialContextSubtitle: {
+      marginTop: 2,
+      fontSize: 11,
+      color:
+        theme.text.secondary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * LOCATION
+     * ------------------------------------------------------------
+     */
+
+    locationStatus: {
+      minHeight: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      borderRadius: 12,
+      marginBottom: 18,
+      backgroundColor:
+        theme.background.sunken,
+      borderWidth: 1,
+      borderColor:
+        theme.border.default,
+    },
+
+    locationSuccess: {
+      backgroundColor:
+        theme.brand.primaryLight,
+      borderColor:
+        theme.brand.primaryLight,
+    },
+
+    locationText: {
+      flexShrink: 1,
+      marginLeft: 7,
+      fontSize: 11,
+      fontWeight: '600',
+      color:
+        theme.text.secondary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * ROLE
+     * ------------------------------------------------------------
+     */
+
+    roleSection: {
+      backgroundColor:
+        theme.card.background,
+      borderWidth: 1,
+      borderColor:
+        theme.card.border,
+      borderRadius: 20,
+      padding: 17,
+
+      shadowColor:
+        theme.shadow.color,
+
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+
+      shadowOpacity:
+        theme.shadow.opacity,
+
+      shadowRadius: 8,
+
+      elevation: 2,
+    },
+
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '800',
+      color:
+        theme.text.primary,
+    },
+
+    requiredText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color:
+        theme.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+
+    sectionDescription: {
+      marginTop: 5,
+      marginBottom: 12,
+      fontSize: 12,
+      lineHeight: 18,
+      color:
+        theme.text.secondary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * AUTH SECTION
+     * ------------------------------------------------------------
+     */
+
+    authSection: {
+      marginTop: 18,
+    },
+
+    selectedRoleBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      marginBottom: 13,
+      borderRadius: 15,
+      backgroundColor:
+        theme.brand.primaryLight,
+      borderWidth: 1,
+      borderColor:
+        theme.brand.primaryLight,
+    },
+
+    selectedRoleIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.surface.default,
+    },
+
+    selectedRoleContent: {
+      flex: 1,
+      marginLeft: 10,
+    },
+
+    selectedRoleLabel: {
+      fontSize: 10,
+      fontWeight: '600',
+      color:
+        theme.text.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+
+    selectedRoleValue: {
+      marginTop: 1,
+      fontSize: 14,
+      fontWeight: '800',
+      color:
+        theme.text.primary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * BUTTONS
+     * ------------------------------------------------------------
+     */
+
+    button: {
+      minHeight: 70,
+      width: '100%',
+      borderRadius: 17,
+      marginBottom: 11,
+      paddingHorizontal: 13,
+      borderWidth: 1,
+
+      shadowColor:
+        theme.shadow.color,
+
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+
+      shadowOpacity:
+        theme.shadow.opacity,
+
+      shadowRadius: 6,
+
+      elevation: 2,
+    },
+
+    buttonContent: {
+      flex: 1,
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+
+    emailButton: {
+      backgroundColor:
+        theme.button.primaryBackground,
+      borderColor:
+        theme.button.primaryBackground,
+    },
+
+    socialButton: {
+      backgroundColor:
+        theme.card.background,
+      borderColor:
+        theme.card.border,
+    },
+
+    appleButton: {
+      backgroundColor:
+        '#000000',
+      borderColor:
+        '#3A3A3C',
+        borderWidth: 1
+    },
+
+    primaryIconCircle: {
+      width: 43,
+      height: 43,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.button.primaryText,
+    },
+
+    socialIconCircle: {
+      width: 43,
+      height: 43,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    appleIconCircle: {
+      width: 43,
+      height: 43,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        '#1F1F1F',
+    },
+
+    buttonTextContainer: {
+      flex: 1,
+      marginLeft: 11,
+      minWidth: 0,
+    },
+
+    emailButtonText: {
+      fontSize: 14,
+      fontWeight: '800',
+      color:
+        theme.button.primaryText,
+    },
+
+    emailButtonSubtext: {
+      marginTop: 2,
+      fontSize: 10,
+      color:
+        theme.button.primaryText,
+      opacity: 0.78,
+    },
+
+    socialButtonTitle: {
+      fontSize: 14,
+      fontWeight: '750',
+      color:
+        theme.text.primary,
+    },
+
+    socialButtonSubtext: {
+      marginTop: 2,
+      fontSize: 10,
+      color:
+        theme.text.secondary,
+    },
+
+    appleButtonTitle: {
+      fontSize: 14,
+      fontWeight: '750',
+      color:
+        '#FFFFFF',
+    },
+
+    appleButtonSubtext: {
+      marginTop: 2,
+      fontSize: 10,
+      color:
+        '#CBD5E1',
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * DIVIDER
+     * ------------------------------------------------------------
+     */
+
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 7,
+    },
+
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor:
+        theme.divider,
+    },
+
+    dividerBadge: {
+      minWidth: 38,
+      height: 27,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 10,
+      backgroundColor:
+        theme.background.sunken,
+    },
+
+    dividerText: {
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 1,
+      color:
+        theme.text.muted,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * LOGIN
+     * ------------------------------------------------------------
+     */
+
+    loginLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 9,
+      paddingVertical: 11,
+    },
+
+    loginText: {
+      fontSize: 13,
+      color:
+        theme.text.secondary,
+    },
+
+    loginLinkText: {
+      marginLeft: 4,
+      fontSize: 13,
+      fontWeight: '800',
+      color:
+        theme.brand.primary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * FOOTER
+     * ------------------------------------------------------------
+     */
+
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 23,
+      paddingHorizontal: 12,
+    },
+
+    footerText: {
+      marginLeft: 6,
+      fontSize: 11,
+      color:
+        theme.text.muted,
+    },
+  });
 
 export default GetStarted;

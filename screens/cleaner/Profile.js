@@ -1,463 +1,13 @@
-// import React, { useEffect,useState, useContext } from 'react';
-// import { SafeAreaView,StyleSheet, Text, StatusBar, Linking, FlatList, ScrollView, Modal, Image, View, TouchableOpacity, ActivityIndicator } from 'react-native';
-// import COLORS from '../../constants/colors';
-// import AvatarUploader from '../../components/shared/AvatarUploader';
-// import { AuthContext } from '../../context/AuthContext';
-// import userService from '../../services/connection/userService';
-// import Availability from '../../components/cleaner/Availability';
-// import Contact from '../../components/cleaner/Contact';
-// import Certification from '../../components/cleaner/Certification';
-// import ContactDisplay from './ContactDisplay';
-// import CertificationDisplay from './CertificationDisplay';
-// import AvailabilityDisplay from './AvailabilityDisplay';
-// import availabilityRange from '../../utils/availabilityRange';
-// import PaymentMethod from '../../components/cleaner/PaymentMethod';
-// import AboutMe from '../../components/cleaner/AboutMe';
-// import AboutMeDisplay from './AboutMeDisplay';
-// import {
-//   get,
-//   ref,
-//   set,
-//   onValue,
-//   push,
-//   update,
-//   snapshot
-//  } from 'firebase/database'; 
-// import { db } from '../../services/firebase/config';
-// import ContactCard from '../../components/shared/ContactCard';
-// import { format, parse } from 'date-fns';
+// import React, {
+//   useEffect,
+//   useState,
+//   useContext,
+//   useCallback,
+// } from 'react';
 
-
-// // Helper: safely convert any input to a Date object
-// const toSafeDate = (dateValue, fallback = new Date()) => {
-//   if (!dateValue) return fallback;
-//   try {
-//     const date = new Date(dateValue);
-//     // Check if date is valid
-//     if (isNaN(date.getTime())) return fallback;
-//     return date;
-//   } catch {
-//     return fallback;
-//   }
-// };
-
-
-// export default function Profile() {
-
-//   const {currentUserId} = useContext(AuthContext)
-//   const {currentUser} = useContext(AuthContext)
-
-//   const[firstname, setFirstname] = useState("")
-//   const[lastname, setLastname] = useState("")
-//   const[avatar, setUserAvatar] = useState("")
-//   const[location, setLocation] = useState("")
-//   const[contact, setContact] = useState("")
-//   const[aboutme, setAboutMe] = useState("")
-//   const[phone, setPhone] = useState("")
-//   const[certification, setCertification] = useState([])
-//   const[openContactModal, setOpenContactModal] = useState(false)
-//   const[openAvailabilityModal, setOpenvailabilityModal] = useState(false)
-//   const[openCertificationModal, setOpenCertificationModal] = useState(false)
-//   const [editingCertification, setEditingCertification] = useState(null);
-//   const[openPaymentTypeModal, setOpenPaymentTypeModal] = useState(false)
-//   const[openAboutMeeModal, setOpenAboutModal] = useState(false)
-//   const[availability, setAvailability] = useState([])
-
-
-
-//   const[currentStep, setCurrentStep] = useState(1);
-
-
-  
-
-//   const handleNextStep = () => {
-//     if (currentStep < 3) {
-//       setCurrentStep(currentStep + 1);
-//     }
-//   };
-
-//   const handlePrevStep = () => {
-//     if (currentStep > 1) {
-//       setCurrentStep(currentStep - 1);
-//     }
-//   };
-
-//   useEffect(()=> {
-//     fetchUser()
-//     fetchAvailability()
-//   },[])
-
-//   const fetchAvailability = async () => {
-//     try {
-//       const response = await userService.getCleanerAvailability(currentUserId);
-//       const data = response.data.data;
-//       // Ensure availability is an array and each slot's times are properly parsed
-//       const formatted = (data?.availability || []).map((item) => ({
-//         day: item.day,
-//         slots: (item.slots || []).map((slot) => ({
-//           start: toSafeDate(slot.start),
-//           end: toSafeDate(slot.end),
-//         })),
-//       }));
-//       setAvailability(formatted);
-//     } catch (err) {
-//       console.error('Error fetching availability:', err);
-//       Alert.alert('Error', 'Failed to load availability');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const fetchUser = async () => {
-//     try {
-
-//       // setLoading(true)
-      
-//       await userService.getUser(currentUserId)
-//       .then(response=> {
-//         const res = response.data
-
-//         setFirstname(res.firstname)
-//         setLastname(res.lastname)
-//         setContact(res.contact)
-//         setPhone(res.phone)
-//         setLocation(res.location)
-//         setUserAvatar(res.avatar)
-    
-
-//         if(res.certification == undefined){
-//           setCertification([])
-//         }else{
-//           setCertification(res.certification)
-//         }
-        
-//         setAboutMe(res.aboutme)
-       
-//       })
-  
-      
-//     } catch(e) {
-//       // error reading value
-//       console.log(e)
-//     }
-//   }
-
-//   const getUploadePhoto = (e) => {
-//     // Update avatar
-//     const data = {
-//       userId: currentUserId,
-//       avatar:e
-//     }
-
-//     userService.updateProfileAvatar(data)
-//     .then(response => {
-//       // Update user avatar on firebase database
-//       updateFirebaseAvatar(data)
-//       console.log("avatar uploaded successfully")
-//     }).catch((err)=> {
-//       console.log(err)
-//     })
-//     setUserAvatar(e);
-//   }
-
-
-  
-  
-//   const updateFirebaseAvatar = async data => {
-//     const mySnapshot = await get(ref(db, `users/${data.userId}`))
-    
-//     console.log("picture")
-//     console.log(mySnapshot.val())
-//     console.log(data.avatar)
-//     console.log("picture")
-//     if(mySnapshot.exists) {
-//       update(ref(db, `users/${data.userId}`), {avatar:data.avatar})
-//     }
-//     return mySnapshot.val()
-
-//   }
-    
-//     const handleOpenContact = () => {
-//         setOpenContactModal(true)
-//     }
-//     const handleCloseContact = () => {
-//       setOpenContactModal(false)
-//     }
-
-//     const handleOpenAvailability = () => {
-//       setOpenvailabilityModal(true)
-//     }
-//     const handleCloseAvailability = () => {
-//       setOpenvailabilityModal(false)
-//     }
-
-//     // const handleOpenCertification = () => {
-//     //   setOpenCertificationModal(true)
-//     // }
-//     // const handleCloseCertification = () => {
-//     //   setOpenCertificationModal(false)
-//     // }
-//     const handleOpenPaymentType = () => {
-//       setOpenPaymentTypeModal(true)
-//     }
-//     const handleClosePaymentType = () => {
-//       setOpenPaymentTypeModal(false)
-//     }
-//     const handleOpenAboutMe = () => {
-//       setOpenAboutModal(true)
-//     }
-//     const handleCloseAboutMe = () => {
-//       setOpenAboutModal(false)
-//     }
-//     const handleUpdateAbout = (e) => {
-//       setAboutMe(e)
-//     }
-
-//     const handleAvailabilty = (originalData) => {
-//       const newData = availabilityRange(originalData)
-//       setAvailability(newData)
-//       // console.log(newData);
-//   };
-
-
-//   const handleOpenCertification = () => {
-//     setEditingCertification(null); // for adding new
-//     setOpenCertificationModal(true);
-//   };
-  
-//   const handleEditCertification = (cert) => {
-//     setEditingCertification(cert);
-//     setOpenCertificationModal(true);
-//   };
-  
-//   const handleCloseCertification = () => {
-//     setOpenCertificationModal(false);
-//     setEditingCertification(null);
-//   };
- 
-
-
-      
-    
-
-    
-    
-//   return (
-//     <SafeAreaView
-//           style={{
-//             flex:1,
-//             backgroundColor:COLORS.white,
-//             // justifyContent:"center",
-//             // alignItems:"center",
-//             marginBottom:0,
-
-//           }}
-//         >
-
-//           <ScrollView>
-//             <View style={styles.header}>
-//               <View style={styles.avatar_background}>
-//                 <AvatarUploader  userId={currentUserId} default_photo={avatar} image_type = "avatar" get_uploaded_photo = {getUploadePhoto} />
-//                 <Text style={styles.name}>{currentUser.firstname} {currentUser.lastname}</Text>
-//                 <Text style={styles.location}>{currentUser?.location?.city}, {currentUser.location?.region}</Text>
-//               </View>
-              
-//               <View style={styles.container}>
-                
-                
-//               <ContactDisplay 
-//                 contact={contact}
-//                 phone={phone}
-//                 handleOpenContact={handleOpenContact}
-//               />
-
-          
-//               <AboutMeDisplay 
-//                 mode="edit"
-//                 aboutme={aboutme}
-//                 handleOpenAboutMe={handleOpenAboutMe}
-//               />
-
-//               <AvailabilityDisplay
-//                 cleanerId = {currentUserId}
-//                 mode="edit"
-//                 availability= {availability}
-//                 handleOpenAvailability={handleOpenAvailability}
-//               />
-              
-//               {/* <CertificationDisplay
-//                 mode="edit"
-//                 certification={certification}
-//                 handleOpenCertification={handleOpenCertification}
-//               /> */}
-
-//             <CertificationDisplay
-//               mode="edit"
-//               certification={certification}
-//               handleOpenCertification={handleOpenCertification}
-//               onEditCertification={handleEditCertification}
-//             />
-
-              
-//               </View>
-            
-            
-
-            
-            
-//         </View>
-
-//         <Modal 
-//           visible={openContactModal}
-//           animationType="slide" 
-//           transparent={true}
-//           // animationType="none" // No animation
-//           statusBarTranslucent={false}
-//           // onRequestClose={onClose} // Handle hardware back button on Android
-//         >
-          
-//             <Contact 
-//               userId={currentUser?._id}
-//               contact={contact}
-//               currentUser={currentUser}
-//               close_modal={handleCloseContact}
-//             />
-
-//         </Modal>
-
-//         <Modal 
-//           visible={openAvailabilityModal}
-//           animationType="slide" 
-//           transparent={true}
-//           // animationType="none" // No animation
-//           statusBarTranslucent={true}
-//           // onRequestClose={onClose} // Handle hardware back button on Android
-//         >
-
-//           <Availability 
-//             cleanerId = {currentUserId}
-//             close_avail_modal={handleCloseAvailability}
-//             get_availability={handleAvailabilty}
-//           />
-            
-//         </Modal>
-
-//         <Modal 
-//           visible={openCertificationModal}
-//           animationType="slide" 
-//           transparent={true}
-//           // animationType="none" // No animation
-//           statusBarTranslucent={false}
-//           // onRequestClose={onClose} // Handle hardware back button on Android
-//         >
-          
-//           {/* <Certification
-//             userId={currentUser?._id}
-//             close_modal={handleCloseCertification}
-//           /> */}
-//           <Certification
-//             userId={currentUserId}
-//             certification={editingCertification}
-//             close_modal={handleCloseCertification}
-//           />
-//           {/* <StatusBar translucent={true} backgroundColor="transparent" /> */}
-//         </Modal>
-        
-
-//         <Modal 
-//           visible={openPaymentTypeModal}
-//           animationType="slide" 
-//           transparent={false}
-//           // animationType="none" // No animation
-//           statusBarTranslucent={false}
-//           // onRequestClose={onClose} // Handle hardware back button on Android
-//         >
-          
-//           <PaymentMethod
-//             close_modal={handleClosePaymentType}
-//           />
-          
-//         </Modal>
-
-//         <Modal 
-//           visible={openAboutMeeModal}
-//           animationType="slide" 
-//           // transparent={true}
-//           // animationType="none" // No animation
-//           // statusBarTranslucent={true}
-//           // onRequestClose={onClose} // Handle hardware back button on Android
-//         >
-          
-//           <AboutMe
-//             userId= {currentUserId}
-//             aboutme= {aboutme}
-//             update_aboutme = {handleUpdateAbout}
-//             close_modal={handleCloseAboutMe}
-//           />
-          
-//         </Modal>
-
-//         </ScrollView>
-//     </SafeAreaView>
-//   )
-// }
-
-
-// const styles = StyleSheet.create({
-//   header:{
-//     margin:0
-//   },
-//   name:{
-//     color:COLORS.white,
-//     fontSize:18,
-//   },
-//   location:{
-//     color:COLORS.white
-//   },
-//   container:{
-//     margin:10
-//   },
-//   avatar_background:{
-//     paddingTop:80,
-//     paddingBottom:10,
-//     minHeighteight:200,
-//     backgroundColor:COLORS.primary,
-//     justifyContent:'center',
-//     alignItems:'center'
-//   },
-//   line:{
-//     borderBottomWidth:0.8,
-//     borderColor:COLORS.light_gray_1,
-//     marginVertical:5,
-//     height:4
-//   },
-//   titleContainer:{
-//     flexDirection:'row',
-//     justifyContent:'space-between',
-//     alignItems:'center',
-//     marginTop:0
-//   },
-//   title:{
-//     fontSize:18,
-//   },
-//   content:{
-//     flexDirection:'row',
-//     justifyContent:'space-between',
-//     marginVertical:5
-//   },
-//   actions:{
-//     flexDirection:'row',
-//   }
-// })
-
-
-
-
-// import React, { useEffect, useState, useContext } from 'react';
 // import {
 //   SafeAreaView,
 //   StyleSheet,
-//   Text,
 //   StatusBar,
 //   ScrollView,
 //   Modal,
@@ -466,743 +16,117 @@
 //   ActivityIndicator,
 //   Alert,
 // } from 'react-native';
-// import COLORS from '../../constants/colors';
+
+// import { LinearGradient } from 'expo-linear-gradient';
+// import { Feather, Ionicons } from '@expo/vector-icons';
+// import { useFocusEffect } from '@react-navigation/native';
+
 // import AvatarUploader from '../../components/shared/AvatarUploader';
 // import { AuthContext } from '../../context/AuthContext';
 // import userService from '../../services/connection/userService';
+
 // import Availability from '../../components/cleaner/Availability';
 // import Contact from '../../components/cleaner/Contact';
 // import Certification from '../../components/cleaner/Certification';
 // import ContactDisplay from './ContactDisplay';
 // import CertificationDisplay from './CertificationDisplay';
 // import AvailabilityDisplay from './AvailabilityDisplay';
-// import availabilityRange from '../../utils/availabilityRange';
-// import PaymentMethod from '../../components/cleaner/PaymentMethod';
 // import AboutMe from '../../components/cleaner/AboutMe';
 // import AboutMeDisplay from './AboutMeDisplay';
-// import { get, ref, update } from 'firebase/database';
-// import { db } from '../../services/firebase/config';
-// import { LinearGradient } from 'expo-linear-gradient';
-// import { format } from 'date-fns';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-// import { tSafe } from '../../utils/tSafe'; // added import
 
-// // Helper: safely convert any input to a Date object
-// const toSafeDate = (dateValue, fallback = new Date()) => {
-//   if (!dateValue) return fallback;
-//   try {
-//     const date = new Date(dateValue);
-//     if (isNaN(date.getTime())) return fallback;
-//     return date;
-//   } catch {
-//     return fallback;
-//   }
-// };
-
-// export default function Profile() {
-//   const { currentUserId, currentUser } = useContext(AuthContext);
-
-//   const [firstname, setFirstname] = useState('');
-//   const [lastname, setLastname] = useState('');
-//   const [avatar, setUserAvatar] = useState('');
-//   const [location, setLocation] = useState('');
-//   const [contact, setContact] = useState({ address: '', phone: '', email: '' });
-//   const [aboutme, setAboutMe] = useState('');
-//   const [certification, setCertification] = useState([]);
-//   const [openContactModal, setOpenContactModal] = useState(false);
-//   const [openAvailabilityModal, setOpenAvailabilityModal] = useState(false);
-//   const [openCertificationModal, setOpenCertificationModal] = useState(false);
-//   const [editingCertification, setEditingCertification] = useState(null);
-//   const [openPaymentTypeModal, setOpenPaymentTypeModal] = useState(false);
-//   const [openAboutMeModal, setOpenAboutModal] = useState(false);
-//   const [availability, setAvailability] = useState([]);
-//   const [loading, setLoading] = useState(false);
-
-//   // Fetch user data
-//   useEffect(() => {
-//     fetchUser();
-//     fetchAvailability();
-//   }, []);
-
-//   const fetchUser = async () => {
-//     try {
-//       const response = await userService.getUser(currentUserId);
-//       const res = response.data;
-
-//       setFirstname(res.firstname || '');
-//       setLastname(res.lastname || '');
-//       setUserAvatar(res.avatar || '');
-//       setLocation(res.location || {});
-//       setContact({
-//         address: res.contact?.address || '',
-//         phone: res.phone || '',
-//         email: res.email || '',
-//       });
-//       setAboutMe(res.aboutme || '');
-//       setCertification(res.certification || []);
-//     } catch (error) {
-//       console.error('Error fetching user:', error);
-//     }
-//   };
-
-//   const fetchAvailability = async () => {
-//     try {
-//       const response = await userService.getCleanerAvailability(currentUserId);
-//       const data = response.data.data;
-//       const formatted = (data?.availability || []).map((item) => ({
-//         day: item.day,
-//         slots: (item.slots || []).map((slot) => ({
-//           start: toSafeDate(slot.start),
-//           end: toSafeDate(slot.end),
-//         })),
-//       }));
-//       setAvailability(formatted);
-//     } catch (err) {
-//       console.error('Error fetching availability:', err);
-//       Alert.alert(
-//         tSafe('error_title', 'Error'),
-//         tSafe('failed_load_availability', 'Failed to load availability')
-//       );
-//     }
-//   };
-
-//   const getUploadedPhoto = (photoUri) => {
-//     const data = { userId: currentUserId, avatar: photoUri };
-//     userService.updateProfileAvatar(data)
-//       .then(() => updateFirebaseAvatar(data))
-//       .catch(console.error);
-//     setUserAvatar(photoUri);
-//   };
-
-//   const updateFirebaseAvatar = async (data) => {
-//     const snapshot = await get(ref(db, `users/${data.userId}`));
-//     if (snapshot.exists()) {
-//       update(ref(db, `users/${data.userId}`), { avatar: data.avatar });
-//     }
-//   };
-
-//   const handleOpenContact = () => setOpenContactModal(true);
-//   const handleCloseContact = () => setOpenContactModal(false);
-
-//   const handleUpdateContact = (updatedContact) => {
-//     setContact(updatedContact);
-//   };
-
-//   const handleOpenAvailability = () => setOpenAvailabilityModal(true);
-//   const handleCloseAvailability = () => setOpenAvailabilityModal(false);
-
-//   const handleAvailabilty = (originalData) => {
-//     const newData = availabilityRange(originalData);
-//     setAvailability(newData);
-//   };
-
-//   const handleOpenCertification = () => {
-//     setEditingCertification(null);
-//     setOpenCertificationModal(true);
-//   };
-//   const handleEditCertification = (cert) => {
-//     setEditingCertification(cert);
-//     setOpenCertificationModal(true);
-//   };
-
-//   const handleUpdateCertification = (savedCert) => {
-//     setCertification(prev => {
-//       // If savedCert has an _id, replace or add
-//       const index = prev.findIndex(c => c._id === savedCert._id);
-//       if (index !== -1) {
-//         const updated = [...prev];
-//         updated[index] = savedCert;
-//         return updated;
-//       } else {
-//         return [...prev, savedCert];
-//       }
-//     });
-//   };
-//   const handleCloseCertification = () => {
-//     setOpenCertificationModal(false);
-//     setEditingCertification(null);
-//   };
-
-//   const handleOpenPaymentType = () => setOpenPaymentTypeModal(true);
-//   const handleClosePaymentType = () => setOpenPaymentTypeModal(false);
-
-//   const handleOpenAboutMe = () => setOpenAboutModal(true);
-//   const handleCloseAboutMe = () => setOpenAboutModal(false);
-//   const handleUpdateAbout = (text) => setAboutMe(text);
-
-//   return (
-//     // <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-//       <View style={styles.container}>
-//       <ScrollView>
-//       <LinearGradient
-//         colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
-//         style={styles.headerGradient}
-//         start={{ x: 0, y: 0 }}
-//         end={{ x: 1, y: 0 }}
-//       >
-//         <View style={styles.headerContent}>
-//           <Text style={styles.headerTitle}>{tSafe('my_profile', 'My Profile')}</Text>
-//         </View>
-//         <View style={styles.avatar_background}>
-//             <AvatarUploader
-//               userId={currentUserId}
-//               default_photo={avatar}
-//               image_type="avatar"
-//               get_uploaded_photo={getUploadedPhoto}
-//             />
-//             <Text style={styles.name}>{currentUser.firstname} {currentUser.lastname}</Text>
-//             <Text style={styles.location}>{currentUser?.location?.city}, {currentUser?.location?.region}</Text>
-//           </View>
-//       </LinearGradient>
-
-
-
-//         <View style={styles.header}>
-//           {/* <View style={styles.avatar_background}>
-//             <AvatarUploader
-//               userId={currentUserId}
-//               default_photo={avatar}
-//               image_type="avatar"
-//               get_uploaded_photo={getUploadedPhoto}
-//             />
-//             <Text style={styles.name}>{currentUser.firstname} {currentUser.lastname}</Text>
-//             <Text style={styles.location}>{currentUser?.location?.city}, {currentUser?.location?.region}</Text>
-//           </View> */}
-
-//           <View style={styles.container}>
-//             <ContactDisplay
-//               contact={contact}
-//               handleOpenContact={handleOpenContact}
-//             />
-
-//             <AboutMeDisplay
-//               mode="edit"
-//               aboutme={aboutme}
-//               handleOpenAboutMe={handleOpenAboutMe}
-//             />
-
-//             <AvailabilityDisplay
-//               cleanerId={currentUserId}
-//               mode="edit"
-//               availability={availability}
-//               handleOpenAvailability={handleOpenAvailability}
-//             />
-
-//             <CertificationDisplay
-//               mode="edit"
-//               certification={certification}
-//               handleOpenCertification={handleOpenCertification}
-//               onEditCertification={handleEditCertification}
-              
-//             />
-//           </View>
-//         </View>
-
-//         <Modal visible={openContactModal} animationType="slide" transparent>
-//           <Contact
-//             userId={currentUserId}
-//             contact={contact}
-//             close_modal={handleCloseContact}
-//             onUpdate={handleUpdateContact}
-//           />
-//         </Modal>
-
-//         <Modal visible={openAvailabilityModal} animationType="slide" transparent>
-//           <Availability
-//             cleanerId={currentUserId}
-//             close_avail_modal={handleCloseAvailability}
-//             get_availability={handleAvailabilty}
-//           />
-//         </Modal>
-
-//         <Modal visible={openCertificationModal} animationType="slide" transparent>
-//           <Certification
-//             userId={currentUserId}
-//             certification={editingCertification}
-//             close_modal={handleCloseCertification}
-//             onUpdate={handleUpdateCertification}
-//           />
-//         </Modal>
-
-//         <Modal visible={openPaymentTypeModal} animationType="slide">
-//           <PaymentMethod close_modal={handleClosePaymentType} />
-//         </Modal>
-
-//         <Modal visible={openAboutMeModal} animationType="slide">
-//           <AboutMe
-//             userId={currentUserId}
-//             aboutme={aboutme}
-//             update_aboutme={handleUpdateAbout}
-//             close_modal={handleCloseAboutMe}
-//           />
-//         </Modal>
-//       </ScrollView>
-//       </View>
-   
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   header: { margin: 0 },
-//   name: { color: COLORS.white, fontSize: 18 },
-//   location: { color: COLORS.white },
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   avatar_background: {
-//     paddingTop: 80,
-//     paddingBottom: 10,
-//     minHeight: 200,
-//     backgroundColor: COLORS.primary,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   line: {
-//     borderBottomWidth: 0.8,
-//     borderColor: COLORS.light_gray_1,
-//     marginVertical: 5,
-//     height: 4,
-//   },
-//   titleContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginTop: 0,
-//   },
-//   title: {
-//     fontSize: 18,
-//   },
-//   content: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginVertical: 5,
-//   },
-//   actions: {
-//     flexDirection: 'row',
-//   },
-//   headerGradient: {
-//     paddingTop: 0,
-//     paddingBottom: 4,
-//     borderBottomLeftRadius: 24,
-//     borderBottomRightRadius: 24,
-//   },
-//   headerContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   headerTitle: {
-//     fontSize: 28,
-//     fontWeight: '700',
-//     color: '#fff',
-//     marginLeft: 12,
-//   },
-// });
-
-// import React, { useEffect, useState, useContext } from 'react';
-// import {
-//   SafeAreaView,
-//   StyleSheet,
-//   Text,
-//   StatusBar,
-//   ScrollView,
-//   Modal,
-//   View,
-//   TouchableOpacity,
-//   ActivityIndicator,
-//   Alert,
-// } from 'react-native';
-// import COLORS from '../../constants/colors';
-// import AvatarUploader from '../../components/shared/AvatarUploader';
-// import { AuthContext } from '../../context/AuthContext';
-// import userService from '../../services/connection/userService';
-// import Availability from '../../components/cleaner/Availability';
-// import Contact from '../../components/cleaner/Contact';
-// import Certification from '../../components/cleaner/Certification';
-// import ContactDisplay from './ContactDisplay';
-// import CertificationDisplay from './CertificationDisplay';
-// import AvailabilityDisplay from './AvailabilityDisplay';
-// import availabilityRange from '../../utils/availabilityRange';
-// import PaymentMethod from '../../components/cleaner/PaymentMethod';
-// import AboutMe from '../../components/cleaner/AboutMe';
-// import AboutMeDisplay from './AboutMeDisplay';
-// import { get, ref, update } from 'firebase/database';
-// import { db } from '../../services/firebase/config';
-// import { LinearGradient } from 'expo-linear-gradient';
-// import { format } from 'date-fns';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 // import { tSafe } from '../../utils/tSafe';
-
-// const toSafeDate = (dateValue, fallback = new Date()) => {
-//   if (!dateValue) return fallback;
-//   try {
-//     const date = new Date(dateValue);
-//     if (isNaN(date.getTime())) return fallback;
-//     return date;
-//   } catch {
-//     return fallback;
-//   }
-// };
+// import { useTheme } from '../../theme';
+// import AppText from '../../ui/AppText';
 
 // export default function Profile() {
-//   const { currentUserId, currentUser } = useContext(AuthContext);
+//   const { theme, isDark } = useTheme();
+
+//   const {
+//     currentUserId,
+//     currentUser,
+//     logout,
+//   } = useContext(AuthContext);
 
 //   const [firstname, setFirstname] = useState('');
 //   const [lastname, setLastname] = useState('');
 //   const [avatar, setUserAvatar] = useState('');
 //   const [location, setLocation] = useState('');
-//   const [contact, setContact] = useState({ address: '', phone: '', email: '' });
+
+//   const [contact, setContact] = useState({
+//     address: '',
+//     phone: '',
+//     email: '',
+//   });
+
 //   const [aboutme, setAboutMe] = useState('');
 //   const [certification, setCertification] = useState([]);
+
 //   const [openContactModal, setOpenContactModal] = useState(false);
 //   const [openAvailabilityModal, setOpenAvailabilityModal] = useState(false);
 //   const [openCertificationModal, setOpenCertificationModal] = useState(false);
 //   const [editingCertification, setEditingCertification] = useState(null);
-//   const [openPaymentTypeModal, setOpenPaymentTypeModal] = useState(false);
 //   const [openAboutMeModal, setOpenAboutModal] = useState(false);
+
 //   const [availability, setAvailability] = useState([]);
-//   const [loading, setLoading] = useState(false);
+//   const [bookedSchedules, setBookedSchedules] = useState([]);
 
-//   useEffect(() => {
-//     fetchUser();
-//     fetchAvailability();
-//   }, []);
-
-//   const fetchUser = async () => {
-//     try {
-//       const response = await userService.getUser(currentUserId);
-//       const res = response.data;
-//       setFirstname(res.firstname || '');
-//       setLastname(res.lastname || '');
-//       setUserAvatar(res.avatar || '');
-//       setLocation(res.location || {});
-//       setContact({
-//         address: res.contact?.address || '',
-//         phone: res.phone || '',
-//         email: res.email || '',
-//       });
-//       setAboutMe(res.aboutme || '');
-//       setCertification(res.certification || []);
-//     } catch (error) {
-//       console.error('Error fetching user:', error);
-//     }
-//   };
-
-//   const fetchAvailability = async () => {
-//     try {
-//       const response = await userService.getCleanerAvailability(currentUserId);
-//       const data = response.data.data;
-//       const formatted = (data?.availability || []).map((item) => ({
-//         day: item.day,
-//         slots: (item.slots || []).map((slot) => ({
-//           start: toSafeDate(slot.start),
-//           end: toSafeDate(slot.end),
-//         })),
-//       }));
-//       setAvailability(formatted);
-//     } catch (err) {
-//       console.error('Error fetching availability:', err);
-//       Alert.alert(
-//         tSafe('error_title', 'Error'),
-//         tSafe('failed_load_availability', 'Failed to load availability')
-//       );
-//     }
-//   };
-
-//   const getUploadedPhoto = (photoUri) => {
-//     const data = { userId: currentUserId, avatar: photoUri };
-//     userService.updateProfileAvatar(data)
-//       .then(() => updateFirebaseAvatar(data))
-//       .catch(console.error);
-//     setUserAvatar(photoUri);
-//   };
-
-//   const updateFirebaseAvatar = async (data) => {
-//     const snapshot = await get(ref(db, `users/${data.userId}`));
-//     if (snapshot.exists()) {
-//       update(ref(db, `users/${data.userId}`), { avatar: data.avatar });
-//     }
-//   };
-
-//   const handleOpenContact = () => setOpenContactModal(true);
-//   const handleCloseContact = () => setOpenContactModal(false);
-
-//   const handleUpdateContact = (updatedContact) => {
-//     setContact(updatedContact);
-//   };
-
-//   const handleOpenAvailability = () => setOpenAvailabilityModal(true);
-//   const handleCloseAvailability = () => setOpenAvailabilityModal(false);
-
-//   const handleAvailabilty = (originalData) => {
-//     const newData = availabilityRange(originalData);
-//     setAvailability(newData);
-//   };
-
-//   const handleOpenCertification = () => {
-//     setEditingCertification(null);
-//     setOpenCertificationModal(true);
-//   };
-//   const handleEditCertification = (cert) => {
-//     setEditingCertification(cert);
-//     setOpenCertificationModal(true);
-//   };
-
-//   const handleUpdateCertification = (savedCert) => {
-//     setCertification(prev => {
-//       const index = prev.findIndex(c => c._id === savedCert._id);
-//       if (index !== -1) {
-//         const updated = [...prev];
-//         updated[index] = savedCert;
-//         return updated;
-//       } else {
-//         return [...prev, savedCert];
-//       }
-//     });
-//   };
-//   const handleCloseCertification = () => {
-//     setOpenCertificationModal(false);
-//     setEditingCertification(null);
-//   };
-
-//   const handleOpenAboutMe = () => setOpenAboutModal(true);
-//   const handleCloseAboutMe = () => setOpenAboutModal(false);
-//   const handleUpdateAbout = (text) => setAboutMe(text);
-
-//   return (
-//     <SafeAreaView style={styles.safeArea}>
-//       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      
-//       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-//         {/* Header Section */}
-//         <LinearGradient
-//           colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
-//           style={styles.headerGradient}
-//           start={{ x: 0, y: 0 }}
-//           end={{ x: 1, y: 0 }}
-//         >
-//           <View style={styles.headerContent}>
-//             <Text style={styles.headerTitle}>{tSafe('my_profile', 'My Profile')}</Text>
-//           </View>
-//           <View style={styles.avatarSection}>
-//             <AvatarUploader
-//               userId={currentUserId}
-//               default_photo={avatar}
-//               image_type="avatar"
-//               get_uploaded_photo={getUploadedPhoto}
-//             />
-//             <Text style={styles.name}>{currentUser?.firstname || ''} {currentUser?.lastname || ''}</Text>
-//             <Text style={styles.location}>
-//               {currentUser?.location?.city}, {currentUser?.location?.region}
-//             </Text>
-//           </View>
-//         </LinearGradient>
-
-//         {/* Content Cards */}
-//         <View style={styles.cardsContainer}>
-//           <ContactDisplay
-//             contact={contact}
-//             handleOpenContact={handleOpenContact}
-//           />
-
-//           <AboutMeDisplay
-//             mode="edit"
-//             aboutme={aboutme}
-//             handleOpenAboutMe={handleOpenAboutMe}
-//           />
-
-//           <AvailabilityDisplay
-//             cleanerId={currentUserId}
-//             mode="edit"
-//             availability={availability}
-//             handleOpenAvailability={handleOpenAvailability}
-//           />
-
-//           <CertificationDisplay
-//             mode="edit"
-//             certification={certification}
-//             handleOpenCertification={handleOpenCertification}
-//             onEditCertification={handleEditCertification}
-//           />
-//         </View>
-//       </ScrollView>
-
-//       {/* Modals */}
-//       <Modal visible={openContactModal} animationType="slide" transparent>
-//         <Contact
-//           userId={currentUserId}
-//           contact={contact}
-//           close_modal={handleCloseContact}
-//           onUpdate={handleUpdateContact}
-//         />
-//       </Modal>
-
-//       <Modal visible={openAvailabilityModal} animationType="slide" transparent>
-//         <Availability
-//           cleanerId={currentUserId}
-//           close_avail_modal={handleCloseAvailability}
-//           get_availability={handleAvailabilty}
-//         />
-//       </Modal>
-
-//       <Modal visible={openCertificationModal} animationType="slide" transparent>
-//         <Certification
-//           userId={currentUserId}
-//           certification={editingCertification}
-//           close_modal={handleCloseCertification}
-//           onUpdate={handleUpdateCertification}
-//         />
-//       </Modal>
-
-//       <Modal visible={openAboutMeModal} animationType="slide" transparent>
-//         <AboutMe
-//           userId={currentUserId}
-//           aboutme={aboutme}
-//           update_aboutme={handleUpdateAbout}
-//           close_modal={handleCloseAboutMe}
-//         />
-//       </Modal>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   headerGradient: {
-//     paddingTop: 10,
-//     paddingBottom: 30,
-//     borderBottomLeftRadius: 30,
-//     borderBottomRightRadius: 30,
-//   },
-//   headerContent: {
-//     flexDirection: 'row',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginBottom: 16,
-//   },
-//   headerTitle: {
-//     fontSize: 28,
-//     fontWeight: '700',
-//     color: '#fff',
-//     letterSpacing: 0.5,
-//   },
-//   avatarSection: {
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   name: {
-//     fontSize: 22,
-//     fontWeight: '700',
-//     color: '#fff',
-//     marginTop: 12,
-//     marginBottom: 4,
-//   },
-//   location: {
-//     fontSize: 16,
-//     color: 'rgba(255,255,255,0.8)',
-//   },
-//   cardsContainer: {
-//     paddingHorizontal: 16,
-//     paddingTop: 8,
-//     paddingBottom: 30,
-//   },
-// });
-
-
-
-// import React, { useEffect, useState, useContext } from 'react';
-// import {
-//   SafeAreaView,
-//   StyleSheet,
-//   Text,
-//   StatusBar,
-//   ScrollView,
-//   Modal,
-//   View,
-//   TouchableOpacity,
-//   ActivityIndicator,
-//   Alert,
-// } from 'react-native';
-// import COLORS from '../../constants/colors';
-// import AvatarUploader from '../../components/shared/AvatarUploader';
-// import { AuthContext } from '../../context/AuthContext';
-// import userService from '../../services/connection/userService';
-// import Availability from '../../components/cleaner/Availability';
-// import Contact from '../../components/cleaner/Contact';
-// import Certification from '../../components/cleaner/Certification';
-// import ContactDisplay from './ContactDisplay';
-// import CertificationDisplay from './CertificationDisplay';
-// import AvailabilityDisplay from './AvailabilityDisplay';
-// import availabilityRange from '../../utils/availabilityRange';
-// import PaymentMethod from '../../components/cleaner/PaymentMethod';
-// import AboutMe from '../../components/cleaner/AboutMe';
-// import AboutMeDisplay from './AboutMeDisplay';
-// import { get, ref, update } from 'firebase/database';
-// import { db } from '../../services/firebase/config';
-// import { LinearGradient } from 'expo-linear-gradient';
-// import { format } from 'date-fns';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-// import { tSafe } from '../../utils/tSafe';
-
-// const toSafeDate = (dateValue, fallback = new Date()) => {
-//   if (!dateValue) return fallback;
-//   try {
-//     const date = new Date(dateValue);
-//     if (isNaN(date.getTime())) return fallback;
-//     return date;
-//   } catch {
-//     return fallback;
-//   }
-// };
-
-// export default function Profile() {
-//   const { currentUserId, currentUser, logout } = useContext(AuthContext);
-
-//   const [firstname, setFirstname] = useState('');
-//   const [lastname, setLastname] = useState('');
-//   const [avatar, setUserAvatar] = useState('');
-//   const [location, setLocation] = useState('');
-//   const [contact, setContact] = useState({ address: '', phone: '', email: '' });
-//   const [aboutme, setAboutMe] = useState('');
-//   const [certification, setCertification] = useState([]);
-//   const [openContactModal, setOpenContactModal] = useState(false);
-//   const [openAvailabilityModal, setOpenAvailabilityModal] = useState(false);
-//   const [openCertificationModal, setOpenCertificationModal] = useState(false);
-//   const [editingCertification, setEditingCertification] = useState(null);
-//   const [openPaymentTypeModal, setOpenPaymentTypeModal] = useState(false);
-//   const [openAboutMeModal, setOpenAboutModal] = useState(false);
-//   const [availability, setAvailability] = useState([]);
-//   const [loading, setLoading] = useState(false);
 //   const [deleting, setDeleting] = useState(false);
 
+//   // Penalty & Performance state
+//   const [penaltyImpacts, setPenaltyImpacts] = useState({
+//     reliability: 0,
+//     score_penalty: 0,
+//   });
+
+//   const [calculatedPerformance, setCalculatedPerformance] = useState(null);
+
+//   const styles = createStyles(theme);
+
 //   useEffect(() => {
 //     fetchUser();
 //     fetchAvailability();
 //   }, []);
 
+//   // Refresh profile whenever the screen comes into focus.
+//   useFocusEffect(
+//     useCallback(() => {
+//       fetchUser();
+//       fetchAvailability();
+//     }, [])
+//   );
+
 //   const fetchUser = async () => {
 //     try {
 //       const response = await userService.getUser(currentUserId);
 //       const res = response.data;
+
 //       setFirstname(res.firstname || '');
 //       setLastname(res.lastname || '');
 //       setUserAvatar(res.avatar || '');
 //       setLocation(res.location || {});
+
 //       setContact({
 //         address: res.contact?.address || '',
 //         phone: res.phone || '',
 //         email: res.email || '',
 //       });
+
 //       setAboutMe(res.aboutme || '');
 //       setCertification(res.certification || []);
+
+//       // Extract penalty and performance data
+//       if (res.effective_penalty_impacts) {
+//         setPenaltyImpacts({
+//           reliability:
+//             res.effective_penalty_impacts.reliability || 0,
+//           score_penalty:
+//             res.effective_penalty_impacts.score_penalty || 0,
+//         });
+//       }
+
+//       if (res.calculated_performance) {
+//         setCalculatedPerformance(res.calculated_performance);
+//       }
 //     } catch (error) {
 //       console.error('Error fetching user:', error);
 //     }
@@ -1210,145 +134,431 @@
 
 //   const fetchAvailability = async () => {
 //     try {
-//       const response = await userService.getCleanerAvailability(currentUserId);
+//       const response =
+//         await userService.getCleanerAvailability(currentUserId);
+
 //       const data = response.data.data;
+
 //       const formatted = (data?.availability || []).map((item) => ({
 //         day: item.day,
 //         slots: (item.slots || []).map((slot) => ({
-//           start: toSafeDate(slot.start),
-//           end: toSafeDate(slot.end),
+//           start: slot.start,
+//           end: slot.end,
 //         })),
 //       }));
+
 //       setAvailability(formatted);
+//       setBookedSchedules(data?.booked_schedules || []);
 //     } catch (err) {
 //       console.error('Error fetching availability:', err);
+
 //       Alert.alert(
 //         tSafe('error_title', 'Error'),
-//         tSafe('failed_load_availability', 'Failed to load availability')
+//         tSafe(
+//           'failed_load_availability',
+//           'Failed to load availability'
+//         )
 //       );
 //     }
 //   };
 
-//   const getUploadedPhoto = (photoUri) => {
-//     const data = { userId: currentUserId, avatar: photoUri };
-//     userService.updateProfileAvatar(data)
-//       .then(() => updateFirebaseAvatar(data))
-//       .catch(console.error);
-//     setUserAvatar(photoUri);
+//   const handleAvailabilty = (originalData) => {
+//     const availabilityData =
+//       originalData?.availability || originalData;
+
+//     if (!Array.isArray(availabilityData)) {
+//       console.warn(
+//         'Unexpected availability data format',
+//         originalData
+//       );
+//       return;
+//     }
+
+//     const formatted = availabilityData.map((item) => ({
+//       day: item.day,
+//       slots: (item.slots || []).map((slot) => ({
+//         start: slot.start,
+//         end: slot.end,
+//       })),
+//     }));
+
+//     setAvailability(formatted);
 //   };
 
-//   const updateFirebaseAvatar = async (data) => {
-//     const snapshot = await get(ref(db, `users/${data.userId}`));
-//     if (snapshot.exists()) {
-//       update(ref(db, `users/${data.userId}`), { avatar: data.avatar });
+//   const getUploadedPhoto = async (photoUri) => {
+//     const data = {
+//       userId: currentUserId,
+//       avatar: photoUri,
+//     };
+
+//     try {
+//       await userService.updateProfileAvatar(data);
+//       setUserAvatar(photoUri);
+//     } catch (error) {
+//       console.error('Error updating profile avatar:', error);
 //     }
 //   };
 
-//   const handleOpenContact = () => setOpenContactModal(true);
-//   const handleCloseContact = () => setOpenContactModal(false);
+//   // ---------------------------
+//   // Contact
+//   // ---------------------------
+
+//   const handleOpenContact = () => {
+//     setOpenContactModal(true);
+//   };
+
+//   const handleCloseContact = () => {
+//     setOpenContactModal(false);
+//   };
 
 //   const handleUpdateContact = (updatedContact) => {
 //     setContact(updatedContact);
 //   };
 
-//   const handleOpenAvailability = () => setOpenAvailabilityModal(true);
-//   const handleCloseAvailability = () => setOpenAvailabilityModal(false);
+//   // ---------------------------
+//   // Availability
+//   // ---------------------------
 
-//   const handleAvailabilty = (originalData) => {
-//     const newData = availabilityRange(originalData);
-//     setAvailability(newData);
+//   const handleOpenAvailability = () => {
+//     setOpenAvailabilityModal(true);
 //   };
+
+//   const handleCloseAvailability = () => {
+//     setOpenAvailabilityModal(false);
+//   };
+
+//   // ---------------------------
+//   // Certification
+//   // ---------------------------
 
 //   const handleOpenCertification = () => {
 //     setEditingCertification(null);
 //     setOpenCertificationModal(true);
 //   };
+
 //   const handleEditCertification = (cert) => {
 //     setEditingCertification(cert);
 //     setOpenCertificationModal(true);
 //   };
 
 //   const handleUpdateCertification = (savedCert) => {
-//     setCertification(prev => {
-//       const index = prev.findIndex(c => c._id === savedCert._id);
+//     setCertification((prev) => {
+//       const index = prev.findIndex(
+//         (c) => c._id === savedCert._id
+//       );
+
 //       if (index !== -1) {
 //         const updated = [...prev];
 //         updated[index] = savedCert;
 //         return updated;
-//       } else {
-//         return [...prev, savedCert];
 //       }
+
+//       return [...prev, savedCert];
 //     });
 //   };
+
 //   const handleCloseCertification = () => {
 //     setOpenCertificationModal(false);
 //     setEditingCertification(null);
 //   };
 
-//   const handleOpenAboutMe = () => setOpenAboutModal(true);
-//   const handleCloseAboutMe = () => setOpenAboutModal(false);
-//   const handleUpdateAbout = (text) => setAboutMe(text);
+//   // ---------------------------
+//   // About Me
+//   // ---------------------------
 
-//   // --- Delete Account Functions ---
+//   const handleOpenAboutMe = () => {
+//     setOpenAboutModal(true);
+//   };
+
+//   const handleCloseAboutMe = () => {
+//     setOpenAboutModal(false);
+//   };
+
+//   const handleUpdateAbout = (text) => {
+//     setAboutMe(text);
+//   };
+
+//   // ---------------------------
+//   // Delete Account
+//   // ---------------------------
+
 //   const handleDeleteAccount = () => {
 //     Alert.alert(
 //       tSafe('delete_account_title', 'Delete Account'),
-//       tSafe('delete_account_message', 'Are you sure you want to permanently delete your account? This action cannot be undone.'),
+//       tSafe(
+//         'delete_account_message',
+//         'Are you sure you want to permanently delete your account? This action cannot be undone.'
+//       ),
 //       [
-//         { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
+//         {
+//           text: tSafe('cancel', 'Cancel'),
+//           style: 'cancel',
+//         },
 //         {
 //           text: tSafe('delete', 'Delete'),
 //           style: 'destructive',
-//           onPress: confirmDeleteAccount
-//         }
+//           onPress: confirmDeleteAccount,
+//         },
 //       ]
 //     );
 //   };
 
 //   const confirmDeleteAccount = async () => {
 //     setDeleting(true);
+
 //     try {
-//       // Call API to delete the account
 //       await userService.deleteAccount(currentUserId);
 
-//       // Optionally remove Firebase data
-//       // const userRef = ref(db, `users/${currentUserId}`);
-//       // await remove(userRef);
-
-//       // Logout – clears tokens, storage, and navigates to Public
 //       await logout();
 
-//       // Show success (may not be visible due to logout)
 //       Alert.alert(
 //         tSafe('account_deleted_title', 'Account Deleted'),
-//         tSafe('account_deleted_message', 'Your account has been permanently deleted.')
+//         tSafe(
+//           'account_deleted_message',
+//           'Your account has been permanently deleted.'
+//         )
 //       );
 //     } catch (error) {
 //       console.error('Delete account error:', error);
+
 //       Alert.alert(
 //         tSafe('error_title', 'Error'),
-//         tSafe('delete_account_failed', 'Failed to delete account. Please try again.')
+//         tSafe(
+//           'delete_account_failed',
+//           'Failed to delete account. Please try again.'
+//         )
 //       );
 //     } finally {
 //       setDeleting(false);
 //     }
 //   };
 
+//   // ---------------------------
+//   // Penalty Tier
+//   // ---------------------------
+
+//   const getPenaltyTier = (reliabilityImpact) => {
+//     const absImpact = Math.abs(
+//       Number(reliabilityImpact) || 0
+//     );
+
+//     if (absImpact >= 20) {
+//       return {
+//         tier: 'MAXIMUM',
+//         color: theme.status.error,
+//       };
+//     }
+
+//     if (absImpact >= 12) {
+//       return {
+//         tier: 'SEVERE',
+//         color: theme.status.error,
+//       };
+//     }
+
+//     if (absImpact >= 6) {
+//       return {
+//         tier: 'MODERATE',
+//         color: theme.status.warning,
+//       };
+//     }
+
+//     if (absImpact >= 3) {
+//       return {
+//         tier: 'MINOR',
+//         color: theme.status.warning,
+//       };
+//     }
+
+//     return {
+//       tier: 'NONE',
+//       color: theme.status.success,
+//     };
+//   };
+
+//   const reliabilityImpact =
+//     Number(penaltyImpacts.reliability) || 0;
+
+//   const scorePenalty =
+//     Number(penaltyImpacts.score_penalty) || 0;
+
+//   const tierInfo = getPenaltyTier(reliabilityImpact);
+
+//   const hasPenalty =
+//     reliabilityImpact < 0 || scorePenalty < 0;
+
+//   // ---------------------------
+//   // Penalty Status Card
+//   // ---------------------------
+
+//   const renderPenaltyStatus = () => (
+//     <View style={styles.penaltyCard}>
+//       <View style={styles.penaltyHeader}>
+//         <Ionicons
+//           name="shield-outline"
+//           size={22}
+//           color={theme.icon.muted}
+//         />
+
+//         <AppText style={styles.penaltyTitle}>
+//           {tSafe(
+//             'penalty_status',
+//             'Penalty Status'
+//           )}
+//         </AppText>
+
+//         {hasPenalty && (
+//           <View
+//             style={[
+//               styles.penaltyBadge,
+//               {
+//                 backgroundColor: tierInfo.color,
+//               },
+//             ]}
+//           >
+//             <AppText style={styles.penaltyBadgeText}>
+//               {tierInfo.tier}
+//             </AppText>
+//           </View>
+//         )}
+//       </View>
+
+//       <View style={styles.penaltyRow}>
+//         <View style={styles.penaltyItem}>
+//           <Feather
+//             name="activity"
+//             size={18}
+//             color={theme.icon.muted}
+//           />
+
+//           <AppText style={styles.penaltyLabel}>
+//             {tSafe(
+//               'reliability_impact',
+//               'Reliability'
+//             )}
+//           </AppText>
+
+//           <AppText
+//             style={[
+//               styles.penaltyValue,
+//               {
+//                 color:
+//                   reliabilityImpact < 0
+//                     ? theme.status.error
+//                     : theme.status.success,
+//               },
+//             ]}
+//           >
+//             {reliabilityImpact > 0 ? '+' : ''}
+//             {reliabilityImpact.toFixed(1)}
+//           </AppText>
+//         </View>
+
+//         <View style={styles.penaltyDivider} />
+
+//         <View style={styles.penaltyItem}>
+//           <Feather
+//             name="star"
+//             size={18}
+//             color={theme.icon.muted}
+//           />
+
+//           <AppText style={styles.penaltyLabel}>
+//             {tSafe(
+//               'score_penalty',
+//               'Score Penalty'
+//             )}
+//           </AppText>
+
+//           <AppText
+//             style={[
+//               styles.penaltyValue,
+//               {
+//                 color:
+//                   scorePenalty < 0
+//                     ? theme.status.error
+//                     : theme.status.success,
+//               },
+//             ]}
+//           >
+//             {scorePenalty > 0 ? '+' : ''}
+//             {scorePenalty.toFixed(1)}
+//           </AppText>
+//         </View>
+//       </View>
+
+//       {hasPenalty && (
+//         <View style={styles.penaltyNote}>
+//           <Feather
+//             name="info"
+//             size={14}
+//             color={theme.icon.muted}
+//           />
+
+//           <AppText style={styles.penaltyNoteText}>
+//             {tSafe(
+//               'penalty_decay_note',
+//               'Penalties gradually reduce over 30 days.'
+//             )}
+//           </AppText>
+//         </View>
+//       )}
+
+//       {!hasPenalty && (
+//         <View style={styles.penaltyNote}>
+//           <Feather
+//             name="check-circle"
+//             size={14}
+//             color={theme.status.success}
+//           />
+
+//           <AppText
+//             style={[
+//               styles.penaltyNoteText,
+//               {
+//                 color: theme.status.success,
+//               },
+//             ]}
+//           >
+//             {tSafe(
+//               'no_active_penalties',
+//               'No active penalties'
+//             )}
+//           </AppText>
+//         </View>
+//       )}
+//     </View>
+//   );
+
 //   return (
 //     <SafeAreaView style={styles.safeArea}>
-//       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      
-//       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-//         {/* Header Section */}
+//       <StatusBar
+//         barStyle={
+//           isDark ? 'light-content' : 'dark-content'
+//         }
+//         backgroundColor={theme.background.default}
+//       />
+
+//       <ScrollView
+//         style={styles.container}
+//         showsVerticalScrollIndicator={false}
+//       >
+//         {/* Header */}
 //         <LinearGradient
-//           colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
+//           colors={[
+//             theme.brand.primary,
+//             theme.brand.secondary || theme.brand.primary,
+//           ]}
 //           style={styles.headerGradient}
 //           start={{ x: 0, y: 0 }}
 //           end={{ x: 1, y: 0 }}
 //         >
 //           <View style={styles.headerContent}>
-//             <Text style={styles.headerTitle}>{tSafe('my_profile', 'My Profile')}</Text>
+//             <AppText style={styles.headerTitle}>
+//               {tSafe('my_profile', 'My Profile')}
+//             </AppText>
 //           </View>
+
 //           <View style={styles.avatarSection}>
 //             <AvatarUploader
 //               userId={currentUserId}
@@ -1356,10 +566,24 @@
 //               image_type="avatar"
 //               get_uploaded_photo={getUploadedPhoto}
 //             />
-//             <Text style={styles.name}>{currentUser?.firstname || ''} {currentUser?.lastname || ''}</Text>
-//             <Text style={styles.location}>
-//               {currentUser?.location?.city}, {currentUser?.location?.region}
-//             </Text>
+
+//             <AppText style={styles.name}>
+//               {currentUser?.firstname || firstname || ''}{' '}
+//               {currentUser?.lastname || lastname || ''}
+//             </AppText>
+
+//             <AppText style={styles.location}>
+//               {currentUser?.location?.city ||
+//                 location?.city ||
+//                 ''}
+//               {currentUser?.location?.city ||
+//               location?.city
+//                 ? ', '
+//                 : ''}
+//               {currentUser?.location?.region ||
+//                 location?.region ||
+//                 ''}
+//             </AppText>
 //           </View>
 //         </LinearGradient>
 
@@ -1373,24 +597,35 @@
 //           <AboutMeDisplay
 //             mode="edit"
 //             aboutme={aboutme}
-//             handleOpenAboutMe={handleOpenAboutMe}
+//             isOwnProfile={true}
+//             onEdit={handleOpenAboutMe}
 //           />
 
 //           <AvailabilityDisplay
 //             cleanerId={currentUserId}
 //             mode="edit"
 //             availability={availability}
-//             handleOpenAvailability={handleOpenAvailability}
+//             handleOpenAvailability={
+//               handleOpenAvailability
+//             }
+//             bookedSchedules={bookedSchedules}
 //           />
 
 //           <CertificationDisplay
 //             mode="edit"
 //             certification={certification}
-//             handleOpenCertification={handleOpenCertification}
-//             onEditCertification={handleEditCertification}
+//             handleOpenCertification={
+//               handleOpenCertification
+//             }
+//             onEditCertification={
+//               handleEditCertification
+//             }
 //           />
 
-//           {/* Delete Account Button */}
+//           {/* Penalty Status */}
+//           {renderPenaltyStatus()}
+
+//           {/* Delete Account */}
 //           <TouchableOpacity
 //             style={styles.deleteButton}
 //             onPress={handleDeleteAccount}
@@ -1398,18 +633,30 @@
 //             activeOpacity={0.7}
 //           >
 //             {deleting ? (
-//               <ActivityIndicator color="#fff" />
+//               <ActivityIndicator
+//                 color={theme.button.primaryText}
+//               />
 //             ) : (
-//               <Text style={styles.deleteButtonText}>
-//                 {tSafe('delete_account', 'Delete Account')}
-//               </Text>
+//               <AppText
+//                 style={styles.deleteButtonText}
+//               >
+//                 {tSafe(
+//                   'delete_account',
+//                   'Delete Account'
+//                 )}
+//               </AppText>
 //             )}
 //           </TouchableOpacity>
 //         </View>
 //       </ScrollView>
 
-//       {/* Modals */}
-//       <Modal visible={openContactModal} animationType="slide" transparent>
+//       {/* Contact Modal */}
+//       <Modal
+//         visible={openContactModal}
+//         animationType="slide"
+//         transparent
+//         onRequestClose={handleCloseContact}
+//       >
 //         <Contact
 //           userId={currentUserId}
 //           contact={contact}
@@ -1418,24 +665,46 @@
 //         />
 //       </Modal>
 
-//       <Modal visible={openAvailabilityModal} animationType="slide" transparent>
+//       {/* Availability Modal */}
+//       <Modal
+//         visible={openAvailabilityModal}
+//         animationType="slide"
+//         transparent
+//         onRequestClose={handleCloseAvailability}
+//       >
 //         <Availability
 //           cleanerId={currentUserId}
-//           close_avail_modal={handleCloseAvailability}
+//           close_avail_modal={
+//             handleCloseAvailability
+//           }
 //           get_availability={handleAvailabilty}
 //         />
 //       </Modal>
 
-//       <Modal visible={openCertificationModal} animationType="slide" transparent>
+//       {/* Certification Modal */}
+//       <Modal
+//         visible={openCertificationModal}
+//         animationType="slide"
+//         transparent
+//         onRequestClose={handleCloseCertification}
+//       >
 //         <Certification
 //           userId={currentUserId}
 //           certification={editingCertification}
-//           close_modal={handleCloseCertification}
+//           close_modal={
+//             handleCloseCertification
+//           }
 //           onUpdate={handleUpdateCertification}
 //         />
 //       </Modal>
 
-//       <Modal visible={openAboutMeModal} animationType="slide" transparent>
+//       {/* About Me Modal */}
+//       <Modal
+//         visible={openAboutMeModal}
+//         animationType="slide"
+//         transparent
+//         onRequestClose={handleCloseAboutMe}
+//       >
 //         <AboutMe
 //           userId={currentUserId}
 //           aboutme={aboutme}
@@ -1447,82 +716,200 @@
 //   );
 // }
 
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   headerGradient: {
-//     paddingTop: 10,
-//     paddingBottom: 30,
-//     borderBottomLeftRadius: 30,
-//     borderBottomRightRadius: 30,
-//   },
-//   headerContent: {
-//     flexDirection: 'row',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginBottom: 16,
-//   },
-//   headerTitle: {
-//     fontSize: 28,
-//     fontWeight: '700',
-//     color: '#fff',
-//     letterSpacing: 0.5,
-//   },
-//   avatarSection: {
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   name: {
-//     fontSize: 22,
-//     fontWeight: '700',
-//     color: '#fff',
-//     marginTop: 12,
-//     marginBottom: 4,
-//   },
-//   location: {
-//     fontSize: 16,
-//     color: 'rgba(255,255,255,0.8)',
-//   },
-//   cardsContainer: {
-//     paddingHorizontal: 16,
-//     paddingTop: 8,
-//     paddingBottom: 30,
-//   },
-//   deleteButton: {
-//     backgroundColor: '#dc3545',
-//     borderRadius: 12,
-//     paddingVertical: 16,
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginTop: 16,
-//     marginHorizontal: 4,
-//     shadowColor: '#dc3545',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 6,
-//     elevation: 6,
-//   },
-//   deleteButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: '600',
-//     letterSpacing: 0.5,
-//   },
-// });
+// const createStyles = (theme) =>
+//   StyleSheet.create({
+//     safeArea: {
+//       flex: 1,
+//       backgroundColor: theme.background.default,
+//     },
+
+//     container: {
+//       flex: 1,
+//       backgroundColor: theme.background.default,
+//     },
+
+//     headerGradient: {
+//       paddingTop: 10,
+//       paddingBottom: 30,
+//       borderBottomLeftRadius: 30,
+//       borderBottomRightRadius: 30,
+//     },
+
+//     headerContent: {
+//       flexDirection: 'row',
+//       justifyContent: 'center',
+//       alignItems: 'center',
+//       marginBottom: 16,
+//     },
+
+//     headerTitle: {
+//       fontSize: 28,
+//       fontWeight: '700',
+//       color: theme.text.inverse,
+//       letterSpacing: 0.5,
+//     },
+
+//     avatarSection: {
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//     },
+
+//     name: {
+//       fontSize: 22,
+//       fontWeight: '700',
+//       color: theme.text.inverse,
+//       marginTop: 12,
+//       marginBottom: 4,
+//     },
+
+//     location: {
+//       fontSize: 16,
+//       color: theme.hero.mutedForeground,
+//     },
+
+//     cardsContainer: {
+//       paddingHorizontal: 16,
+//       paddingTop: 8,
+//       paddingBottom: 30,
+//     },
+
+//     // ---------------------------
+//     // Penalty Card
+//     // ---------------------------
+
+//     penaltyCard: {
+//       backgroundColor: theme.card.background,
+//       borderRadius: 16,
+//       padding: 20,
+//       marginTop: 16,
+//       marginBottom: 8,
+//       borderWidth: 1,
+//       borderColor: theme.card.border,
+//       shadowColor: theme.shadow?.color || '#000000',
+//       shadowOffset: {
+//         width: 0,
+//         height: 2,
+//       },
+//       shadowOpacity: theme.shadow?.opacity || 0.05,
+//       shadowRadius: 8,
+//       elevation: 2,
+//     },
+
+//     penaltyHeader: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       marginBottom: 16,
+//       gap: 10,
+//     },
+
+//     penaltyTitle: {
+//       flex: 1,
+//       fontSize: 16,
+//       fontWeight: '600',
+//       color: theme.text.primary,
+//     },
+
+//     penaltyBadge: {
+//       paddingHorizontal: 10,
+//       paddingVertical: 4,
+//       borderRadius: 20,
+//     },
+
+//     penaltyBadgeText: {
+//       fontSize: 10,
+//       fontWeight: '700',
+//       color: theme.text.inverse,
+//       letterSpacing: 0.5,
+//     },
+
+//     penaltyRow: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-around',
+//       marginBottom: 12,
+//     },
+
+//     penaltyItem: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       gap: 8,
+//     },
+
+//     penaltyLabel: {
+//       fontSize: 14,
+//       color: theme.text.secondary,
+//     },
+
+//     penaltyValue: {
+//       fontSize: 16,
+//       fontWeight: '600',
+//       minWidth: 40,
+//       textAlign: 'right',
+//     },
+
+//     penaltyDivider: {
+//       width: 1,
+//       backgroundColor: theme.divider,
+//     },
+
+//     penaltyNote: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       gap: 6,
+//       paddingTop: 8,
+//       borderTopWidth: 1,
+//       borderTopColor: theme.divider,
+//       marginTop: 4,
+//     },
+
+//     penaltyNoteText: {
+//       fontSize: 12,
+//       color: theme.text.muted,
+//       fontStyle: 'italic',
+//     },
+
+//     // ---------------------------
+//     // Delete Account
+//     // ---------------------------
+
+//     deleteButton: {
+//       backgroundColor: theme.status.error,
+//       borderRadius: 12,
+//       paddingVertical: 16,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginTop: 16,
+//       marginHorizontal: 4,
+//       shadowColor: theme.status.error,
+//       shadowOffset: {
+//         width: 0,
+//         height: 4,
+//       },
+//       shadowOpacity: 0.3,
+//       shadowRadius: 6,
+//       elevation: 6,
+//     },
+
+//     deleteButtonText: {
+//       color: theme.text.inverse,
+//       fontSize: 16,
+//       fontWeight: '600',
+//       letterSpacing: 0.5,
+//     },
+//   });
 
 
 
-import React, { useEffect, useState, useContext, useCallback } from 'react';
+
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useCallback,
+} from 'react';
+
 import {
   SafeAreaView,
   StyleSheet,
-  Text,
   StatusBar,
   ScrollView,
   Modal,
@@ -1531,75 +918,86 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import COLORS from '../../constants/colors';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+
 import AvatarUploader from '../../components/shared/AvatarUploader';
 import { AuthContext } from '../../context/AuthContext';
 import userService from '../../services/connection/userService';
+
 import Availability from '../../components/cleaner/Availability';
 import Contact from '../../components/cleaner/Contact';
 import Certification from '../../components/cleaner/Certification';
 import ContactDisplay from './ContactDisplay';
 import CertificationDisplay from './CertificationDisplay';
 import AvailabilityDisplay from './AvailabilityDisplay';
-import PaymentMethod from '../../components/cleaner/PaymentMethod';
 import AboutMe from '../../components/cleaner/AboutMe';
 import AboutMeDisplay from './AboutMeDisplay';
-import { get, ref, update } from 'firebase/database';
-import { db } from '../../services/firebase/config';
-import { LinearGradient } from 'expo-linear-gradient';
-import { format } from 'date-fns';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { tSafe } from '../../utils/tSafe';
-import { useFocusEffect } from '@react-navigation/native';
 
-// const toSafeDate = (dateValue, fallback = new Date()) => {
-//   if (!dateValue) return fallback;
-//   try {
-//     const date = new Date(dateValue);
-//     if (isNaN(date.getTime())) return fallback;
-//     return date;
-//   } catch {
-//     return fallback;
-//   }
-// };
+import { tSafe } from '../../utils/tSafe';
+import { useTheme } from '../../theme';
+import AppText from '../../ui/AppText';
 
 export default function Profile() {
-  const { currentUserId, currentUser, logout } = useContext(AuthContext);
+  const { theme, isDark } = useTheme();
+
+  const {
+    currentUserId,
+    currentUser,
+    logout,
+  } = useContext(AuthContext);
 
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [avatar, setUserAvatar] = useState('');
   const [location, setLocation] = useState('');
-  const [contact, setContact] = useState({ address: '', phone: '', email: '' });
+
+  const [contact, setContact] = useState({
+    address: '',
+    phone: '',
+    email: '',
+  });
+
   const [aboutme, setAboutMe] = useState('');
   const [certification, setCertification] = useState([]);
+
   const [openContactModal, setOpenContactModal] = useState(false);
   const [openAvailabilityModal, setOpenAvailabilityModal] = useState(false);
   const [openCertificationModal, setOpenCertificationModal] = useState(false);
   const [editingCertification, setEditingCertification] = useState(null);
-  const [openPaymentTypeModal, setOpenPaymentTypeModal] = useState(false);
   const [openAboutMeModal, setOpenAboutModal] = useState(false);
+
   const [availability, setAvailability] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [bookedSchedules, setBookedSchedules] = useState([]);
+
   const [deleting, setDeleting] = useState(false);
 
-  // NEW: Penalty & Performance state
-  const [penaltyImpacts, setPenaltyImpacts] = useState({ reliability: 0, score_penalty: 0 });
+  // Penalty and performance state
+  const [penaltyImpacts, setPenaltyImpacts] = useState({
+    reliability: 0,
+    score_penalty: 0,
+  });
+
   const [calculatedPerformance, setCalculatedPerformance] = useState(null);
 
-  const [bookedSchedules, setBookedSchedules] = useState([]);
+  const styles = createStyles(theme);
+
+  // ---------------------------
+  // Fetch Profile Data
+  // ---------------------------
 
   useEffect(() => {
     fetchUser();
     fetchAvailability();
   }, []);
 
-   // Run when screen focuses
-   useFocusEffect(
+  // Refresh profile whenever the screen comes into focus.
+  useFocusEffect(
     useCallback(() => {
       fetchUser();
-      fetchAvailability()
+      fetchAvailability();
     }, [])
   );
 
@@ -1607,25 +1005,30 @@ export default function Profile() {
     try {
       const response = await userService.getUser(currentUserId);
       const res = response.data;
+
       setFirstname(res.firstname || '');
       setLastname(res.lastname || '');
       setUserAvatar(res.avatar || '');
       setLocation(res.location || {});
+
       setContact({
         address: res.contact?.address || '',
         phone: res.phone || '',
         email: res.email || '',
       });
+
       setAboutMe(res.aboutme || '');
       setCertification(res.certification || []);
 
-      // ✅ Extract penalty and performance data
       if (res.effective_penalty_impacts) {
         setPenaltyImpacts({
-          reliability: res.effective_penalty_impacts.reliability || 0,
-          score_penalty: res.effective_penalty_impacts.score_penalty || 0,  // ✅ renamed
+          reliability:
+            res.effective_penalty_impacts.reliability || 0,
+          score_penalty:
+            res.effective_penalty_impacts.score_penalty || 0,
         });
       }
+
       if (res.calculated_performance) {
         setCalculatedPerformance(res.calculated_performance);
       }
@@ -1634,135 +1037,209 @@ export default function Profile() {
     }
   };
 
-  // Inside Profile component
+  const fetchAvailability = async () => {
+    try {
+      const response =
+        await userService.getCleanerAvailability(currentUserId);
 
-  // Inside Profile component
+      const data = response.data.data;
 
-const fetchAvailability = async () => {
-  try {
-    const response = await userService.getCleanerAvailability(currentUserId);
-    const data = response.data.data;
-    const formatted = (data?.availability || []).map((item) => ({
+      const formatted = (data?.availability || []).map((item) => ({
+        day: item.day,
+        slots: (item.slots || []).map((slot) => ({
+          start: slot.start,
+          end: slot.end,
+        })),
+      }));
+
+      setAvailability(formatted);
+      setBookedSchedules(data?.booked_schedules || []);
+    } catch (err) {
+      console.error('Error fetching availability:', err);
+
+      Alert.alert(
+        tSafe('error_title', 'Error'),
+        tSafe(
+          'failed_load_availability',
+          'Failed to load availability'
+        )
+      );
+    }
+  };
+
+  // ---------------------------
+  // Update Availability
+  // ---------------------------
+
+  const handleAvailabilty = (originalData) => {
+    const availabilityData =
+      originalData?.availability || originalData;
+
+    if (!Array.isArray(availabilityData)) {
+      console.warn(
+        'Unexpected availability data format',
+        originalData
+      );
+      return;
+    }
+
+    const formatted = availabilityData.map((item) => ({
       day: item.day,
       slots: (item.slots || []).map((slot) => ({
         start: slot.start,
         end: slot.end,
       })),
     }));
+
     setAvailability(formatted);
-    setBookedSchedules(data.booked_schedules || []);
-  } catch (err) {
-    console.error('Error fetching availability:', err);
-    Alert.alert(
-      tSafe('error_title', 'Error'),
-      tSafe('failed_load_availability', 'Failed to load availability')
-    );
-  }
-};
-
-const handleAvailabilty = (originalData) => {
-  const availabilityData = originalData?.availability || originalData;
-  if (!Array.isArray(availabilityData)) {
-    console.warn('Unexpected availability data format', originalData);
-    return;
-  }
-  const formatted = availabilityData.map((item) => ({
-    day: item.day,
-    slots: (item.slots || []).map((slot) => ({
-      start: slot.start,
-      end: slot.end,
-    })),
-  }));
-  setAvailability(formatted);
-};
-
-
-  const getUploadedPhoto = (photoUri) => {
-    const data = { userId: currentUserId, avatar: photoUri };
-    userService.updateProfileAvatar(data)
-      .then(() => updateFirebaseAvatar(data))
-      .catch(console.error);
-    setUserAvatar(photoUri);
   };
 
-  const updateFirebaseAvatar = async (data) => {
-    const snapshot = await get(ref(db, `users/${data.userId}`));
-    if (snapshot.exists()) {
-      update(ref(db, `users/${data.userId}`), { avatar: data.avatar });
+  // ---------------------------
+  // Update Avatar
+  // ---------------------------
+
+  const getUploadedPhoto = async (photoUri) => {
+    const data = {
+      userId: currentUserId,
+      avatar: photoUri,
+    };
+
+    try {
+      await userService.updateProfileAvatar(data);
+      setUserAvatar(photoUri);
+    } catch (error) {
+      console.error('Error updating profile avatar:', error);
     }
   };
 
-  const handleOpenContact = () => setOpenContactModal(true);
-  const handleCloseContact = () => setOpenContactModal(false);
+  // ---------------------------
+  // Contact
+  // ---------------------------
+
+  const handleOpenContact = () => {
+    setOpenContactModal(true);
+  };
+
+  const handleCloseContact = () => {
+    setOpenContactModal(false);
+  };
 
   const handleUpdateContact = (updatedContact) => {
     setContact(updatedContact);
   };
 
-  const handleOpenAvailability = () => setOpenAvailabilityModal(true);
-  const handleCloseAvailability = () => setOpenAvailabilityModal(false);
+  // ---------------------------
+  // Availability
+  // ---------------------------
 
-  
+  const handleOpenAvailability = () => {
+    setOpenAvailabilityModal(true);
+  };
+
+  const handleCloseAvailability = () => {
+    setOpenAvailabilityModal(false);
+  };
+
+  // ---------------------------
+  // Certification
+  // ---------------------------
+
   const handleOpenCertification = () => {
     setEditingCertification(null);
     setOpenCertificationModal(true);
   };
+
   const handleEditCertification = (cert) => {
     setEditingCertification(cert);
     setOpenCertificationModal(true);
   };
 
   const handleUpdateCertification = (savedCert) => {
-    setCertification(prev => {
-      const index = prev.findIndex(c => c._id === savedCert._id);
+    setCertification((prev) => {
+      const index = prev.findIndex(
+        (c) => c._id === savedCert._id
+      );
+
       if (index !== -1) {
         const updated = [...prev];
         updated[index] = savedCert;
         return updated;
-      } else {
-        return [...prev, savedCert];
       }
+
+      return [...prev, savedCert];
     });
   };
+
   const handleCloseCertification = () => {
     setOpenCertificationModal(false);
     setEditingCertification(null);
   };
 
-  const handleOpenAboutMe = () => setOpenAboutModal(true);
-  const handleCloseAboutMe = () => setOpenAboutModal(false);
-  const handleUpdateAbout = (text) => setAboutMe(text);
+  // ---------------------------
+  // About Me
+  // ---------------------------
 
-  // --- Delete Account Functions ---
+  const handleOpenAboutMe = () => {
+    setOpenAboutModal(true);
+  };
+
+  const handleCloseAboutMe = () => {
+    setOpenAboutModal(false);
+  };
+
+  const handleUpdateAbout = (text) => {
+    setAboutMe(text);
+  };
+
+  // ---------------------------
+  // Delete Account
+  // ---------------------------
+
   const handleDeleteAccount = () => {
     Alert.alert(
       tSafe('delete_account_title', 'Delete Account'),
-      tSafe('delete_account_message', 'Are you sure you want to permanently delete your account? This action cannot be undone.'),
+      tSafe(
+        'delete_account_message',
+        'Are you sure you want to permanently delete your account? This action cannot be undone.'
+      ),
       [
-        { text: tSafe('cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: tSafe('cancel', 'Cancel'),
+          style: 'cancel',
+        },
         {
           text: tSafe('delete', 'Delete'),
           style: 'destructive',
-          onPress: confirmDeleteAccount
-        }
+          onPress: confirmDeleteAccount,
+        },
       ]
     );
   };
 
   const confirmDeleteAccount = async () => {
     setDeleting(true);
+
     try {
       await userService.deleteAccount(currentUserId);
+
       await logout();
+
       Alert.alert(
         tSafe('account_deleted_title', 'Account Deleted'),
-        tSafe('account_deleted_message', 'Your account has been permanently deleted.')
+        tSafe(
+          'account_deleted_message',
+          'Your account has been permanently deleted.'
+        )
       );
     } catch (error) {
       console.error('Delete account error:', error);
+
       Alert.alert(
         tSafe('error_title', 'Error'),
-        tSafe('delete_account_failed', 'Failed to delete account. Please try again.')
+        tSafe(
+          'delete_account_failed',
+          'Failed to delete account. Please try again.'
+        )
       );
     } finally {
       setDeleting(false);
@@ -1770,110 +1247,300 @@ const handleAvailabilty = (originalData) => {
   };
 
   // ---------------------------
-  // Helper: get penalty tier from impact
+  // Penalty Tier
   // ---------------------------
+
   const getPenaltyTier = (reliabilityImpact) => {
-    const absImpact = Math.abs(reliabilityImpact);
-    if (absImpact >= 20) return { tier: 'MAXIMUM', color: '#B91C1C' };
-    if (absImpact >= 12) return { tier: 'SEVERE', color: '#EF4444' };
-    if (absImpact >= 6) return { tier: 'MODERATE', color: '#F97316' };
-    if (absImpact >= 3) return { tier: 'MINOR', color: '#F59E0B' };
-    return { tier: 'NONE', color: '#34C759' };
+    const absImpact = Math.abs(
+      Number(reliabilityImpact) || 0
+    );
+
+    if (absImpact >= 20) {
+      return {
+        tier: 'MAXIMUM',
+        color: theme.status.error,
+      };
+    }
+
+    if (absImpact >= 12) {
+      return {
+        tier: 'SEVERE',
+        color: theme.status.error,
+      };
+    }
+
+    if (absImpact >= 6) {
+      return {
+        tier: 'MODERATE',
+        color: theme.status.warning || '#D97706',
+      };
+    }
+
+    if (absImpact >= 3) {
+      return {
+        tier: 'MINOR',
+        color: theme.status.warning || '#D97706',
+      };
+    }
+
+    return {
+      tier: 'NONE',
+      color: theme.status.success,
+    };
   };
 
-  const tierInfo = getPenaltyTier(penaltyImpacts.reliability);
-  const hasPenalty = penaltyImpacts.reliability < 0 || penaltyImpacts.rating < 0;
+  const reliabilityImpact =
+    Number(penaltyImpacts.reliability) || 0;
+
+  const scorePenalty =
+    Number(penaltyImpacts.score_penalty) || 0;
+
+  const tierInfo = getPenaltyTier(reliabilityImpact);
+
+  const hasPenalty =
+    reliabilityImpact < 0 || scorePenalty < 0;
 
   // ---------------------------
-  // Render Penalty Status Card
+  // Penalty Status Card
   // ---------------------------
+
   const renderPenaltyStatus = () => (
     <View style={styles.penaltyCard}>
       <View style={styles.penaltyHeader}>
-        <Ionicons name="shield-outline" size={22} color="#6B7280" />
-        <Text style={styles.penaltyTitle}>{tSafe('penalty_status', 'Penalty Status')}</Text>
+        <Ionicons
+          name="shield-outline"
+          size={22}
+          color={theme.icon.muted}
+        />
+
+        <AppText style={styles.penaltyTitle}>
+          {tSafe('penalty_status', 'Penalty Status')}
+        </AppText>
+
         {hasPenalty && (
-          <View style={[styles.penaltyBadge, { backgroundColor: tierInfo.color }]}>
-            <Text style={styles.penaltyBadgeText}>{tierInfo.tier}</Text>
+          <View
+            style={[
+              styles.penaltyBadge,
+              {
+                backgroundColor: tierInfo.color,
+              },
+            ]}
+          >
+            <AppText style={styles.penaltyBadgeText}>
+              {tierInfo.tier}
+            </AppText>
           </View>
         )}
       </View>
 
       <View style={styles.penaltyRow}>
         <View style={styles.penaltyItem}>
-          <Feather name="activity" size={18} color="#6B7280" />
-          <Text style={styles.penaltyLabel}>{tSafe('reliability_impact', 'Reliability')}</Text>
-          <Text style={[styles.penaltyValue, { color: penaltyImpacts.reliability < 0 ? '#EF4444' : '#34C759' }]}>
-            {penaltyImpacts.reliability > 0 ? '+' : ''}{penaltyImpacts.reliability.toFixed(1)}
-          </Text>
+          <Feather
+            name="activity"
+            size={18}
+            color={theme.icon.muted}
+          />
+
+          <AppText style={styles.penaltyLabel}>
+            {tSafe('reliability_impact', 'Reliability')}
+          </AppText>
+
+          <AppText
+            style={[
+              styles.penaltyValue,
+              {
+                color:
+                  reliabilityImpact < 0
+                    ? theme.status.error
+                    : theme.status.success,
+              },
+            ]}
+          >
+            {reliabilityImpact > 0 ? '+' : ''}
+            {reliabilityImpact.toFixed(1)}
+          </AppText>
         </View>
+
         <View style={styles.penaltyDivider} />
-        {/* <View style={styles.penaltyItem}>
-          <Feather name="star" size={18} color="#6B7280" />
-          <Text style={styles.penaltyLabel}>{tSafe('rating_impact', 'Rating')}</Text>
-          <Text style={[styles.penaltyValue, { color: penaltyImpacts.rating < 0 ? '#EF4444' : '#34C759' }]}>
-            {penaltyImpacts.rating > 0 ? '+' : ''}{penaltyImpacts.rating.toFixed(1)}
-          </Text>
-        </View> */}
+
         <View style={styles.penaltyItem}>
-          <Feather name="star" size={18} color="#6B7280" />
-          <Text style={styles.penaltyLabel}>{tSafe('score_penalty', 'Score Penalty')}</Text>
-          <Text style={[styles.penaltyValue, { color: penaltyImpacts.score_penalty < 0 ? '#EF4444' : '#34C759' }]}>
-            {penaltyImpacts.score_penalty > 0 ? '+' : ''}{penaltyImpacts.score_penalty.toFixed(1)}
-          </Text>
+          <Feather
+            name="star"
+            size={18}
+            color={theme.icon.muted}
+          />
+
+          <AppText style={styles.penaltyLabel}>
+            {tSafe('score_penalty', 'Score Penalty')}
+          </AppText>
+
+          <AppText
+            style={[
+              styles.penaltyValue,
+              {
+                color:
+                  scorePenalty < 0
+                    ? theme.status.error
+                    : theme.status.success,
+              },
+            ]}
+          >
+            {scorePenalty > 0 ? '+' : ''}
+            {scorePenalty.toFixed(1)}
+          </AppText>
         </View>
       </View>
 
       {hasPenalty && (
         <View style={styles.penaltyNote}>
-          <Feather name="info" size={14} color="#9CA3AF" />
-          <Text style={styles.penaltyNoteText}>
-            {tSafe('penalty_decay_note', 'Penalties gradually reduce over 30 days.')}
-          </Text>
+          <Feather
+            name="info"
+            size={14}
+            color={theme.icon.muted}
+          />
+
+          <AppText style={styles.penaltyNoteText}>
+            {tSafe(
+              'penalty_decay_note',
+              'Penalties gradually reduce over 30 days.'
+            )}
+          </AppText>
         </View>
       )}
 
       {!hasPenalty && (
         <View style={styles.penaltyNote}>
-          <Feather name="check-circle" size={14} color="#34C759" />
-          <Text style={[styles.penaltyNoteText, { color: '#34C759' }]}>
-            {tSafe('no_active_penalties', 'No active penalties')}
-          </Text>
+          <Feather
+            name="check-circle"
+            size={14}
+            color={theme.status.success}
+          />
+
+          <AppText
+            style={[
+              styles.penaltyNoteText,
+              {
+                color: theme.status.success,
+              },
+            ]}
+          >
+            {tSafe(
+              'no_active_penalties',
+              'No active penalties'
+            )}
+          </AppText>
         </View>
       )}
     </View>
   );
 
+  // ---------------------------
+  // Profile Header
+  // ---------------------------
+
+  const displayCity =
+    currentUser?.location?.city || location?.city || '';
+
+  const displayRegion =
+    currentUser?.location?.region || location?.region || '';
+
+  const displayLocation = [displayCity, displayRegion]
+    .filter(Boolean)
+    .join(', ');
+
+  const displayName = [
+    currentUser?.firstname || firstname,
+    currentUser?.lastname || lastname,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background.default}
+      />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Hero Header */}
         <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
-          style={styles.headerGradient}
+          colors={[
+            theme.brand.primary,
+            theme.brand.secondary || theme.brand.primary,
+          ]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
         >
+          {/* Decorative background elements */}
+          <View
+            pointerEvents="none"
+            style={styles.headerDecorationLarge}
+          />
+
+          <View
+            pointerEvents="none"
+            style={styles.headerDecorationSmall}
+          />
+
+          {/* Header title */}
           <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>{tSafe('my_profile', 'My Profile')}</Text>
+            <View style={styles.headerHeading}>
+              <AppText style={styles.headerEyebrow}>
+                FRESHSWEEPER
+              </AppText>
+
+              <AppText style={styles.headerTitle}>
+                {tSafe('my_profile', 'My Profile')}
+              </AppText>
+            </View>
+
+            <View style={styles.headerIconContainer}>
+              <Feather
+                name="user"
+                size={22}
+                color={theme.text.inverse}
+              />
+            </View>
           </View>
+
+          {/* Profile identity */}
           <View style={styles.avatarSection}>
-            <AvatarUploader
-              userId={currentUserId}
-              default_photo={avatar}
-              image_type="avatar"
-              get_uploaded_photo={getUploadedPhoto}
-            />
-            <Text style={styles.name}>{currentUser?.firstname || ''} {currentUser?.lastname || ''}</Text>
-            <Text style={styles.location}>
-              {currentUser?.location?.city}, {currentUser?.location?.region}
-            </Text>
+            <View style={styles.avatarFrame}>
+              <AvatarUploader
+                userId={currentUserId}
+                default_photo={avatar}
+                image_type="avatar"
+                get_uploaded_photo={getUploadedPhoto}
+              />
+            </View>
+
+            <AppText style={styles.name}>
+              {displayName}
+            </AppText>
+
+            {displayLocation ? (
+              <View style={styles.locationRow}>
+                <Feather
+                  name="map-pin"
+                  size={14}
+                  color={theme.hero.mutedForeground}
+                />
+
+                <AppText style={styles.location}>
+                  {displayLocation}
+                </AppText>
+              </View>
+            ) : null}
           </View>
         </LinearGradient>
 
-        {/* Content Cards */}
+        {/* Profile Content Cards */}
         <View style={styles.cardsContainer}>
           <ContactDisplay
             contact={contact}
@@ -1883,7 +1550,8 @@ const handleAvailabilty = (originalData) => {
           <AboutMeDisplay
             mode="edit"
             aboutme={aboutme}
-            handleOpenAboutMe={handleOpenAboutMe}
+            isOwnProfile={true}
+            onEdit={handleOpenAboutMe}
           />
 
           <AvailabilityDisplay
@@ -1901,10 +1569,10 @@ const handleAvailabilty = (originalData) => {
             onEditCertification={handleEditCertification}
           />
 
-          {/* 🟢 Penalty Status Card */}
+          {/* Penalty Status */}
           {renderPenaltyStatus()}
 
-          {/* Delete Account Button */}
+          {/* Delete Account */}
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDeleteAccount}
@@ -1912,18 +1580,25 @@ const handleAvailabilty = (originalData) => {
             activeOpacity={0.7}
           >
             {deleting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator
+                color={theme.button.primaryText}
+              />
             ) : (
-              <Text style={styles.deleteButtonText}>
+              <AppText style={styles.deleteButtonText}>
                 {tSafe('delete_account', 'Delete Account')}
-              </Text>
+              </AppText>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Modals */}
-      <Modal visible={openContactModal} animationType="slide" transparent>
+      {/* Contact Modal */}
+      <Modal
+        visible={openContactModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseContact}
+      >
         <Contact
           userId={currentUserId}
           contact={contact}
@@ -1932,7 +1607,13 @@ const handleAvailabilty = (originalData) => {
         />
       </Modal>
 
-      <Modal visible={openAvailabilityModal} animationType="slide" transparent>
+      {/* Availability Modal */}
+      <Modal
+        visible={openAvailabilityModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseAvailability}
+      >
         <Availability
           cleanerId={currentUserId}
           close_avail_modal={handleCloseAvailability}
@@ -1940,7 +1621,13 @@ const handleAvailabilty = (originalData) => {
         />
       </Modal>
 
-      <Modal visible={openCertificationModal} animationType="slide" transparent>
+      {/* Certification Modal */}
+      <Modal
+        visible={openCertificationModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseCertification}
+      >
         <Certification
           userId={currentUserId}
           certification={editingCertification}
@@ -1949,7 +1636,13 @@ const handleAvailabilty = (originalData) => {
         />
       </Modal>
 
-      <Modal visible={openAboutMeModal} animationType="slide" transparent>
+      {/* About Me Modal */}
+      <Modal
+        visible={openAboutMeModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseAboutMe}
+      >
         <AboutMe
           userId={currentUserId}
           aboutme={aboutme}
@@ -1961,148 +1654,301 @@ const handleAvailabilty = (originalData) => {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-  headerGradient: {
-    paddingTop: 10,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: 0.5,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  location: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  cardsContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 30,
-  },
-  // ----- Penalty Card Styles -----
-  penaltyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-  },
-  penaltyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 10,
-  },
-  penaltyTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  penaltyBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  penaltyBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  penaltyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-  },
-  penaltyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  penaltyLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  penaltyValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    minWidth: 40,
-    textAlign: 'right',
-  },
-  penaltyDivider: {
-    width: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  penaltyNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    marginTop: 4,
-  },
-  penaltyNoteText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontStyle: 'italic',
-  },
-  // ----- Delete Button -----
-  deleteButton: {
-    backgroundColor: '#dc3545',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    marginHorizontal: 4,
-    shadowColor: '#dc3545',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-});
+// =====================================================
+// Styles
+// =====================================================
+
+const createStyles = (theme) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.background.default,
+    },
+
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.default,
+    },
+
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 10,
+    },
+
+    // ---------------------------
+    // Profile Hero Header
+    // ---------------------------
+
+    headerGradient: {
+      position: 'relative',
+      overflow: 'hidden',
+
+      paddingTop: 24,
+      paddingBottom: 32,
+      paddingHorizontal: 24,
+
+      borderBottomLeftRadius: 32,
+      borderBottomRightRadius: 32,
+    },
+
+    headerDecorationLarge: {
+      position: 'absolute',
+      top: -75,
+      right: -55,
+
+      width: 230,
+      height: 230,
+      borderRadius: 115,
+
+      backgroundColor: 'rgba(255,255,255,0.09)',
+    },
+
+    headerDecorationSmall: {
+      position: 'absolute',
+      bottom: 45,
+      left: -35,
+
+      width: 110,
+      height: 110,
+      borderRadius: 55,
+
+      backgroundColor: 'rgba(255,255,255,0.07)',
+    },
+
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+
+      marginBottom: 28,
+    },
+
+    headerHeading: {
+      flex: 1,
+    },
+
+    headerEyebrow: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: theme.hero.mutedForeground,
+      marginBottom: 5,
+    },
+
+    headerTitle: {
+      fontSize: 29,
+      fontWeight: '800',
+      color: theme.text.inverse,
+      letterSpacing: -0.5,
+      lineHeight: 38,
+    },
+
+    headerIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 15,
+
+      alignItems: 'center',
+      justifyContent: 'center',
+
+      backgroundColor: 'rgba(255,255,255,0.14)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.20)',
+
+      marginLeft: 12,
+    },
+
+    avatarSection: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    avatarFrame: {
+      alignItems: 'center',
+      justifyContent: 'center',
+
+      padding: 5,
+      borderRadius: 100,
+
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      borderWidth: 2,
+      borderColor: 'rgba(255,255,255,0.65)',
+    },
+
+    name: {
+      fontSize: 23,
+      fontWeight: '800',
+      color: theme.text.inverse,
+
+      textAlign: 'center',
+
+      marginTop: 16,
+      marginBottom: 8,
+      letterSpacing: 0.2,
+    },
+
+    locationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+
+      borderRadius: 20,
+      backgroundColor: 'rgba(255,255,255,0.12)',
+    },
+
+    location: {
+      fontSize: 13,
+      color: theme.hero.mutedForeground,
+      textAlign: 'center',
+    },
+
+    // ---------------------------
+    // Profile Content
+    // ---------------------------
+
+    cardsContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 30,
+    },
+
+    // ---------------------------
+    // Penalty Card
+    // ---------------------------
+
+    penaltyCard: {
+      backgroundColor: theme.card.background,
+      borderRadius: 16,
+      padding: 20,
+      marginTop: 16,
+      marginBottom: 8,
+
+      borderWidth: 1,
+      borderColor: theme.card.border,
+
+      shadowColor: theme.shadow?.color || '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: theme.shadow?.opacity || 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+
+    penaltyHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      gap: 10,
+    },
+
+    penaltyTitle: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text.primary,
+    },
+
+    penaltyBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 20,
+    },
+
+    penaltyBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.text.inverse,
+      letterSpacing: 0.5,
+    },
+
+    penaltyRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+
+    penaltyItem: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+
+    penaltyLabel: {
+      fontSize: 14,
+      color: theme.text.secondary,
+    },
+
+    penaltyValue: {
+      fontSize: 16,
+      fontWeight: '600',
+      minWidth: 40,
+      textAlign: 'right',
+    },
+
+    penaltyDivider: {
+      width: 1,
+      alignSelf: 'stretch',
+      backgroundColor: theme.divider,
+      marginHorizontal: 8,
+    },
+
+    penaltyNote: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.divider,
+      marginTop: 4,
+    },
+
+    penaltyNoteText: {
+      flex: 1,
+      fontSize: 12,
+      color: theme.text.muted,
+      fontStyle: 'italic',
+    },
+
+    // ---------------------------
+    // Delete Account
+    // ---------------------------
+
+    deleteButton: {
+      backgroundColor: theme.status.error,
+      borderRadius: 12,
+      paddingVertical: 16,
+
+      alignItems: 'center',
+      justifyContent: 'center',
+
+      marginTop: 16,
+      marginHorizontal: 4,
+
+      shadowColor: theme.status.error,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 6,
+    },
+
+    deleteButtonText: {
+      color: theme.text.inverse,
+      fontSize: 16,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+  });

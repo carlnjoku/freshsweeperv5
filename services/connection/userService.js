@@ -217,15 +217,12 @@ class UserService {
         }
       );
     }
-    getLinkedProperties(authToken){
-      return http.get(
-        `/api/apartments/linked_properties`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+    // getLinkedProperties(){
+    //   return http.get('/api/apartments/linked_properties');
+    // }
+
+    getLinkedProperties() {
+      return http.get('/api/apartments/linked_properties');
     }
     getPropertyGigs(property_id, authToken){
       return http.get(
@@ -346,6 +343,26 @@ class UserService {
     }
 
 
+    // ============================================================
+
+  // MANUAL SCHEDULE CHANGE
+
+  // ============================================================
+
+  getManualScheduleChangeRequest(requestId) {
+    return http.get(
+      `/api/schedules/manual_schedule_change_request/${requestId}`
+    );
+  }
+
+  respondToManualScheduleChange(data) {
+    return http.put(
+      '/api/schedules/respond_to_manual_schedule_change',
+      data
+    );
+  }
+
+
     getRecommendedCleaners(schedulId){
       return http.get(`/api/recommended_cleaners/get_recommended_cleaners/${schedulId}`)
     }
@@ -378,9 +395,24 @@ class UserService {
       );
     }
 
+    startCleanerRecommendation(scheduleId) {
+      return http.post(
+        `/api/recommended_cleaners/start_cleaner_recommendation/${scheduleId}`
+      );
+    }
+
     getReplacementRequestStatus(scheduleId, requestId) {
       return http.get(
         `/api/recommended_cleaners/replacement_request_status/${scheduleId}/${requestId}`
+      );
+    }
+
+    
+
+    selectReplacementCleaner(data) {
+      return http.post(
+        '/api/recommended_cleaners/select_replacement_cleaner',
+        data
       );
     }
 
@@ -389,6 +421,89 @@ class UserService {
         '/api/recommended_cleaners/respond_to_replacement_request',
         data
       );
+    }
+
+    getReplacementRequest(requestId) {
+      return http.get(
+        `/api/recommended_cleaners/replacement_request/${requestId}`
+      );
+    }
+
+    getReplacementWorkflows(scheduleId) {
+      return http.get(
+        `/api/recommended_cleaners/replacement_workflows/${scheduleId}`
+      );
+    }
+
+    getReplacementWorkflow(
+      scheduleId,
+      requestId
+    ) {
+      return http.get(
+        `/api/schedules/replacement_workflow/${scheduleId}/${requestId}`
+      );
+    }
+
+    getReplacementPaymentDetails(
+      scheduleId,
+      replacementRequestId
+    ) {
+      return http.get(
+        `/api/recommended_cleaners/replacement_payment/${scheduleId}/${replacementRequestId}`
+      );
+    }
+
+    createReplacementPaymentIntent(data) {
+      return http.post(
+        '/api/stripes/create-replacement-payment-intent',
+        data
+      );
+    }
+
+    createConnectUpdateLink() {
+      return http.post(
+        '/api/stripes/update'
+      );
+    }
+
+    getCleanerPayoutSettings() {
+      return http.get(
+        '/api/stripes/payout-settings'
+      );
+    }
+
+    getTaxReportingStatus() {
+      return http.get(
+        '/api/stripes/tax-reporting-status'
+      );
+    }
+
+    
+    requestTaxReporting(taxType = '1099_misc') {
+      return http.post(
+        `/api/stripes/request-tax-reporting?tax_type=${encodeURIComponent(taxType)}`
+      );
+    }
+
+    createExpressDashboardLink() {
+      return http.post(
+        '/api/stripes/express-dashboard-link'
+      );
+    }
+
+    getTransactionBalance(currency = 'USD') {
+      return http.get('/api/transactions/balance', {
+        params: { currency },
+      });
+    }
+    
+    getTransactions(currency = 'USD', limit = 50) {
+      return http.get('/api/transactions', {
+        params: {
+          currency,
+          limit,
+        },
+      });
     }
   
     getMyCleaningRequest(cleanerId){
@@ -651,6 +766,13 @@ class UserService {
 
     cancelSchedule(schedule_id, data){
       return http.post(`/api/schedules/${schedule_id}/cancel`, data)
+    }
+
+    removeCleanerFromSchedule(scheduleId, data) {
+      return http.post(
+          `/api/schedules/${scheduleId}/remove-cleaner`,
+          data
+      );
     }
 
     // Get cleaner's tasks upcoming, passed, completed and cancelled

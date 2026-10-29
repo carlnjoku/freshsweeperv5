@@ -264,144 +264,174 @@
 //   });
 
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SafeAreaView,
   ScrollView,
   Keyboard,
-  Text,
   View,
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
+
 import { TextInput, Snackbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import COLORS from '../../constants/colors';
+
+import { useTheme } from '../../theme';
+import AppText from '../../ui/AppText';
 import userService from '../../services/connection/userService';
 import ROUTES from '../../constants/routes';
 import { tSafe } from '../../utils/tSafe';
 
 const ForgotPassword = () => {
   const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
+
+  const styles = createStyles(theme);
+  const redirectTimeout = useRef(null);
+
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ visible: false, message: '', isError: false });
+
+  const [snackbar, setSnackbar] = useState({
+    visible: false,
+    message: '',
+    isError: false,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeout.current) {
+        clearTimeout(redirectTimeout.current);
+      }
+    };
+  }, []);
 
   const showMessage = (message, isError = false) => {
-    setSnackbar({ visible: true, message, isError });
+    setSnackbar({
+      visible: true,
+      message,
+      isError,
+    });
   };
 
-  const hideSnackbar = () => setSnackbar((prev) => ({ ...prev, visible: false }));
+  const hideSnackbar = () => {
+    setSnackbar((previous) => ({
+      ...previous,
+      visible: false,
+    }));
+  };
 
-  const validateEmail = (text) => {
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!text) {
-      setEmailError(tSafe('email_required', 'Email is required'));
+  const validateEmail = (value) => {
+    const normalizedEmail = value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!normalizedEmail) {
+      setEmailError(
+        tSafe('email_required', 'Email is required')
+      );
       return false;
     }
-    if (!emailRegex.test(text)) {
-      setEmailError(tSafe('email_invalid', 'Please enter a valid email address'));
+
+    if (!emailRegex.test(normalizedEmail)) {
+      setEmailError(
+        tSafe(
+          'email_invalid',
+          'Please enter a valid email address'
+        )
+      );
       return false;
     }
+
     setEmailError('');
     return true;
   };
 
-  const handleEmailChange = (text) => {
-    setEmail(text);
-    if (emailError) validateEmail(text);
+  const handleEmailChange = (value) => {
+    setEmail(value);
+
+    if (emailError) {
+      validateEmail(value);
+    }
   };
 
-  // const handleResetPassword = async () => {
-  //   Keyboard.dismiss();
-  //   if (!validateEmail(email)) return;
-
-  //   setLoading(true);
-  //   try {
-  //     const response = await userService.forgotPassword({ email });
-  //     const { status } = response.data;
-  //     if (status === 'success') {
-  //       // Optionally store email for later use
-  //       await AsyncStorage.setItem('resetEmail', email);
-  //       showMessage(tSafe('reset_sent', 'Password reset link sent to your email'));
-  //       // Navigate after a short delay to let the user read the message
-  //       setTimeout(() => navigation.navigate(ROUTES.signin), 1500);
-  //     } else {
-  //       showMessage(
-  //         tSafe('reset_failed', 'Unable to reset password. Please try again.'),
-  //         true
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error('Password reset error:', error);
-      
-  //     // Extract error message from backend response
-  //     let errorMessage = tSafe('network_error', 'Network error. Please check your connection.');
-      
-  //     if (error.response) {
-  //       // Server responded with a status code outside 2xx
-  //       const status = error.response.status;
-  //       const detail = error.response.data?.detail;
-        
-  //       if (status === 404) {
-  //         errorMessage = tSafe('email_not_found', 'No account found with this email address.');
-  //       } else if (detail) {
-  //         errorMessage = detail;
-  //       } else if (error.response.data?.message) {
-  //         errorMessage = error.response.data.message;
-  //       }
-  //     } else if (error.request) {
-  //       // Request was made but no response received
-  //       errorMessage = tSafe('no_server_response', 'Server is not responding. Please try again later.');
-  //     }
-      
-  //     showMessage(errorMessage, true);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleResetPassword = async () => {
+    if (loading) return;
+
     Keyboard.dismiss();
-    if (!validateEmail(email)) return;
-  
+
+    const normalizedEmail = email.trim();
+
+    if (!validateEmail(normalizedEmail)) {
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const response = await userService.forgotPassword({ email });
-      // Backend always returns 200 with { message: "..." }
-      const message = response.data?.message || tSafe('reset_sent', 'Password reset link sent to your email');
+      const response = await userService.forgotPassword({
+        email: "skoodee2022@gmail.com",
+        // email: normalizedEmail,
+      });
+
+      const message =
+        response?.data?.message ||
+        tSafe(
+          'reset_sent',
+          'If an account exists for this email, password reset instructions will be sent.'
+        );
+
       showMessage(message, false);
-      
-      // Optionally store email for later use
-      await AsyncStorage.setItem('resetEmail', email);
-      
-      // Navigate after a short delay
-      setTimeout(() => navigation.navigate(ROUTES.signin), 2000);
+
+      redirectTimeout.current = setTimeout(() => {
+        navigation.navigate(ROUTES.signin);
+      }, 2000);
     } catch (error) {
-      console.error('Password reset error:', error);
-      
-      let errorMessage = tSafe('network_error', 'Network error. Please try again.');
-      
-      if (error.response) {
-        // Server responded with an error status (shouldn't happen per our design, but handle gracefully)
+      console.error(
+        'Password reset error:',
+        error?.response?.status || error?.message
+      );
+
+      let errorMessage = tSafe(
+        'network_error',
+        'Network error. Please try again.'
+      );
+
+      if (error?.response) {
         const status = error.response.status;
-        const detail = error.response.data?.detail || error.response.data?.message;
+        const detail =
+          error.response.data?.detail ||
+          error.response.data?.message;
+
         if (status === 404) {
-          errorMessage = tSafe('email_not_found', 'No account found with this email address.');
+          errorMessage = tSafe(
+            'email_not_found',
+            'Unable to process this request. Please check your email address and try again.'
+          );
+        } else if (status >= 500) {
+          errorMessage = tSafe(
+            'server_error',
+            'Server error. Please try again later.'
+          );
         } else if (detail) {
           errorMessage = detail;
         } else {
-          errorMessage = tSafe('server_error', 'Server error. Please try again later.');
+          errorMessage = tSafe(
+            'reset_failed',
+            'Unable to send password reset instructions. Please try again.'
+          );
         }
-      } else if (error.request) {
-        errorMessage = tSafe('no_server_response', 'Cannot connect to server. Check your internet.');
+      } else if (error?.request) {
+        errorMessage = tSafe(
+          'no_server_response',
+          'Cannot connect to the server. Please check your internet connection.'
+        );
       }
-      
+
       showMessage(errorMessage, true);
     } finally {
       setLoading(false);
@@ -410,6 +440,11 @@ const ForgotPassword = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background.default}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
@@ -420,158 +455,314 @@ const ForgotPassword = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>
+            <View style={styles.iconContainer}>
+              <TextInput.Icon
+                icon="lock-reset"
+                size={42}
+                color={theme.brand.primary}
+              />
+            </View>
+
+            <AppText style={styles.title}>
               {tSafe('forgot_password', 'Forgot Password?')}
-            </Text>
-            <Text style={styles.subtitle}>
+            </AppText>
+
+            <AppText style={styles.subtitle}>
               {tSafe(
                 'reset_instruction',
-                "Enter your email address and we'll send you a link to reset your password."
+                "Enter your email address and we'll send you instructions to reset your password."
               )}
-            </Text>
+            </AppText>
           </View>
 
           <View style={styles.form}>
+            <AppText style={styles.formTitle}>
+              {tSafe('reset_password', 'Reset Password')}
+            </AppText>
+
+            <AppText style={styles.formDescription}>
+              {tSafe(
+                'reset_email_description',
+                'Enter the email address associated with your account.'
+              )}
+            </AppText>
+
             <TextInput
               mode="outlined"
               label={tSafe('email', 'Email')}
+              placeholder={tSafe(
+                'enter_email',
+                'Enter your email address'
+              )}
               value={email}
               onChangeText={handleEmailChange}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="email-address"
-              returnKeyType="done"
+              textContentType="emailAddress"
+              autoComplete="email"
+              returnKeyType="send"
               onSubmitEditing={handleResetPassword}
               error={!!emailError}
-              outlineColor="#E2E8F0"
-              activeOutlineColor={COLORS.primary}
+              disabled={loading}
+              outlineColor={theme.input.border}
+              activeOutlineColor={theme.brand.primary}
+              textColor={theme.text.primary}
+              placeholderTextColor={theme.input.placeholder}
               style={styles.input}
-              left={<TextInput.Icon icon="email-outline" />}
+              left={
+                <TextInput.Icon
+                  icon="email-outline"
+                  color={
+                    emailError
+                      ? theme.status.error
+                      : theme.icon.default
+                  }
+                />
+              }
+              theme={{
+                colors: {
+                  background: theme.input.background,
+                  surface: theme.input.background,
+                  onSurface: theme.text.primary,
+                  onSurfaceVariant: theme.text.secondary,
+                  error: theme.status.error,
+                  primary: theme.brand.primary,
+                  outline: theme.input.border,
+                },
+              }}
             />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+            {emailError ? (
+              <AppText style={styles.errorText}>
+                {emailError}
+              </AppText>
+            ) : null}
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                loading && styles.buttonDisabled,
+              ]}
               onPress={handleResetPassword}
               disabled={loading}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={tSafe(
+                'send_reset_link',
+                'Send Reset Link'
+              )}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator
+                  color={theme.button.primaryText}
+                />
               ) : (
-                <Text style={styles.buttonText}>
+                <AppText style={styles.buttonText}>
                   {tSafe('send_reset_link', 'Send Reset Link')}
-                </Text>
+                </AppText>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => navigation.navigate(ROUTES.signin)}
               style={styles.linkContainer}
+              disabled={loading}
+              activeOpacity={0.7}
+              accessibilityRole="button"
             >
-              <Text style={styles.linkText}>
+              <AppText style={styles.linkText}>
                 {tSafe('back_to_login', '← Back to Login')}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           </View>
+
+          <AppText style={styles.footerText}>
+            {tSafe(
+              'password_reset_footer',
+              'Keep your account secure by using a strong, unique password.'
+            )}
+          </AppText>
         </ScrollView>
 
         <Snackbar
           visible={snackbar.visible}
           onDismiss={hideSnackbar}
-          duration={3000}
-          style={snackbar.isError ? styles.errorSnackbar : styles.successSnackbar}
+          duration={3500}
+          style={
+            snackbar.isError
+              ? styles.errorSnackbar
+              : styles.successSnackbar
+          }
           wrapperStyle={styles.snackbarWrapper}
+          theme={{
+            colors: {
+              inverseSurface: snackbar.isError
+                ? theme.status.error
+                : theme.status.success,
+              inverseOnSurface: '#FFFFFF',
+            },
+          }}
         >
-          {snackbar.message}
+          <AppText style={styles.snackbarText}>
+            {snackbar.message}
+          </AppText>
         </Snackbar>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-const styles = {
+const createStyles = (theme) => ({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.backgroundColor || '#F8FAFC',
+    backgroundColor: theme.background.default,
   },
+
   container: {
     flex: 1,
+    backgroundColor: theme.background.default,
   },
+
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 40,
   },
+
   header: {
-    marginBottom: 40,
+    alignItems: 'center',
+    marginBottom: 32,
   },
+
+  iconContainer: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: theme.brand.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 22,
+  },
+
   title: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '700',
-    color: COLORS.black || '#1E293B',
+    color: theme.text.primary,
     textAlign: 'center',
     marginBottom: 12,
+
   },
+
   subtitle: {
-    fontSize: 16,
-    color: '#64748B',
+    fontSize: 15,
+    color: theme.text.secondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 23,
+    paddingHorizontal: 4,
   },
+
   form: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card.background,
     borderRadius: 24,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.card.border,
+    shadowColor: theme.shadow?.color || '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: theme.shadow?.opacity ?? 0.08,
+    shadowRadius: 12,
     elevation: 3,
   },
+
+  formTitle: {
+    fontSize: 21,
+    fontWeight: '700',
+    color: theme.text.primary,
+    marginBottom: 8,
+  },
+
+  formDescription: {
+    fontSize: 14,
+    color: theme.text.secondary,
+    lineHeight: 21,
+    marginBottom: 22,
+  },
+
   input: {
     marginBottom: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.input.background,
   },
+
   errorText: {
-    color: COLORS.red || '#EF4444',
+    color: theme.status.error,
     fontSize: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     marginLeft: 8,
   },
+
   button: {
-    backgroundColor: COLORS.primary || '#3B82F6',
+    backgroundColor: theme.button.primaryBackground,
     borderRadius: 25,
+    minHeight: 52,
     paddingVertical: 14,
+    paddingHorizontal: 18,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 16,
     marginBottom: 20,
   },
+
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.65,
   },
+
   buttonText: {
-    color: '#FFFFFF',
+    color: theme.button.primaryText,
     fontSize: 16,
     fontWeight: '600',
   },
+
   linkContainer: {
     alignItems: 'center',
+    paddingVertical: 8,
   },
+
   linkText: {
-    color: COLORS.primary || '#3B82F6',
+    color: theme.brand.primary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
+
+  footerText: {
+    color: theme.text.secondary,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: 24,
+    paddingHorizontal: 12,
+  },
+
   errorSnackbar: {
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.status.error,
   },
+
   successSnackbar: {
-    backgroundColor: '#10B981',
+    backgroundColor: theme.status.success,
   },
+
   snackbarWrapper: {
     marginBottom: Platform.OS === 'ios' ? 20 : 10,
   },
-};
+
+  snackbarText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+});
 
 export default ForgotPassword;

@@ -1,110 +1,155 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import COLORS from '../../constants/colors';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+} from 'react-native';
 
+import { useTheme } from '../../theme';
 
 const StepsIndicator = ({ step, onClose }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+
   return (
     <View>
-      
-
       {/* Steps Indicator */}
       <View style={styles.stepContainer}>
-        {[1, 2, 3, 4].map((stepNumber) => (
-          <View key={stepNumber} style={styles.stepItem}>
+        {[1, 2, 3, 4].map((stepNumber) => {
+          const isActive = step === stepNumber;
+          const isCompleted = step > stepNumber;
+
+          return (
             <View
-              style={[
-                styles.stepCircle,
-                step === stepNumber
-                  ? styles.activeStepCircle // Current step: outlined
-                  : step > stepNumber
-                  ? styles.completedStepCircle // Previous steps: filled
-                  : styles.upcomingStepCircle, // Upcoming steps: outlined only
-              ]}
+              key={stepNumber}
+              style={styles.stepItem}
             >
-              <Text
+              <View
                 style={[
-                  styles.stepNumber,
-                  step === stepNumber
-                    ? styles.activeStepNumber // Current step: green text
-                    : step > stepNumber
-                    ? styles.completedStepNumber // Completed steps: white text
-                    : styles.upcomingStepNumber, // Upcoming steps: gray text
+                  styles.stepCircle,
+                  isActive &&
+                    styles.activeStepCircle,
+                  isCompleted &&
+                    styles.completedStepCircle,
+                  !isActive &&
+                    !isCompleted &&
+                    styles.upcomingStepCircle,
                 ]}
               >
-                {stepNumber}
-              </Text>
-            </View>
-            {stepNumber < 4 && (
-              <View style={styles.stepLineContainer}>
-                <View style={styles.stepLine} />
+                <Text
+                  style={[
+                    styles.stepNumber,
+                    isActive &&
+                      styles.activeStepNumber,
+                    isCompleted &&
+                      styles.completedStepNumber,
+                    !isActive &&
+                      !isCompleted &&
+                      styles.upcomingStepNumber,
+                  ]}
+                >
+                  {stepNumber}
+                </Text>
               </View>
-            )}
-          </View>
-        ))}
+
+              {stepNumber < 4 && (
+                <View
+                  style={styles.stepLineContainer}
+                >
+                  <View
+                    style={[
+                      styles.stepLine,
+                      isCompleted &&
+                        styles.completedStepLine,
+                    ]}
+                  />
+                </View>
+              )}
+            </View>
+          );
+        })}
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginRight: 10,
-    marginTop: 10,
-    zIndex: 1,
-  },
-  stepContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginTop: 30,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stepCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeStepCircle: {
-    borderColor: COLORS.primary, // Current step: outlined
-    backgroundColor: '#fff', // Not filled for the current step
-  },
-  completedStepCircle: {
-    borderColor: COLORS.primary, // Completed steps: outlined
-    backgroundColor: COLORS.primary, // Filled for previous steps
-  },
-  upcomingStepCircle: {
-    borderColor: '#ddd', // Upcoming steps: outlined in gray
-    backgroundColor: '#fff', // Not filled for upcoming steps
-  },
-  stepNumber: {
-    fontSize: 16,
-  },
-  activeStepNumber: {
-    color: COLORS.primary, // Current step number: green text
-  },
-  completedStepNumber: {
-    color: '#fff', // Previous step number: white text
-  },
-  upcomingStepNumber: {
-    color: '#aaa', // Upcoming step number: gray text
-  },
-  stepLine: {
-    width: 72,
-    height: 1.4,
-    backgroundColor: '#ddd', // Line color between steps
-    marginHorizontal: 5,
-  },
-});
+const createStyles = (theme) =>
+  StyleSheet.create({
+    stepContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginBottom: 20,
+      marginTop: 30,
+    },
+
+    stepItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+
+    stepCircle: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    // Current step
+    activeStepCircle: {
+      borderColor: theme.brand.primary,
+      backgroundColor: theme.surface.elevated,
+    },
+
+    activeStepNumber: {
+      color: theme.brand.primary,
+      fontWeight: '700',
+    },
+
+    // Completed steps
+    completedStepCircle: {
+      borderColor: theme.brand.primary,
+      backgroundColor: theme.brand.primary,
+    },
+
+    completedStepNumber: {
+      color: theme.text.inverse,
+      fontWeight: '700',
+    },
+
+    // Upcoming steps
+    upcomingStepCircle: {
+      borderColor: theme.border.strong,
+      backgroundColor: theme.surface.elevated,
+    },
+
+    upcomingStepNumber: {
+      color: theme.text.muted,
+      fontWeight: '500',
+    },
+
+    stepNumber: {
+      fontSize: 16,
+    },
+
+    stepLineContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    stepLine: {
+      width: 72,
+      height: 1.4,
+      backgroundColor: theme.border.default,
+      marginHorizontal: 5,
+    },
+
+    completedStepLine: {
+      backgroundColor: theme.brand.primary,
+    },
+  });
 
 export default StepsIndicator;
-

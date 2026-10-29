@@ -94,8 +94,22 @@ const StripeGroupPaymentButton = ({
 
       if (paymentError) throw new Error(paymentError.message);
 
-      // Payment successful
-      const paymentDetails = { status: 'success', totalAmount };
+      // // Payment successful
+      // const paymentDetails = { status: 'success', totalAmount };
+      // onSuccess(paymentDetails);
+
+      // Stripe PaymentSheet completed successfully.
+      //
+      // IMPORTANT:
+      // This does NOT mean the replacement workflow is completed yet.
+      // The backend webhook must verify the payment and assign the\
+      // replacement cleaner.
+
+      const paymentDetails = {
+        status: 'stripe_payment_submitted',
+        totalAmount,
+      };
+
       onSuccess(paymentDetails);
 
       // Add friend create chatroom and send the initial message 

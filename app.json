@@ -8,9 +8,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "plugins": [
+      "expo-apple-authentication",
       [
         "expo-image-picker",
         {
@@ -72,7 +73,6 @@
       [
         "@stripe/stripe-react-native",
         {
-          "merchantIdentifier": "merchant.com.flavoursoft.freshsweeperv5",
           "enableGooglePay": true
         }
       ]
@@ -83,6 +83,7 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.flavoursoft.freshsweeperv5",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",

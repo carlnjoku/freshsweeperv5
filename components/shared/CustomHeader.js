@@ -1,61 +1,182 @@
-// import React from 'react';
-// import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-// import Ionicons from '@expo/vector-icons/Ionicons';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-// import COLORS from '../../constants/colors';
+import React, { useCallback } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from 'react-native';
 
-// const CustomHeader = ({ title, navigation }) => {
-//   return (
-//     <SafeAreaView style={styles.safeArea}>
-//       <View style={styles.headerContainer}>
-//         <TouchableOpacity onPress={() => navigation.goBack()}>
-//           <Ionicons name="arrow-back" size={24} color="#fff" />
-//         </TouchableOpacity>
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
-//         <Text style={styles.headerTitle}>{title}</Text>
+import { useTheme } from '../../theme';
 
-//         {/* Spacer to balance layout */}
-//         <View style={{ width: 24 }} />
-//       </View>
-//     </SafeAreaView>
-//   );
-// };
+const CustomHeader = ({
+  navigation,
+  currentStep,
+  setCurrentStep,
+}) => {
+  const insets = useSafeAreaInsets();
 
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     backgroundColor: COLORS.primary,
-//   },
-//   headerContainer: {
-//     height: 60,
-//     backgroundColor: COLORS.primary,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     paddingHorizontal: 16,
-//   },
-//   headerTitle: {
-//     color: '#fff',
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//   },
-// });
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
 
-// export default CustomHeader;
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle(
+        isDark ? 'light-content' : 'dark-content'
+      );
+
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor(
+          theme.background.default
+        );
+      }
+    }, [isDark, theme.background.default])
+  );
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  const stepTitles = {
+    1: 'Select Property',
+    2: 'Choose Schedule',
+    3: 'Available Cleaners',
+  };
+
+  return (
+    <View
+      style={[
+        styles.headerWrapper,
+        { paddingTop: insets.top },
+      ]}
+    >
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backButton}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Feather
+            name="arrow-left"
+            size={24}
+            color={theme.icon.default}
+          />
+        </TouchableOpacity>
+
+        <View style={styles.titleAndSteps}>
+          <Text style={styles.titleText}>
+            {stepTitles[currentStep] || 'Find Cleaners'}
+          </Text>
+
+          <View style={styles.stepIndicatorContainer}>
+            {[1, 2, 3].map((step) => (
+              <View
+                key={step}
+                style={[
+                  styles.stepDot,
+                  currentStep >= step && styles.activeDot,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Keeps the title centered */}
+        <View style={styles.spacer} />
+      </View>
+    </View>
+  );
+};
+
+const createStyles = (theme) =>
+  StyleSheet.create({
+    headerWrapper: {
+      backgroundColor: theme.background.default,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.divider,
+    },
+
+    headerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: theme.background.default,
+    },
+
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      backgroundColor: theme.background.sunken,
+      borderWidth: 1,
+      borderColor: theme.border.default,
+    },
+
+    titleAndSteps: {
+      flex: 1,
+      alignItems: 'center',
+    },
+
+    titleText: {
+      color: theme.text.primary,
+      fontSize: 20,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+      marginBottom: 4,
+    },
+
+    stepIndicatorContainer: {
+      marginTop: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+
+    stepDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.border.default,
+    },
+
+    activeDot: {
+      backgroundColor: theme.brand.primary,
+      width: 20,
+      borderRadius: 4,
+    },
+
+    spacer: {
+      width: 40,
+    },
+  });
+
+export default CustomHeader;
 
 
-
-
-// components/shared/CustomHeader.js
-// components/shared/CustomHeader.js
-// import React, {useCallback} from 'react';
+// import React, { useCallback } from 'react';
 // import { View, TouchableOpacity, Text, StyleSheet, StatusBar, Platform } from 'react-native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import { Feather } from '@expo/vector-icons';
 // import COLORS from '../../constants/colors';
 // import { useFocusEffect } from '@react-navigation/native';
 
-
 // const CustomHeader = ({ navigation, currentStep, setCurrentStep }) => {
+//   const insets = useSafeAreaInsets();
 
 //   useFocusEffect(
 //     useCallback(() => {
@@ -81,9 +202,9 @@
 //   };
 
 //   return (
-//     <SafeAreaView style={styles.safeArea}>
+//     <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
 //       <View style={styles.headerContainer}>
-//         <TouchableOpacity onPress={handleBack}>
+//         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
 //           <Feather name="arrow-left" size={24} color="#000" />
 //         </TouchableOpacity>
 
@@ -95,34 +216,37 @@
 //                 key={step}
 //                 style={[
 //                   styles.stepDot,
-//                   currentStep >= step && styles.activeDot
+//                   currentStep >= step && styles.activeDot,
 //                 ]}
 //               />
 //             ))}
 //           </View>
 //         </View>
 
-//         {/* Spacer to align arrow and steps */}
-//         <View style={{ width: 24 }} />
+//         {/* Spacer to balance the layout */}
+//         <View style={styles.spacer} />
 //       </View>
-//     </SafeAreaView>
+//     </View>
 //   );
 // };
 
 // const styles = StyleSheet.create({
-//   safeArea: {
+//   headerWrapper: {
 //     backgroundColor: COLORS.white,
-//     paddingBottom: Platform.OS === 'ios' ? 0 : 40,
 //   },
 //   headerContainer: {
-//     height: 30,
-//     backgroundColor: COLORS.white,
 //     flexDirection: 'row',
 //     alignItems: 'center',
 //     justifyContent: 'space-between',
+//     paddingVertical: 12,
 //     paddingHorizontal: 16,
+//     backgroundColor: COLORS.white,
+//   },
+//   backButton: {
+//     padding: 4,
 //   },
 //   titleAndSteps: {
+//     flex: 1,
 //     alignItems: 'center',
 //   },
 //   titleText: {
@@ -132,9 +256,9 @@
 //     marginBottom: 4,
 //   },
 //   stepIndicatorContainer: {
+//     marginTop:10,
 //     flexDirection: 'row',
 //     gap: 6,
-//     marginTop:5
 //   },
 //   stepDot: {
 //     width: 8,
@@ -145,115 +269,9 @@
 //   activeDot: {
 //     backgroundColor: COLORS.primary,
 //   },
+//   spacer: {
+//     width: 40, // matches the back button width to keep title centered
+//   },
 // });
 
 // export default CustomHeader;
-
-
-import React, { useCallback } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, StatusBar, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import COLORS from '../../constants/colors';
-import { useFocusEffect } from '@react-navigation/native';
-
-const CustomHeader = ({ navigation, currentStep, setCurrentStep }) => {
-  const insets = useSafeAreaInsets();
-
-  useFocusEffect(
-    useCallback(() => {
-      StatusBar.setBarStyle('dark-content');
-      if (Platform.OS === 'android') {
-        StatusBar.setBackgroundColor(COLORS.white);
-      }
-    }, [])
-  );
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    } else {
-      navigation.goBack();
-    }
-  };
-
-  const stepTitles = {
-    1: 'Select Property',
-    2: 'Choose Schedule',
-    3: 'Available Cleaners',
-  };
-
-  return (
-    <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color="#000" />
-        </TouchableOpacity>
-
-        <View style={styles.titleAndSteps}>
-          <Text style={styles.titleText}>{stepTitles[currentStep]}</Text>
-          <View style={styles.stepIndicatorContainer}>
-            {[1, 2, 3].map(step => (
-              <View
-                key={step}
-                style={[
-                  styles.stepDot,
-                  currentStep >= step && styles.activeDot,
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Spacer to balance the layout */}
-        <View style={styles.spacer} />
-      </View>
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  headerWrapper: {
-    backgroundColor: COLORS.white,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.white,
-  },
-  backButton: {
-    padding: 4,
-  },
-  titleAndSteps: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  titleText: {
-    color: '#000',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  stepIndicatorContainer: {
-    marginTop:10,
-    flexDirection: 'row',
-    gap: 6,
-  },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary_light,
-  },
-  activeDot: {
-    backgroundColor: COLORS.primary,
-  },
-  spacer: {
-    width: 40, // matches the back button width to keep title centered
-  },
-});
-
-export default CustomHeader;

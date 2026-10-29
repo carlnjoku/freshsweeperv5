@@ -7,241 +7,482 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import COLORS from '../../../constants/colors';
+import {
+  MaterialIcons,
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
+
+import { useTheme } from '../../../theme';
 
 const PaymentDetails = ({
   cleaningServiceFee = 0,
   cleanersWithFee = [],
 }) => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
-  console.log(cleanersWithFee)
-  // Payment calculation
+  const [modalVisible, setModalVisible] =
+    useState(false);
+
+  console.log(cleanersWithFee);
+
+  /*
+   * ---------------------------------------------------------
+   * PAYMENT CALCULATION
+   * ---------------------------------------------------------
+   */
+
   const subtotal =
     cleanersWithFee.length > 0
       ? cleanersWithFee.reduce(
-          (sum, cleaner) => sum + (Number(cleaner.fee) || 0),
+          (sum, cleaner) =>
+            sum +
+            (Number(cleaner.fee) || 0),
           0
         )
       : Number(cleaningServiceFee) || 0;
 
-  const serviceFee = subtotal * 0.1;
-  const total = subtotal + serviceFee;
+  const serviceFee =
+    subtotal * 0.1;
 
-  const formatCurrency = (amount) =>
-    `$${(Number(amount) || 0).toFixed(2)}`;
+  const total =
+    subtotal + serviceFee;
+
+  const formatCurrency =
+    (amount) =>
+      `$${(
+        Number(amount) || 0
+      ).toFixed(2)}`;
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+
+      {/* -------------------------------------------------- */}
+      {/* HEADER */}
+      {/* -------------------------------------------------- */}
+
       <View style={styles.headerRow}>
         <View style={styles.headerIcon}>
           <MaterialCommunityIcons
             name="receipt"
             size={22}
-            color={COLORS.primary}
+            color={theme.brand.primary}
           />
         </View>
 
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Payment Summary</Text>
+          <Text style={styles.title}>
+            Payment Summary
+          </Text>
+
           <Text style={styles.subtitle}>
             Review your cleaning service charges
           </Text>
         </View>
       </View>
 
-      {/* Cleaner Charges */}
+      {/* -------------------------------------------------- */}
+      {/* CLEANER CHARGES */}
+      {/* -------------------------------------------------- */}
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Cleaning Service</Text>
+        <Text style={styles.sectionTitle}>
+          Cleaning Service
+        </Text>
 
         <View style={styles.card}>
           {cleanersWithFee.length > 0 ? (
-            cleanersWithFee.map((cleaner, index) => {
-              const name = cleaner.firstname
-                ? `${cleaner.firstname} ${cleaner.lastname || ''}`.trim()
-                : `Cleaner ${index + 1}`;
+            cleanersWithFee.map(
+              (cleaner, index) => {
+                const name =
+                  cleaner.firstname
+                    ? `${cleaner.firstname} ${
+                        cleaner.lastname ||
+                        ''
+                      }`.trim()
+                    : `Cleaner ${
+                        index + 1
+                      }`;
 
-              return (
-                <View
-                  key={cleaner.cleanerId || cleaner._id || index}
-                  style={[
-                    styles.cleanerRow,
-                    index !== cleanersWithFee.length - 1 &&
-                      styles.rowDivider,
-                  ]}
-                >
-                  <View style={styles.cleanerLeft}>
-                    <View style={styles.avatar}>
-                      <MaterialCommunityIcons
-                        name="account-outline"
-                        size={19}
-                        color={COLORS.primary}
-                      />
+                return (
+                  <View
+                    key={
+                      cleaner.cleanerId ||
+                      cleaner._id ||
+                      index
+                    }
+                    style={[
+                      styles.cleanerRow,
+                      index !==
+                        cleanersWithFee.length -
+                          1 &&
+                        styles.rowDivider,
+                    ]}
+                  >
+                    <View
+                      style={
+                        styles.cleanerLeft
+                      }
+                    >
+                      <View
+                        style={
+                          styles.avatar
+                        }
+                      >
+                        <MaterialCommunityIcons
+                          name="account-outline"
+                          size={19}
+                          color={
+                            theme.brand.primary
+                          }
+                        />
+                      </View>
+
+                      <View
+                        style={
+                          styles.cleanerInfo
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.cleanerName
+                          }
+                          numberOfLines={1}
+                        >
+                          {name}
+                        </Text>
+
+                        {cleaner.group ? (
+                          <Text
+                            style={
+                              styles.groupLabel
+                            }
+                          >
+                            {cleaner.group.replace(
+                              '_',
+                              ' '
+                            )}
+                          </Text>
+                        ) : (
+                          <Text
+                            style={
+                              styles.groupLabel
+                            }
+                          >
+                            Cleaning service
+                          </Text>
+                        )}
+                      </View>
                     </View>
 
-                    <View style={styles.cleanerInfo}>
-                      <Text style={styles.cleanerName} numberOfLines={1}>
-                        {name}
-                      </Text>
-
-                      {cleaner.group ? (
-                        <Text style={styles.groupLabel}>
-                          {cleaner.group.replace('_', ' ')}
-                        </Text>
-                      ) : (
-                        <Text style={styles.groupLabel}>
-                          Cleaning service
-                        </Text>
+                    <Text
+                      style={
+                        styles.amount
+                      }
+                    >
+                      {formatCurrency(
+                        cleaner.fee
                       )}
-                    </View>
+                    </Text>
                   </View>
-
-                  <Text style={styles.amount}>
-                    {formatCurrency(cleaner.fee)}
-                  </Text>
-                </View>
-              );
-            })
+                );
+              }
+            )
           ) : (
-            <View style={styles.cleanerRow}>
-              <View style={styles.cleanerLeft}>
-                <View style={styles.avatar}>
+            <View
+              style={styles.cleanerRow}
+            >
+              <View
+                style={
+                  styles.cleanerLeft
+                }
+              >
+                <View
+                  style={styles.avatar}
+                >
                   <MaterialCommunityIcons
                     name="home-clean"
                     size={19}
-                    color={COLORS.primary}
+                    color={
+                      theme.brand.primary
+                    }
                   />
                 </View>
 
-                <View style={styles.cleanerInfo}>
-                  <Text style={styles.cleanerName}>
+                <View
+                  style={
+                    styles.cleanerInfo
+                  }
+                >
+                  <Text
+                    style={
+                      styles.cleanerName
+                    }
+                  >
                     Cleaning Service
                   </Text>
-                  <Text style={styles.groupLabel}>
+
+                  <Text
+                    style={
+                      styles.groupLabel
+                    }
+                  >
                     Standard service
                   </Text>
                 </View>
               </View>
 
-              <Text style={styles.amount}>
-                {formatCurrency(subtotal)}
+              <Text
+                style={
+                  styles.amount
+                }
+              >
+                {formatCurrency(
+                  subtotal
+                )}
               </Text>
             </View>
           )}
         </View>
       </View>
 
-      {/* Charges */}
+      {/* -------------------------------------------------- */}
+      {/* CHARGES */}
+      {/* -------------------------------------------------- */}
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Charges</Text>
+        <Text style={styles.sectionTitle}>
+          Charges
+        </Text>
 
         <View style={styles.card}>
+
           <View style={styles.chargeRow}>
-            <Text style={styles.chargeLabel}>Cleaning service</Text>
-            <Text style={styles.chargeValue}>
-              {formatCurrency(subtotal)}
+            <Text
+              style={
+                styles.chargeLabel
+              }
+            >
+              Cleaning service
+            </Text>
+
+            <Text
+              style={
+                styles.chargeValue
+              }
+            >
+              {formatCurrency(
+                subtotal
+              )}
             </Text>
           </View>
 
           <View style={styles.chargeRow}>
-            <View style={styles.feeLabelContainer}>
-              <Text style={styles.chargeLabel}>Service fee</Text>
+            <View
+              style={
+                styles.feeLabelContainer
+              }
+            >
+              <Text
+                style={
+                  styles.chargeLabel
+                }
+              >
+                Service fee
+              </Text>
 
               <TouchableOpacity
-                onPress={() => setModalVisible(true)}
-                style={styles.infoButton}
+                onPress={() =>
+                  setModalVisible(
+                    true
+                  )
+                }
+                style={
+                  styles.infoButton
+                }
                 activeOpacity={0.7}
               >
                 <MaterialIcons
                   name="info-outline"
                   size={16}
-                  color={COLORS.primary}
+                  color={
+                    theme.brand.primary
+                  }
                 />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.chargeValue}>
-              {formatCurrency(serviceFee)}
+            <Text
+              style={
+                styles.chargeValue
+              }
+            >
+              {formatCurrency(
+                serviceFee
+              )}
             </Text>
           </View>
 
-          <View style={styles.separator} />
+          <View
+            style={
+              styles.separator
+            }
+          />
 
-          <View style={styles.totalRow}>
+          <View
+            style={
+              styles.totalRow
+            }
+          >
             <View>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalCaption}>
+              <Text
+                style={
+                  styles.totalLabel
+                }
+              >
+                Total
+              </Text>
+
+              <Text
+                style={
+                  styles.totalCaption
+                }
+              >
                 Including service fee
               </Text>
             </View>
 
-            <Text style={styles.totalValue}>
-              {formatCurrency(total)}
+            <Text
+              style={
+                styles.totalValue
+              }
+            >
+              {formatCurrency(
+                total
+              )}
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Secure Payment Notice */}
-      <View style={styles.secureNotice}>
+      {/* -------------------------------------------------- */}
+      {/* SECURE PAYMENT NOTICE */}
+      {/* -------------------------------------------------- */}
+
+      <View
+        style={
+          styles.secureNotice
+        }
+      >
         <MaterialCommunityIcons
           name="shield-check-outline"
           size={20}
-          color="#16A34A"
+          color={
+            theme.status.success
+          }
         />
 
-        <View style={styles.secureContent}>
-          <Text style={styles.secureTitle}>
+        <View
+          style={
+            styles.secureContent
+          }
+        >
+          <Text
+            style={
+              styles.secureTitle
+            }
+          >
             Secure payment
           </Text>
-          <Text style={styles.secureText}>
-            Your payment is securely processed and your payment
+
+          <Text
+            style={
+              styles.secureText
+            }
+          >
+            Your payment is securely
+            processed and your payment
             information is protected.
           </Text>
         </View>
       </View>
 
-      {/* Service Fee Modal */}
+      {/* -------------------------------------------------- */}
+      {/* SERVICE FEE MODAL */}
+      {/* -------------------------------------------------- */}
+
       <Modal
         animationType="fade"
         transparent
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() =>
+          setModalVisible(false)
+        }
       >
         <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setModalVisible(false)}
+          style={
+            styles.modalOverlay
+          }
+          onPress={() =>
+            setModalVisible(false)
+          }
         >
           <Pressable
-            style={styles.modalContent}
-            onPress={(event) => event.stopPropagation()}
+            style={
+              styles.modalContent
+            }
+            onPress={(event) =>
+              event.stopPropagation()
+            }
           >
-            <View style={styles.modalIcon}>
+            <View
+              style={
+                styles.modalIcon
+              }
+            >
               <MaterialCommunityIcons
                 name="information-outline"
                 size={25}
-                color={COLORS.primary}
+                color={
+                  theme.brand.primary
+                }
               />
             </View>
 
-            <Text style={styles.modalTitle}>
+            <Text
+              style={
+                styles.modalTitle
+              }
+            >
               Service Fee
             </Text>
 
-            <Text style={styles.modalText}>
-              The 10% service fee covers operational costs,
-              secure payment processing, platform maintenance,
-              scheduling, and customer support.
+            <Text
+              style={
+                styles.modalText
+              }
+            >
+              The 10% service fee covers
+              operational costs, secure
+              payment processing, platform
+              maintenance, scheduling, and
+              customer support.
             </Text>
 
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
+              style={
+                styles.closeButton
+              }
+              onPress={() =>
+                setModalVisible(false)
+              }
               activeOpacity={0.85}
             >
-              <Text style={styles.closeButtonText}>
+              <Text
+                style={
+                  styles.closeButtonText
+                }
+              >
                 Got it
               </Text>
             </TouchableOpacity>
@@ -252,289 +493,937 @@ const PaymentDetails = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 20,
-  },
 
-  /* Header */
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 22,
-  },
+/*
+ * ---------------------------------------------------------
+ * THEMED STYLES
+ * ---------------------------------------------------------
+ */
 
-  headerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#EEF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
+const createStyles = (theme) =>
+  StyleSheet.create({
 
-  headerContent: {
-    flex: 1,
-  },
-
-  title: {
-    fontSize: 21,
-    fontWeight: '700',
-    color: '#111827',
-    letterSpacing: -0.3,
-  },
-
-  subtitle: {
-    marginTop: 3,
-    fontSize: 13,
-    color: '#6B7280',
-  },
-
-  /* Sections */
-  section: {
-    marginBottom: 18,
-  },
-
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6B7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 9,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#E8ECF2',
-
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    container: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 20,
     },
-    shadowRadius: 10,
 
-    elevation: 2,
-  },
+    /* --------------------------------------------------- */
+    /* HEADER */
+    /* --------------------------------------------------- */
 
-  /* Cleaner Rows */
-  cleanerRow: {
-    minHeight: 70,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 22,
+    },
 
-  rowDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF0F4',
-  },
+    headerIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor:
+        theme.brand.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
 
-  cleanerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    paddingRight: 12,
-  },
+    headerContent: {
+      flex: 1,
+    },
 
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 11,
-  },
+    title: {
+      fontSize: 21,
+      fontWeight: '700',
+      color:
+        theme.text.primary,
+      letterSpacing: -0.3,
+    },
 
-  cleanerInfo: {
-    flex: 1,
-  },
+    subtitle: {
+      marginTop: 3,
+      fontSize: 13,
+      color:
+        theme.text.secondary,
+    },
 
-  cleanerName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-  },
+    /* --------------------------------------------------- */
+    /* SECTIONS */
+    /* --------------------------------------------------- */
 
-  groupLabel: {
-    marginTop: 3,
-    fontSize: 12,
-    color: '#8A94A6',
-    textTransform: 'capitalize',
-  },
+    section: {
+      marginBottom: 18,
+    },
 
-  amount: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
-  },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color:
+        theme.text.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.7,
+      marginBottom: 9,
+    },
 
-  /* Charges */
-  chargeRow: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+    /* --------------------------------------------------- */
+    /* CARD */
+    /* --------------------------------------------------- */
 
-  feeLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    card: {
+      backgroundColor:
+        theme.card.background,
+      borderRadius: 18,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor:
+        theme.card.border,
 
-  chargeLabel: {
-    fontSize: 14,
-    color: '#667085',
-  },
+      shadowColor:
+        theme.shadow.color,
 
-  chargeValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
+      shadowOpacity:
+        theme.shadow.opacity,
 
-  infoButton: {
-    width: 25,
-    height: 25,
-    marginLeft: 5,
-    borderRadius: 13,
-    backgroundColor: '#EEF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
 
-  separator: {
-    height: 1,
-    backgroundColor: '#E9EDF2',
-    marginVertical: 4,
-  },
+      shadowRadius: 10,
 
-  /* Total */
-  totalRow: {
-    minHeight: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+      elevation: 2,
+    },
 
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-  },
+    /* --------------------------------------------------- */
+    /* CLEANER ROWS */
+    /* --------------------------------------------------- */
 
-  totalCaption: {
-    marginTop: 3,
-    fontSize: 11,
-    color: '#8A94A6',
-  },
+    cleanerRow: {
+      minHeight: 70,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+    },
 
-  totalValue: {
-    fontSize: 25,
-    fontWeight: '800',
-    color: COLORS.primary,
-    letterSpacing: -0.5,
-  },
+    rowDivider: {
+      borderBottomWidth: 1,
+      borderBottomColor:
+        theme.divider,
+    },
 
-  /* Secure Notice */
-  secureNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F0FDF4',
-    borderRadius: 14,
-    padding: 13,
-    marginTop: 2,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
+    cleanerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      paddingRight: 12,
+    },
 
-  secureContent: {
-    flex: 1,
-    marginLeft: 10,
-  },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor:
+        theme.background.sunken,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 11,
+      borderWidth: 1,
+      borderColor:
+        theme.border.default,
+    },
 
-  secureTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#166534',
-  },
+    cleanerInfo: {
+      flex: 1,
+    },
 
-  secureText: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 16,
-    color: '#4B7A5A',
-  },
+    cleanerName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color:
+        theme.text.primary,
+    },
 
-  /* Modal */
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
+    groupLabel: {
+      marginTop: 3,
+      fontSize: 12,
+      color:
+        theme.text.muted,
+      textTransform:
+        'capitalize',
+    },
 
-  modalContent: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 24,
-    alignItems: 'center',
-  },
+    amount: {
+      fontSize: 15,
+      fontWeight: '700',
+      color:
+        theme.text.primary,
+    },
 
-  modalIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: '#EEF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
+    /* --------------------------------------------------- */
+    /* CHARGES */
+    /* --------------------------------------------------- */
 
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 10,
-  },
+    chargeRow: {
+      minHeight: 50,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+    },
 
-  modalText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: '#667085',
-    textAlign: 'center',
-    marginBottom: 22,
-  },
+    feeLabelContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  closeButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    chargeLabel: {
+      fontSize: 14,
+      color:
+        theme.text.secondary,
+    },
 
-  closeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});
+    chargeValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color:
+        theme.text.primary,
+    },
+
+    infoButton: {
+      width: 25,
+      height: 25,
+      marginLeft: 5,
+      borderRadius: 13,
+      backgroundColor:
+        theme.brand.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    separator: {
+      height: 1,
+      backgroundColor:
+        theme.divider,
+      marginVertical: 4,
+    },
+
+    /* --------------------------------------------------- */
+    /* TOTAL */
+    /* --------------------------------------------------- */
+
+    totalRow: {
+      minHeight: 76,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+    },
+
+    totalLabel: {
+      fontSize: 18,
+      fontWeight: '700',
+      color:
+        theme.text.primary,
+    },
+
+    totalCaption: {
+      marginTop: 3,
+      fontSize: 11,
+      color:
+        theme.text.muted,
+    },
+
+    totalValue: {
+      fontSize: 25,
+      fontWeight: '800',
+      color:
+        theme.brand.primary,
+      letterSpacing: -0.5,
+    },
+
+    /* --------------------------------------------------- */
+    /* SECURE PAYMENT */
+    /* --------------------------------------------------- */
+
+    secureNotice: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+
+      /*
+       * Use a neutral theme surface rather than
+       * a hard-coded light green background.
+       * The success icon/title still communicate
+       * the security state.
+       */
+      backgroundColor:
+        theme.background.sunken,
+
+      borderRadius: 14,
+      padding: 13,
+      marginTop: 2,
+
+      borderWidth: 1,
+      borderColor:
+        theme.border.default,
+    },
+
+    secureContent: {
+      flex: 1,
+      marginLeft: 10,
+    },
+
+    secureTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color:
+        theme.status.success,
+    },
+
+    secureText: {
+      marginTop: 2,
+      fontSize: 11,
+      lineHeight: 16,
+      color:
+        theme.text.secondary,
+    },
+
+    /* --------------------------------------------------- */
+    /* MODAL */
+    /* --------------------------------------------------- */
+
+    modalOverlay: {
+      flex: 1,
+      backgroundColor:
+        theme.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+
+    modalContent: {
+      width: '100%',
+      maxWidth: 400,
+
+      backgroundColor:
+        theme.surface.elevated,
+
+      borderRadius: 22,
+      padding: 24,
+      alignItems: 'center',
+
+      borderWidth: 1,
+      borderColor:
+        theme.border.default,
+
+      shadowColor:
+        theme.shadow.color,
+
+      shadowOpacity:
+        theme.shadow.opacity,
+
+      shadowOffset: {
+        width: 0,
+        height: 6,
+      },
+
+      shadowRadius: 18,
+
+      elevation: 6,
+    },
+
+    modalIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      backgroundColor:
+        theme.brand.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14,
+    },
+
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color:
+        theme.text.primary,
+      marginBottom: 10,
+    },
+
+    modalText: {
+      fontSize: 14,
+      lineHeight: 21,
+      color:
+        theme.text.secondary,
+      textAlign: 'center',
+      marginBottom: 22,
+    },
+
+    closeButton: {
+      width: '100%',
+      height: 48,
+      borderRadius: 14,
+
+      backgroundColor:
+        theme.button.primaryBackground,
+
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    closeButtonText: {
+      color:
+        theme.button.primaryText,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+  });
 
 export default PaymentDetails;
+
+
+
+
+// import React, { useState } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Modal,
+//   Pressable,
+// } from 'react-native';
+// import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+// import COLORS from '../../../constants/colors';
+
+// const PaymentDetails = ({
+//   cleaningServiceFee = 0,
+//   cleanersWithFee = [],
+// }) => {
+//   const [modalVisible, setModalVisible] = useState(false);
+
+//   console.log(cleanersWithFee)
+//   // Payment calculation
+//   const subtotal =
+//     cleanersWithFee.length > 0
+//       ? cleanersWithFee.reduce(
+//           (sum, cleaner) => sum + (Number(cleaner.fee) || 0),
+//           0
+//         )
+//       : Number(cleaningServiceFee) || 0;
+
+//   const serviceFee = subtotal * 0.1;
+//   const total = subtotal + serviceFee;
+
+//   const formatCurrency = (amount) =>
+//     `$${(Number(amount) || 0).toFixed(2)}`;
+
+//   return (
+//     <View style={styles.container}>
+//       {/* Header */}
+//       <View style={styles.headerRow}>
+//         <View style={styles.headerIcon}>
+//           <MaterialCommunityIcons
+//             name="receipt"
+//             size={22}
+//             color={COLORS.primary}
+//           />
+//         </View>
+
+//         <View style={styles.headerContent}>
+//           <Text style={styles.title}>Payment Summary</Text>
+//           <Text style={styles.subtitle}>
+//             Review your cleaning service charges
+//           </Text>
+//         </View>
+//       </View>
+
+//       {/* Cleaner Charges */}
+//       <View style={styles.section}>
+//         <Text style={styles.sectionTitle}>Cleaning Service</Text>
+
+//         <View style={styles.card}>
+//           {cleanersWithFee.length > 0 ? (
+//             cleanersWithFee.map((cleaner, index) => {
+//               const name = cleaner.firstname
+//                 ? `${cleaner.firstname} ${cleaner.lastname || ''}`.trim()
+//                 : `Cleaner ${index + 1}`;
+
+//               return (
+//                 <View
+//                   key={cleaner.cleanerId || cleaner._id || index}
+//                   style={[
+//                     styles.cleanerRow,
+//                     index !== cleanersWithFee.length - 1 &&
+//                       styles.rowDivider,
+//                   ]}
+//                 >
+//                   <View style={styles.cleanerLeft}>
+//                     <View style={styles.avatar}>
+//                       <MaterialCommunityIcons
+//                         name="account-outline"
+//                         size={19}
+//                         color={COLORS.primary}
+//                       />
+//                     </View>
+
+//                     <View style={styles.cleanerInfo}>
+//                       <Text style={styles.cleanerName} numberOfLines={1}>
+//                         {name}
+//                       </Text>
+
+//                       {cleaner.group ? (
+//                         <Text style={styles.groupLabel}>
+//                           {cleaner.group.replace('_', ' ')}
+//                         </Text>
+//                       ) : (
+//                         <Text style={styles.groupLabel}>
+//                           Cleaning service
+//                         </Text>
+//                       )}
+//                     </View>
+//                   </View>
+
+//                   <Text style={styles.amount}>
+//                     {formatCurrency(cleaner.fee)}
+//                   </Text>
+//                 </View>
+//               );
+//             })
+//           ) : (
+//             <View style={styles.cleanerRow}>
+//               <View style={styles.cleanerLeft}>
+//                 <View style={styles.avatar}>
+//                   <MaterialCommunityIcons
+//                     name="home-clean"
+//                     size={19}
+//                     color={COLORS.primary}
+//                   />
+//                 </View>
+
+//                 <View style={styles.cleanerInfo}>
+//                   <Text style={styles.cleanerName}>
+//                     Cleaning Service
+//                   </Text>
+//                   <Text style={styles.groupLabel}>
+//                     Standard service
+//                   </Text>
+//                 </View>
+//               </View>
+
+//               <Text style={styles.amount}>
+//                 {formatCurrency(subtotal)}
+//               </Text>
+//             </View>
+//           )}
+//         </View>
+//       </View>
+
+//       {/* Charges */}
+//       <View style={styles.section}>
+//         <Text style={styles.sectionTitle}>Charges</Text>
+
+//         <View style={styles.card}>
+//           <View style={styles.chargeRow}>
+//             <Text style={styles.chargeLabel}>Cleaning service</Text>
+//             <Text style={styles.chargeValue}>
+//               {formatCurrency(subtotal)}
+//             </Text>
+//           </View>
+
+//           <View style={styles.chargeRow}>
+//             <View style={styles.feeLabelContainer}>
+//               <Text style={styles.chargeLabel}>Service fee</Text>
+
+//               <TouchableOpacity
+//                 onPress={() => setModalVisible(true)}
+//                 style={styles.infoButton}
+//                 activeOpacity={0.7}
+//               >
+//                 <MaterialIcons
+//                   name="info-outline"
+//                   size={16}
+//                   color={COLORS.primary}
+//                 />
+//               </TouchableOpacity>
+//             </View>
+
+//             <Text style={styles.chargeValue}>
+//               {formatCurrency(serviceFee)}
+//             </Text>
+//           </View>
+
+//           <View style={styles.separator} />
+
+//           <View style={styles.totalRow}>
+//             <View>
+//               <Text style={styles.totalLabel}>Total</Text>
+//               <Text style={styles.totalCaption}>
+//                 Including service fee
+//               </Text>
+//             </View>
+
+//             <Text style={styles.totalValue}>
+//               {formatCurrency(total)}
+//             </Text>
+//           </View>
+//         </View>
+//       </View>
+
+//       {/* Secure Payment Notice */}
+//       <View style={styles.secureNotice}>
+//         <MaterialCommunityIcons
+//           name="shield-check-outline"
+//           size={20}
+//           color="#16A34A"
+//         />
+
+//         <View style={styles.secureContent}>
+//           <Text style={styles.secureTitle}>
+//             Secure payment
+//           </Text>
+//           <Text style={styles.secureText}>
+//             Your payment is securely processed and your payment
+//             information is protected.
+//           </Text>
+//         </View>
+//       </View>
+
+//       {/* Service Fee Modal */}
+//       <Modal
+//         animationType="fade"
+//         transparent
+//         visible={modalVisible}
+//         onRequestClose={() => setModalVisible(false)}
+//       >
+//         <Pressable
+//           style={styles.modalOverlay}
+//           onPress={() => setModalVisible(false)}
+//         >
+//           <Pressable
+//             style={styles.modalContent}
+//             onPress={(event) => event.stopPropagation()}
+//           >
+//             <View style={styles.modalIcon}>
+//               <MaterialCommunityIcons
+//                 name="information-outline"
+//                 size={25}
+//                 color={COLORS.primary}
+//               />
+//             </View>
+
+//             <Text style={styles.modalTitle}>
+//               Service Fee
+//             </Text>
+
+//             <Text style={styles.modalText}>
+//               The 10% service fee covers operational costs,
+//               secure payment processing, platform maintenance,
+//               scheduling, and customer support.
+//             </Text>
+
+//             <TouchableOpacity
+//               style={styles.closeButton}
+//               onPress={() => setModalVisible(false)}
+//               activeOpacity={0.85}
+//             >
+//               <Text style={styles.closeButtonText}>
+//                 Got it
+//               </Text>
+//             </TouchableOpacity>
+//           </Pressable>
+//         </Pressable>
+//       </Modal>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     paddingHorizontal: 16,
+//     paddingTop: 8,
+//     paddingBottom: 20,
+//   },
+
+//   /* Header */
+//   headerRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 22,
+//   },
+
+//   headerIcon: {
+//     width: 44,
+//     height: 44,
+//     borderRadius: 14,
+//     backgroundColor: '#EEF4FF',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginRight: 12,
+//   },
+
+//   headerContent: {
+//     flex: 1,
+//   },
+
+//   title: {
+//     fontSize: 21,
+//     fontWeight: '700',
+//     color: '#111827',
+//     letterSpacing: -0.3,
+//   },
+
+//   subtitle: {
+//     marginTop: 3,
+//     fontSize: 13,
+//     color: '#6B7280',
+//   },
+
+//   /* Sections */
+//   section: {
+//     marginBottom: 18,
+//   },
+
+//   sectionTitle: {
+//     fontSize: 13,
+//     fontWeight: '700',
+//     color: '#6B7280',
+//     textTransform: 'uppercase',
+//     letterSpacing: 0.7,
+//     marginBottom: 9,
+//   },
+
+//   card: {
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 18,
+//     paddingHorizontal: 16,
+//     borderWidth: 1,
+//     borderColor: '#E8ECF2',
+
+//     shadowColor: '#000',
+//     shadowOpacity: 0.04,
+//     shadowOffset: {
+//       width: 0,
+//       height: 3,
+//     },
+//     shadowRadius: 10,
+
+//     elevation: 2,
+//   },
+
+//   /* Cleaner Rows */
+//   cleanerRow: {
+//     minHeight: 70,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//   },
+
+//   rowDivider: {
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#EEF0F4',
+//   },
+
+//   cleanerLeft: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     flex: 1,
+//     paddingRight: 12,
+//   },
+
+//   avatar: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 12,
+//     backgroundColor: '#F1F5F9',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginRight: 11,
+//   },
+
+//   cleanerInfo: {
+//     flex: 1,
+//   },
+
+//   cleanerName: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#111827',
+//   },
+
+//   groupLabel: {
+//     marginTop: 3,
+//     fontSize: 12,
+//     color: '#8A94A6',
+//     textTransform: 'capitalize',
+//   },
+
+//   amount: {
+//     fontSize: 15,
+//     fontWeight: '700',
+//     color: '#111827',
+//   },
+
+//   /* Charges */
+//   chargeRow: {
+//     minHeight: 50,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//   },
+
+//   feeLabelContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+
+//   chargeLabel: {
+//     fontSize: 14,
+//     color: '#667085',
+//   },
+
+//   chargeValue: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#1F2937',
+//   },
+
+//   infoButton: {
+//     width: 25,
+//     height: 25,
+//     marginLeft: 5,
+//     borderRadius: 13,
+//     backgroundColor: '#EEF4FF',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+
+//   separator: {
+//     height: 1,
+//     backgroundColor: '#E9EDF2',
+//     marginVertical: 4,
+//   },
+
+//   /* Total */
+//   totalRow: {
+//     minHeight: 76,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//   },
+
+//   totalLabel: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#111827',
+//   },
+
+//   totalCaption: {
+//     marginTop: 3,
+//     fontSize: 11,
+//     color: '#8A94A6',
+//   },
+
+//   totalValue: {
+//     fontSize: 25,
+//     fontWeight: '800',
+//     color: COLORS.primary,
+//     letterSpacing: -0.5,
+//   },
+
+//   /* Secure Notice */
+//   secureNotice: {
+//     flexDirection: 'row',
+//     alignItems: 'flex-start',
+//     backgroundColor: '#F0FDF4',
+//     borderRadius: 14,
+//     padding: 13,
+//     marginTop: 2,
+//     borderWidth: 1,
+//     borderColor: '#DCFCE7',
+//   },
+
+//   secureContent: {
+//     flex: 1,
+//     marginLeft: 10,
+//   },
+
+//   secureTitle: {
+//     fontSize: 13,
+//     fontWeight: '700',
+//     color: '#166534',
+//   },
+
+//   secureText: {
+//     marginTop: 2,
+//     fontSize: 11,
+//     lineHeight: 16,
+//     color: '#4B7A5A',
+//   },
+
+//   /* Modal */
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(15, 23, 42, 0.55)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 24,
+//   },
+
+//   modalContent: {
+//     width: '100%',
+//     maxWidth: 400,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 22,
+//     padding: 24,
+//     alignItems: 'center',
+//   },
+
+//   modalIcon: {
+//     width: 52,
+//     height: 52,
+//     borderRadius: 16,
+//     backgroundColor: '#EEF4FF',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginBottom: 14,
+//   },
+
+//   modalTitle: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#111827',
+//     marginBottom: 10,
+//   },
+
+//   modalText: {
+//     fontSize: 14,
+//     lineHeight: 21,
+//     color: '#667085',
+//     textAlign: 'center',
+//     marginBottom: 22,
+//   },
+
+//   closeButton: {
+//     width: '100%',
+//     height: 48,
+//     borderRadius: 14,
+//     backgroundColor: COLORS.primary,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+
+//   closeButtonText: {
+//     color: '#FFFFFF',
+//     fontSize: 15,
+//     fontWeight: '700',
+//   },
+// });
+
+// export default PaymentDetails;
 
 
 

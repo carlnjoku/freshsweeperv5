@@ -1,1214 +1,1518 @@
-// // ProjectTimelineBar.js – grouped version
-// import React from 'react';
-// import { View, Text, StyleSheet } from 'react-native';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import COLORS from '../../constants/colors';
-
-// const ProjectTimelineBar = ({ currentStatus, scheduledDate }) => {
-//   // Map backend status to our grouped stages
-//   const statusToStage = {
-//     published: 0,
-//     assigned: 1,
-//     accepted: 1,
-//     clocked_in: 1,
-//     in_progress: 1,
-//     pending_review: 2,
-//     completed: 2,
-//     approved: 2,
-//     disapproved: 2,
-//   };
-
-//   const currentStage = statusToStage[currentStatus] ?? 0;
-
-//   // Define stages and their internal steps
-//   const stages = [
-//     {
-//       title: 'Job Published',
-//       icon: 'cloud-upload',
-//       steps: [
-//         { key: 'pending_payment', label: 'Published', status: 'active' }
-//       ],
-//       extraWarning: currentStatus === 'published' && scheduledDate && 
-//         (new Date(scheduledDate) - new Date()) < 24 * 60 * 60 * 1000,
-//     },
-//     {
-//       title: 'Active Cleaning',
-//       icon: 'progress-wrench',
-//       steps: [
-//         { key: 'assigned', label: 'Assigned' },
-//         { key: 'clocked_in', label: 'Clocked In' },
-//         { key: 'in_progress', label: 'In Progress' },
-//       ],
-//     },
-//     {
-//       title: 'Review & Completion',
-//       icon: 'clipboard-check',
-//       steps: [
-//         { key: 'pending_review', label: 'Pending Review' },
-//         { key: 'approved', label: 'Approved' },
-//         { key: 'disapproved', label: 'Revision' },
-//       ],
-//     },
-//   ];
-
-//   // Helper: determine if a specific step is completed, active, or upcoming
-//   const getStepStatus = (stageIdx, stepKey) => {
-//     if (stageIdx < currentStage) return 'completed';
-//     if (stageIdx > currentStage) return 'upcoming';
-//     // same stage – compare with currentStatus
-//     const statusIndex = stages[stageIdx].steps.findIndex(s => s.key === stepKey);
-//     // Need to map currentStatus to step order
-//     const stepOrder = {
-//       published: 0,
-//       assigned: 1,
-//       clocked_in: 2,
-//       in_progress: 3,
-//       pending_review: 0,
-//       approved: 1,
-//       disapproved: 1,
-//     };
-//     const currentStepInStage = stepOrder[currentStatus] ?? 0;
-//     if (statusIndex < currentStepInStage) return 'completed';
-//     if (statusIndex === currentStepInStage) return 'active';
-//     return 'upcoming';
-//   };
-
-//   const getStageStatus = (stageIdx) => {
-//     if (stageIdx < currentStage) return 'completed';
-//     if (stageIdx === currentStage) return 'active';
-//     return 'upcoming';
-//   };
-
-//   const getStageColor = (status) => {
-//     if (status === 'completed') return COLORS.success || '#4CAF50';
-//     if (status === 'active') return COLORS.primary || '#007AFF';
-//     return COLORS.light_gray || '#ccc';
-//   };
-
-//   const getStepIconColor = (stepStatus) => {
-//     if (stepStatus === 'completed') return COLORS.success || '#4CAF50';
-//     if (stepStatus === 'active') return COLORS.primary || '#007AFF';
-//     return COLORS.light_gray || '#ccc';
-//   };
-
-//   return (
-//     <View >
-//       {stages.map((stage, idx) => {
-//         const stageStatus = getStageStatus(idx);
-//         const isLast = idx === stages.length - 1;
-
-//         return (
-//           <View key={idx} style={styles.stageContainer}>
-//             {/* Stage header */}
-//             <View style={styles.stageHeader}>
-//               <View
-//                 style={[
-//                   styles.stageIconCircle,
-//                   { backgroundColor: getStageColor(stageStatus) },
-//                 ]}
-//               >
-//                 <MaterialCommunityIcons
-//                   name={stage.icon}
-//                   size={20}
-//                   color="#fff"
-//                 />
-//               </View>
-//               <Text
-//                 style={[
-//                   styles.stageTitle,
-//                   {
-//                     color: stageStatus === 'completed' || stageStatus === 'active'
-//                       ? COLORS.dark
-//                       : COLORS.gray,
-//                     fontWeight: stageStatus === 'active' ? '700' : '500',
-//                   },
-//                 ]}
-//               >
-//                 {stage.title}
-//               </Text>
-//               {stage.extraWarning && (
-//                 <MaterialCommunityIcons
-//                   name="alert-circle"
-//                   size={18}
-//                   color="#FF9800"
-//                   style={styles.warningIcon}
-//                 />
-//               )}
-//             </View>
-
-//             {/* Steps inside the stage */}
-//             <View style={styles.stepsRow}>
-//               {stage.steps.map((step, stepIdx) => {
-//                 const stepStatus = getStepStatus(idx, step.key);
-//                 const isLastStep = stepIdx === stage.steps.length - 1;
-//                 return (
-//                   <React.Fragment key={step.key}>
-//                     <View style={styles.stepItem}>
-//                       <View
-//                         style={[
-//                           styles.stepDot,
-//                           { backgroundColor: getStepIconColor(stepStatus) },
-//                           stepStatus === 'active' && styles.activeStepDot,
-//                         ]}
-//                       />
-//                       <Text
-//                         style={[
-//                           styles.stepLabel,
-//                           { color: getStepIconColor(stepStatus) },
-//                         ]}
-//                       >
-//                         {step.label}
-//                       </Text>
-//                     </View>
-//                     {!isLastStep && (
-//                       <View
-//                         style={[
-//                           styles.stepLine,
-//                           { backgroundColor: getStepIconColor(stepStatus) === COLORS.success
-//                               ? COLORS.success
-//                               : COLORS.light_gray },
-//                         ]}
-//                       />
-//                     )}
-//                   </React.Fragment>
-//                 );
-//               })}
-//             </View>
-
-//             {/* Vertical connecting line between stages */}
-//             {!isLast && (
-//               <View
-//                 style={[
-//                   styles.stageConnector,
-//                   {
-//                     backgroundColor:
-//                       stageStatus === 'completed' ? COLORS.success : COLORS.light_gray,
-//                   },
-//                 ]}
-//               />
-//             )}
-//           </View>
-//         );
-//       })}
-
-//       {/* Summary or warning message */}
-//       <View style={styles.summary}>
-//         {stages[0].extraWarning && (
-//           <View style={styles.warningBox}>
-//             <MaterialCommunityIcons name="alert-circle" size={16} color="#FF9800" />
-//             <Text style={styles.warningText}>
-//               No cleaner assigned yet – job expires in less than 24h.
-//             </Text>
-//           </View>
-//         )}
-//         <Text style={styles.summaryText}>
-//           {currentStatus === 'pending_payment' && '📢 Looking for a cleaner...'}
-//           {currentStatus === 'assigned' && '✅ Cleaner assigned – will arrive on scheduled date.'}
-//           {currentStatus === 'clocked_in' && '🧹 Cleaner has started working.'}
-//           {currentStatus === 'in_progress' && '🔄 Cleaning in progress.'}
-//           {currentStatus === 'pending_review' && '👀 Cleaning finished. Please review the work.'}
-//           {currentStatus === 'approved' && '🎉 Job completed and approved!'}
-//           {currentStatus === 'disapproved' && '❌ Needs revision – please contact your cleaner.'}
-//         </Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     backgroundColor: '#fff',
-//     borderRadius: 20,
-//     padding: 16,
-//     marginHorizontal: 8,
-//     marginVertical: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 8,
-//     elevation: 2,
-//   },
-//   stageContainer: {
-//     marginBottom: 16,
-//   },
-//   stageHeader: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 12,
-//   },
-//   stageIconCircle: {
-//     width: 32,
-//     height: 32,
-//     borderRadius: 16,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginRight: 12,
-//   },
-//   stageTitle: {
-//     fontSize: 16,
-//     flex: 1,
-//   },
-//   warningIcon: {
-//     marginLeft: 8,
-//   },
-//   stepsRow: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     paddingLeft: 44, // align with stage title
-//   },
-//   stepItem: {
-//     alignItems: 'center',
-//     flex: 1,
-//   },
-//   stepDot: {
-//     width: 10,
-//     height: 10,
-//     borderRadius: 5,
-//     marginBottom: 6,
-//   },
-//   activeStepDot: {
-//     width: 14,
-//     height: 14,
-//     borderRadius: 7,
-//     borderWidth: 2,
-//     borderColor: '#fff',
-//   },
-//   stepLabel: {
-//     fontSize: 10,
-//     textAlign: 'center',
-//   },
-//   stepLine: {
-//     width: 30,
-//     height: 2,
-//     marginHorizontal: 4,
-//   },
-//   stageConnector: {
-//     width: 2,
-//     height: 20,
-//     marginLeft: 16, // under the icon
-//     marginTop: -8,
-//     marginBottom: 8,
-//   },
-//   summary: {
-//     backgroundColor: COLORS.background_light || '#f5f5f5',
-//     borderRadius: 12,
-//     padding: 12,
-//     marginTop: 8,
-//   },
-//   summaryText: {
-//     fontSize: 12,
-//     color: COLORS.gray || '#666',
-//     textAlign: 'center',
-//   },
-//   warningBox: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#FFF3E0',
-//     borderRadius: 8,
-//     padding: 8,
-//     marginBottom: 8,
-//   },
-//   warningText: {
-//     fontSize: 12,
-//     color: '#E65100',
-//     marginLeft: 6,
-//     flex: 1,
-//   },
-// });
-
-// export default ProjectTimelineBar;
-
-
-
-
 // ProjectTimelineBar.js
-// import React from 'react';
-// import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import COLORS from '../../constants/colors';
 
-// const ProjectTimelineBar = ({ currentStatus, scheduledDate, onReviewPress, onContactCleaner }) => {
-//   // Stage definitions with steps, icons, and status messages
-//   const stages = [
-//     {
-//       id: 0,
-//       title: 'Step 1: Publish Job',
-//       icon: 'cloud-upload',
-//       steps: [
-//         { key: 'published', label: 'Published', description: 'Looking for a cleaner' }
-//       ],
-//       warning: currentStatus === 'published' && scheduledDate && 
-//         (new Date(scheduledDate) - new Date()) < 24 * 60 * 60 * 1000,
-//       warningMessage: '⚠️ No cleaner assigned – job expires in <24h',
-//     },
-//     {
-//       id: 1,
-//       title: 'Step 2: Active Cleaning',
-//       icon: 'broom',
-//       steps: [
-//         { key: 'assigned', label: 'Assigned', description: 'Cleaner confirmed' },
-//         { key: 'clocked_in', label: 'Clocked in', description: 'Arrived on site' },
-//         { key: 'in_progress', label: 'In progress', description: 'Cleaning ongoing' },
-//       ],
-//     },
-//     {
-//       id: 2,
-//       title: 'Step 3: Review & Close',
-//       icon: 'clipboard-check-outline',
-//       steps: [
-//         { key: 'pending_review', label: 'Pending review', description: 'Waiting for your approval' },
-//         { key: 'approved', label: 'Approved', description: 'Job completed successfully' },
-//         { key: 'disapproved', label: 'Needs revision', description: 'Cleaner requested to redo' },
-//       ],
-//     },
-//   ];
+import React, { useMemo, useState, useEffect } from 'react';
 
-//   // Map backend status to stage & step index
-//   const statusMap = {
-//     published: { stage: 0, step: 0 },
-//     assigned: { stage: 1, step: 0 },
-//     accepted: { stage: 1, step: 0 },
-//     clocked_in: { stage: 1, step: 1 },
-//     in_progress: { stage: 1, step: 2 },
-//     pending_review: { stage: 2, step: 0 },
-//     approved: { stage: 2, step: 1 },
-//     completed: { stage: 2, step: 1 },
-//     disapproved: { stage: 2, step: 2 },
-//     revision_needed: { stage: 2, step: 2 },
-//   };
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+} from 'react-native';
 
-//   const current = statusMap[currentStatus] || { stage: 0, step: 0 };
-//   const currentStageIdx = current.stage;
-//   const currentStepIdx = current.step;
-
-//   // Helper to get status of a stage/step
-//   const getStageStatus = (stageIdx) => {
-//     if (stageIdx < currentStageIdx) return 'completed';
-//     if (stageIdx === currentStageIdx) return 'active';
-//     return 'upcoming';
-//   };
-
-//   const getStepStatus = (stageIdx, stepIdx) => {
-//     if (stageIdx < currentStageIdx) return 'completed';
-//     if (stageIdx === currentStageIdx) {
-//       if (stepIdx < currentStepIdx) return 'completed';
-//       if (stepIdx === currentStepIdx) return 'active';
-//     }
-//     return 'upcoming';
-//   };
-
-//   const getColor = (status) => {
-//     switch (status) {
-//       case 'completed': return COLORS.success || '#4CAF50';
-//       case 'active': return COLORS.primary || '#007AFF';
-//       default: return COLORS.light_gray || '#E0E0E0';
-//     }
-//   };
-
-//   const getTextColor = (status) => {
-//     if (status === 'completed') return COLORS.success || '#4CAF50';
-//     if (status === 'active') return COLORS.primary || '#007AFF';
-//     return COLORS.gray || '#999';
-//   };
-
-//   // Render a micro-step inside a stage
-//   const renderStep = (stageIdx, step, stepIdx) => {
-//     const stepStatus = getStepStatus(stageIdx, stepIdx);
-//     const isActive = stepStatus === 'active';
-//     const isCompleted = stepStatus === 'completed';
-//     const isUpcoming = stepStatus === 'upcoming';
-
-//     return (
-//       <View key={step.key} style={styles.stepRow}>
-//         <View style={styles.stepIndicator}>
-//           {isCompleted ? (
-//             <View style={[styles.stepCircleCompleted, { backgroundColor: getColor(stepStatus) }]}>
-//               <MaterialCommunityIcons name="check" size={12} color="#fff" />
-//             </View>
-//           ) : (
-//             <View style={[styles.stepCircle, { borderColor: getColor(stepStatus) }]} />
-//           )}
-//           {stepIdx < stages[stageIdx].steps.length - 1 && (
-//             <View style={[styles.stepLine, { backgroundColor: getColor(stepStatus) }]} />
-//           )}
-//         </View>
-//         <View style={styles.stepContent}>
-//           <Text style={[styles.stepLabel, { color: getTextColor(stepStatus), fontWeight: isActive ? '600' : '400' }]}>
-//             {step.label}
-//           </Text>
-//           <Text style={[styles.stepDesc, { color: getTextColor('upcoming') }]}>
-//             {step.description}
-//           </Text>
-//         </View>
-//       </View>
-//     );
-//   };
-
-//   // Overall progress (0 to 1)
-//   const totalStages = stages.length;
-//   const overallProgress = currentStageIdx / (totalStages - 1);
-
-//   // Action buttons for active stage
-//   const renderActionButton = () => {
-//     if (currentStatus === 'pending_review') {
-//       return (
-//         <TouchableOpacity style={styles.actionButton} onPress={onReviewPress}>
-//           <Text style={styles.actionButtonText}>Review Cleaning</Text>
-//           <MaterialCommunityIcons name="arrow-right" size={18} color="#fff" />
-//         </TouchableOpacity>
-//       );
-//     }
-//     if (currentStatus === 'disapproved') {
-//       return (
-//         <TouchableOpacity style={styles.actionButtonOutline} onPress={onContactCleaner}>
-//           <Text style={styles.actionButtonOutlineText}>Contact Cleaner</Text>
-//           <MaterialCommunityIcons name="chat" size={18} color={COLORS.primary} />
-//         </TouchableOpacity>
-//       );
-//     }
-//     return null;
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       {/* Overall progress bar */}
-//       <View style={styles.progressSection}>
-//         <View style={styles.progressLabels}>
-//           <Text style={styles.progressLabel}>Job Progress</Text>
-//           <Text style={styles.progressPercent}>{Math.round(overallProgress * 100)}%</Text>
-//         </View>
-//         <View style={styles.progressTrack}>
-//           <View style={[styles.progressFill, { width: `${overallProgress * 100}%` }]} />
-//         </View>
-//       </View>
-
-//       {/* Timeline stages */}
-//       {stages.map((stage, idx) => {
-//         const stageStatus = getStageStatus(idx);
-//         const isActive = stageStatus === 'active';
-//         const isCompleted = stageStatus === 'completed';
-
-//         return (
-//           <View key={idx} style={[styles.stageCard, isActive && styles.activeCard]}>
-//             <View style={styles.stageHeader}>
-//               <View style={[styles.stageIconBg, { backgroundColor: getColor(stageStatus) }]}>
-//                 <MaterialCommunityIcons name={stage.icon} size={22} color="#fff" />
-//               </View>
-//               <View style={styles.stageTitleContainer}>
-//                 <Text style={[styles.stageTitle, { color: getTextColor(stageStatus) }]}>
-//                   {stage.title}
-//                 </Text>
-//                 {isCompleted && (
-//                   <View style={styles.badge}>
-//                     <Text style={styles.badgeText}>Done</Text>
-//                   </View>
-//                 )}
-//                 {isActive && (
-//                   <View style={[styles.badge, styles.activeBadge]}>
-//                     <Text style={[styles.badgeText, { color: '#fff' }]}>In progress</Text>
-//                   </View>
-//                 )}
-//               </View>
-//             </View>
-
-//             {/* Steps inside stage */}
-//             <View style={styles.stepsContainer}>
-//               {stage.steps.map((step, stepIdx) => renderStep(idx, step, stepIdx))}
-//             </View>
-
-//             {/* Warning inside stage 1 if no cleaner assigned */}
-//             {idx === 0 && stage.warning && (
-//               <View style={styles.warningContainer}>
-//                 <MaterialCommunityIcons name="alert-decagram" size={18} color="#FF9800" />
-//                 <Text style={styles.warningText}>{stage.warningMessage}</Text>
-//               </View>
-//             )}
-//           </View>
-//         );
-//       })}
-
-//       {/* Action button for active stage */}
-//       {renderActionButton()}
-
-//       {/* Summary message */}
-//       <View style={styles.summaryCard}>
-//         <MaterialCommunityIcons name="information" size={20} color={COLORS.primary} />
-//         <Text style={styles.summaryText}>
-//           {currentStatus === 'published' && 'No cleaner yet? We’re still matching – you can extend the date if needed.'}
-//           {currentStatus === 'assigned' && 'Cleaner will arrive on the scheduled date.'}
-//           {currentStatus === 'clocked_in' && 'Cleaner started – you’ll be notified when done.'}
-//           {currentStatus === 'in_progress' && 'Work in progress – check back later.'}
-//           {currentStatus === 'pending_review' && 'Please review the cleaning quality and approve or request changes.'}
-//           {currentStatus === 'approved' && 'Job completed! Thank you for using FreshSweeper.'}
-//           {currentStatus === 'disapproved' && 'The cleaner has been notified. You can discuss details via chat.'}
-//         </Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     padding: 16,
-//     backgroundColor: '#F8FAFC',
-//   },
-//   // Progress bar
-//   progressSection: {
-//     marginBottom: 24,
-//   },
-//   progressLabels: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 8,
-//   },
-//   progressLabel: {
-//     fontSize: 14,
-//     fontWeight: '600',
-//     color: COLORS.dark || '#1E293B',
-//   },
-//   progressPercent: {
-//     fontSize: 14,
-//     fontWeight: '600',
-//     color: COLORS.primary,
-//   },
-//   progressTrack: {
-//     height: 8,
-//     backgroundColor: '#E2E8F0',
-//     borderRadius: 4,
-//     overflow: 'hidden',
-//   },
-//   progressFill: {
-//     height: '100%',
-//     backgroundColor: COLORS.primary,
-//     borderRadius: 4,
-//   },
-//   // Stage cards
-//   stageCard: {
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 20,
-//     padding: 16,
-//     marginBottom: 16,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 8,
-//     elevation: 2,
-//   },
-//   activeCard: {
-//     borderWidth: 1,
-//     borderColor: COLORS.primary,
-//     shadowOpacity: 0.1,
-//   },
-//   stageHeader: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 16,
-//   },
-//   stageIconBg: {
-//     width: 40,
-//     height: 40,
-//     borderRadius: 20,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginRight: 12,
-//   },
-//   stageTitleContainer: {
-//     flex: 1,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//   },
-//   stageTitle: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-//   badge: {
-//     backgroundColor: '#E2E8F0',
-//     paddingHorizontal: 10,
-//     paddingVertical: 4,
-//     borderRadius: 20,
-//   },
-//   activeBadge: {
-//     backgroundColor: COLORS.primary,
-//   },
-//   badgeText: {
-//     fontSize: 12,
-//     fontWeight: '600',
-//     color: COLORS.dark,
-//   },
-//   // Steps inside stage
-//   stepsContainer: {
-//     marginLeft: 8,
-//   },
-//   stepRow: {
-//     flexDirection: 'row',
-//     marginBottom: 16,
-//   },
-//   stepIndicator: {
-//     width: 24,
-//     alignItems: 'center',
-//     marginRight: 12,
-//   },
-//   stepCircle: {
-//     width: 16,
-//     height: 16,
-//     borderRadius: 8,
-//     borderWidth: 2,
-//     backgroundColor: '#fff',
-//   },
-//   stepCircleCompleted: {
-//     width: 18,
-//     height: 18,
-//     borderRadius: 9,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   stepLine: {
-//     width: 2,
-//     height: 24,
-//     marginTop: 4,
-//   },
-//   stepContent: {
-//     flex: 1,
-//   },
-//   stepLabel: {
-//     fontSize: 14,
-//     marginBottom: 2,
-//   },
-//   stepDesc: {
-//     fontSize: 12,
-//   },
-//   // Warning
-//   warningContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#FFF8E1',
-//     padding: 10,
-//     borderRadius: 12,
-//     marginTop: 8,
-//   },
-//   warningText: {
-//     fontSize: 12,
-//     color: '#E65100',
-//     marginLeft: 8,
-//     flex: 1,
-//   },
-//   // Action button
-//   actionButton: {
-//     backgroundColor: COLORS.primary,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     paddingVertical: 14,
-//     paddingHorizontal: 20,
-//     borderRadius: 30,
-//     marginBottom: 16,
-//   },
-//   actionButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-//   actionButtonOutline: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     paddingVertical: 14,
-//     paddingHorizontal: 20,
-//     borderRadius: 30,
-//     borderWidth: 1,
-//     borderColor: COLORS.primary,
-//     marginBottom: 16,
-//   },
-//   actionButtonOutlineText: {
-//     color: COLORS.primary,
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-//   // Summary card
-//   summaryCard: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 16,
-//     padding: 14,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.03,
-//     shadowRadius: 4,
-//     elevation: 1,
-//   },
-//   summaryText: {
-//     flex: 1,
-//     fontSize: 13,
-//     color: COLORS.gray,
-//     marginLeft: 10,
-//   },
-// });
-
-// export default ProjectTimelineBar;
-
-
-
-
-// ProjectTimelineBar.js
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import COLORS from '../../constants/colors';
+import moment from 'moment';
 
-const ProjectTimelineBar = ({ currentStatus, scheduledDate, onReviewPress, onContactCleaner }) => {
-  // Stage definitions
-  const stages = [
+import { useTheme } from '../../theme';
+
+const MILESTONES = [
     {
-      id: 0,
-      title: 'Step 1: Publish Job',
-      icon: 'cloud-upload',
-      steps: [
-        { key: 'pending_payment', label: 'Published', description: 'Looking for a cleaner' }
-      ],
-      warning: currentStatus === 'pending_payment' && scheduledDate && 
-        (new Date(scheduledDate) - new Date()) < 24 * 60 * 60 * 1000,
-      warningMessage: '⚠️ No cleaner assigned – job expires in <24h',
+        key: 'published',
+        stage: 0,
+        step: 0,
+        label: 'Published',
+        description: 'Job published and available for cleaner matching.',
+        icon: 'cloud-upload',
+        statuses: ['open'],
+        actions: [
+            'schedule_created',
+            'job_published',
+            'publish_schedule',
+            'schedule_published',
+        ],
     },
     {
-      id: 1,
-      title: 'Step 2: Active Cleaning',
-      icon: 'broom',
-      steps: [
-        { key: 'upcoming', label: 'Assigned', description: 'Cleaner confirmed' },
-        { key: 'clocked_in', label: 'Clocked in', description: 'Arrived on site' },
-        { key: 'in_progress', label: 'In progress', description: 'Cleaning ongoing' },
-      ],
+        key: 'assigned',
+        stage: 1,
+        step: 0,
+        label: 'Cleaner accepted',
+        description: 'A cleaner accepted the cleaning request.',
+        icon: 'account-check',
+        statuses: ['pending_payment'],
+        actions: [
+            'cleaner_accepts',
+            'cleaner_accepted',
+            'cleaner_accepts_request',
+        ],
     },
     {
-      id: 2,
-      title: 'Step 3: Review & Close',
-      icon: 'clipboard-check-outline',
-      steps: [
-        { key: 'pending_review', label: 'Pending review', description: 'Waiting for your approval' },
-        { key: 'approved', label: 'Approved', description: 'Job completed successfully' },
-        { key: 'disapproved', label: 'Needs revision', description: 'Cleaner requested to redo' },
-      ],
+        key: 'payment_confirmed',
+        stage: 1,
+        step: 1,
+        label: 'Payment confirmed',
+        description: 'Payment was confirmed by the backend.',
+        icon: 'credit-card-check',
+        statuses: ['payment_confirmed'],
+        actions: [
+            'payment_made',
+            'payment_confirmed',
+            'payment_succeeded',
+        ],
     },
-  ];
+    {
+        key: 'upcoming',
+        stage: 1,
+        step: 2,
+        label: 'Upcoming',
+        description: 'The cleaning is scheduled to take place.',
+        icon: 'calendar-clock',
+        statuses: ['upcoming'],
+        actions: [
+            'schedule_confirmed',
+            'cleaning_scheduled',
+        ],
+    },
+    {
+        key: 'clocked_in',
+        stage: 1,
+        step: 3,
+        label: 'Clocked in',
+        description: 'The cleaner recorded their arrival.',
+        icon: 'map-marker-check',
+        statuses: ['clocked_in'],
+        actions: ['clock_in', 'cleaner_clocked_in'],
+    },
+    {
+        key: 'in_progress',
+        stage: 1,
+        step: 4,
+        label: 'Cleaning in progress',
+        description: 'Cleaning work is underway.',
+        icon: 'broom',
+        statuses: ['in_progress'],
+        actions: [
+            'start_cleaning',
+            'cleaning_started',
+        ],
+    },
+    {
+        key: 'pending_review',
+        stage: 2,
+        step: 0,
+        label: 'Pending review',
+        description: 'The cleaning is awaiting host review.',
+        icon: 'clipboard-check-outline',
+        statuses: ['pending_review'],
+        actions: [
+            'cleaning_completed',
+            'submit_for_review',
+            'pending_review',
+        ],
+    },
+    {
+        key: 'approved',
+        stage: 2,
+        step: 1,
+        label: 'Host approved',
+        description: 'The host approved the cleaning.',
+        icon: 'check-decagram',
+        statuses: ['approved'],
+        actions: ['host_approves', 'host_approved'],
+    },
+    {
+        key: 'completed',
+        stage: 2,
+        step: 2,
+        label: 'Completed',
+        description: 'The schedule reached its final completed state.',
+        icon: 'check-circle',
+        statuses: ['completed', 'reviewed'],
+        actions: [
+            'host_final_approves',
+            'schedule_completed',
+            'cleaning_finalized',
+        ],
+    },
+];
 
-  // Map backend status to stage & step index
-  const statusMap = {
-    pending_payment: { stage: 0, step: 0 },
-    upcoming: { stage: 1, step: 0 },
-    accepted: { stage: 1, step: 0 },
-    clocked_in: { stage: 1, step: 1 },
-    in_progress: { stage: 1, step: 2 },
-    pending_review: { stage: 2, step: 0 },
-    approved: { stage: 2, step: 1 },
-    completed: { stage: 2, step: 1 },
-    disapproved: { stage: 2, step: 2 },
-    revision_needed: { stage: 2, step: 2 },
-  };
+const STAGES = [
+    {
+        id: 0,
+        title: 'Step 1: Publish Job',
+        icon: 'cloud-upload',
+        milestoneKeys: ['published'],
+    },
+    {
+        id: 1,
+        title: 'Step 2: Cleaning & Assignment',
+        icon: 'broom',
+        milestoneKeys: [
+            'assigned',
+            'payment_confirmed',
+            'upcoming',
+            'clocked_in',
+            'in_progress',
+        ],
+    },
+    {
+        id: 2,
+        title: 'Step 3: Review & Close',
+        icon: 'clipboard-check-outline',
+        milestoneKeys: [
+            'pending_review',
+            'approved',
+            'completed',
+        ],
+    },
+];
 
-  const current = statusMap[currentStatus] || { stage: 0, step: 0 };
-  const currentStageIdx = current.stage;
-  const currentStepIdx = current.step;
+const STATUS_ALIASES = {
+    created: 'published',
+    published: 'published',
+    open: 'published',
 
-  // Collapsible state: stage 1 is always expanded, stages 2 and 3 collapsible.
-  // By default, expand the active stage, collapse others.
-  const getDefaultExpanded = (stageIdx) => {
-    if (stageIdx === 0) return true; // Stage 1 always expanded
-    return stageIdx === currentStageIdx; // Only expand the active stage
-  };
+    accepted: 'assigned',
+    pending_payment: 'assigned',
+    cleaner_accepted: 'assigned',
 
-  const [expandedStages, setExpandedStages] = useState({
-    0: true,
-    1: getDefaultExpanded(1),
-    2: getDefaultExpanded(2),
-  });
+    payment_made: 'payment_confirmed',
+    payment_succeeded: 'payment_confirmed',
 
-  const toggleStage = (stageIdx) => {
-    if (stageIdx === 0) return; // Stage 1 cannot be collapsed
-    setExpandedStages(prev => ({ ...prev, [stageIdx]: !prev[stageIdx] }));
-  };
+    upcoming: 'upcoming',
 
-  // Helper to get status of a stage/step
-  const getStageStatus = (stageIdx) => {
-    if (stageIdx < currentStageIdx) return 'completed';
-    if (stageIdx === currentStageIdx) return 'active';
-    return 'upcoming';
-  };
+    clock_in: 'clocked_in',
 
-  const getStepStatus = (stageIdx, stepIdx) => {
-    if (stageIdx < currentStageIdx) return 'completed';
-    if (stageIdx === currentStageIdx) {
-      if (stepIdx < currentStepIdx) return 'completed';
-      if (stepIdx === currentStepIdx) return 'active';
-    }
-    return 'upcoming';
-  };
+    cleaning_started: 'in_progress',
 
-  const getColor = (status) => {
-    switch (status) {
-      case 'completed': return COLORS.success || '#4CAF50';
-      case 'active': return COLORS.primary || '#007AFF';
-      default: return COLORS.light_gray || '#E0E0E0';
-    }
-  };
+    cleaning_completed: 'pending_review',
 
-  const getTextColor = (status) => {
-    if (status === 'completed') return COLORS.success || '#4CAF50';
-    if (status === 'active') return COLORS.primary || '#007AFF';
-    return COLORS.gray || '#999';
-  };
+    host_approved: 'approved',
 
-  // Render a micro-step inside a stage
-  const renderStep = (stageIdx, step, stepIdx) => {
-    const stepStatus = getStepStatus(stageIdx, stepIdx);
-    const isActive = stepStatus === 'active';
-    const isCompleted = stepStatus === 'completed';
-
-    return (
-      <View key={step.key} style={styles.stepRow}>
-        <View style={styles.stepIndicator}>
-          {isCompleted ? (
-            <View style={[styles.stepCircleCompleted, { backgroundColor: getColor(stepStatus) }]}>
-              <MaterialCommunityIcons name="check" size={12} color="#fff" />
-            </View>
-          ) : (
-            <View style={[styles.stepCircle, { borderColor: getColor(stepStatus) }]} />
-          )}
-          {stepIdx < stages[stageIdx].steps.length - 1 && (
-            <View style={[styles.stepLine, { backgroundColor: getColor(stepStatus) }]} />
-          )}
-        </View>
-        <View style={styles.stepContent}>
-          <Text style={[styles.stepLabel, { color: getTextColor(stepStatus), fontWeight: isActive ? '600' : '400' }]}>
-            {step.label}
-          </Text>
-          <Text style={[styles.stepDesc, { color: getTextColor('upcoming') }]}>
-            {step.description}
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
-  // Overall progress (0 to 1)
-  const totalStages = stages.length;
-  const overallProgress = currentStageIdx / (totalStages - 1);
-
-  // Action buttons for active stage
-  const renderActionButton = () => {
-    if (currentStatus === 'pending_review') {
-      return (
-        <TouchableOpacity style={styles.actionButton} onPress={onReviewPress}>
-          <Text style={styles.actionButtonText}>Review Cleaning</Text>
-          <MaterialCommunityIcons name="arrow-right" size={18} color="#fff" />
-        </TouchableOpacity>
-      );
-    }
-    if (currentStatus === 'disapproved') {
-      return (
-        <TouchableOpacity style={styles.actionButtonOutline} onPress={onContactCleaner}>
-          <Text style={styles.actionButtonOutlineText}>Contact Cleaner</Text>
-          <MaterialCommunityIcons name="chat" size={18} color={COLORS.primary} />
-        </TouchableOpacity>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Overall progress bar */}
-      <View style={styles.progressSection}>
-        <View style={styles.progressLabels}>
-          <Text style={styles.progressLabel}>Job Progress</Text>
-          <Text style={styles.progressPercent}>{Math.round(overallProgress * 100)}%</Text>
-        </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${overallProgress * 100}%` }]} />
-        </View>
-      </View>
-
-      {/* Timeline stages */}
-      {stages.map((stage, idx) => {
-        const stageStatus = getStageStatus(idx);
-        const isActive = stageStatus === 'active';
-        const isCompleted = stageStatus === 'completed';
-        const isExpanded = expandedStages[idx];
-        const canCollapse = idx !== 0; // only stages 2 and 3 are collapsible
-        const chevronIcon = isExpanded ? 'chevron-up' : 'chevron-down';
-
-        return (
-          <View key={idx} style={[styles.stageCard, isActive && styles.activeCard]}>
-            {/* Header with touchable toggle for collapsible stages */}
-            <TouchableOpacity
-              activeOpacity={canCollapse ? 0.7 : 1}
-              onPress={() => canCollapse && toggleStage(idx)}
-              disabled={!canCollapse}
-            >
-              <View style={styles.stageHeader}>
-                <View style={[styles.stageIconBg, { backgroundColor: getColor(stageStatus) }]}>
-                  <MaterialCommunityIcons name={stage.icon} size={22} color="#fff" />
-                </View>
-                <View style={styles.stageTitleContainer}>
-                  <Text style={[styles.stageTitle, { color: getTextColor(stageStatus) }]}>
-                    {stage.title}
-                  </Text>
-                  <View style={styles.headerRight}>
-                    {isCompleted && (
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeText}>Done</Text>
-                      </View>
-                    )}
-                    {isActive && (
-                      <View style={[styles.badge, styles.activeBadge]}>
-                        <Text style={[styles.badgeText, { color: '#fff' }]}>In progress</Text>
-                      </View>
-                    )}
-                    {canCollapse && (
-                      <MaterialCommunityIcons name={chevronIcon} size={22} color={COLORS.gray} />
-                    )}
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Steps inside stage – only show if expanded */}
-            {isExpanded && (
-              <View style={styles.stepsContainer}>
-                {stage.steps.map((step, stepIdx) => renderStep(idx, step, stepIdx))}
-              </View>
-            )}
-
-            {/* Warning inside stage 1 if no cleaner assigned */}
-            {idx === 0 && stage.warning && (
-              <View style={styles.warningContainer}>
-                <MaterialCommunityIcons name="alert-decagram" size={18} color="#FF9800" />
-                <Text style={styles.warningText}>{stage.warningMessage}</Text>
-              </View>
-            )}
-          </View>
-        );
-      })}
-
-      {/* Action button for active stage */}
-      {renderActionButton()}
-
-      {/* Summary message */}
-      <View style={styles.summaryCard}>
-        <MaterialCommunityIcons name="information" size={20} color={COLORS.primary} />
-        <Text style={styles.summaryText}>
-          {currentStatus === 'pending_payment' && 'No cleaner yet? We’re still matching – you can extend the date if needed.'}
-          {currentStatus === 'upcoming' && 'Cleaner will arrive on the scheduled date.'}
-          {currentStatus === 'clocked_in' && 'Cleaner started – you’ll be notified when done.'}
-          {currentStatus === 'in_progress' && 'Work in progress – check back later.'}
-          {currentStatus === 'pending_review' && 'Please review the cleaning quality and approve or request changes.'}
-          {currentStatus === 'approved' && 'Job completed! Thank you for using FreshSweeper.'}
-          {currentStatus === 'disapproved' && 'The cleaner has been notified. You can discuss details via chat.'}
-        </Text>
-      </View>
-    </View>
-  );
+    host_final_approves: 'completed',
+    reviewed: 'completed',
+    completed: 'completed',
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    backgroundColor: '#F8FAFC',
-  },
-  progressSection: {
-    marginBottom: 24,
-  },
-  progressLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.dark || '#1E293B',
-  },
-  progressPercent: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  progressTrack: {
-    height: 8,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-    borderRadius: 4,
-  },
-  stageCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  activeCard: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    shadowOpacity: 0.1,
-  },
-  stageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stageIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  stageTitleContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  stageTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  badge: {
-    backgroundColor: '#E2E8F0',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  activeBadge: {
-    backgroundColor: COLORS.primary,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.dark,
-  },
-  stepsContainer: {
-    marginLeft: 8,
-    marginTop: 16,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  stepIndicator: {
-    width: 24,
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  stepCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    backgroundColor: '#fff',
-  },
-  stepCircleCompleted: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepLine: {
-    width: 2,
-    height: 24,
-    marginTop: 4,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepLabel: {
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  stepDesc: {
-    fontSize: 12,
-  },
-  warningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    padding: 10,
-    borderRadius: 12,
-    marginTop: 12,
-  },
-  warningText: {
-    fontSize: 12,
-    color: '#E65100',
-    marginLeft: 8,
-    flex: 1,
-  },
-  actionButton: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    marginBottom: 16,
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  actionButtonOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    marginBottom: 16,
-  },
-  actionButtonOutlineText: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  summaryText: {
-    flex: 1,
-    fontSize: 13,
-    color: COLORS.gray,
-    marginLeft: 10,
-  },
-});
+const TERMINAL_STATUSES = [
+    'cancelled',
+    'canceled',
+    'host_cancelled',
+    'host_canceled',
+];
+
+const REPLACEMENT_ACTIONS = [
+    'cleaner_cancels',
+    'cleaner_cancelled',
+    'cleaner_canceled',
+    'host_removes_cleaner',
+    'replacement_required',
+];
+
+const REPLACEMENT_STATUSES = [
+    'replacement_required',
+    'waiting_for_cleaners',
+    'cleaner_available',
+    'payment_required',
+];
+
+const normalize = (value) =>
+    String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_');
+
+const getHistoryAction = (entry) =>
+    normalize(
+        entry?.action ||
+        entry?.event ||
+        entry?.type
+    );
+
+const getHistoryStatus = (entry) =>
+    normalize(
+        entry?.status ||
+        entry?.new_status ||
+        entry?.to_status
+    );
+
+const getHistoryTimestamp = (entry) =>
+    entry?.timestamp ||
+    entry?.created_at ||
+    entry?.createdAt ||
+    entry?.updated_at ||
+    entry?.date ||
+    null;
+
+const getHistoryNote = (entry) =>
+    entry?.note ||
+    entry?.message ||
+    entry?.description ||
+    null;
+
+const parseTimestamp = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    const parsed = moment(value);
+
+    return parsed.isValid() ? parsed : null;
+};
+
+const formatTimestamp = (value) => {
+    const parsed = parseTimestamp(value);
+
+    if (!parsed) {
+        return null;
+    }
+
+    return parsed.format('MMM D, YYYY [at] h:mm A');
+};
+
+const findMilestoneForHistoryEntry = (entry) => {
+    const action = getHistoryAction(entry);
+    const status = getHistoryStatus(entry);
+
+    // Prefer an explicit transition action because history entries
+    // may contain a status representing the state before a transition.
+    for (const milestone of MILESTONES) {
+        if (milestone.actions.includes(action)) {
+            return milestone;
+        }
+    }
+
+    // Fall back to the status recorded in the history entry.
+    for (const milestone of MILESTONES) {
+        if (milestone.statuses.includes(status)) {
+            return milestone;
+        }
+    }
+
+    return null;
+};
+
+const getCurrentMilestoneKey = (status) => {
+    const normalizedStatus = normalize(status);
+
+    return STATUS_ALIASES[normalizedStatus] || null;
+};
+
+const ProjectTimelineBar = ({
+    currentStatus,
+    scheduledDate,
+    history = [],
+    onReviewPress,
+    onContactCleaner,
+}) => {
+    const { theme } = useTheme();
+
+    const [expandedStages, setExpandedStages] = useState({
+        0: true,
+        1: true,
+        2: true,
+    });
+
+    useEffect(() => {
+        const activeKey = getCurrentMilestoneKey(currentStatus);
+
+        const activeMilestone = MILESTONES.find(
+            (milestone) => milestone.key === activeKey
+        );
+
+        if (activeMilestone) {
+            setExpandedStages((previous) => ({
+                ...previous,
+                [activeMilestone.stage]: true,
+            }));
+        }
+    }, [currentStatus]);
+
+    const colors = useMemo(() => ({
+        background: theme.background.default,
+
+        surface: theme.surface.default,
+        elevated: theme.surface.elevated,
+        selected: theme.surface.selected,
+
+        primary: theme.brand.primary,
+
+        text: theme.text.primary,
+        secondaryText: theme.text.secondary,
+        mutedText: theme.text.muted,
+
+        border: theme.border.default,
+
+        success: theme.status.success,
+        warning: theme.status.warning,
+        error: theme.status.error,
+
+        icon: theme.icon.default,
+        mutedIcon: theme.icon.muted,
+
+        shadow: theme.shadow.color,
+        shadowOpacity: theme.shadow.opacity,
+    }), [theme]);
+
+    const styles = useMemo(
+        () => createStyles(colors),
+        [colors]
+    );
+
+    const normalizedHistory = useMemo(() => {
+        if (!Array.isArray(history)) {
+            return [];
+        }
+
+        return history
+            .map((entry, originalIndex) => ({
+                ...entry,
+                originalIndex,
+                parsedTimestamp: parseTimestamp(
+                    getHistoryTimestamp(entry)
+                ),
+            }))
+            .sort((a, b) => {
+                if (
+                    a.parsedTimestamp &&
+                    b.parsedTimestamp
+                ) {
+                    return (
+                        a.parsedTimestamp.valueOf() -
+                        b.parsedTimestamp.valueOf()
+                    );
+                }
+
+                // Preserve original order when timestamps are absent.
+                return a.originalIndex - b.originalIndex;
+            });
+    }, [history]);
+
+    const currentStatusNormalized = normalize(currentStatus);
+
+    const currentMilestoneKey =
+        getCurrentMilestoneKey(currentStatus);
+
+    const currentMilestone = MILESTONES.find(
+        (milestone) =>
+            milestone.key === currentMilestoneKey
+    );
+
+    const isCancelled = TERMINAL_STATUSES.includes(
+        currentStatusNormalized
+    );
+
+    const isReplacementRequired =
+        currentStatusNormalized === 'replacement_required' ||
+        normalizedHistory.some((entry) => {
+            const action = getHistoryAction(entry);
+            const status = getHistoryStatus(entry);
+
+            return (
+                REPLACEMENT_ACTIONS.includes(action) ||
+                REPLACEMENT_STATUSES.includes(status)
+            );
+        });
+
+    /*
+     * Build a history-backed record for each milestone.
+     *
+     * The history entry is the source for timestamps and notes.
+     * The current status can establish that a milestone has been
+     * reached even if that particular transition lacks a history entry.
+     */
+    const milestoneRecords = useMemo(() => {
+        const records = {};
+
+        normalizedHistory.forEach((entry) => {
+            const milestone =
+                findMilestoneForHistoryEntry(entry);
+
+            if (!milestone) {
+                return;
+            }
+
+            const existing = records[milestone.key];
+
+            const timestamp = getHistoryTimestamp(entry);
+
+            if (
+                !existing ||
+                (
+                    timestamp &&
+                    (
+                        !existing.timestamp ||
+                        (
+                            parseTimestamp(timestamp) &&
+                            parseTimestamp(existing.timestamp) &&
+                            parseTimestamp(timestamp).isAfter(
+                                parseTimestamp(existing.timestamp)
+                            )
+                        )
+                    )
+                )
+            ) {
+                records[milestone.key] = {
+                    key: milestone.key,
+                    timestamp,
+                    note: getHistoryNote(entry),
+                    action: getHistoryAction(entry),
+                    status: getHistoryStatus(entry),
+                    source: 'history',
+                };
+            }
+        });
+
+        return records;
+    }, [normalizedHistory]);
+
+    /*
+     * Determine the furthest known milestone from the current backend
+     * status. This helps keep the active indicator accurate even when
+     * older history entries are missing.
+     */
+    const furthestReachedIndex = useMemo(() => {
+        let furthest = -1;
+
+        MILESTONES.forEach((milestone, index) => {
+            if (milestoneRecords[milestone.key]) {
+                furthest = Math.max(furthest, index);
+            }
+        });
+
+        if (currentMilestone) {
+            const currentIndex = MILESTONES.findIndex(
+                (milestone) =>
+                    milestone.key === currentMilestone.key
+            );
+
+            furthest = Math.max(furthest, currentIndex);
+        }
+
+        return furthest;
+    }, [milestoneRecords, currentMilestone]);
+
+    const milestoneStates = useMemo(() => {
+        const result = {};
+
+        MILESTONES.forEach((milestone, index) => {
+            const record = milestoneRecords[milestone.key];
+
+            const isCurrent =
+                milestone.key === currentMilestoneKey;
+
+            const hasHistoryRecord = Boolean(record);
+
+            let state = 'upcoming';
+
+            if (isCancelled) {
+                // Cancellation is a terminal exception, not successful
+                // completion of all the later milestones.
+                if (hasHistoryRecord) {
+                    state = 'completed';
+                }
+            } else if (hasHistoryRecord) {
+                state = 'completed';
+            } else if (isCurrent) {
+                state = 'active';
+            } else if (
+                index < furthestReachedIndex
+            ) {
+                /*
+                 * The backend's current status or a later recorded
+                 * milestone proves this milestone was passed, but its
+                 * individual history event was not found.
+                 */
+                state = 'completed';
+            } else if (
+                index === furthestReachedIndex &&
+                !hasHistoryRecord &&
+                currentMilestone
+            ) {
+                state = isCurrent ? 'active' : 'upcoming';
+            }
+
+            if (isCurrent && !isCancelled) {
+                state = 'active';
+            }
+
+            result[milestone.key] = {
+                state,
+                record,
+                hasHistoryRecord,
+                inferred:
+                    state === 'completed' &&
+                    !hasHistoryRecord,
+            };
+        });
+
+        return result;
+    }, [
+        milestoneRecords,
+        currentMilestoneKey,
+        furthestReachedIndex,
+        currentMilestone,
+        isCancelled,
+    ]);
+
+    const getMilestoneColor = (state) => {
+        switch (state) {
+            case 'completed':
+                return colors.success;
+
+            case 'active':
+                return colors.primary;
+
+            default:
+                return colors.border;
+        }
+    };
+
+    const getStageState = (stage) => {
+        const states = stage.milestoneKeys.map(
+            (key) => milestoneStates[key]?.state || 'upcoming'
+        );
+
+        if (states.includes('active')) {
+            return 'active';
+        }
+
+        if (
+            states.length > 0 &&
+            states.every((state) => state === 'completed')
+        ) {
+            return 'completed';
+        }
+
+        if (states.some((state) => state === 'completed')) {
+            return 'active';
+        }
+
+        return 'upcoming';
+    };
+
+    const getStageColor = (state) =>
+        getMilestoneColor(state);
+
+    const toggleStage = (stageIndex) => {
+        setExpandedStages((previous) => ({
+            ...previous,
+            [stageIndex]: !previous[stageIndex],
+        }));
+    };
+
+    const getProgress = () => {
+        if (isCancelled) {
+            return 0;
+        }
+
+        if (
+            currentMilestoneKey === 'completed' ||
+            currentStatusNormalized === 'reviewed'
+        ) {
+            return 100;
+        }
+
+        if (currentMilestoneKey === 'approved') {
+            return 90;
+        }
+
+        if (currentMilestoneKey === 'pending_review') {
+            return 80;
+        }
+
+        if (currentMilestoneKey === 'in_progress') {
+            return 65;
+        }
+
+        if (currentMilestoneKey === 'clocked_in') {
+            return 55;
+        }
+
+        if (currentMilestoneKey === 'upcoming') {
+            return 45;
+        }
+
+        if (currentMilestoneKey === 'payment_confirmed') {
+            return 35;
+        }
+
+        if (currentMilestoneKey === 'assigned') {
+            return 25;
+        }
+
+        if (currentMilestoneKey === 'published') {
+            return 10;
+        }
+
+        return 0;
+    };
+
+    const progressPercent = getProgress();
+
+    const renderMilestone = (milestone, index, stage) => {
+        const milestoneState =
+            milestoneStates[milestone.key] || {
+                state: 'upcoming',
+                record: null,
+                hasHistoryRecord: false,
+                inferred: false,
+            };
+
+        const state = milestoneState.state;
+        const record = milestoneState.record;
+
+        const isActive = state === 'active';
+        const isCompleted = state === 'completed';
+
+        const milestoneColor =
+            getMilestoneColor(state);
+
+        const eventTimestamp = record?.timestamp
+            ? formatTimestamp(record.timestamp)
+            : null;
+
+        const displayNote = record?.note;
+
+        return (
+            <View
+                key={milestone.key}
+                style={styles.milestoneRow}
+            >
+                <View style={styles.milestoneIndicator}>
+                    <View
+                        style={[
+                            styles.milestoneCircle,
+                            {
+                                borderColor: milestoneColor,
+                                backgroundColor: isCompleted
+                                    ? milestoneColor
+                                    : isActive
+                                        ? colors.selected
+                                        : colors.surface,
+                            },
+                        ]}
+                    >
+                        {isCompleted ? (
+                            <MaterialCommunityIcons
+                                name="check"
+                                size={13}
+                                color="#FFFFFF"
+                            />
+                        ) : (
+                            <MaterialCommunityIcons
+                                name={milestone.icon}
+                                size={12}
+                                color={milestoneColor}
+                            />
+                        )}
+                    </View>
+
+                    {index < stage.milestoneKeys.length - 1 && (
+                        <View
+                            style={[
+                                styles.milestoneLine,
+                                {
+                                    backgroundColor:
+                                        isCompleted
+                                            ? colors.success
+                                            : colors.border,
+                                },
+                            ]}
+                        />
+                    )}
+                </View>
+
+                <View style={styles.milestoneContent}>
+                    <View style={styles.milestoneTitleRow}>
+                        <Text
+                            style={[
+                                styles.milestoneTitle,
+                                {
+                                    color: isActive
+                                        ? colors.primary
+                                        : isCompleted
+                                            ? colors.text
+                                            : colors.mutedText,
+                                    fontWeight:
+                                        isActive || isCompleted
+                                            ? '600'
+                                            : '400',
+                                },
+                            ]}
+                        >
+                            {milestone.label}
+                        </Text>
+
+                        {isActive && !isCancelled && (
+                            <View
+                                style={[
+                                    styles.stateBadge,
+                                    styles.activeStateBadge,
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.stateBadgeText,
+                                        {
+                                            color: colors.primary,
+                                        },
+                                    ]}
+                                >
+                                    Current
+                                </Text>
+                            </View>
+                        )}
+
+                        {isCompleted && (
+                            <View
+                                style={[
+                                    styles.stateBadge,
+                                    styles.completedStateBadge,
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.stateBadgeText,
+                                        {
+                                            color: colors.success,
+                                        },
+                                    ]}
+                                >
+                                    {milestoneState.hasHistoryRecord
+                                        ? 'Recorded'
+                                        : 'Reached'}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+
+                    <Text style={styles.milestoneDescription}>
+                        {milestone.description}
+                    </Text>
+
+                    {eventTimestamp && (
+                        <View style={styles.timestampRow}>
+                            <MaterialCommunityIcons
+                                name="clock-outline"
+                                size={13}
+                                color={colors.secondaryText}
+                            />
+
+                            <Text style={styles.timestampText}>
+                                {eventTimestamp}
+                            </Text>
+                        </View>
+                    )}
+
+                    {milestoneState.inferred && (
+                        <Text style={styles.inferredText}>
+                            Reached according to the current schedule
+                            status; no matching timestamp was found
+                            in history.
+                        </Text>
+                    )}
+
+                    {displayNote && (
+                        <View style={styles.noteContainer}>
+                            <Text style={styles.noteText}>
+                                {displayNote}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    const renderReplacementBanner = () => {
+        if (!isReplacementRequired) {
+            return null;
+        }
+
+        return (
+            <View style={styles.replacementBanner}>
+                <MaterialCommunityIcons
+                    name="account-switch-outline"
+                    size={22}
+                    color={colors.warning}
+                />
+
+                <View style={styles.bannerContent}>
+                    <Text style={styles.replacementTitle}>
+                        Cleaner replacement required
+                    </Text>
+
+                    <Text style={styles.replacementDescription}>
+                        The schedule history indicates that a cleaner
+                        cancellation or replacement workflow needs
+                        attention. This is separate from successful
+                        cleaning completion.
+                    </Text>
+                </View>
+            </View>
+        );
+    };
+
+    const renderCancellationBanner = () => {
+        if (!isCancelled) {
+            return null;
+        }
+
+        return (
+            <View style={styles.cancellationBanner}>
+                <MaterialCommunityIcons
+                    name="cancel"
+                    size={22}
+                    color={colors.error}
+                />
+
+                <View style={styles.bannerContent}>
+                    <Text style={styles.cancellationTitle}>
+                        Schedule cancelled
+                    </Text>
+
+                    <Text style={styles.cancellationDescription}>
+                        This schedule ended through cancellation.
+                        Later cleaning and review milestones are not
+                        treated as completed.
+                    </Text>
+                </View>
+            </View>
+        );
+    };
+
+    const renderActionButton = () => {
+        if (
+            currentStatusNormalized === 'pending_review' &&
+            onReviewPress
+        ) {
+            return (
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={onReviewPress}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.actionButtonText}>
+                        Review Cleaning
+                    </Text>
+
+                    <MaterialCommunityIcons
+                        name="arrow-right"
+                        size={18}
+                        color="#FFFFFF"
+                    />
+                </TouchableOpacity>
+            );
+        }
+
+        if (
+            [
+                'disapproved',
+                'revision_needed',
+            ].includes(currentStatusNormalized) &&
+            onContactCleaner
+        ) {
+            return (
+                <TouchableOpacity
+                    style={styles.outlineButton}
+                    onPress={onContactCleaner}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.outlineButtonText}>
+                        Contact Cleaner
+                    </Text>
+
+                    <MaterialCommunityIcons
+                        name="chat"
+                        size={18}
+                        color={colors.primary}
+                    />
+                </TouchableOpacity>
+            );
+        }
+
+        return null;
+    };
+
+    const getSummaryMessage = () => {
+        if (isCancelled) {
+            return 'This schedule was cancelled. Check its history for the recorded cancellation details.';
+        }
+
+        if (isReplacementRequired) {
+            return 'A cleaner replacement event was detected. Follow the replacement workflow before treating the assignment as settled.';
+        }
+
+        switch (currentStatusNormalized) {
+            case 'open':
+                return 'The job is open and available for cleaner matching.';
+
+            case 'pending_payment':
+                return 'A cleaner has accepted the request. Payment is still pending.';
+
+            case 'payment_confirmed':
+                return 'Payment has been confirmed. Check the scheduled cleaning details.';
+
+            case 'upcoming':
+                return 'Your cleaner is expected on the scheduled date.';
+
+            case 'clocked_in':
+                return 'The cleaner has recorded their arrival.';
+
+            case 'in_progress':
+                return 'Cleaning is in progress.';
+
+            case 'pending_review':
+                return 'Review the cleaning quality and approve the work or request changes.';
+
+            case 'approved':
+                return 'The host approved the cleaning.';
+
+            case 'completed':
+            case 'reviewed':
+                return 'The schedule has reached its completed state.';
+
+            case 'payment_failed':
+                return 'Payment failed. Check the payment status before proceeding.';
+
+            default:
+                return 'Follow the recorded schedule history to track the job lifecycle.';
+        }
+    };
+
+    return (
+        <View style={styles.container}>
+            {/* Progress */}
+
+            <View style={styles.progressSection}>
+                <View style={styles.progressLabels}>
+                    <Text style={styles.progressLabel}>
+                        Schedule Progress
+                    </Text>
+
+                    <Text style={styles.progressPercent}>
+                        {isCancelled
+                            ? 'Cancelled'
+                            : `${progressPercent}%`}
+                    </Text>
+                </View>
+
+                <View style={styles.progressTrack}>
+                    <View
+                        style={[
+                            styles.progressFill,
+                            {
+                                width: `${progressPercent}%`,
+                                backgroundColor: isCancelled
+                                    ? colors.error
+                                    : colors.primary,
+                            },
+                        ]}
+                    />
+                </View>
+            </View>
+
+            {renderCancellationBanner()}
+            {renderReplacementBanner()}
+
+            {/* Timeline stages */}
+
+            {STAGES.map((stage) => {
+                const stageState = getStageState(stage);
+                const isExpanded = expandedStages[stage.id];
+                const canCollapse = stage.id !== 0;
+
+                return (
+                    <View
+                        key={stage.id}
+                        style={[
+                            styles.stageCard,
+                            stageState === 'active' &&
+                                styles.activeStageCard,
+                        ]}
+                    >
+                        <TouchableOpacity
+                            activeOpacity={canCollapse ? 0.7 : 1}
+                            onPress={() => {
+                                if (canCollapse) {
+                                    toggleStage(stage.id);
+                                }
+                            }}
+                            disabled={!canCollapse}
+                            accessibilityRole={
+                                canCollapse ? 'button' : undefined
+                            }
+                            accessibilityState={
+                                canCollapse
+                                    ? { expanded: isExpanded }
+                                    : undefined
+                            }
+                        >
+                            <View style={styles.stageHeader}>
+                                <View
+                                    style={[
+                                        styles.stageIcon,
+                                        {
+                                            backgroundColor:
+                                                getStageColor(stageState),
+                                        },
+                                    ]}
+                                >
+                                    <MaterialCommunityIcons
+                                        name={stage.icon}
+                                        size={21}
+                                        color="#FFFFFF"
+                                    />
+                                </View>
+
+                                <View style={styles.stageTitleContainer}>
+                                    <Text style={styles.stageTitle}>
+                                        {stage.title}
+                                    </Text>
+
+                                    <View style={styles.stageHeaderRight}>
+                                        {stageState === 'completed' && (
+                                            <MaterialCommunityIcons
+                                                name="check-circle"
+                                                size={18}
+                                                color={colors.success}
+                                            />
+                                        )}
+
+                                        {stageState === 'active' && (
+                                            <Text
+                                                style={[
+                                                    styles.stageStateText,
+                                                    {
+                                                        color: colors.primary,
+                                                    },
+                                                ]}
+                                            >
+                                                Active
+                                            </Text>
+                                        )}
+
+                                        {canCollapse && (
+                                            <MaterialCommunityIcons
+                                                name={
+                                                    isExpanded
+                                                        ? 'chevron-up'
+                                                        : 'chevron-down'
+                                                }
+                                                size={22}
+                                                color={colors.mutedIcon}
+                                            />
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+
+                        {isExpanded && (
+                            <View style={styles.milestonesContainer}>
+                                {stage.milestoneKeys.map(
+                                    (milestoneKey, index) => {
+                                        const milestone =
+                                            MILESTONES.find(
+                                                (item) =>
+                                                    item.key === milestoneKey
+                                            );
+
+                                        if (!milestone) {
+                                            return null;
+                                        }
+
+                                        return renderMilestone(
+                                            milestone,
+                                            index,
+                                            stage
+                                        );
+                                    }
+                                )}
+                            </View>
+                        )}
+                    </View>
+                );
+            })}
+
+            {/* Actions */}
+
+            {renderActionButton()}
+
+            {/* Summary */}
+
+            <View style={styles.summaryCard}>
+                <MaterialCommunityIcons
+                    name="information-outline"
+                    size={21}
+                    color={colors.primary}
+                />
+
+                <Text style={styles.summaryText}>
+                    {getSummaryMessage()}
+                </Text>
+            </View>
+
+            {/* History diagnostic */}
+
+            {normalizedHistory.length === 0 && (
+                <View style={styles.historyNotice}>
+                    <MaterialCommunityIcons
+                        name="history"
+                        size={18}
+                        color={colors.mutedText}
+                    />
+
+                    <Text style={styles.historyNoticeText}>
+                        No schedule history entries were provided.
+                        The active milestone is based on the current
+                        schedule status; historical timestamps cannot
+                        be displayed.
+                    </Text>
+                </View>
+            )}
+        </View>
+    );
+};
+
+const createStyles = (colors) =>
+    StyleSheet.create({
+        container: {
+            padding: 16,
+            backgroundColor: colors.background,
+        },
+
+        progressSection: {
+            marginBottom: 20,
+        },
+
+        progressLabels: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+        },
+
+        progressLabel: {
+            fontSize: 14,
+            fontWeight: '600',
+            color: colors.text,
+        },
+
+        progressPercent: {
+            fontSize: 14,
+            fontWeight: '700',
+            color: colors.primary,
+        },
+
+        progressTrack: {
+            height: 8,
+            backgroundColor: colors.border,
+            borderRadius: 4,
+            overflow: 'hidden',
+        },
+
+        progressFill: {
+            height: '100%',
+            borderRadius: 4,
+        },
+
+        stageCard: {
+            backgroundColor: colors.surface,
+            borderRadius: 16,
+            padding: 15,
+            marginBottom: 14,
+            borderWidth: 1,
+            borderColor: colors.border,
+
+            shadowColor: colors.shadow,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: colors.shadowOpacity,
+            shadowRadius: 6,
+            elevation: 2,
+        },
+
+        activeStageCard: {
+            borderColor: colors.primary,
+        },
+
+        stageHeader: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+
+        stageIcon: {
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 12,
+        },
+
+        stageTitleContainer: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            minWidth: 0,
+        },
+
+        stageTitle: {
+            color: colors.text,
+            fontSize: 15,
+            fontWeight: '600',
+            flex: 1,
+        },
+
+        stageHeaderRight: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            marginLeft: 8,
+        },
+
+        stageStateText: {
+            fontSize: 12,
+            fontWeight: '600',
+        },
+
+        milestonesContainer: {
+            marginTop: 18,
+            marginLeft: 4,
+        },
+
+        milestoneRow: {
+            flexDirection: 'row',
+            alignItems: 'stretch',
+            minHeight: 68,
+        },
+
+        milestoneIndicator: {
+            width: 28,
+            alignItems: 'center',
+            marginRight: 12,
+        },
+
+        milestoneCircle: {
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            borderWidth: 1.5,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        milestoneLine: {
+            width: 2,
+            flex: 1,
+            minHeight: 32,
+            marginVertical: 3,
+        },
+
+        milestoneContent: {
+            flex: 1,
+            paddingBottom: 20,
+            minWidth: 0,
+        },
+
+        milestoneTitleRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 6,
+        },
+
+        milestoneTitle: {
+            fontSize: 14,
+            flexShrink: 1,
+        },
+
+        milestoneDescription: {
+            fontSize: 12,
+            lineHeight: 18,
+            color: colors.secondaryText,
+            marginTop: 3,
+        },
+
+        stateBadge: {
+            paddingHorizontal: 7,
+            paddingVertical: 3,
+            borderRadius: 10,
+        },
+
+        activeStateBadge: {
+            backgroundColor: colors.selected,
+        },
+
+        completedStateBadge: {
+            backgroundColor: colors.elevated,
+        },
+
+        stateBadgeText: {
+            fontSize: 10,
+            fontWeight: '700',
+        },
+
+        timestampRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 6,
+            gap: 5,
+        },
+
+        timestampText: {
+            fontSize: 11,
+            color: colors.secondaryText,
+        },
+
+        inferredText: {
+            fontSize: 11,
+            lineHeight: 16,
+            color: colors.mutedText,
+            marginTop: 5,
+            fontStyle: 'italic',
+        },
+
+        noteContainer: {
+            backgroundColor: colors.elevated,
+            borderLeftWidth: 2,
+            borderLeftColor: colors.border,
+            padding: 8,
+            marginTop: 7,
+            borderRadius: 5,
+        },
+
+        noteText: {
+            fontSize: 12,
+            lineHeight: 17,
+            color: colors.secondaryText,
+        },
+
+        replacementBanner: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            backgroundColor: colors.elevated,
+            borderWidth: 1,
+            borderColor: colors.warning,
+            borderRadius: 12,
+            padding: 12,
+            marginBottom: 14,
+            gap: 10,
+        },
+
+        bannerContent: {
+            flex: 1,
+        },
+
+        replacementTitle: {
+            color: colors.warning,
+            fontSize: 14,
+            fontWeight: '700',
+            marginBottom: 4,
+        },
+
+        replacementDescription: {
+            color: colors.secondaryText,
+            fontSize: 12,
+            lineHeight: 18,
+        },
+
+        cancellationBanner: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            backgroundColor: colors.elevated,
+            borderWidth: 1,
+            borderColor: colors.error,
+            borderRadius: 12,
+            padding: 12,
+            marginBottom: 14,
+            gap: 10,
+        },
+
+        cancellationTitle: {
+            color: colors.error,
+            fontSize: 14,
+            fontWeight: '700',
+            marginBottom: 4,
+        },
+
+        cancellationDescription: {
+            color: colors.secondaryText,
+            fontSize: 12,
+            lineHeight: 18,
+        },
+
+        actionButton: {
+            backgroundColor: colors.primary,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingVertical: 14,
+            paddingHorizontal: 20,
+            borderRadius: 28,
+            marginBottom: 14,
+        },
+
+        actionButtonText: {
+            color: '#FFFFFF',
+            fontSize: 15,
+            fontWeight: '600',
+        },
+
+        outlineButton: {
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.primary,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingVertical: 14,
+            paddingHorizontal: 20,
+            borderRadius: 28,
+            marginBottom: 14,
+        },
+
+        outlineButtonText: {
+            color: colors.primary,
+            fontSize: 15,
+            fontWeight: '600',
+        },
+
+        summaryCard: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            backgroundColor: colors.surface,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 14,
+            gap: 10,
+        },
+
+        summaryText: {
+            flex: 1,
+            fontSize: 13,
+            lineHeight: 19,
+            color: colors.secondaryText,
+        },
+
+        historyNotice: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            marginTop: 12,
+            padding: 10,
+            gap: 8,
+        },
+
+        historyNoticeText: {
+            flex: 1,
+            color: colors.mutedText,
+            fontSize: 11,
+            lineHeight: 17,
+        },
+    });
 
 export default ProjectTimelineBar;

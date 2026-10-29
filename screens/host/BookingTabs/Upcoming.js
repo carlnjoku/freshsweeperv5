@@ -227,7 +227,7 @@ import UpcomingScheduleListItem from '../../../components/shared/UpcomingSchedul
 import COLORS from '../../../constants/colors';
 import { tSafe } from '../../../utils/tSafe'; // added import
 
-export default function Upcoming({ schedules, currency, isLoading = false }) {
+export default function Upcoming({ schedules, currency, isLoading = false, replacementWorkflows = {}, }) {
 
   // Enhanced empty state function
   const renderEmptyState = (type = 'general') => {
@@ -279,18 +279,36 @@ export default function Upcoming({ schedules, currency, isLoading = false }) {
     );
   };
 
-  const singleItem = ( {item, index} ) => (
-    <Animatable.View 
-      animation="fadeInUp" 
-      duration={500}
-      delay={index * 100}
-    >
-      <UpcomingScheduleListItem
-        item={item}
-        currency={currency}
-      />
-    </Animatable.View>
-  );
+
+
+  const singleItem = ({ item, index }) => {
+    const scheduleId = String(item?._id || '');
+    
+  
+    const workflowsForSchedule =
+      replacementWorkflows?.[scheduleId] || [];
+
+      console.log('[UPCOMING WORKFLOW DEBUG]', {
+        scheduleId,
+        replacementWorkflowsKeys: Object.keys(replacementWorkflows || {}), 
+        allReplacementWorkflows: replacementWorkflows,
+        workflowsForSchedule,
+      });
+  
+    return (
+      <Animatable.View
+        animation="fadeInUp"
+        duration={500}
+        delay={index * 100}
+      >
+        <UpcomingScheduleListItem
+          item={item}
+          currency={currency}
+          replacementWorkflows={workflowsForSchedule}
+        />
+      </Animatable.View>
+    );
+  };
 
   const itemSeparator = () => (
     <View style={styles.item_separator}></View>

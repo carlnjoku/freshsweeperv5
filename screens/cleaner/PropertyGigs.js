@@ -1,268 +1,13 @@
-// import React, { useState, useEffect, useContext } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   FlatList,
-//   ActivityIndicator,
-//   TouchableOpacity,
-// } from 'react-native';
-// import { useRoute, useNavigation } from '@react-navigation/native';
-// import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-// import moment from 'moment';
-// import { AuthContext } from '../../context/AuthContext';
-// import userService from '../../services/connection/userService';
-// import COLORS from '../../constants/colors';
-// import ROUTES from '../../constants/routes';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-// // Simple GigCard component – replace with your own if available
-// const GigCard = ({ gig, onPress }) => {
-//   const getStatusColor = (status) => {
-//     switch (status) {
-//       case 'upcoming': return COLORS.primary;
-//       case 'completed': return '#4CAF50';
-//       case 'cancelled': return COLORS.error;
-//       default: return COLORS.gray;
-//     }
-//   };
-
-//   return (
-//     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-//       <View style={styles.cardHeader}>
-//         <View style={styles.gigInfo}>
-//           <Text style={styles.gigTitle}>Cleaning Job</Text>
-//           <View style={styles.statusBadge}>
-//             <Text style={[styles.statusText, { color: getStatusColor(gig.status) }]}>
-//               {gig.status?.toUpperCase() || 'UNKNOWN'}
-//             </Text>
-//           </View>
-//         </View>
-//         <Text style={styles.gigDate}>
-//           {gig.date ? moment(gig.date).format('MMM DD, YYYY') : 'Date TBD'}
-//         </Text>
-//       </View>
-//       <View style={styles.gigDetails}>
-//         <View style={styles.detailRow}>
-//           <MaterialIcons name="access-time" size={16} color={COLORS.gray} />
-//           <Text style={styles.detailText}>{gig.time || 'Time TBD'}</Text>
-//         </View>
-//         <View style={styles.detailRow}>
-//           <MaterialCommunityIcons name="currency-usd" size={16} color={COLORS.gray} />
-//           <Text style={styles.detailText}>${gig.pay?.toFixed(2) || '0.00'}</Text>
-//         </View>
-//       </View>
-//       <View style={styles.cardFooter}>
-//         <Text style={styles.viewDetails}>View Details</Text>
-//         <MaterialIcons name="chevron-right" size={20} color={COLORS.primary} />
-//       </View>
-//     </TouchableOpacity>
-//   );
-// };
-
-// export default function PropertyGigs() {
-//   const route = useRoute();
-//   const navigation = useNavigation();
-//   const { property } = route.params; // property object from MyGigs screen
-//   const { currentUserId, userToken } = useContext(AuthContext);
-//   const [gigs, setGigs] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     fetchGigs();
-//   }, []);
-
-//   const fetchGigs = async () => {
-//     try {
-//       setError(null);
-      
-//       // Call your API – adjust endpoint as needed
-//       const response = await userService.getPropertyGigs(property.property_id, userToken);
-//       console.log("My gigs----------YB", response.data)
-//       // Assuming response.data is an array of gigs
-//       setGigs(response.data || []);
-//     } catch (err) {
-//       console.error('Failed to fetch gigs for property:', err);
-//       setError('Could not load gigs. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleGigPress = (gig) => {
-//     // Navigate to gig details screen
-//     navigation.navigate(ROUTES.cleaner_schedule_details_view, { gigId: gig._id });
-//   };
-
-//   if (loading) {
-//     return (
-//       <View style={styles.centered}>
-//         <ActivityIndicator size="large" color={COLORS.primary} />
-//       </View>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <View style={styles.centered}>
-//         <MaterialIcons name="error-outline" size={48} color={COLORS.error} />
-//         <Text style={styles.errorText}>{error}</Text>
-//         <TouchableOpacity style={styles.retryButton} onPress={fetchGigs}>
-//           <Text style={styles.retryText}>Retry</Text>
-//         </TouchableOpacity>
-//       </View>
-//     );
-//   }
-
-//   if (gigs.length === 0) {
-//     return (
-//       <View style={styles.centered}>
-//         <MaterialCommunityIcons name="calendar-blank" size={64} color={COLORS.light_gray} />
-//         <Text style={styles.emptyTitle}>No Gigs Found</Text>
-//         <Text style={styles.emptyText}>
-//           You don't have any cleaning jobs at {property.property_name} yet.
-//         </Text>
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <FlatList
-//         data={gigs}
-//         keyExtractor={(item) => item._id}
-//         renderItem={({ item }) => (
-//           <GigCard gig={item} onPress={() => handleGigPress(item)} />
-//         )}
-//         contentContainerStyle={styles.listContent}
-//         showsVerticalScrollIndicator={false}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FA',
-//   },
-//   listContent: {
-//     padding: 16,
-//     paddingBottom: 30,
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#F5F7FA',
-//     padding: 20,
-//   },
-//   errorText: {
-//     marginTop: 12,
-//     fontSize: 16,
-//     color: COLORS.error,
-//     textAlign: 'center',
-//   },
-//   retryButton: {
-//     marginTop: 16,
-//     paddingHorizontal: 20,
-//     paddingVertical: 10,
-//     backgroundColor: COLORS.primary,
-//     borderRadius: 8,
-//   },
-//   retryText: {
-//     color: '#fff',
-//     fontWeight: '600',
-//   },
-//   emptyTitle: {
-//     fontSize: 18,
-//     fontWeight: '600',
-//     color: '#333',
-//     marginTop: 16,
-//   },
-//   emptyText: {
-//     fontSize: 14,
-//     color: '#888',
-//     textAlign: 'center',
-//     marginTop: 8,
-//     paddingHorizontal: 20,
-//   },
-//   // GigCard styles
-//   card: {
-//     backgroundColor: '#fff',
-//     borderRadius: 16,
-//     padding: 16,
-//     marginBottom: 12,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 6,
-//     elevation: 3,
-//   },
-//   cardHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//   },
-//   gigInfo: {
-//     flex: 1,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   gigTitle: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#333',
-//     marginRight: 8,
-//   },
-//   statusBadge: {
-//     paddingHorizontal: 8,
-//     paddingVertical: 4,
-//     borderRadius: 12,
-//     backgroundColor: '#F0F0F0',
-//   },
-//   statusText: {
-//     fontSize: 10,
-//     fontWeight: '700',
-//   },
-//   gigDate: {
-//     fontSize: 13,
-//     color: '#666',
-//   },
-//   gigDetails: {
-//     marginBottom: 12,
-//   },
-//   detailRow: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 4,
-//   },
-//   detailText: {
-//     marginLeft: 8,
-//     fontSize: 13,
-//     color: '#555',
-//   },
-//   cardFooter: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     borderTopWidth: 1,
-//     borderTopColor: '#F0F0F0',
-//     paddingTop: 12,
-//   },
-//   viewDetails: {
-//     fontSize: 14,
-//     fontWeight: '600',
-//     color: COLORS.primary,
-//   },
-// });
-
-
-import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
@@ -270,131 +15,457 @@ import {
   RefreshControl,
   Animated,
 } from "react-native";
+
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  MaterialIcons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+
 import moment from "moment";
+
 import { AuthContext } from "../../context/AuthContext";
 import userService from "../../services/connection/userService";
-import COLORS from "../../constants/colors";
 import ROUTES from "../../constants/routes";
 import { tSafe } from "../../utils/tSafe";
 
-/* ----------------------------- CARD COMPONENT ----------------------------- */
-const GigCard = ({ gig, onPress, index }) => {
+import { useTheme } from "../../theme";
+import AppText from "../../ui/AppText";
+
+/* -------------------------------------------------------------------------- */
+/* HELPERS                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const getStatusConfig = (status, theme) => {
+  switch (String(status || "").toLowerCase()) {
+    case "upcoming":
+      return {
+        label: tSafe("status_upcoming", "UPCOMING"),
+        color: theme.status.info,
+        icon: "calendar-clock-outline",
+      };
+
+    case "completed":
+      return {
+        label: tSafe("status_completed", "COMPLETED"),
+        color: theme.status.success,
+        icon: "check-circle-outline",
+      };
+
+    case "cancelled":
+      return {
+        label: tSafe("status_cancelled", "CANCELLED"),
+        color: theme.status.error,
+        icon: "close-circle-outline",
+      };
+
+    default:
+      return {
+        label: tSafe("status_unknown", "UNKNOWN"),
+        color: theme.text.muted,
+        icon: "help-circle-outline",
+      };
+  }
+};
+
+const formatGigDate = (date) => {
+  if (!date) {
+    return null;
+  }
+
+  const parsed = moment(date);
+
+  if (!parsed.isValid()) {
+    return null;
+  }
+
+  return parsed.format("MMM DD, YYYY");
+};
+
+const formatGigPay = (pay) => {
+  const numericPay = Number(pay);
+
+  if (!Number.isFinite(numericPay)) {
+    return "$0.00";
+  }
+
+  return `$${numericPay.toFixed(2)}`;
+};
+
+/* -------------------------------------------------------------------------- */
+/* GIG CARD                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const GigCard = ({ gig, onPress, index, theme }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-  console.log(gig)
+  const translateY = useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
-    Animated.parallel([
+    const animation = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
-        delay: index * 100,
+        duration: 350,
+        delay: Math.min(index * 70, 350),
         useNativeDriver: true,
       }),
+
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 400,
-        delay: index * 100,
+        duration: 350,
+        delay: Math.min(index * 70, 350),
         useNativeDriver: true,
       }),
-    ]).start();
-  }, []);
+    ]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "upcoming":
-        return COLORS.primary;
-      case "completed":
-        return "#34C759";
-      case "cancelled":
-        return "#FF3B30";
-      default:
-        return "#8E8E93";
-    }
-  };
+    animation.start();
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case "upcoming":
-        return tSafe("status_upcoming", "UPCOMING");
-      case "completed":
-        return tSafe("status_completed", "COMPLETED");
-      case "cancelled":
-        return tSafe("status_cancelled", "CANCELLED");
-      default:
-        return tSafe("status_unknown", "UNKNOWN");
-    }
-  };
+    return () => {
+      animation.stop();
+    };
+  }, [fadeAnim, translateY, index]);
+
+  const status = getStatusConfig(gig?.status, theme);
+
+  const formattedDate = formatGigDate(gig?.date);
 
   return (
     <Animated.View
       style={[
         styles.cardWrapper,
-        { opacity: fadeAnim, transform: [{ translateY }] },
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY }],
+        },
       ]}
     >
-      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.card.background,
+            borderColor: theme.card.border,
+          },
+        ]}
+        onPress={onPress}
+        activeOpacity={0.82}
+        accessibilityRole="button"
+        accessibilityLabel={tSafe(
+          "view_cleaning_job",
+          "View cleaning job"
+        )}
+      >
+        {/* -------------------------- CARD HEADER -------------------------- */}
+
         <View style={styles.cardHeader}>
-          <Text style={styles.gigTitle}>{tSafe("cleaning_job", "Cleaning Job")}</Text>
+          <View style={styles.titleContainer}>
+            <View
+              style={[
+                styles.jobIcon,
+                {
+                  backgroundColor: theme.brand.primaryLight,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="broom"
+                size={19}
+                color={theme.brand.primary}
+              />
+            </View>
+
+            <View style={styles.titleContent}>
+              <AppText
+                variant="subtitle"
+                style={[
+                  styles.gigTitle,
+                  {
+                    color: theme.text.primary,
+                  },
+                ]}
+              >
+                {tSafe("cleaning_job", "Cleaning Job")}
+              </AppText>
+
+              {!!gig?.property_name && (
+                <AppText
+                  variant="caption"
+                  style={[
+                    styles.propertyName,
+                    {
+                      color: theme.text.secondary,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {gig.property_name}
+                </AppText>
+              )}
+            </View>
+          </View>
+
+          {/* Status */}
+
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: getStatusColor(gig.status) },
+              {
+                backgroundColor: status.color,
+              },
             ]}
           >
-            <Text style={styles.statusText}>
-              {getStatusText(gig.status)}
-            </Text>
+            <MaterialCommunityIcons
+              name={status.icon}
+              size={13}
+              color={theme.text.inverse}
+            />
+
+            <AppText
+              variant="caption"
+              style={[
+                styles.statusText,
+                {
+                  color: theme.text.inverse,
+                },
+              ]}
+            >
+              {status.label}
+            </AppText>
           </View>
         </View>
 
-        <Text style={styles.propertyName}>{gig.property_name}</Text>
+        {/* ---------------------------- DETAILS ---------------------------- */}
 
-        <View style={styles.detailRow}>
-          <MaterialCommunityIcons
-            name="calendar-month-outline"
-            size={18}
-            color="#6C6C80"
+        <View
+          style={[
+            styles.detailsContainer,
+            {
+              backgroundColor: theme.background.sunken,
+              borderColor: theme.border.default,
+            },
+          ]}
+        >
+          {/* Date */}
+
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons
+              name="calendar-month-outline"
+              size={18}
+              color={theme.icon.default}
+            />
+
+            <View style={styles.detailContent}>
+              <AppText
+                variant="caption"
+                style={[
+                  styles.detailLabel,
+                  {
+                    color: theme.text.muted,
+                  },
+                ]}
+              >
+                {tSafe("date", "Date")}
+              </AppText>
+
+              <AppText
+                variant="body"
+                style={[
+                  styles.detailText,
+                  {
+                    color: theme.text.primary,
+                  },
+                ]}
+              >
+                {formattedDate ||
+                  tSafe("date_tbd", "Date TBD")}
+              </AppText>
+            </View>
+          </View>
+
+          {/* Time */}
+
+          <View style={styles.detailRow}>
+            <MaterialIcons
+              name="access-time"
+              size={18}
+              color={theme.icon.default}
+            />
+
+            <View style={styles.detailContent}>
+              <AppText
+                variant="caption"
+                style={[
+                  styles.detailLabel,
+                  {
+                    color: theme.text.muted,
+                  },
+                ]}
+              >
+                {tSafe("time", "Time")}
+              </AppText>
+
+              <AppText
+                variant="body"
+                style={[
+                  styles.detailText,
+                  {
+                    color: theme.text.primary,
+                  },
+                ]}
+              >
+                {gig?.time ||
+                  tSafe("time_tbd", "Time TBD")}
+              </AppText>
+            </View>
+          </View>
+
+          {/* Pay */}
+
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons
+              name="currency-usd"
+              size={18}
+              color={theme.icon.default}
+            />
+
+            <View style={styles.detailContent}>
+              <AppText
+                variant="caption"
+                style={[
+                  styles.detailLabel,
+                  {
+                    color: theme.text.muted,
+                  },
+                ]}
+              >
+                {tSafe("earnings", "Earnings")}
+              </AppText>
+
+              <AppText
+                variant="body"
+                style={[
+                  styles.detailText,
+                  styles.payText,
+                  {
+                    color: theme.status.success,
+                  },
+                ]}
+              >
+                {formatGigPay(gig?.pay)}
+              </AppText>
+            </View>
+          </View>
+        </View>
+
+        {/* ----------------------------- FOOTER ---------------------------- */}
+
+        <View
+          style={[
+            styles.cardFooter,
+            {
+              borderTopColor: theme.divider,
+            },
+          ]}
+        >
+          <AppText
+            variant="body"
+            style={[
+              styles.viewDetails,
+              {
+                color: theme.brand.primary,
+              },
+            ]}
+          >
+            {tSafe("view_details", "View Details")}
+          </AppText>
+
+          <MaterialIcons
+            name="arrow-forward-ios"
+            size={14}
+            color={theme.brand.primary}
           />
-          <Text style={styles.detailText}>
-            {gig.date
-              ? moment(gig.date).format("MMM DD, YYYY")
-              : tSafe("date_tbd", "Date TBD")}
-          </Text>
-        </View>
-
-        <View style={styles.detailsRow}>
-          <View style={styles.detailItem}>
-            <MaterialIcons name="access-time" size={16} color="#6C6C80" />
-            <Text style={styles.detailItemText}>
-              {gig.time || tSafe("time_tbd", "Time TBD")}
-            </Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <MaterialCommunityIcons name="currency-usd" size={16} color="#6C6C80" />
-            <Text style={styles.detailItemText}>
-              ${gig.pay?.toFixed(2) || "0.00"}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <Text style={styles.viewDetails}>{tSafe("view_details", "View Details")}</Text>
-          <MaterialIcons name="arrow-forward-ios" size={14} color={COLORS.primary} />
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-/* --------------------------- MAIN SCREEN --------------------------- */
+/* -------------------------------------------------------------------------- */
+/* SECTION HEADER                                                             */
+/* -------------------------------------------------------------------------- */
+
+const SectionHeader = ({
+  title,
+  count,
+  icon,
+  color,
+  theme,
+  style,
+}) => {
+  return (
+    <View style={[styles.sectionHeader, style]}>
+      <View
+        style={[
+          styles.sectionIcon,
+          {
+            backgroundColor: `${color}18`,
+          },
+        ]}
+      >
+        <MaterialCommunityIcons
+          name={icon}
+          size={19}
+          color={color}
+        />
+      </View>
+
+      <AppText
+        variant="h3"
+        style={[
+          styles.sectionTitle,
+          {
+            color: theme.text.primary,
+          },
+        ]}
+      >
+        {title}
+      </AppText>
+
+      <View
+        style={[
+          styles.countBadge,
+          {
+            backgroundColor: theme.surface.selected,
+            borderColor: theme.border.default,
+          },
+        ]}
+      >
+        <AppText
+          variant="caption"
+          style={[
+            styles.countText,
+            {
+              color: theme.text.secondary,
+            },
+          ]}
+        >
+          {count}
+        </AppText>
+      </View>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* MAIN SCREEN                                                                */
+/* -------------------------------------------------------------------------- */
+
 export default function PropertyGigs() {
   const route = useRoute();
   const navigation = useNavigation();
-  const { property } = route.params;
+
+  const { theme } = useTheme();
+
+  const { property } = route.params || {};
   const { userToken } = useContext(AuthContext);
 
   const [gigs, setGigs] = useState([]);
@@ -402,276 +473,1029 @@ export default function PropertyGigs() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+  /* ------------------------------------------------------------------------ */
+  /* FETCH GIGS                                                               */
+  /* ------------------------------------------------------------------------ */
+
+  const fetchGigs = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!property?.property_id) {
+        setError(
+          tSafe(
+            "property_not_available",
+            "Property information is not available."
+          )
+        );
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      if (!silent) {
+        setError(null);
+      }
+
+      try {
+        const response = await userService.getPropertyGigs(
+          property.property_id,
+          userToken
+        );
+
+        const incomingGigs = Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+        setGigs(incomingGigs);
+        setError(null);
+      } catch (err) {
+        console.log("PropertyGigs fetch error:", err);
+
+        if (!silent) {
+          setError(
+            tSafe(
+              "load_gigs_error",
+              "Could not load gigs. Please try again."
+            )
+          );
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [property?.property_id, userToken]
+  );
+
   useEffect(() => {
     fetchGigs();
-  }, []);
+  }, [fetchGigs]);
 
-  const fetchGigs = async () => {
-    try {
-      setError(null);
-      const response = await userService.getPropertyGigs(property.property_id, userToken);
-      console.log("My gigs-------p", response.data);
-      setGigs(response.data || []);
-    } catch (err) {
-      console.log(err);
-      setError(tSafe("load_gigs_error", "Could not load gigs"));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  /* ------------------------------------------------------------------------ */
+  /* REFRESH                                                                   */
+  /* ------------------------------------------------------------------------ */
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchGigs();
-  };
+    fetchGigs({ silent: true });
+  }, [fetchGigs]);
 
-  const handleGigPress = (gig) => {
-    navigation.navigate(ROUTES.cleaner_schedule_details_view, { scheduleId: gig.scheduleId });
-  };
+  /* ------------------------------------------------------------------------ */
+  /* NAVIGATION                                                                */
+  /* ------------------------------------------------------------------------ */
 
-  // Separate gigs by status
-  const upcoming = gigs.filter((g) => g.status === "upcoming");
-  const past = gigs.filter((g) => g.status !== "upcoming");
+  const handleGigPress = useCallback(
+    (gig) => {
+      if (!gig?.scheduleId) {
+        return;
+      }
 
-  // Timeline item renderer
-  const renderTimelineItem = ({ item, index, sectionLength, isPast }) => (
-    <View style={styles.timelineRow}>
-      <View style={styles.timelineColumn}>
-        <View
-          style={[
-            styles.timelineDot,
-            { backgroundColor: isPast ? "#C4C4C6" : COLORS.primary },
-          ]}
-        />
-        {index !== sectionLength - 1 && (
-          <View
-            style={[
-              styles.timelineLine,
-              { backgroundColor: isPast ? "#E0E0E5" : "#E6E6EB" },
-            ]}
-          />
-        )}
-      </View>
-      <GigCard gig={item} onPress={() => handleGigPress(item)} index={index} />
-    </View>
+      navigation.navigate(
+        ROUTES.cleaner_schedule_details_view,
+        {
+          scheduleId: gig.scheduleId,
+        }
+      );
+    },
+    [navigation]
   );
+
+  /* ------------------------------------------------------------------------ */
+  /* DERIVED DATA                                                              */
+  /* ------------------------------------------------------------------------ */
+
+  const upcoming = gigs.filter(
+    (gig) => gig?.status === "upcoming"
+  );
+
+  const past = gigs.filter(
+    (gig) => gig?.status !== "upcoming"
+  );
+
+  const upcomingCount = upcoming.length;
+  const pastCount = past.length;
+
+  /* ------------------------------------------------------------------------ */
+  /* LOADING                                                                   */
+  /* ------------------------------------------------------------------------ */
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View
+        style={[
+          styles.centered,
+          {
+            backgroundColor: theme.background.default,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.stateIconContainer,
+            {
+              backgroundColor: theme.brand.primaryLight,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="briefcase-clock-outline"
+            size={34}
+            color={theme.brand.primary}
+          />
+        </View>
+
+        <ActivityIndicator
+          size="large"
+          color={theme.brand.primary}
+          style={styles.loadingIndicator}
+        />
+
+        <AppText
+          variant="body"
+          style={[
+            styles.stateMessage,
+            {
+              color: theme.text.secondary,
+            },
+          ]}
+        >
+          {tSafe("loading_gigs", "Loading your gigs...")}
+        </AppText>
       </View>
     );
   }
 
+  /* ------------------------------------------------------------------------ */
+  /* ERROR                                                                     */
+  /* ------------------------------------------------------------------------ */
+
   if (error) {
     return (
-      <View style={styles.centered}>
-        <MaterialCommunityIcons name="alert-circle-outline" size={64} color="red" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchGigs}>
-          <Text style={styles.retryText}>{tSafe("try_again", "Try Again")}</Text>
+      <View
+        style={[
+          styles.centered,
+          {
+            backgroundColor: theme.background.default,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.stateIconContainer,
+            {
+              backgroundColor: theme.status.error + "18",
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={40}
+            color={theme.status.error}
+          />
+        </View>
+
+        <AppText
+          variant="h3"
+          style={[
+            styles.stateTitle,
+            {
+              color: theme.text.primary,
+            },
+          ]}
+        >
+          {tSafe("something_went_wrong", "Something went wrong")}
+        </AppText>
+
+        <AppText
+          variant="body"
+          style={[
+            styles.errorText,
+            {
+              color: theme.text.secondary,
+            },
+          ]}
+        >
+          {error}
+        </AppText>
+
+        <TouchableOpacity
+          style={[
+            styles.retryButton,
+            {
+              backgroundColor: theme.button.primaryBackground,
+            },
+          ]}
+          onPress={() => fetchGigs()}
+          activeOpacity={0.85}
+        >
+          <MaterialCommunityIcons
+            name="refresh"
+            size={18}
+            color={theme.button.primaryText}
+          />
+
+          <AppText
+            variant="body"
+            style={[
+              styles.retryText,
+              {
+                color: theme.button.primaryText,
+              },
+            ]}
+          >
+            {tSafe("try_again", "Try Again")}
+          </AppText>
         </TouchableOpacity>
       </View>
     );
   }
 
+  /* ------------------------------------------------------------------------ */
+  /* EMPTY                                                                     */
+  /* ------------------------------------------------------------------------ */
+
   if (gigs.length === 0) {
     return (
-      <View style={styles.centered}>
-        <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#D3D3D3" />
-        <Text style={styles.emptyTitle}>{tSafe("no_gigs_found", "No Gigs Found")}</Text>
-        <Text style={styles.emptyText}>
-          {tSafe("no_gigs_for_property", "No cleaning jobs yet for {propertyName}", { propertyName: property.property_name })}
-        </Text>
+      <View
+        style={[
+          styles.centered,
+          {
+            backgroundColor: theme.background.default,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.emptyIconContainer,
+            {
+              backgroundColor: theme.surface.selected,
+              borderColor: theme.border.default,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="calendar-blank-outline"
+            size={46}
+            color={theme.icon.muted}
+          />
+        </View>
+
+        <AppText
+          variant="h2"
+          style={[
+            styles.emptyTitle,
+            {
+              color: theme.text.primary,
+            },
+          ]}
+        >
+          {tSafe("no_gigs_found", "No Gigs Found")}
+        </AppText>
+
+        <AppText
+          variant="body"
+          style={[
+            styles.emptyText,
+            {
+              color: theme.text.secondary,
+            },
+          ]}
+        >
+          {tSafe(
+            "no_gigs_for_property",
+            "No cleaning jobs yet for {propertyName}",
+            {
+              propertyName:
+                property?.property_name ||
+                tSafe("this_property", "this property"),
+            }
+          )}
+        </AppText>
+
+        <TouchableOpacity
+          style={[
+            styles.emptyRefreshButton,
+            {
+              borderColor: theme.border.default,
+              backgroundColor: theme.surface.elevated,
+            },
+          ]}
+          onPress={() => fetchGigs()}
+          activeOpacity={0.85}
+        >
+          <MaterialCommunityIcons
+            name="refresh"
+            size={18}
+            color={theme.brand.primary}
+          />
+
+          <AppText
+            variant="body"
+            style={[
+              styles.emptyRefreshText,
+              {
+                color: theme.brand.primary,
+              },
+            ]}
+          >
+            {tSafe("refresh", "Refresh")}
+          </AppText>
+        </TouchableOpacity>
       </View>
     );
   }
 
+  /* ------------------------------------------------------------------------ */
+  /* RENDER                                                                    */
+  /* ------------------------------------------------------------------------ */
+
   return (
     <FlatList
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.listContent}
-      ListHeaderComponent={() => (
-        <>
-          {upcoming.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>{tSafe("upcoming_section", "📅 Upcoming")}</Text>
-              {upcoming.map((item, index) =>
-                renderTimelineItem({
-                  item,
-                  index,
-                  sectionLength: upcoming.length,
-                  isPast: false,
-                })
-              )}
-            </>
-          )}
-          {past.length > 0 && (
-            <>
-              <Text style={[styles.sectionTitle, styles.pastSectionTitle]}>
-                {tSafe("past_jobs_section", "✅ Past Jobs")}
-              </Text>
-              {past.map((item, index) =>
-                renderTimelineItem({
-                  item,
-                  index,
-                  sectionLength: past.length,
-                  isPast: true,
-                })
-              )}
-            </>
-          )}
-        </>
-      )}
       data={[]}
       renderItem={null}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.listContent,
+        {
+          backgroundColor: theme.background.default,
+        },
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.brand.primary}
+          colors={[theme.brand.primary]}
+        />
+      }
+      ListHeaderComponent={
+        <View>
+          {/* ---------------------------------------------------------------- */}
+          {/* PAGE HEADER                                                       */}
+          {/* ---------------------------------------------------------------- */}
+
+          <View
+            style={[
+              styles.pageHeader,
+              {
+                backgroundColor: theme.surface.elevated,
+                borderColor: theme.card.border,
+              },
+            ]}
+          >
+            <View style={styles.pageHeaderTop}>
+              <View style={styles.pageHeaderIcon}>
+                <MaterialCommunityIcons
+                  name="briefcase-outline"
+                  size={23}
+                  color={theme.brand.primary}
+                />
+              </View>
+
+              <View style={styles.pageHeaderContent}>
+                <AppText
+                  variant="h2"
+                  style={[
+                    styles.pageTitle,
+                    {
+                      color: theme.text.primary,
+                    },
+                  ]}
+                >
+                  {tSafe("property_gigs", "Property Gigs")}
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  style={[
+                    styles.pageSubtitle,
+                    {
+                      color: theme.text.secondary,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {property?.property_name ||
+                    tSafe("your_property", "Your Property")}
+                </AppText>
+              </View>
+            </View>
+
+            {/* Summary */}
+
+            <View
+              style={[
+                styles.summaryRow,
+                {
+                  borderTopColor: theme.divider,
+                },
+              ]}
+            >
+              <View style={styles.summaryItem}>
+                <AppText
+                  variant="h3"
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: theme.brand.primary,
+                    },
+                  ]}
+                >
+                  {gigs.length}
+                </AppText>
+
+                <AppText
+                  variant="caption"
+                  style={[
+                    styles.summaryLabel,
+                    {
+                      color: theme.text.muted,
+                    },
+                  ]}
+                >
+                  {tSafe("total_jobs", "Total Jobs")}
+                </AppText>
+              </View>
+
+              <View
+                style={[
+                  styles.summaryDivider,
+                  {
+                    backgroundColor: theme.divider,
+                  },
+                ]}
+              />
+
+              <View style={styles.summaryItem}>
+                <AppText
+                  variant="h3"
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: theme.status.info,
+                    },
+                  ]}
+                >
+                  {upcomingCount}
+                </AppText>
+
+                <AppText
+                  variant="caption"
+                  style={[
+                    styles.summaryLabel,
+                    {
+                      color: theme.text.muted,
+                    },
+                  ]}
+                >
+                  {tSafe("upcoming", "Upcoming")}
+                </AppText>
+              </View>
+
+              <View
+                style={[
+                  styles.summaryDivider,
+                  {
+                    backgroundColor: theme.divider,
+                  },
+                ]}
+              />
+
+              <View style={styles.summaryItem}>
+                <AppText
+                  variant="h3"
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: theme.status.success,
+                    },
+                  ]}
+                >
+                  {pastCount}
+                </AppText>
+
+                <AppText
+                  variant="caption"
+                  style={[
+                    styles.summaryLabel,
+                    {
+                      color: theme.text.muted,
+                    },
+                  ]}
+                >
+                  {tSafe("past", "Past")}
+                </AppText>
+              </View>
+            </View>
+          </View>
+
+          {/* ---------------------------------------------------------------- */}
+          {/* UPCOMING                                                          */}
+          {/* ---------------------------------------------------------------- */}
+
+          {upcoming.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeader
+                title={tSafe("upcoming_section", "Upcoming")}
+                count={upcoming.length}
+                icon="calendar-clock-outline"
+                color={theme.status.info}
+                theme={theme}
+              />
+
+              {upcoming.map((item, index) => (
+                <View
+                  key={
+                    item?.scheduleId ||
+                    item?._id ||
+                    `upcoming-${index}`
+                  }
+                  style={styles.timelineRow}
+                >
+                  <View style={styles.timelineColumn}>
+                    <View
+                      style={[
+                        styles.timelineDot,
+                        {
+                          backgroundColor: theme.status.info,
+                          borderColor:
+                            theme.background.default,
+                        },
+                      ]}
+                    />
+
+                    {index !== upcoming.length - 1 && (
+                      <View
+                        style={[
+                          styles.timelineLine,
+                          {
+                            backgroundColor:
+                              theme.border.default,
+                          },
+                        ]}
+                      />
+                    )}
+                  </View>
+
+                  <GigCard
+                    gig={item}
+                    index={index}
+                    theme={theme}
+                    onPress={() => handleGigPress(item)}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* ---------------------------------------------------------------- */}
+          {/* PAST                                                               */}
+          {/* ---------------------------------------------------------------- */}
+
+          {past.length > 0 && (
+            <View style={[styles.section, styles.pastSection]}>
+              <SectionHeader
+                title={tSafe("past_jobs_section", "Past Jobs")}
+                count={past.length}
+                icon="history"
+                color={theme.text.muted}
+                theme={theme}
+              />
+
+              {past.map((item, index) => (
+                <View
+                  key={
+                    item?.scheduleId ||
+                    item?._id ||
+                    `past-${index}`
+                  }
+                  style={styles.timelineRow}
+                >
+                  <View style={styles.timelineColumn}>
+                    <View
+                      style={[
+                        styles.timelineDot,
+                        {
+                          backgroundColor: theme.text.muted,
+                          borderColor:
+                            theme.background.default,
+                        },
+                      ]}
+                    />
+
+                    {index !== past.length - 1 && (
+                      <View
+                        style={[
+                          styles.timelineLine,
+                          {
+                            backgroundColor:
+                              theme.divider,
+                          },
+                        ]}
+                      />
+                    )}
+                  </View>
+
+                  <GigCard
+                    gig={item}
+                    index={index}
+                    theme={theme}
+                    onPress={() => handleGigPress(item)}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Bottom spacing */}
+
+          <View style={styles.bottomSpacer} />
+        </View>
+      }
     />
   );
 }
 
-/* ----------------------------- STYLES ----------------------------- */
+/* -------------------------------------------------------------------------- */
+/* STYLES                                                                      */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
   listContent: {
-    padding: 20,
-    backgroundColor: "#F8F9FC",
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 40,
   },
-  sectionTitle: {
+
+  /* ----------------------------- PAGE HEADER ----------------------------- */
+
+  pageHeader: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 24,
+  },
+
+  pageHeaderTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  pageHeaderIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.04)",
+  },
+
+  pageHeaderContent: {
+    flex: 1,
+    marginLeft: 13,
+  },
+
+  pageTitle: {
+    fontSize: 21,
+    fontWeight: "800",
+  },
+
+  pageSubtitle: {
+    marginTop: 3,
+    fontSize: 14,
+  },
+
+  summaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 18,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  },
+
+  summaryItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+
+  summaryValue: {
     fontSize: 20,
+    fontWeight: "800",
+  },
+
+  summaryLabel: {
+    marginTop: 3,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  summaryDivider: {
+    width: 1,
+    height: 30,
+  },
+
+  /* ----------------------------- SECTIONS -------------------------------- */
+
+  section: {
+    width: "100%",
+  },
+
+  pastSection: {
+    marginTop: 10,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+    paddingHorizontal: 2,
+  },
+
+  sectionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  sectionTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  countBadge: {
+    minWidth: 30,
+    height: 28,
+    paddingHorizontal: 9,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  countText: {
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 16,
-    color: "#1E1E2F",
   },
-  pastSectionTitle: {
-    marginTop: 24,
-    color: "#6C6C80",
-  },
+
+  /* ----------------------------- TIMELINE -------------------------------- */
+
   timelineRow: {
     flexDirection: "row",
-    marginBottom: 18,
+    marginBottom: 16,
   },
+
   timelineColumn: {
     width: 30,
     alignItems: "center",
   },
+
   timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginTop: 8,
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    borderWidth: 3,
+    marginTop: 10,
+    zIndex: 2,
   },
+
   timelineLine: {
     flex: 1,
     width: 2,
-    marginTop: 4,
+    marginTop: -1,
+    marginBottom: -16,
   },
+
+  /* ------------------------------- CARD ---------------------------------- */
+
   cardWrapper: {
     flex: 1,
   },
+
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 20,
+    borderWidth: 1,
     padding: 16,
+
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+
+    elevation: 3,
   },
+
   cardHeader: {
     flexDirection: "row",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 14,
   },
+
+  titleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  jobIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  titleContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+
   gigTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#1E1E2F",
+    fontSize: 16,
+    fontWeight: "800",
   },
+
   propertyName: {
-    fontSize: 14,
-    color: "#6C6C80",
-    marginBottom: 8,
+    marginTop: 2,
+    fontSize: 12,
   },
+
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 14,
+    gap: 4,
   },
+
   statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#fff",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.4,
   },
+
+  /* ------------------------------ DETAILS -------------------------------- */
+
+  detailsContainer: {
+    borderRadius: 15,
+    borderWidth: 1,
+    padding: 11,
+  },
+
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    minHeight: 45,
   },
+
+  detailContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+
+  detailLabel: {
+    fontSize: 10,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
   detailText: {
-    marginLeft: 8,
+    marginTop: 1,
     fontSize: 14,
-    color: "#6C6C80",
+    fontWeight: "600",
   },
-  detailsRow: {
-    flexDirection: "row",
-    marginBottom: 12,
+
+  payText: {
+    fontWeight: "800",
   },
-  detailItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  detailItemText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: "#6C6C80",
-  },
+
+  /* ------------------------------- FOOTER -------------------------------- */
+
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end",
     borderTopWidth: 1,
-    borderTopColor: "#EFEFF4",
+    marginTop: 14,
     paddingTop: 12,
   },
+
   viewDetails: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "700",
     marginRight: 6,
   },
+
+  /* --------------------------- STATE SCREENS ------------------------------ */
+
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 32,
   },
-  errorText: {
-    marginTop: 12,
-    fontSize: 16,
+
+  stateIconContainer: {
+    width: 76,
+    height: 76,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  retryButton: {
-    marginTop: 16,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
+
+  loadingIndicator: {
+    marginTop: 20,
   },
-  retryText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginTop: 16,
-  },
-  emptyText: {
-    fontSize: 15,
-    marginTop: 8,
-    color: "#8E8E93",
+
+  stateTitle: {
+    marginTop: 18,
     textAlign: "center",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+
+  stateMessage: {
+    marginTop: 12,
+    textAlign: "center",
+  },
+
+  errorText: {
+    marginTop: 10,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    maxWidth: 320,
+  },
+
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 15,
+    gap: 7,
+  },
+
+  retryText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  /* ------------------------------- EMPTY --------------------------------- */
+
+  emptyIconContainer: {
+    width: 92,
+    height: 92,
+    borderRadius: 30,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    marginTop: 20,
+    fontSize: 21,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  emptyText: {
+    marginTop: 9,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    maxWidth: 330,
+  },
+
+  emptyRefreshButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 22,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 7,
+  },
+
+  emptyRefreshText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  bottomSpacer: {
+    height: 10,
   },
 });

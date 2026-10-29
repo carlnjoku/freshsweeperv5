@@ -1,521 +1,633 @@
-// import React, { useState, useEffect } from 'react';
-// import { View, TextInput, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import * as Location from 'expo-location';
-// import GoogleAutocomplete from './GooglePlacesAutocomplete';
-// import COLORS from '../../constants/colors';
-// import { GOOGLE_MAPS_API_KEY } from '../../secret';
-// import useLocationPermission from './UseLocationPermission';
-
-// const AddressInput = ({ 
-//   label,
-//   value,
-//   onChange,
-//   onCoordinatesSet,
-//   error,
-//   initialCoordinates  // Add this prop
-// }) => {
-//   const { hasPermission, requestPermission } = useLocationPermission();
-//   const [showManualInput, setShowManualInput] = useState(false);
-//   const [isVerifying, setIsVerifying] = useState(false);
-//   const [lastVerifiedAddress, setLastVerifiedAddress] = useState(null);
-
-//   const [coordinates, setCoordinates] = useState(initialCoordinates || null);
-
-//     // Initialize with existing coordinates
-//     useEffect(() => {
-//         if (initialCoordinates) {
-//             setCoordinates(initialCoordinates);
-//         }
-//     }, [initialCoordinates]);
-
-//   // Reset verification if address changes
-//   useEffect(() => {
-//     if (value !== lastVerifiedAddress) {
-//       setLastVerifiedAddress(null);
-//     }
-//   }, [value]);
-
-//   const isVerified = value === lastVerifiedAddress;
-
-//   const handleAutocompleteSelected = async (selectedAddress) => {
-//     try {
-//       setIsVerifying(true);
-//       let coordinates = null;
-
-//       // Try Google Geocoding first
-//       const googleResponse = await fetch(
-//         `https://maps.googleapis.com/maps/json?address=${encodeURIComponent(selectedAddress)}&key=${GOOGLE_MAPS_API_KEY}`
-//       );
-//       const googleData = await googleResponse.json();
-
-//       if (googleData.status === 'OK') {
-//         const location = googleData.results[0].geometry.location;
-//         coordinates = { latitude: location.lat, longitude: location.lng };
-//       }
-
-//       // Fallback to Expo if Google fails
-//       if (!coordinates) {
-//         const expoResults = await Location.geocodeAsync(selectedAddress);
-//         if (expoResults.length > 0) {
-//           coordinates = {
-//             latitude: expoResults[0].latitude,
-//             longitude: expoResults[0].longitude
-//           };
-//         }
-//       }
-
-//       if (coordinates) {
-//         onChange(selectedAddress);
-//         onCoordinatesSet(coordinates);
-//         setLastVerifiedAddress(selectedAddress);
-//       } else {
-//         throw new Error('Location verification failed');
-//       }
-//     } catch (error) {
-//       Alert.alert('Error', 'Failed to verify address location');
-//       setShowManualInput(true);
-//     } finally {
-//       setIsVerifying(false);
-//     }
-//   };
-
-//   const handleManualVerification = async () => {
-//     if (!value.trim() || isVerified) return;
-
-//     try {
-//       setIsVerifying(true);
-//       const hasPerms = await requestPermission();
-//       if (!hasPerms) return;
-
-//       const expoResults = await Location.geocodeAsync(value);
-//       if (expoResults.length > 0) {
-//         const coordinates = {
-//           latitude: expoResults[0].latitude,
-//           longitude: expoResults[0].longitude
-//         };
-//         onCoordinatesSet(coordinates);
-//         setLastVerifiedAddress(value);
-//       } else {
-//         Alert.alert('Error', 'Could not verify address location');
-//       }
-//     } catch (error) {
-//       Alert.alert('Error', 'Failed to process address verification');
-//     } finally {
-//       setIsVerifying(false);
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       {!showManualInput ? (
-//         <GoogleAutocomplete
-//           label={label}
-//           selected_address={handleAutocompleteSelected}
-//           handleError={() => setShowManualInput(true)}
-//           initialValue={value}
-//         />
-//       ) : (
-//         <View style={styles.manualContainer}>
-//           <TextInput
-//             placeholder="Enter address manually"
-//             value={value}
-//             onChangeText={onChange}
-//             style={styles.input}
-//             multiline
-//             numberOfLines={3}
-//           />
-          
-//           <View style={styles.buttonRow}>
-//             <TouchableOpacity
-//               style={[
-//                 styles.verifyButton,
-//                 isVerified && styles.verifiedButton
-//               ]}
-//               onPress={handleManualVerification}
-//               disabled={isVerified || isVerifying}
-//             >
-//               {isVerifying ? (
-//                 <ActivityIndicator color="white" />
-//               ) : isVerified ? (
-//                 <View style={styles.verifiedWrapper}>
-//                   <MaterialCommunityIcons 
-//                     name="check" 
-//                     size={20} 
-//                     color="white" 
-//                   />
-//                   <Text style={styles.buttonText}>Address Verified</Text>
-//                 </View>
-//               ) : (
-//                 <Text style={styles.buttonText}>Verify Address</Text>
-//               )}
-//             </TouchableOpacity>
-
-//             <TouchableOpacity
-//               style={styles.retryButton}
-//               onPress={() => setShowManualInput(false)}
-//             >
-//               <Text style={[styles.buttonText, { color: COLORS.primary }]}>
-//                 Use Autocomplete
-//               </Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       )}
-
-//       {error && <Text style={styles.errorText}>{error}</Text>}
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     marginVertical: 10,
-//   },
-//   manualContainer: {
-//     marginTop: 10,
-//   },
-//   input: {
-//     borderWidth: 1,
-//     borderColor: '#ccc',
-//     borderRadius: 5,
-//     padding: 10,
-//     marginBottom: 10,
-//     minHeight: 70,
-//     textAlignVertical: 'top',
-//   },
-//   buttonRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     gap: 10,
-//   },
-//   verifyButton: {
-//     flex: 1,
-//     backgroundColor: COLORS.primary,
-//     padding: 12,
-//     borderRadius: 5,
-//     alignItems: 'center',
-//     marginBottom: 10,
-//   },
-//   verifiedButton: {
-//     backgroundColor: COLORS.green,
-//   },
-//   verifiedWrapper: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 8,
-//   },
-//   retryButton: {
-//     flex: 1,
-//     backgroundColor: 'white',
-//     borderWidth: 1,
-//     borderColor: COLORS.primary,
-//     padding: 12,
-//     borderRadius: 5,
-  
-//   },
-//   buttonText: {
-//     color: 'white',
-//     fontWeight: 'bold',
-//   },
-//   errorText: {
-//     color: 'red',
-//     fontSize: 12,
-//     marginTop: 5,
-//   },
-// });
-
-// export default AddressInput;
-
-
-
-
-
-
-// import React, { useState, useEffect, useRef } from 'react';
-// import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-// import { TextInput } from 'react-native-paper';
-// import { geocodeAddress } from '../../utils/geocodeAddress';
-// import COLORS from '../../constants/colors';
-
-// const AddressInput = ({ 
-//     label, 
-//     value, 
-//     onChange, 
-//     onCoordinatesSet, 
-//     error,
-//     initialCoordinates 
-// }) => {
-//     const [coordinates, setCoordinates] = useState(null);
-//     const [isVerifying, setIsVerifying] = useState(false);
-//     const [verificationError, setVerificationError] = useState(null);
-//     const [lastVerifiedAddress, setLastVerifiedAddress] = useState(null);
-//     const initialLoad = useRef(true);
-
-//     // Initialize with existing coordinates
-//     useEffect(() => {
-//         if (initialCoordinates) {
-//             setCoordinates(initialCoordinates);
-//             setLastVerifiedAddress(value);
-//         }
-//     }, [initialCoordinates]);
-
-//     // Reset verification if address changes
-//     useEffect(() => {
-//         if (value !== lastVerifiedAddress) {
-//             setLastVerifiedAddress(null);
-//             setCoordinates(null);
-//         }
-//     }, [value]);
-
-//     const handleVerify = async () => {
-//         setIsVerifying(true);
-//         setVerificationError(null);
-//         try {
-//             const coords = await geocodeAddress(value);
-//             setCoordinates(coords);
-//             setLastVerifiedAddress(value);
-//             onCoordinatesSet(coords);
-//         } catch (err) {
-//             setVerificationError('Failed to verify address. Please check and try again.');
-//         } finally {
-//             setIsVerifying(false);
-//         }
-//     };
-
-//     return (
-//         <View style={styles.container}>
-            
-//             <TextInput
-//                 placeholder="Enter address manually"
-//                 outlineColor="#D8D8D8"
-//                 mode="outlined"
-//                 label={label}
-//                 activeOutlineColor={COLORS.primary}
-//                 style={{marginBottom:5, marginTop:5, color:COLORS.gray, fontSize:14, backgroundColor:"#fff"}}
-//                 value={value}
-//                 onChangeText={onChange}
-//                 editable={!isVerifying}
-//                 multiline
-//                 numberOfLines={2}
-//             />
-
-            
-//             {/* Verification Button */}
-//             <TouchableOpacity 
-//                 style={styles.verifyButton} 
-//                 onPress={handleVerify}
-//                 disabled={isVerifying}
-//             >
-//                 {isVerifying ? (
-//                     <ActivityIndicator color="white" />
-//                 ) : (
-//                     <Text style={styles.verifyButtonText}>
-//                         {coordinates ? 'Verified' : 'Verify Address'}
-//                     </Text>
-//                 )}
-//             </TouchableOpacity>
-
-//             {/* Verification Status */}
-//             {coordinates && (
-//                 <Text style={styles.verifiedText}>
-//                     Verified Location: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
-//                 </Text>
-//             )}
-//             {verificationError && <Text style={styles.errorText}>{verificationError}</Text>}
-//             {error && <Text style={styles.errorText}>{error}</Text>}
-//         </View>
-//     );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//       marginBottom: 15,
-//   },
-//   label: {
-//       fontSize: 14,
-//       fontWeight: '500',
-//       marginBottom: 5,
-//       color: COLORS.dark,
-//   },
-//   input: {
-//       borderWidth: 1,
-//       borderColor: COLORS.lightGray,
-//       borderRadius: 5,
-//       padding: 10,
-//       fontSize: 14,
-//       backgroundColor: 'white',
-//   },
-//   errorInput: {
-//       borderColor: COLORS.red,
-//   },
-//   verifyButton: {
-//       backgroundColor: COLORS.primary,
-//       padding: 10,
-//       borderRadius: 5,
-//       alignItems: 'center',
-//       marginTop: 10,
-//   },
-//   verifyButtonText: {
-//       color: 'white',
-//       fontWeight: 'bold',
-//   },
-//   verifiedText: {
-//       marginTop: 5,
-//       color: COLORS.green,
-//       fontSize: 12,
-//       fontStyle: 'italic',
-//   },
-//   errorText: {
-//       marginTop: 5,
-//       color: COLORS.red,
-//       fontSize: 12,
-//   },
-// });
-
-// export default AddressInput;
-
-
-
-
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { TextInput } from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import { geocodeAddress } from '../../utils/geocodeAddress';
-import COLORS from '../../constants/colors';
-import { tSafe } from '../../utils/tSafe'; // added import
+import { tSafe } from '../../utils/tSafe';
+import { useTheme } from '../../theme';
+import AppText from '../../ui/AppText';
 
-const AddressInput = ({ 
-    label, 
-    value, 
-    onChange, 
-    onCoordinatesSet, 
-    error,
-    initialCoordinates 
+const AddressInput = ({
+  label,
+  value,
+  onChange,
+  onCoordinatesSet,
+  error,
+  initialCoordinates,
 }) => {
-    const [coordinates, setCoordinates] = useState(null);
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [verificationError, setVerificationError] = useState(null);
-    const [lastVerifiedAddress, setLastVerifiedAddress] = useState(null);
-    const initialLoad = useRef(true);
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
-    // Initialize with existing coordinates
-    useEffect(() => {
-        if (initialCoordinates) {
-            setCoordinates(initialCoordinates);
-            setLastVerifiedAddress(value);
-        }
-    }, [initialCoordinates]);
+  const [coordinates, setCoordinates] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState(null);
+  const [lastVerifiedAddress, setLastVerifiedAddress] = useState(null);
 
-    // Reset verification if address changes
-    useEffect(() => {
-        if (value !== lastVerifiedAddress) {
-            setLastVerifiedAddress(null);
-            setCoordinates(null);
-        }
-    }, [value]);
+  const initialLoad = useRef(true);
 
-    const handleVerify = async () => {
-        setIsVerifying(true);
-        setVerificationError(null);
-        try {
-            const coords = await geocodeAddress(value);
-            setCoordinates(coords);
-            setLastVerifiedAddress(value);
-            onCoordinatesSet(coords);
-        } catch (err) {
-            setVerificationError(tSafe('address_verify_failed', 'Failed to verify address. Please check and try again.'));
-        } finally {
-            setIsVerifying(false);
-        }
-    };
+  /*
+   * Initialize with existing coordinates.
+   */
+  useEffect(() => {
+    if (initialCoordinates && initialLoad.current) {
+      setCoordinates(initialCoordinates);
+      setLastVerifiedAddress(value);
+      initialLoad.current = false;
+    }
+  }, [initialCoordinates, value]);
 
-    return (
-        <View style={styles.container}>
-            <TextInput
-                placeholder={tSafe('enter_address_manually', 'Enter address manually')}
-                outlineColor="#D8D8D8"
-                mode="outlined"
-                label={label}
-                activeOutlineColor={COLORS.primary}
-                style={{ marginBottom: 5, marginTop: 5, color: COLORS.gray, fontSize: 14, backgroundColor: "#fff" }}
-                value={value}
-                onChangeText={onChange}
-                editable={!isVerifying}
-                multiline
-                numberOfLines={2}
+  /*
+   * Reset verification whenever the address changes.
+   *
+   * This is important because coordinates from the previous
+   * address must never remain associated with a new address.
+   */
+  useEffect(() => {
+    if (
+      value !== lastVerifiedAddress &&
+      lastVerifiedAddress !== null
+    ) {
+      setCoordinates(null);
+      setLastVerifiedAddress(null);
+      setVerificationError(null);
+    }
+  }, [value, lastVerifiedAddress]);
+
+  const hasAddress = Boolean(value?.trim());
+  const isVerified =
+    Boolean(coordinates) &&
+    value === lastVerifiedAddress;
+
+  const handleVerify = async () => {
+    const address = value?.trim();
+
+    if (!address) {
+      setVerificationError(
+        tSafe(
+          'address_required',
+          'Please enter an address before verifying.'
+        )
+      );
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError(null);
+
+    try {
+      const coords = await geocodeAddress(address);
+
+      if (
+        !coords ||
+        typeof coords.latitude !== 'number' ||
+        typeof coords.longitude !== 'number'
+      ) {
+        throw new Error('Invalid coordinates returned');
+      }
+
+      setCoordinates(coords);
+      setLastVerifiedAddress(address);
+
+      if (onCoordinatesSet) {
+        onCoordinatesSet(coords);
+      }
+    } catch (err) {
+      setCoordinates(null);
+      setLastVerifiedAddress(null);
+
+      setVerificationError(
+        tSafe(
+          'address_verify_failed',
+          'Failed to verify this address. Please check the address and try again.'
+        )
+      );
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleAddressChange = (text) => {
+    onChange(text);
+
+    /*
+     * Immediately invalidate the previous verification.
+     */
+    if (text !== lastVerifiedAddress) {
+      setCoordinates(null);
+      setLastVerifiedAddress(null);
+      setVerificationError(null);
+    }
+  };
+
+  const handleClearVerification = () => {
+    setCoordinates(null);
+    setLastVerifiedAddress(null);
+    setVerificationError(null);
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.titleContainer}>
+          <View style={styles.iconContainer}>
+            <MaterialCommunityIcons
+              name="map-marker-outline"
+              size={20}
+              color={theme.brand.primary}
+            />
+          </View>
+
+          <View style={styles.titleContent}>
+            <AppText
+              variant="body"
+              style={styles.title}
+            >
+              {label ||
+                tSafe('address', 'Address')}
+            </AppText>
+
+            <AppText
+              variant="caption"
+              style={styles.subtitle}
+            >
+              {tSafe(
+                'address_verification_subtitle',
+                'Enter your address and verify its location.'
+              )}
+            </AppText>
+          </View>
+        </View>
+
+        {isVerified && (
+          <View style={styles.verifiedBadge}>
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color={theme.status.success}
             />
 
-            {/* Verification Button */}
-            <TouchableOpacity 
-                style={styles.verifyButton} 
-                onPress={handleVerify}
-                disabled={isVerifying}
+            <AppText
+              variant="caption"
+              style={styles.verifiedBadgeText}
             >
-                {isVerifying ? (
-                    <ActivityIndicator color="white" />
-                ) : (
-                    <Text style={styles.verifyButtonText}>
-                        {coordinates ? tSafe('verified', 'Verified') : tSafe('verify_address', 'Verify Address')}
-                    </Text>
-                )}
-            </TouchableOpacity>
+              {tSafe('verified', 'Verified')}
+            </AppText>
+          </View>
+        )}
+      </View>
 
-            {/* Verification Status */}
-            {coordinates && (
-                <Text style={styles.verifiedText}>
-                    {tSafe('verified_location', 'Verified Location')}: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
-                </Text>
-            )}
-            {verificationError && <Text style={styles.errorText}>{verificationError}</Text>}
-            {error && <Text style={styles.errorText}>{error}</Text>}
+      {/* Address Input */}
+      <View
+        style={[
+          styles.inputContainer,
+          error && styles.inputContainerError,
+          isVerified && styles.inputContainerVerified,
+        ]}
+      >
+        <TextInput
+          placeholder={tSafe(
+            'enter_address_manually',
+            'Enter address manually'
+          )}
+          label={label}
+          mode="outlined"
+          value={value}
+          onChangeText={handleAddressChange}
+          editable={!isVerifying}
+          multiline
+          numberOfLines={2}
+          textColor={theme.input.text}
+          placeholderTextColor={theme.input.placeholder}
+          outlineColor={
+            error
+              ? theme.status.error
+              : isVerified
+              ? theme.status.success
+              : theme.input.border
+          }
+          activeOutlineColor={
+            error
+              ? theme.status.error
+              : theme.input.focus
+          }
+          cursorColor={theme.brand.primary}
+          selectionColor={theme.brand.primary}
+          theme={{
+            roundness: 16,
+            colors: {
+              primary: error
+                ? theme.status.error
+                : theme.input.focus,
+              outline: error
+                ? theme.status.error
+                : isVerified
+                ? theme.status.success
+                : theme.input.border,
+              background: theme.input.background,
+              onSurfaceVariant: theme.input.placeholder,
+            },
+          }}
+          style={styles.input}
+        />
+      </View>
+
+      {/* Verification Action */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={handleVerify}
+        disabled={isVerifying || !hasAddress}
+        style={[
+          styles.verifyButton,
+          !hasAddress && styles.verifyButtonDisabled,
+          isVerifying && styles.verifyButtonDisabled,
+          isVerified && styles.verifyButtonVerified,
+        ]}
+      >
+        {isVerifying ? (
+          <>
+            <ActivityIndicator
+              size="small"
+              color={theme.button.primaryText}
+            />
+
+            <AppText
+              variant="body"
+              style={styles.verifyButtonText}
+            >
+              {tSafe(
+                'verifying',
+                'Verifying address...'
+              )}
+            </AppText>
+          </>
+        ) : isVerified ? (
+          <>
+            <MaterialCommunityIcons
+              name="check-circle-outline"
+              size={20}
+              color={theme.button.primaryText}
+            />
+
+            <AppText
+              variant="body"
+              style={styles.verifyButtonText}
+            >
+              {tSafe(
+                'address_verified',
+                'Address Verified'
+              )}
+            </AppText>
+          </>
+        ) : (
+          <>
+            <MaterialCommunityIcons
+              name="map-marker-check-outline"
+              size={20}
+              color={
+                hasAddress
+                  ? theme.button.primaryText
+                  : theme.text.disabled
+              }
+            />
+
+            <AppText
+              variant="body"
+              style={[
+                styles.verifyButtonText,
+                !hasAddress &&
+                  styles.verifyButtonTextDisabled,
+              ]}
+            >
+              {tSafe(
+                'verify_address',
+                'Verify Address'
+              )}
+            </AppText>
+          </>
+        )}
+      </TouchableOpacity>
+
+      {/* Verified Location */}
+      {isVerified && coordinates && (
+        <View style={styles.verifiedCard}>
+          <View style={styles.verifiedIconContainer}>
+            <MaterialCommunityIcons
+              name="map-marker-check"
+              size={22}
+              color={theme.status.success}
+            />
+          </View>
+
+          <View style={styles.verifiedContent}>
+            <AppText
+              variant="body"
+              style={styles.verifiedTitle}
+            >
+              {tSafe(
+                'verified_location',
+                'Verified Location'
+              )}
+            </AppText>
+
+            <AppText
+              variant="caption"
+              style={styles.coordinatesText}
+            >
+              {coordinates.latitude.toFixed(5)},{' '}
+              {coordinates.longitude.toFixed(5)}
+            </AppText>
+
+            <AppText
+              variant="caption"
+              style={styles.verifiedDescription}
+            >
+              {tSafe(
+                'address_verified_description',
+                'This address has been successfully matched to a map location.'
+              )}
+            </AppText>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleClearVerification}
+            hitSlop={{
+              top: 10,
+              bottom: 10,
+              left: 10,
+              right: 10,
+            }}
+            style={styles.clearButton}
+          >
+            <MaterialCommunityIcons
+              name="close"
+              size={18}
+              color={theme.icon.muted}
+            />
+          </TouchableOpacity>
         </View>
-    );
+      )}
+
+      {/* Verification Error */}
+      {verificationError && (
+        <View style={styles.messageCardError}>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={18}
+            color={theme.status.error}
+          />
+
+          <AppText
+            variant="caption"
+            style={styles.errorText}
+          >
+            {verificationError}
+          </AppText>
+        </View>
+      )}
+
+      {/* Parent Validation Error */}
+      {error && (
+        <View style={styles.messageCardError}>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={18}
+            color={theme.status.error}
+          />
+
+          <AppText
+            variant="caption"
+            style={styles.errorText}
+          >
+            {error}
+          </AppText>
+        </View>
+      )}
+
+      {/* Helper */}
+      {!isVerified &&
+        !verificationError &&
+        !error && (
+          <View style={styles.helperContainer}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={16}
+              color={theme.icon.muted}
+            />
+
+            <AppText
+              variant="caption"
+              style={styles.helperText}
+            >
+              {tSafe(
+                'address_verification_help',
+                'Your address must be verified before it can be used for scheduling and cleaner matching.'
+              )}
+            </AppText>
+          </View>
+        )}
+    </View>
+  );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) =>
+  StyleSheet.create({
     container: {
-        marginBottom: 15,
+      width: '100%',
+      marginBottom: 20,
     },
-    label: {
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 5,
-        color: COLORS.dark,
+
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 10,
     },
+
+    titleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.brand.primaryLight,
+      marginRight: 10,
+    },
+
+    titleContent: {
+      flex: 1,
+    },
+
+    title: {
+      color: theme.text.primary,
+      fontSize: 15,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+
+    subtitle: {
+      color: theme.text.muted,
+      fontSize: 12,
+      lineHeight: 17,
+    },
+
+    verifiedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 9,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: `${theme.status.success}15`,
+      marginLeft: 8,
+    },
+
+    verifiedBadgeText: {
+      color: theme.status.success,
+      fontWeight: '600',
+      marginLeft: 4,
+      fontSize: 11,
+    },
+
+    inputContainer: {
+      borderRadius: 16,
+    },
+
+    inputContainerError: {
+      borderRadius: 16,
+    },
+
+    inputContainerVerified: {
+      borderRadius: 16,
+    },
+
     input: {
-        borderWidth: 1,
-        borderColor: COLORS.lightGray,
-        borderRadius: 5,
-        padding: 10,
-        fontSize: 14,
-        backgroundColor: 'white',
+      backgroundColor: theme.input.background,
+      fontSize: 14,
+      minHeight: 58,
+      paddingHorizontal: 2,
     },
-    errorInput: {
-        borderColor: COLORS.red,
-    },
+
     verifyButton: {
-        backgroundColor: COLORS.primary,
-        padding: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginTop: 10,
+      minHeight: 48,
+      borderRadius: 14,
+      marginTop: 10,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.button.primaryBackground,
+      gap: 8,
     },
+
+    verifyButtonDisabled: {
+      backgroundColor: theme.button.disabledBackground,
+    },
+
+    verifyButtonVerified: {
+      backgroundColor: theme.status.success,
+    },
+
     verifyButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
+      color: theme.button.primaryText,
+      fontWeight: '600',
+      fontSize: 14,
     },
-    verifiedText: {
-        marginTop: 5,
-        color: COLORS.green,
-        fontSize: 12,
-        fontStyle: 'italic',
+
+    verifyButtonTextDisabled: {
+      color: theme.text.disabled,
     },
+
+    verifiedCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginTop: 12,
+      padding: 13,
+      borderRadius: 14,
+      backgroundColor: `${theme.status.success}10`,
+      borderWidth: 1,
+      borderColor: `${theme.status.success}30`,
+    },
+
+    verifiedIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: `${theme.status.success}18`,
+      marginRight: 10,
+    },
+
+    verifiedContent: {
+      flex: 1,
+    },
+
+    verifiedTitle: {
+      color: theme.status.success,
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+
+    coordinatesText: {
+      color: theme.text.secondary,
+      fontSize: 12,
+      fontFamily: 'monospace',
+      marginBottom: 3,
+    },
+
+    verifiedDescription: {
+      color: theme.text.muted,
+      fontSize: 11,
+      lineHeight: 16,
+    },
+
+    clearButton: {
+      padding: 4,
+      marginLeft: 6,
+    },
+
+    messageCardError: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginTop: 9,
+      paddingHorizontal: 4,
+    },
+
     errorText: {
-        marginTop: 5,
-        color: COLORS.red,
-        fontSize: 12,
+      flex: 1,
+      color: theme.status.error,
+      fontSize: 12,
+      lineHeight: 17,
+      marginLeft: 7,
     },
-});
+
+    helperContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginTop: 9,
+      paddingHorizontal: 3,
+    },
+
+    helperText: {
+      flex: 1,
+      color: theme.text.muted,
+      fontSize: 11,
+      lineHeight: 16,
+      marginLeft: 6,
+    },
+  });
 
 export default AddressInput;

@@ -571,296 +571,835 @@
 
 
 
-import { View, Text, TouchableOpacity } from 'react-native';
+// import { View, Text, TouchableOpacity } from 'react-native';
+// import { Avatar } from 'react-native-paper';
+// import COLORS from '../../constants/colors';
+// import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+// const CommunicateItem = ({ 
+//     cleaner, 
+//     index, 
+//     distance, 
+//     callPhone, 
+//     openExisitingConversation,
+//     onCancelCleaner,
+//     canCancel = false 
+// }) => {
+//     const isClaimed = Boolean(cleaner.cleanerId);
+
+//     const getStatusStyle = (status) => {
+//         switch (status) {
+//             case 'payment_confirmed':
+//                 return { label: 'Assigned', bg: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71' };
+//             case 'completed':
+//                 return { label: 'Completed', bg: 'rgba(39, 174, 96, 0.15)', color: '#27ae60' };
+//             case 'pending_review':
+//                 return { label: 'Pending', bg: 'rgba(243, 156, 18, 0.15)', color: '#f39c12' };
+//             case 'cancelled':
+//                 return { label: 'Cancelled', bg: 'rgba(231, 76, 60, 0.15)', color: '#e74c3c' };
+//             default:
+//                 return { 
+//                     label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Assigned',
+//                     bg: 'rgba(149, 165, 166, 0.15)', 
+//                     color: '#7f8c8d'
+//                 };
+//         }
+//     };
+
+//     const { label, bg, color } = getStatusStyle(cleaner.status);
+
+//     const showCancelButton = isClaimed && cleaner.status === 'payment_confirmed' && canCancel;
+
+//     // ✅ Safe string helpers
+//     const getFirstLetter = (str) => (str ? str.charAt(0).toUpperCase() : '');
+
+//     return (
+//         <View style={[styles.container, !isClaimed && styles.unclaimedContainer]}>
+//             <View style={styles.content}>
+//                 {/* Left Section - Avatar + Info */}
+//                 <View style={styles.leftSection}>
+//                     {isClaimed ? (
+//                         <Avatar.Image
+//                             size={48}
+//                             source={{ uri: cleaner.avatar }}
+//                             style={styles.avatar}
+//                         />
+//                     ) : (
+//                         <View style={styles.ghostAvatar}>
+//                             <MaterialCommunityIcons name="account-outline" size={24} color="#BDBDBD" />
+//                         </View>
+//                     )}
+                    
+//                     <View style={styles.textContainer}>
+//                         {/* ✅ Fixed: safe access to firstname and lastname */}
+//                         <Text style={[styles.name, !isClaimed && styles.unclaimedName]}>
+//                             {isClaimed 
+//                                 ? `${cleaner.firstname || ''} ${getFirstLetter(cleaner.lastname)}.` 
+//                                 : 'Awaiting Assignment'}
+//                         </Text>
+//                         <Text style={[styles.distance, !isClaimed && styles.unclaimedDistance]}>
+//                             {isClaimed ? `${distance} miles away` : 'No cleaner assigned yet'}
+//                         </Text>
+
+//                         {/* Status Badge */}
+//                         <View style={[styles.statusBadge, { backgroundColor: bg }]}>
+//                             <View style={[styles.statusDot, { backgroundColor: color }]} />
+//                             <Text style={[styles.statusText, { color }]}>
+//                                 {isClaimed ? label : 'Unassigned'}
+//                             </Text>
+//                         </View>
+//                     </View>
+//                 </View>
+
+//                 {/* Right Section - Actions (only if claimed) */}
+//                 {isClaimed && (
+//                     <View style={styles.actions}>
+//                         <TouchableOpacity 
+//                             style={styles.actionButton}
+//                             onPress={() => callPhone(cleaner.phone)}
+//                         >
+//                             <View style={styles.iconContainer}>
+//                                 <MaterialCommunityIcons name="phone" size={20} color={COLORS.primary} />
+//                             </View>
+//                             <Text style={styles.actionText}>Call</Text>
+//                         </TouchableOpacity>
+
+//                         <TouchableOpacity 
+//                             style={styles.actionButton}
+//                             onPress={() => openExisitingConversation(cleaner.cleanerId)}
+//                         >
+//                             <View style={styles.iconContainer}>
+//                                 <MaterialCommunityIcons name="message-text" size={20} color={COLORS.primary} />
+//                             </View>
+//                             <Text style={styles.actionText}>Message</Text>
+//                         </TouchableOpacity>
+
+//                         {/* Cancel button only for payment_confirmed status */}
+//                         {showCancelButton && (
+//                             <TouchableOpacity 
+//                                 style={[styles.actionButton, styles.cancelAction]}
+//                                 onPress={onCancelCleaner}
+//                             >
+//                                 <View style={[styles.iconContainer, styles.cancelIconContainer]}>
+//                                     <MaterialCommunityIcons name="close" size={18} color="#DC3545" />
+//                                 </View>
+//                                 <Text style={styles.cancelActionText}>Cancel</Text>
+//                             </TouchableOpacity>
+//                         )}
+//                     </View>
+//                 )}
+//             </View>
+
+//             {/* Availability Badge */}
+//             <View style={[
+//                 styles.availabilityBadge,
+//                 isClaimed ? styles.statusActive : styles.statusInactive
+//             ]}>
+//                 <View style={[
+//                     styles.availabilityDot,
+//                     isClaimed ? styles.dotActive : styles.dotInactive
+//                 ]} />
+//                 <Text style={[styles.availabilityText, !isClaimed && styles.unclaimedAvailabilityText]}>
+//                     {isClaimed ? 'Assigned' : 'Open'}
+//                 </Text>
+//             </View>
+//         </View>
+//     );
+// };
+
+// const styles = {
+//     container: {
+//         paddingVertical: 16,
+//         paddingHorizontal: 4,
+//         backgroundColor: '#FFFFFF',
+//         borderBottomWidth: 1,
+//         borderBottomColor: '#F0F0F0',
+//         borderRadius: 12,
+//         marginVertical: 4,
+//     },
+//     unclaimedContainer: {
+//         borderWidth: 1.5,
+//         borderColor: '#FFD700',
+//         borderStyle: 'dashed',
+//         backgroundColor: '#FFFDF5',
+//         borderRadius: 14,
+//         paddingHorizontal: 8,
+//     },
+//     content: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         justifyContent: 'space-between',
+//     },
+//     leftSection: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         flex: 1,
+//     },
+//     avatar: {
+//         backgroundColor: COLORS.ultraLightGray,
+//         borderRadius: 24,
+//     },
+//     ghostAvatar: {
+//         width: 48,
+//         height: 48,
+//         borderRadius: 24,
+//         backgroundColor: '#F5F5F5',
+//         borderWidth: 1.5,
+//         borderColor: '#E0E0E0',
+//         borderStyle: 'dashed',
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         marginRight: 12,
+//     },
+//     textContainer: {
+//         marginLeft: 12,
+//         flex: 1,
+//     },
+//     name: {
+//         fontWeight: '600',
+//         fontSize: 17,
+//         color: COLORS.dark,
+//         marginBottom: 2,
+//     },
+//     unclaimedName: {
+//         color: '#FF8C00',
+//         fontStyle: 'italic',
+//     },
+//     distance: {
+//         fontSize: 14,
+//         color: COLORS.gray,
+//         fontWeight: '400',
+//         marginBottom: 4,
+//     },
+//     unclaimedDistance: {
+//         color: '#A0A0A0',
+//     },
+//     statusBadge: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         alignSelf: 'flex-start',
+//         paddingHorizontal: 10,
+//         paddingVertical: 4,
+//         borderRadius: 20,
+//     },
+//     statusDot: {
+//         width: 6,
+//         height: 6,
+//         borderRadius: 3,
+//         marginRight: 6,
+//     },
+//     statusText: {
+//         fontSize: 12,
+//         fontWeight: '600',
+//     },
+//     actions: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         gap: 8,
+//     },
+//     actionButton: {
+//         alignItems: 'center',
+//         minWidth: 50,
+//     },
+//     iconContainer: {
+//         width: 40,
+//         height: 40,
+//         borderRadius: 10,
+//         backgroundColor: COLORS.ultraLightPrimary,
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         marginBottom: 4,
+//     },
+//     actionText: {
+//         fontSize: 11,
+//         fontWeight: '500',
+//         color: COLORS.primary,
+//     },
+//     cancelAction: {
+//         minWidth: 40,
+//     },
+//     cancelIconContainer: {
+//         backgroundColor: 'rgba(220, 53, 69, 0.1)',
+//     },
+//     cancelActionText: {
+//         fontSize: 11,
+//         fontWeight: '500',
+//         color: '#DC3545',
+//     },
+//     availabilityBadge: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         alignSelf: 'flex-start',
+//         marginTop: 12,
+//         paddingHorizontal: 12,
+//         paddingVertical: 6,
+//         borderRadius: 20,
+//     },
+//     statusActive: {
+//         backgroundColor: 'rgba(76, 217, 100, 0.12)',
+//     },
+//     statusInactive: {
+//         backgroundColor: 'rgba(255, 149, 0, 0.12)',
+//     },
+//     availabilityDot: {
+//         width: 8,
+//         height: 8,
+//         borderRadius: 4,
+//         marginRight: 8,
+//     },
+//     dotActive: {
+//         backgroundColor: '#4CD964',
+//     },
+//     dotInactive: {
+//         backgroundColor: '#FF9500',
+//     },
+//     availabilityText: {
+//         fontSize: 12,
+//         fontWeight: '500',
+//         color: COLORS.dark,
+//     },
+//     unclaimedAvailabilityText: {
+//         color: '#FF9500',
+//     },
+// };
+
+// export default CommunicateItem;
+
+
+
+import React from 'react';
+
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+} from 'react-native';
+
 import { Avatar } from 'react-native-paper';
-import COLORS from '../../constants/colors';
+
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const CommunicateItem = ({ 
-    cleaner, 
-    index, 
-    distance, 
-    callPhone, 
+import { useTheme } from '../../theme';
+
+const CommunicateItem = ({
+    cleaner,
+    index,
+    distance,
+    callPhone,
     openExisitingConversation,
     onCancelCleaner,
-    canCancel = false 
+    canCancel = false,
 }) => {
-    const isClaimed = Boolean(cleaner.cleanerId);
+    const { theme } = useTheme();
 
+    const isClaimed = Boolean(cleaner?.cleanerId);
+
+    const colors = {
+        background: theme.surface.default,
+        elevated: theme.surface.elevated,
+        selected: theme.surface.selected,
+
+        primary: theme.brand.primary,
+
+        text: theme.text.primary,
+        secondaryText: theme.text.secondary,
+        mutedText: theme.text.muted,
+
+        border: theme.border.default,
+
+        icon: theme.icon.default,
+        mutedIcon: theme.icon.muted,
+
+        success: theme.status.success,
+        error: theme.status.error,
+        warning: theme.status.warning,
+    };
+
+    // Status colors remain semantic, with theme colors used where available.
     const getStatusStyle = (status) => {
         switch (status) {
             case 'payment_confirmed':
-                return { label: 'Assigned', bg: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71' };
+                return {
+                    label: 'Assigned',
+                    bg: 'rgba(46, 204, 113, 0.15)',
+                    color: colors.success || '#2ECC71',
+                };
+
             case 'completed':
-                return { label: 'Completed', bg: 'rgba(39, 174, 96, 0.15)', color: '#27ae60' };
+                return {
+                    label: 'Completed',
+                    bg: 'rgba(39, 174, 96, 0.15)',
+                    color: colors.success || '#27AE60',
+                };
+
             case 'pending_review':
-                return { label: 'Pending', bg: 'rgba(243, 156, 18, 0.15)', color: '#f39c12' };
+                return {
+                    label: 'Pending',
+                    bg: 'rgba(243, 156, 18, 0.15)',
+                    color: colors.warning || '#F39C12',
+                };
+
             case 'cancelled':
-                return { label: 'Cancelled', bg: 'rgba(231, 76, 60, 0.15)', color: '#e74c3c' };
+                return {
+                    label: 'Cancelled',
+                    bg: 'rgba(231, 76, 60, 0.15)',
+                    color: colors.error || '#E74C3C',
+                };
+
             default:
-                return { 
-                    label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Assigned',
-                    bg: 'rgba(149, 165, 166, 0.15)', 
-                    color: '#7f8c8d'
+                return {
+                    label: status
+                        ? status.charAt(0).toUpperCase() + status.slice(1)
+                        : 'Assigned',
+
+                    bg: 'rgba(149, 165, 166, 0.15)',
+                    color: colors.mutedText || '#7F8C8D',
                 };
         }
     };
 
-    const { label, bg, color } = getStatusStyle(cleaner.status);
+    const {
+        label,
+        bg,
+        color,
+    } = getStatusStyle(cleaner?.status);
 
-    const showCancelButton = isClaimed && cleaner.status === 'payment_confirmed' && canCancel;
+    const showCancelButton =
+        isClaimed &&
+        cleaner?.status === 'payment_confirmed' &&
+        canCancel &&
+        typeof onCancelCleaner === 'function';
 
-    // ✅ Safe string helpers
-    const getFirstLetter = (str) => (str ? str.charAt(0).toUpperCase() : '');
+    const getFirstLetter = (str) =>
+        str ? str.charAt(0).toUpperCase() : '';
+
+    const cleanerName = isClaimed
+        ? `${cleaner?.firstname || ''} ${getFirstLetter(cleaner?.lastname)}${cleaner?.lastname ? '.' : ''}`.trim()
+        : 'Awaiting Assignment';
+
+    const parsedDistance = Number(distance);
+
+    const distanceLabel =
+        distance !== null &&
+        distance !== undefined &&
+        distance !== '' &&
+        Number.isFinite(parsedDistance)
+            ? `${parsedDistance.toFixed(1)} miles away`
+            : 'Distance unavailable';
+
+    const styles = StyleSheet.create({
+        container: {
+            paddingVertical: 16,
+            paddingHorizontal: 8,
+
+            backgroundColor: colors.background,
+
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: colors.border,
+
+            borderRadius: 12,
+            marginVertical: 4,
+        },
+
+        unclaimedContainer: {
+            borderWidth: 1.5,
+            borderColor: colors.warning || '#F59E0B',
+            borderStyle: 'dashed',
+
+            backgroundColor: colors.elevated,
+
+            borderRadius: 14,
+            paddingHorizontal: 8,
+        },
+
+        content: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+
+        leftSection: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1,
+            minWidth: 0,
+        },
+
+        avatar: {
+            backgroundColor: colors.elevated,
+            borderRadius: 24,
+        },
+
+        ghostAvatar: {
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+
+            backgroundColor: colors.elevated,
+
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            borderStyle: 'dashed',
+
+            justifyContent: 'center',
+            alignItems: 'center',
+
+            marginRight: 12,
+        },
+
+        textContainer: {
+            marginLeft: 12,
+            flex: 1,
+            minWidth: 0,
+        },
+
+        name: {
+            fontWeight: '600',
+            fontSize: 16,
+            color: colors.text,
+            marginBottom: 3,
+        },
+
+        unclaimedName: {
+            color: colors.warning || '#F59E0B',
+            fontStyle: 'italic',
+        },
+
+        distance: {
+            fontSize: 13,
+            color: colors.secondaryText,
+            fontWeight: '400',
+            marginBottom: 6,
+        },
+
+        unclaimedDistance: {
+            color: colors.mutedText,
+        },
+
+        statusBadge: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            alignSelf: 'flex-start',
+
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+
+            borderRadius: 20,
+        },
+
+        statusDot: {
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            marginRight: 6,
+        },
+
+        statusText: {
+            fontSize: 12,
+            fontWeight: '600',
+        },
+
+        actions: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            marginLeft: 8,
+        },
+
+        actionButton: {
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 44,
+        },
+
+        iconContainer: {
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+
+            backgroundColor: colors.selected,
+
+            justifyContent: 'center',
+            alignItems: 'center',
+
+            marginBottom: 4,
+        },
+
+        actionText: {
+            fontSize: 11,
+            fontWeight: '500',
+            color: colors.primary,
+        },
+
+        cancelAction: {
+            minWidth: 40,
+        },
+
+        cancelIconContainer: {
+            backgroundColor: 'rgba(220, 53, 69, 0.12)',
+        },
+
+        cancelActionText: {
+            fontSize: 11,
+            fontWeight: '500',
+            color: colors.error || '#DC3545',
+        },
+
+        availabilityBadge: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            alignSelf: 'flex-start',
+
+            marginTop: 12,
+
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+
+            borderRadius: 20,
+        },
+
+        statusActive: {
+            backgroundColor: 'rgba(46, 204, 113, 0.12)',
+        },
+
+        statusInactive: {
+            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+        },
+
+        availabilityDot: {
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            marginRight: 8,
+        },
+
+        dotActive: {
+            backgroundColor: colors.success || '#2ECC71',
+        },
+
+        dotInactive: {
+            backgroundColor: colors.warning || '#F59E0B',
+        },
+
+        availabilityText: {
+            fontSize: 12,
+            fontWeight: '500',
+            color: colors.text,
+        },
+
+        unclaimedAvailabilityText: {
+            color: colors.warning || '#F59E0B',
+        },
+    });
 
     return (
-        <View style={[styles.container, !isClaimed && styles.unclaimedContainer]}>
+        <View
+            style={[
+                styles.container,
+                !isClaimed && styles.unclaimedContainer,
+            ]}
+        >
             <View style={styles.content}>
-                {/* Left Section - Avatar + Info */}
+                {/* Cleaner Avatar and Information */}
+
                 <View style={styles.leftSection}>
                     {isClaimed ? (
                         <Avatar.Image
                             size={48}
-                            source={{ uri: cleaner.avatar }}
+                            source={
+                                cleaner?.avatar
+                                    ? { uri: cleaner.avatar }
+                                    : undefined
+                            }
                             style={styles.avatar}
+                            accessibilityLabel={cleanerName}
                         />
                     ) : (
                         <View style={styles.ghostAvatar}>
-                            <MaterialCommunityIcons name="account-outline" size={24} color="#BDBDBD" />
+                            <MaterialCommunityIcons
+                                name="account-outline"
+                                size={24}
+                                color={colors.mutedIcon}
+                            />
                         </View>
                     )}
-                    
+
                     <View style={styles.textContainer}>
-                        {/* ✅ Fixed: safe access to firstname and lastname */}
-                        <Text style={[styles.name, !isClaimed && styles.unclaimedName]}>
-                            {isClaimed 
-                                ? `${cleaner.firstname || ''} ${getFirstLetter(cleaner.lastname)}.` 
-                                : 'Awaiting Assignment'}
-                        </Text>
-                        <Text style={[styles.distance, !isClaimed && styles.unclaimedDistance]}>
-                            {isClaimed ? `${distance} miles away` : 'No cleaner assigned yet'}
+                        <Text
+                            style={[
+                                styles.name,
+                                !isClaimed && styles.unclaimedName,
+                            ]}
+                            numberOfLines={1}
+                        >
+                            {cleanerName}
                         </Text>
 
-                        {/* Status Badge */}
-                        <View style={[styles.statusBadge, { backgroundColor: bg }]}>
-                            <View style={[styles.statusDot, { backgroundColor: color }]} />
-                            <Text style={[styles.statusText, { color }]}>
+                        <Text
+                            style={[
+                                styles.distance,
+                                !isClaimed && styles.unclaimedDistance,
+                            ]}
+                            numberOfLines={1}
+                        >
+                            {isClaimed
+                                ? distanceLabel
+                                : 'No cleaner assigned yet'}
+                        </Text>
+
+                        {/* Cleaner Status */}
+
+                        <View
+                            style={[
+                                styles.statusBadge,
+                                { backgroundColor: bg },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.statusDot,
+                                    { backgroundColor: color },
+                                ]}
+                            />
+
+                            <Text
+                                style={[
+                                    styles.statusText,
+                                    { color },
+                                ]}
+                            >
                                 {isClaimed ? label : 'Unassigned'}
                             </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Right Section - Actions (only if claimed) */}
+                {/* Actions for Assigned Cleaners */}
+
                 {isClaimed && (
                     <View style={styles.actions}>
-                        <TouchableOpacity 
+                        {/* Call */}
+
+                        <TouchableOpacity
                             style={styles.actionButton}
-                            onPress={() => callPhone(cleaner.phone)}
+                            onPress={() =>
+                                callPhone?.(cleaner?.phone)
+                            }
+                            disabled={!cleaner?.phone}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Call ${cleanerName}`}
                         >
                             <View style={styles.iconContainer}>
-                                <MaterialCommunityIcons name="phone" size={20} color={COLORS.primary} />
+                                <MaterialCommunityIcons
+                                    name="phone"
+                                    size={20}
+                                    color={colors.primary}
+                                />
                             </View>
-                            <Text style={styles.actionText}>Call</Text>
+
+                            <Text style={styles.actionText}>
+                                Call
+                            </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity 
+                        {/* Message */}
+
+                        <TouchableOpacity
                             style={styles.actionButton}
-                            onPress={() => openExisitingConversation(cleaner.cleanerId)}
+                            onPress={() =>
+                                openExisitingConversation?.(
+                                    cleaner?.cleanerId
+                                )
+                            }
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Message ${cleanerName}`}
                         >
                             <View style={styles.iconContainer}>
-                                <MaterialCommunityIcons name="message-text" size={20} color={COLORS.primary} />
+                                <MaterialCommunityIcons
+                                    name="message-text"
+                                    size={20}
+                                    color={colors.primary}
+                                />
                             </View>
-                            <Text style={styles.actionText}>Message</Text>
+
+                            <Text style={styles.actionText}>
+                                Message
+                            </Text>
                         </TouchableOpacity>
 
-                        {/* Cancel button only for payment_confirmed status */}
+                        {/* Cancel Cleaner */}
+
                         {showCancelButton && (
-                            <TouchableOpacity 
-                                style={[styles.actionButton, styles.cancelAction]}
+                            <TouchableOpacity
+                                style={[
+                                    styles.actionButton,
+                                    styles.cancelAction,
+                                ]}
                                 onPress={onCancelCleaner}
+                                activeOpacity={0.7}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Cancel ${cleanerName}`}
                             >
-                                <View style={[styles.iconContainer, styles.cancelIconContainer]}>
-                                    <MaterialCommunityIcons name="close" size={18} color="#DC3545" />
+                                <View
+                                    style={[
+                                        styles.iconContainer,
+                                        styles.cancelIconContainer,
+                                    ]}
+                                >
+                                    <MaterialCommunityIcons
+                                        name="close"
+                                        size={18}
+                                        color={
+                                            colors.error || '#DC3545'
+                                        }
+                                    />
                                 </View>
-                                <Text style={styles.cancelActionText}>Cancel</Text>
+
+                                <Text
+                                    style={styles.cancelActionText}
+                                >
+                                    Cancel
+                                </Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
             </View>
 
-            {/* Availability Badge */}
-            <View style={[
-                styles.availabilityBadge,
-                isClaimed ? styles.statusActive : styles.statusInactive
-            ]}>
-                <View style={[
-                    styles.availabilityDot,
-                    isClaimed ? styles.dotActive : styles.dotInactive
-                ]} />
-                <Text style={[styles.availabilityText, !isClaimed && styles.unclaimedAvailabilityText]}>
+            {/* Assignment Availability */}
+
+            <View
+                style={[
+                    styles.availabilityBadge,
+                    isClaimed
+                        ? styles.statusActive
+                        : styles.statusInactive,
+                ]}
+            >
+                <View
+                    style={[
+                        styles.availabilityDot,
+                        isClaimed
+                            ? styles.dotActive
+                            : styles.dotInactive,
+                    ]}
+                />
+
+                <Text
+                    style={[
+                        styles.availabilityText,
+                        !isClaimed &&
+                            styles.unclaimedAvailabilityText,
+                    ]}
+                >
                     {isClaimed ? 'Assigned' : 'Open'}
                 </Text>
             </View>
         </View>
     );
-};
-
-const styles = {
-    container: {
-        paddingVertical: 16,
-        paddingHorizontal: 4,
-        backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-        borderRadius: 12,
-        marginVertical: 4,
-    },
-    unclaimedContainer: {
-        borderWidth: 1.5,
-        borderColor: '#FFD700',
-        borderStyle: 'dashed',
-        backgroundColor: '#FFFDF5',
-        borderRadius: 14,
-        paddingHorizontal: 8,
-    },
-    content: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    leftSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    avatar: {
-        backgroundColor: COLORS.ultraLightGray,
-        borderRadius: 24,
-    },
-    ghostAvatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#F5F5F5',
-        borderWidth: 1.5,
-        borderColor: '#E0E0E0',
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    textContainer: {
-        marginLeft: 12,
-        flex: 1,
-    },
-    name: {
-        fontWeight: '600',
-        fontSize: 17,
-        color: COLORS.dark,
-        marginBottom: 2,
-    },
-    unclaimedName: {
-        color: '#FF8C00',
-        fontStyle: 'italic',
-    },
-    distance: {
-        fontSize: 14,
-        color: COLORS.gray,
-        fontWeight: '400',
-        marginBottom: 4,
-    },
-    unclaimedDistance: {
-        color: '#A0A0A0',
-    },
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
-    },
-    statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        marginRight: 6,
-    },
-    statusText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    actions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    actionButton: {
-        alignItems: 'center',
-        minWidth: 50,
-    },
-    iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        backgroundColor: COLORS.ultraLightPrimary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    actionText: {
-        fontSize: 11,
-        fontWeight: '500',
-        color: COLORS.primary,
-    },
-    cancelAction: {
-        minWidth: 40,
-    },
-    cancelIconContainer: {
-        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-    },
-    cancelActionText: {
-        fontSize: 11,
-        fontWeight: '500',
-        color: '#DC3545',
-    },
-    availabilityBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        marginTop: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-    },
-    statusActive: {
-        backgroundColor: 'rgba(76, 217, 100, 0.12)',
-    },
-    statusInactive: {
-        backgroundColor: 'rgba(255, 149, 0, 0.12)',
-    },
-    availabilityDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: 8,
-    },
-    dotActive: {
-        backgroundColor: '#4CD964',
-    },
-    dotInactive: {
-        backgroundColor: '#FF9500',
-    },
-    availabilityText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: COLORS.dark,
-    },
-    unclaimedAvailabilityText: {
-        color: '#FF9500',
-    },
 };
 
 export default CommunicateItem;

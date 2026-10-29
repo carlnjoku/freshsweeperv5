@@ -1,53 +1,92 @@
 import React from 'react';
-import AppText from './AppText';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import {
+    TouchableOpacity,
+    StyleSheet,
+    View,
+} from 'react-native';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import COLORS from '../../constants/colors';
 
-const CircleIcon = ({ iconName, onPress, buttonSize,roomSize, type, radiusSise, iconSize, title, title_color }) => {
+import AppText from './AppText';
+import { useTheme } from '../../theme';
 
+const CircleIcon = ({
+    iconName,
+    onPress,
+    buttonSize,
+    roomSize,
+    type,
+    radiusSise,
+    iconSize,
+    title,
+    title_color,
+}) => {
+    const { theme, isDark } = useTheme();
 
-  const styles = StyleSheet.create({
-    container:{
-        flexDirection:'column',
-        alignItems:'center'
-    },
-    button: {
-      height: buttonSize,
-      width: buttonSize,
-      borderRadius: radiusSise, // Half of the width and height to create a circle
-      // borderColor: COLORS.primary_light,
-      // borderWidth:1.5,
-      backgroundColor: COLORS.white, 
-      borderWidth:0.8,
-      borderColor:COLORS.light_gray,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight:2,
-      
-    },
-    title_color:{
-    color:title_color,
-    marginRight:10,
-    fontSize:13, 
-    color:COLORS.gray
-    },
-    roomSize:{
-      fontSize:11,
-      color:COLORS.light_gray
-    }
-});
-  return (
-    <View style={styles.container}>
-        <TouchableOpacity style={styles.button} onPress={onPress}>
-            <MaterialCommunityIcons name={iconName} size={iconSize} color={COLORS.gray} />
-        </TouchableOpacity>
-        <AppText style={styles.title_color}>{title} {type}</AppText>
-        <AppText style={styles.roomSize}>{roomSize} ft²</AppText>
-    </View>
-  );
+    const styles = StyleSheet.create({
+        container: {
+            flexDirection: 'column',
+            alignItems: 'center',
+        },
+
+        button: {
+            height: buttonSize,
+            width: buttonSize,
+            borderRadius: radiusSise,
+            backgroundColor: theme.surface.elevated,
+            borderWidth: 0.8,
+            borderColor: theme.border.default,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 2,
+        },
+
+        title: {
+            marginRight: 10,
+            marginTop: 4,
+            fontSize: 13,
+            color: title_color || theme.text.secondary,
+            textAlign: 'center',
+        },
+
+        roomSize: {
+            fontSize: 11,
+            marginTop: 2,
+            color: theme.text.muted,
+            textAlign: 'center',
+        },
+    });
+
+    return (
+        <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={onPress}
+                disabled={!onPress}
+                activeOpacity={0.7}
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={`${title || ''} ${type || ''}`}
+            >
+                <MaterialCommunityIcons
+                    name={iconName}
+                    size={iconSize}
+                    color={theme.icon.default}
+                />
+            </TouchableOpacity>
+
+            <AppText style={styles.title}>
+                {title} {type}
+            </AppText>
+
+            {roomSize !== undefined &&
+                roomSize !== null &&
+                roomSize !== '' && (
+                    <AppText style={styles.roomSize}>
+                        {roomSize} ft²
+                    </AppText>
+                )}
+        </View>
+    );
 };
-// const bsize = buttonSize
-
 
 export default CircleIcon;

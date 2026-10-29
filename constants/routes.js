@@ -44,7 +44,11 @@ const ROUTES = {
     cleaner_my_gigs:'MyGigs',
     cleaner_property_gigs:'PropertyGig',
     cleaner_schedule_date_change:"ScheduleDateChange",
+    cleaner_manual_schedule_date_change:"Manual Schedule Change",
     cleaner_replacement_request: 'ReplacementRequest',
+    cleaner_payout_settings: 'RayoutSettings',
+    cleaner_tax_document: 'TaxDocument',
+    cleaner_earning_detail_report: 'EarningDetailReport',
 
     host_home_tab: "Home",
     host_home_drawer:"Dashboard Host",
@@ -94,6 +98,7 @@ const ROUTES = {
     host_team_form: 'TeamForm',
     host_replacement_cleaner:'ReplacementCleaner',
     host_replacement_request_status: 'ReplacementRequestStatus',
+    host_replacement_payment: 'ReplacementPayment',
     
 
     host_select_incident: 'SelectIncident',   // new

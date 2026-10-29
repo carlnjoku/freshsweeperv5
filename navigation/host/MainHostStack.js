@@ -603,644 +603,1163 @@
 
 
 
+// import React from 'react';
+// import { Text, View, TouchableOpacity } from 'react-native';
+// import { SafeAreaView, Platform, StyleSheet } from 'react-native';
+// import { createStackNavigator } from '@react-navigation/stack';
+// import { TransitionPresets } from '@react-navigation/stack';
+// import DrawerNavigator from './DrawerNavigator';
+// import ROUTES from '../../constants/routes';
+// import { useNavigation } from '@react-navigation/native';
+// import COLORS from '../../constants/colors';
+// import { MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
+
+// import PropertyDashboard from '../../screens/host/PropertyDashboard';
+// import AddProperty from '../../screens/host/AddProperty';
+// import CleanerProfileHost from '../../screens/host/CleanerProfileHost';
+// import CleanerProfilePay from '../../screens/host/CleanerProfilePay';
+// import ChatConversation from '../../screens/sharedscreen/ChatConversation';
+// import moment from 'moment';
+// import { BookingProvider } from '../../context/BookingContext';
+// import ScheduleDetails from '../../screens/host/ScheduleDetails';
+// import TaskProgress from '../../screens/host/TaskProgress';
+// import PaymentComplete from '../../screens/host/Payment/PaymentComplete';
+// import ScheduleRequest from '../../screens/host/ScheduleRequest';
+// import PaymentGroupCheckout from '../../screens/host/Payment/PaymentGroupCheckout';
+// import Notification from '../../components/shared/Notification';
+// import Createchecklist from '../../screens/host/Createchecklist';
+// import CancellationDetails from '../../screens/sharedscreen/Notifications/Cancellation';
+// import ChangePassword from '../../screens/sharedscreen/ChangePassword';
+// import ChangeLanguage from '../../screens/sharedscreen/ChangeLanguage';
+// import EditProperty from '../../screens/host/EditProperty';
+// import EditChecklist from '../../screens/host/EditChecklist';
+// import PaymentSingleCheckout from '../../screens/host/Payment/PaymentSingleCheckout';
+// import Receipt from '../../screens/host/Payment/Receipt';
+// import ICalendar from '../../screens/host/ICalendar';
+// import { tSafe } from '../../utils/tSafe'; // added import
+// import InviteCleaner from '../../screens/host/InviteCleaner';
+// import InventoryManagement from '../../screens/host/InventoryManagement';
+// import TeamForm from '../../screens/host/Team/TeamForm';
+// import SelectTeamMembers from '../../screens/host/Team/SelectTeamMembers';
+// import CustomBackButton from '../../components/shared/CustomBackButton';
+// import HostCleanerRecommendations from '../../screens/host/HostCleanerRecommendations';
+// import ReplacementCleaner from '../../screens/host/ReplacementCleaner';
+// import ReplacementRequestStatus from '../../screens/host/ReplacementRequestStatus';
+// import ReplacementPayment from '../../screens/host/ReplacementPayment';
+// import { useTheme } from '../../theme/ThemeProvider';
+
+
+// export default function MainHostStack() {
+//     const navigation = useNavigation();
+//     const Stack = createStackNavigator();
+//     const { theme, isDark } = useTheme();
+
+//     const CustomChatHeader = ( conversation ) => {
+
+//       console.log("Chat schedulingggggg------PPP", conversation)
+//         const navigation = useNavigation();
+
+//         return (
+//             <SafeAreaView
+//                 style={{
+//                     backgroundColor: COLORS.primary,
+//                     paddingTop: Platform.OS === 'android' ? 10 : 0,
+//                     zIndex: 10,
+//                     elevation: 5,
+//                 }}
+//             >
+//                 <View style={{ flexDirection: 'row', justifyContent:'center', paddingBottom: 10}}>
+//                     <TouchableOpacity
+//                         onPress={() => navigation.goBack()}
+//                         style={{ marginRight: 15, marginTop: 10 }}
+//                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+//                     >
+//                         <AntDesign name="arrowleft" size={24} color={COLORS.white} />
+//                     </TouchableOpacity>
+//                     <View style={{ marginTop: 10 }}>
+//                         <Text
+//                             style={{
+//                                 alignSelf: 'center',
+//                                 color: COLORS.white,
+//                                 fontSize: 20,
+//                                 fontWeight: '500',
+//                             }}
+//                         >
+//                             {conversation.schedule.schedule.apartment_name}
+//                         </Text>
+//                         <Text
+//                             style={{
+//                                 alignSelf: 'center',
+//                                 color: COLORS.white,
+//                                 fontSize: 14,
+//                             }}
+//                         >
+//                             {conversation.schedule.schedule.address}
+//                         </Text>
+//                     </View>
+//                 </View>
+
+//                 <View
+//                     style={{
+//                         flexDirection: 'row',
+//                         justifyContent: 'center',
+//                         alignItems: 'center',
+//                         backgroundColor: COLORS.light_gray_1,
+//                         paddingVertical: 6,
+//                         borderBottomWidth: 0.5,
+//                         borderBottomColor: COLORS.light_gray,
+//                     }}
+//                 >
+//                     <MaterialCommunityIcons name="calendar" style={{ marginLeft: 5 }} size={20} color={COLORS.gray} />
+//                     <Text style={{ fontSize: 14, color: COLORS.gray }}>
+//                         {tSafe('schedule', 'Schedule')} {moment(conversation.schedule.schedule.cleaning_date).format('ddd MMM D')}, {moment(conversation.schedule.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}
+//                     </Text>
+//                 </View>
+//             </SafeAreaView>
+//         );
+//     };
+
+//     return (
+//         <BookingProvider>
+//             <Stack.Navigator
+//                 screenOptions={{
+//                     ...TransitionPresets.ScaleFromCenterAndroid,
+                
+//                     headerTintColor: theme.text.primary,
+                
+//                     headerBackImage: ({ tintColor }) => (
+//                         <CustomBackButton
+//                             tintColor={tintColor || theme.icon.default}
+//                         />
+//                     ),
+                
+//                     headerBackTitleVisible: false,
+                
+//                     headerStyle: {
+//                         backgroundColor: theme.surface.elevated,
+//                         elevation: 5,
+//                         shadowColor: theme.shadow?.color || '#000000',
+//                         shadowOpacity: theme.shadow?.opacity ?? 0.08,
+//                         shadowOffset: {
+//                             width: 0,
+//                             height: 2,
+//                         },
+//                         shadowRadius: 3,
+//                     },
+                
+//                     headerTitleStyle: {
+//                         color: theme.text.primary,
+//                     },
+//                 }}
+//             >
+//                 <Stack.Screen
+//                     name={ROUTES.host_dashboard}
+//                     component={DrawerNavigator}
+//                     options={{
+//                         headerShown: false,
+//                     }}
+//                 />
+
+//                 <Stack.Screen
+//                     name={ROUTES.host_apt_dashboard}
+//                     component={PropertyDashboard}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('apartment_title', 'Apartment'),
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_team_form}
+//                     component={TeamForm}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('team_form', 'Team Form'),
+//                     })}
+//                 />
+//                 <Stack.Screen 
+//                     name={ROUTES.host_select_team_members} 
+//                     component={SelectTeamMembers} 
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         title: tSafe('select_team_members', 'Select Team Members'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+                
+//                 <Stack.Screen
+//                     name={ROUTES.host_edit_apt}
+//                     component={EditProperty}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         title: tSafe('edit_property_title', 'Edit Property'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_add_apt}
+//                     component={AddProperty}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('add_apartment_title', 'Add Apartment'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_create_checklist}
+//                     component={Createchecklist}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('create_checklist_title', 'Create Checklist'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_edit_checklist}
+//                     component={EditChecklist}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('edit_checklist_title', 'Edit Checklist'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_link_icalendar}
+//                     component={ICalendar}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('link_calendar_title', 'Link Calendar'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_invite_cleaners}
+//                     component={InviteCleaner}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('invite_cleaners', 'Invite Cleaner'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_inventory}
+//                     component={InventoryManagement}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('inventory_management', 'Inventory Management'),
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_schedule_details}
+//                     component={ScheduleDetails}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             borderBottomWidth: 1,
+//                             borderBottomColor: '#E5E5EA',
+//                         },
+//                         title: tSafe('schedule_details_title', 'Schedule Details'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                     })}
+//                 />
+
+//                 {/* <Stack.Screen
+//                     name={ROUTES.host_recommended_cleaners}
+//                     component={HostCleanerRecommendations}
+//                     options={{ title: 'Build Your Cleaning Team' }}
+//                 /> */}
+
+// <Stack.Screen
+//     name={ROUTES.host_recommended_cleaners}
+//     component={HostCleanerRecommendations}
+//     options={{
+//     title: 'Build Your Cleaning Team',
+//     headerBackButtonDisplayMode: 'minimal',
+//     }}
+
+// />
+
+//                 <Stack.Screen
+//                     name={ROUTES.host_schedule_request}
+//                     component={ScheduleRequest}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('schedule_requests_title', 'Schedule Requests'),
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.cleaner_profile_Pay}
+//                     component={CleanerProfilePay}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                         title: tSafe('about_cleaner_title', 'About Cleaner'),
+//                         headerRight: () => (
+//                             <View style={{ flexDirection: 'row', paddingRight: 10 }}>
+//                                 <MaterialCommunityIcons name="bookmark" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
+//                                 <MaterialCommunityIcons name="share" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
+//                             </View>
+//                         ),
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.cleaner_profile_info}
+//                     component={CleanerProfileHost}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                         title: tSafe('about_cleaner_title', 'About Cleaner'),
+//                         headerRight: () => (
+//                             <View style={{ flexDirection: 'row', paddingRight: 10 }}>
+//                                 <MaterialCommunityIcons name="bookmark" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
+//                                 <MaterialCommunityIcons name="share" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
+//                             </View>
+//                         ),
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.notification}
+//                     component={Notification}
+//                     options={{
+//                         headerShown: true,
+//                         title: tSafe('notifications_title', 'Notifications'),
+//                         headerTintColor: theme.text.primary,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: theme.surface.elevated,
+//                             elevation: 5,
+//                             shadowColor: theme.shadow?.color || '#000000',
+//                             shadowOpacity: theme.shadow?.opacity ?? 0.08,
+//                             shadowOffset: {
+//                                 width: 0,
+//                                 height: 2,
+//                             },
+//                             shadowRadius: 3,
+//                         },
+//                         headerTitleStyle: {
+//                             color: theme.text.primary,
+//                         },
+//                     }}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_single_checkout}
+//                     component={PaymentSingleCheckout}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('checkout_title', 'Checkout'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_group_checkout}
+//                     component={PaymentGroupCheckout}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('checkout_title', 'Checkout'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.payment_complete}
+//                     component={PaymentComplete}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+                
+//                 <Stack.Screen
+//                     name={ROUTES.host_receipt_details}
+//                     component={Receipt}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_replacement_cleaner}
+//                     component={ReplacementCleaner}
+//                     options={{ title: "Find Replacement Cleaner" }}
+//                 />
+                
+//                 <Stack.Screen
+//                     name={ROUTES.host_replacement_request_status}
+//                     component={ReplacementRequestStatus}
+//                     options={{
+//                         title: 'Replacement Requests',
+//                     }}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.host_replacement_payment}
+//                     component={ReplacementPayment}
+//                     options={{
+//                         title: 'Replacement Payment',
+//                     }}
+//                 />
+//                 <Stack.Screen
+//                     name={ROUTES.chat_conversation}
+//                     component={ChatConversation}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         // header: () => <CustomChatHeader schedule={route.params.conversation} />,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+
+//                 <Stack.Screen
+//                     name={ROUTES.host_task_progress}
+//                     component={TaskProgress}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         title: tSafe('in_progress_cleaning_title', 'In-Progress Cleaning'),
+//                         headerTintColor: COLORS.black,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+
+//                 <Stack.Screen
+//                     name={ROUTES.host_cancellation_details}
+//                     component={CancellationDetails}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerBackTitle: '',
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                         title: tSafe('cancellation_details_title', 'Cancellation Details'),
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: COLORS.primary,
+//                         },
+//                     })}
+//                 />
+
+//                 <Stack.Screen
+//                     name={ROUTES.cleaner_change_password}
+//                     component={ChangePassword}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         title: tSafe('change_password_title', 'Change Password'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                     })}
+//                 />
+
+//                 <Stack.Screen
+//                     name={ROUTES.cleaner_change_language}
+//                     component={ChangeLanguage}
+//                     options={({ route }) => ({
+//                         headerShown: true,
+//                         headerTintColor: COLORS.white,
+//                         headerBackTitleVisible: false,
+//                         headerStyle: {
+//                             backgroundColor: '#fff',
+//                             elevation: 5,
+//                             shadowColor: '#000',
+//                             shadowOpacity: 0.3,
+//                             shadowOffset: { width: 0, height: 2 },
+//                             shadowRadius: 3,
+//                         },
+//                         title: tSafe('change_language_title', 'Change Language'),
+//                         headerTintColor: COLORS.gray,
+//                         headerBackTitleVisible: false,
+//                     })}
+//                 />
+//             </Stack.Navigator>
+//         </BookingProvider>
+//     );
+// }
+
+
 import React from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
-import { SafeAreaView, Platform, StyleSheet } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { TransitionPresets } from '@react-navigation/stack';
+
+import {
+  View,
+  StyleSheet,
+} from 'react-native';
+
+import {
+  createStackNavigator,
+  TransitionPresets,
+} from '@react-navigation/stack';
+
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import DrawerNavigator from './DrawerNavigator';
 import ROUTES from '../../constants/routes';
-import { useNavigation } from '@react-navigation/native';
-import COLORS from '../../constants/colors';
-import { MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
+
+import { BookingProvider } from '../../context/BookingContext';
+import { useTheme } from '../../theme/ThemeProvider';
+
+import CustomBackButton from '../../components/shared/CustomBackButton';
 
 import PropertyDashboard from '../../screens/host/PropertyDashboard';
 import AddProperty from '../../screens/host/AddProperty';
 import CleanerProfileHost from '../../screens/host/CleanerProfileHost';
 import CleanerProfilePay from '../../screens/host/CleanerProfilePay';
+
 import ChatConversation from '../../screens/sharedscreen/ChatConversation';
-import moment from 'moment';
-import { BookingProvider } from '../../context/BookingContext';
 import ScheduleDetails from '../../screens/host/ScheduleDetails';
 import TaskProgress from '../../screens/host/TaskProgress';
+
 import PaymentComplete from '../../screens/host/Payment/PaymentComplete';
 import ScheduleRequest from '../../screens/host/ScheduleRequest';
 import PaymentGroupCheckout from '../../screens/host/Payment/PaymentGroupCheckout';
+import PaymentSingleCheckout from '../../screens/host/Payment/PaymentSingleCheckout';
+import Receipt from '../../screens/host/Payment/Receipt';
+
 import Notification from '../../components/shared/Notification';
 import Createchecklist from '../../screens/host/Createchecklist';
 import CancellationDetails from '../../screens/sharedscreen/Notifications/Cancellation';
+
 import ChangePassword from '../../screens/sharedscreen/ChangePassword';
 import ChangeLanguage from '../../screens/sharedscreen/ChangeLanguage';
+
 import EditProperty from '../../screens/host/EditProperty';
 import EditChecklist from '../../screens/host/EditChecklist';
-import PaymentSingleCheckout from '../../screens/host/Payment/PaymentSingleCheckout';
-import Receipt from '../../screens/host/Payment/Receipt';
 import ICalendar from '../../screens/host/ICalendar';
-import { tSafe } from '../../utils/tSafe'; // added import
+
 import InviteCleaner from '../../screens/host/InviteCleaner';
 import InventoryManagement from '../../screens/host/InventoryManagement';
+
 import TeamForm from '../../screens/host/Team/TeamForm';
 import SelectTeamMembers from '../../screens/host/Team/SelectTeamMembers';
-import CustomBackButton from '../../components/shared/CustomBackButton';
+
 import HostCleanerRecommendations from '../../screens/host/HostCleanerRecommendations';
 import ReplacementCleaner from '../../screens/host/ReplacementCleaner';
 import ReplacementRequestStatus from '../../screens/host/ReplacementRequestStatus';
+import ReplacementPayment from '../../screens/host/ReplacementPayment';
 
+import { tSafe } from '../../utils/tSafe';
+
+const Stack = createStackNavigator();
 
 export default function MainHostStack() {
-    const navigation = useNavigation();
-    const Stack = createStackNavigator();
+  const { theme, isDark } = useTheme();
 
-    const CustomChatHeader = ( conversation ) => {
+  /*
+   * Shared theme-aware navigation header.
+   *
+   * Every screen inherits these settings unless it changes
+   * a non-color property such as headerShown.
+   */
+  const headerOptions = {
+    ...TransitionPresets.ScaleFromCenterAndroid,
 
-      console.log("Chat schedulingggggg------PPP", conversation)
-        const navigation = useNavigation();
+    headerShown: true,
 
-        return (
-            <SafeAreaView
-                style={{
-                    backgroundColor: COLORS.primary,
-                    paddingTop: Platform.OS === 'android' ? 10 : 0,
-                    zIndex: 10,
-                    elevation: 5,
-                }}
-            >
-                <View style={{ flexDirection: 'row', justifyContent:'center', paddingBottom: 10}}>
-                    <TouchableOpacity
-                        onPress={() => navigation.goBack()}
-                        style={{ marginRight: 15, marginTop: 10 }}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                        <AntDesign name="arrowleft" size={24} color={COLORS.white} />
-                    </TouchableOpacity>
-                    <View style={{ marginTop: 10 }}>
-                        <Text
-                            style={{
-                                alignSelf: 'center',
-                                color: COLORS.white,
-                                fontSize: 20,
-                                fontWeight: '500',
-                            }}
-                        >
-                            {conversation.schedule.schedule.apartment_name}
-                        </Text>
-                        <Text
-                            style={{
-                                alignSelf: 'center',
-                                color: COLORS.white,
-                                fontSize: 14,
-                            }}
-                        >
-                            {conversation.schedule.schedule.address}
-                        </Text>
-                    </View>
-                </View>
+    headerTintColor: theme.text.primary,
 
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: COLORS.light_gray_1,
-                        paddingVertical: 6,
-                        borderBottomWidth: 0.5,
-                        borderBottomColor: COLORS.light_gray,
-                    }}
-                >
-                    <MaterialCommunityIcons name="calendar" style={{ marginLeft: 5 }} size={20} color={COLORS.gray} />
-                    <Text style={{ fontSize: 14, color: COLORS.gray }}>
-                        {tSafe('schedule', 'Schedule')} {moment(conversation.schedule.schedule.cleaning_date).format('ddd MMM D')}, {moment(conversation.schedule.schedule.cleaning_time, 'h:mm:ss A').format('h:mm A')}
-                    </Text>
-                </View>
-            </SafeAreaView>
-        );
-    };
+    headerBackImage: ({ tintColor }) => (
+      <CustomBackButton
+        tintColor={tintColor || theme.text.primary}
+      />
+    ),
 
-    return (
-        <BookingProvider>
-            <Stack.Navigator
-                screenOptions={{
-                    ...TransitionPresets.ScaleFromCenterAndroid,
-                    headerTintColor: '#000',
-                    headerBackImage: ({ tintColor }) => <CustomBackButton tintColor={tintColor || '#333'} />,
-                    headerBackTitleVisible: false,
-                    headerStyle: {
-                        backgroundColor: '#ffffff',
-                        elevation: 5,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.3,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 3,
-                    },
-                }}
-            >
-                <Stack.Screen
-                    name={ROUTES.host_dashboard}
-                    component={DrawerNavigator}
-                    options={{
-                        headerShown: false,
-                    }}
-                />
+    headerBackTitleVisible: false,
+    headerBackTitle: '',
 
-                <Stack.Screen
-                    name={ROUTES.host_apt_dashboard}
-                    component={PropertyDashboard}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('apartment_title', 'Apartment'),
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_team_form}
-                    component={TeamForm}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('team_form', 'Team Form'),
-                    })}
-                />
-                <Stack.Screen 
-                    name={ROUTES.host_select_team_members} 
-                    component={SelectTeamMembers} 
-                    options={({ route }) => ({
-                        headerShown: true,
-                        title: tSafe('select_team_members', 'Select Team Members'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                
-                <Stack.Screen
-                    name={ROUTES.host_edit_apt}
-                    component={EditProperty}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        title: tSafe('edit_property_title', 'Edit Property'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_add_apt}
-                    component={AddProperty}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('add_apartment_title', 'Add Apartment'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_create_checklist}
-                    component={Createchecklist}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('create_checklist_title', 'Create Checklist'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_edit_checklist}
-                    component={EditChecklist}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('edit_checklist_title', 'Edit Checklist'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_link_icalendar}
-                    component={ICalendar}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('link_calendar_title', 'Link Calendar'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_invite_cleaners}
-                    component={InviteCleaner}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('invite_cleaners', 'Invite Cleaner'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_inventory}
-                    component={InventoryManagement}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('inventory_management', 'Inventory Management'),
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_schedule_details}
-                    component={ScheduleDetails}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#E5E5EA',
-                        },
-                        title: tSafe('schedule_details_title', 'Schedule Details'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                    })}
-                />
+    headerStyle: {
+      backgroundColor: theme.surface.elevated,
 
-                {/* <Stack.Screen
-                    name={ROUTES.host_recommended_cleaners}
-                    component={HostCleanerRecommendations}
-                    options={{ title: 'Build Your Cleaning Team' }}
-                /> */}
+      elevation: isDark ? 0 : 5,
 
-<Stack.Screen
-    name={ROUTES.host_recommended_cleaners}
-    component={HostCleanerRecommendations}
-    options={{
-    title: 'Build Your Cleaning Team',
-    headerBackButtonDisplayMode: 'minimal',
-    }}
+      shadowColor: theme.shadow?.color || '#000000',
 
-/>
+      shadowOpacity:
+        theme.shadow?.opacity ?? (isDark ? 0.3 : 0.08),
 
-                <Stack.Screen
-                    name={ROUTES.host_schedule_request}
-                    component={ScheduleRequest}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('schedule_requests_title', 'Schedule Requests'),
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.cleaner_profile_Pay}
-                    component={CleanerProfilePay}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                        title: tSafe('about_cleaner_title', 'About Cleaner'),
-                        headerRight: () => (
-                            <View style={{ flexDirection: 'row', paddingRight: 10 }}>
-                                <MaterialCommunityIcons name="bookmark" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
-                                <MaterialCommunityIcons name="share" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
-                            </View>
-                        ),
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.cleaner_profile_info}
-                    component={CleanerProfileHost}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                        title: tSafe('about_cleaner_title', 'About Cleaner'),
-                        headerRight: () => (
-                            <View style={{ flexDirection: 'row', paddingRight: 10 }}>
-                                <MaterialCommunityIcons name="bookmark" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
-                                <MaterialCommunityIcons name="share" style={{ marginLeft: 5 }} size={20} color={COLORS.white} />
-                            </View>
-                        ),
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.notification}
-                    component={Notification}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                        title: tSafe('notifications_title', 'Notifications'),
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_single_checkout}
-                    component={PaymentSingleCheckout}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('checkout_title', 'Checkout'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_group_checkout}
-                    component={PaymentGroupCheckout}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('checkout_title', 'Checkout'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.payment_complete}
-                    component={PaymentComplete}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
-                
-                <Stack.Screen
-                    name={ROUTES.host_receipt_details}
-                    component={Receipt}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
-                <Stack.Screen
-                    name={ROUTES.host_replacement_cleaner}
-                    component={ReplacementCleaner}
-                    options={{ title: "Find Replacement Cleaner" }}
-                />
-                
-                <Stack.Screen
-                    name={ROUTES.host_replacement_request_status}
-                    component={ReplacementRequestStatus}
-                    options={{
-                        title: 'Replacement Requests',
-                    }}
-                />
-                <Stack.Screen
-                    name={ROUTES.chat_conversation}
-                    component={ChatConversation}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        // header: () => <CustomChatHeader schedule={route.params.conversation} />,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
 
-                <Stack.Screen
-                    name={ROUTES.host_task_progress}
-                    component={TaskProgress}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        title: tSafe('in_progress_cleaning_title', 'In-Progress Cleaning'),
-                        headerTintColor: COLORS.black,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
+      shadowRadius: 3,
 
-                <Stack.Screen
-                    name={ROUTES.host_cancellation_details}
-                    component={CancellationDetails}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerBackTitle: '',
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                        title: tSafe('cancellation_details_title', 'Cancellation Details'),
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: COLORS.primary,
-                        },
-                    })}
-                />
+      borderBottomColor: theme.border.default,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+    },
 
-                <Stack.Screen
-                    name={ROUTES.cleaner_change_password}
-                    component={ChangePassword}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        title: tSafe('change_password_title', 'Change Password'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                    })}
-                />
+    headerTitleStyle: {
+      color: theme.text.primary,
+      fontWeight: '600',
+      fontSize: 17,
+    },
 
-                <Stack.Screen
-                    name={ROUTES.cleaner_change_language}
-                    component={ChangeLanguage}
-                    options={({ route }) => ({
-                        headerShown: true,
-                        headerTintColor: COLORS.white,
-                        headerBackTitleVisible: false,
-                        headerStyle: {
-                            backgroundColor: '#fff',
-                            elevation: 5,
-                            shadowColor: '#000',
-                            shadowOpacity: 0.3,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowRadius: 3,
-                        },
-                        title: tSafe('change_language_title', 'Change Language'),
-                        headerTintColor: COLORS.gray,
-                        headerBackTitleVisible: false,
-                    })}
-                />
-            </Stack.Navigator>
-        </BookingProvider>
-    );
+    headerTitleAlign: 'center',
+
+    cardStyle: {
+      backgroundColor: theme.background.default,
+    },
+  };
+
+  /*
+   * Shared profile-header actions.
+   */
+  const renderProfileActions = () => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: 10,
+      }}
+    >
+      <MaterialCommunityIcons
+        name="bookmark"
+        style={{ marginLeft: 12 }}
+        size={20}
+        color={theme.text.primary}
+      />
+
+      <MaterialCommunityIcons
+        name="share"
+        style={{ marginLeft: 12 }}
+        size={20}
+        color={theme.text.primary}
+      />
+    </View>
+  );
+
+  return (
+    <BookingProvider>
+      <Stack.Navigator
+        screenOptions={headerOptions}
+      >
+        {/* HOST DASHBOARD */}
+
+        <Stack.Screen
+          name={ROUTES.host_dashboard}
+          component={DrawerNavigator}
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        {/* PROPERTY MANAGEMENT */}
+
+        <Stack.Screen
+          name={ROUTES.host_apt_dashboard}
+          component={PropertyDashboard}
+          options={{
+            title: tSafe(
+              'apartment_title',
+              'Apartment'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_add_apt}
+          component={AddProperty}
+          options={{
+            title: tSafe(
+              'add_apartment_title',
+              'Add Apartment'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_edit_apt}
+          component={EditProperty}
+          options={{
+            title: tSafe(
+              'edit_property_title',
+              'Edit Property'
+            ),
+          }}
+        />
+
+        {/* TEAM MANAGEMENT */}
+
+        <Stack.Screen
+          name={ROUTES.host_team_form}
+          component={TeamForm}
+          options={{
+            title: tSafe(
+              'team_form',
+              'Team Form'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_select_team_members}
+          component={SelectTeamMembers}
+          options={{
+            title: tSafe(
+              'select_team_members',
+              'Select Team Members'
+            ),
+          }}
+        />
+
+        {/* CHECKLIST MANAGEMENT */}
+
+        <Stack.Screen
+          name={ROUTES.host_create_checklist}
+          component={Createchecklist}
+          options={{
+            title: tSafe(
+              'create_checklist_title',
+              'Create Checklist'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_edit_checklist}
+          component={EditChecklist}
+          options={{
+            title: tSafe(
+              'edit_checklist_title',
+              'Edit Checklist'
+            ),
+          }}
+        />
+
+        {/* CALENDAR */}
+
+        <Stack.Screen
+          name={ROUTES.host_link_icalendar}
+          component={ICalendar}
+          options={{
+            title: tSafe(
+              'link_calendar_title',
+              'Link Calendar'
+            ),
+          }}
+        />
+
+        {/* CLEANER INVITATIONS */}
+
+        <Stack.Screen
+          name={ROUTES.host_invite_cleaners}
+          component={InviteCleaner}
+          options={{
+            title: tSafe(
+              'invite_cleaners',
+              'Invite Cleaner'
+            ),
+          }}
+        />
+
+        {/* INVENTORY */}
+
+        <Stack.Screen
+          name={ROUTES.host_inventory}
+          component={InventoryManagement}
+          options={{
+            title: tSafe(
+              'inventory_management',
+              'Inventory Management'
+            ),
+          }}
+        />
+
+        {/* SCHEDULE DETAILS */}
+
+        <Stack.Screen
+          name={ROUTES.host_schedule_details}
+          component={ScheduleDetails}
+          options={{
+            title: tSafe(
+              'schedule_details_title',
+              'Schedule Details'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_schedule_request}
+          component={ScheduleRequest}
+          options={{
+            title: tSafe(
+              'schedule_requests_title',
+              'Schedule Requests'
+            ),
+          }}
+        />
+
+        {/* CLEANER RECOMMENDATIONS */}
+
+        <Stack.Screen
+          name={ROUTES.host_recommended_cleaners}
+          component={HostCleanerRecommendations}
+          options={{
+            title: 'Build Your Cleaning Team',
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
+
+        {/* CLEANER PROFILES */}
+
+        <Stack.Screen
+          name={ROUTES.cleaner_profile_Pay}
+          component={CleanerProfilePay}
+          options={{
+            title: tSafe(
+              'about_cleaner_title',
+              'About Cleaner'
+            ),
+            headerRight: renderProfileActions,
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.cleaner_profile_info}
+          component={CleanerProfileHost}
+          options={{
+            title: tSafe(
+              'about_cleaner_title',
+              'About Cleaner'
+            ),
+            headerRight: renderProfileActions,
+          }}
+        />
+
+        {/* NOTIFICATIONS */}
+
+        <Stack.Screen
+          name={ROUTES.notification}
+          component={Notification}
+          options={{
+            title: tSafe(
+              'notifications_title',
+              'Notifications'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_cancellation_details}
+          component={CancellationDetails}
+          options={{
+            title: tSafe(
+              'cancellation_details_title',
+              'Cancellation Details'
+            ),
+          }}
+        />
+
+        {/* CHECKOUT */}
+
+        <Stack.Screen
+          name={ROUTES.host_single_checkout}
+          component={PaymentSingleCheckout}
+          options={{
+            title: tSafe(
+              'checkout_title',
+              'Checkout'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_group_checkout}
+          component={PaymentGroupCheckout}
+          options={{
+            title: tSafe(
+              'checkout_title',
+              'Checkout'
+            ),
+          }}
+        />
+
+        {/* PAYMENT COMPLETION */}
+
+        <Stack.Screen
+          name={ROUTES.payment_complete}
+          component={PaymentComplete}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_receipt_details}
+          component={Receipt}
+        />
+
+        {/* REPLACEMENT CLEANER WORKFLOW */}
+
+        <Stack.Screen
+          name={ROUTES.host_replacement_cleaner}
+          component={ReplacementCleaner}
+          options={{
+            title: 'Find Replacement Cleaner',
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_replacement_request_status}
+          component={ReplacementRequestStatus}
+          options={{
+            title: 'Replacement Requests',
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.host_replacement_payment}
+          component={ReplacementPayment}
+          options={{
+            title: 'Replacement Payment',
+          }}
+        />
+
+        {/* CHAT */}
+
+        <Stack.Screen
+          name={ROUTES.chat_conversation}
+          component={ChatConversation}
+          options={{
+            title: tSafe(
+              'chat_title',
+              'Conversation'
+            ),
+          }}
+        />
+
+        {/* CLEANING PROGRESS */}
+
+        <Stack.Screen
+          name={ROUTES.host_task_progress}
+          component={TaskProgress}
+          options={{
+            title: tSafe(
+              'in_progress_cleaning_title',
+              'In-Progress Cleaning'
+            ),
+          }}
+        />
+
+        {/* ACCOUNT SETTINGS */}
+
+        <Stack.Screen
+          name={ROUTES.cleaner_change_password}
+          component={ChangePassword}
+          options={{
+            title: tSafe(
+              'change_password_title',
+              'Change Password'
+            ),
+          }}
+        />
+
+        <Stack.Screen
+          name={ROUTES.cleaner_change_language}
+          component={ChangeLanguage}
+          options={{
+            title: tSafe(
+              'change_language_title',
+              'Change Language'
+            ),
+          }}
+        />
+      </Stack.Navigator>
+    </BookingProvider>
+  );
 }

@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import { tSafe } from '../../utils/tSafe';
-// Keep your existing COLORS import if your project already has one.
-// Example:
-// import { COLORS } from '../../constants/colors';
-import COLORS from '../../constants/colors';
+import { useTheme } from '../../theme';
+import AppText from '../../ui/AppText';
 
 const MAX_CHARS = 80;
 
@@ -20,21 +18,27 @@ const AboutMeDisplay = ({
   isHost = false,
   onEdit,
 }) => {
+  const { theme } = useTheme();
+
   const [expanded, setExpanded] = useState(false);
 
+  const styles = createStyles(theme);
+
   /*
-   * Host profiles and display mode are ALWAYS read-only.
-   * This prevents the edit icon from appearing even if another
-   * prop accidentally enables editing.
+   * Host profiles and display mode are always read-only.
+   * This prevents the edit icon from appearing even if
+   * another prop accidentally enables editing.
    */
-  const isReadOnly = mode === 'display' || isHost;
+  const isReadOnly =
+    mode === 'display' || isHost;
 
   const normalizedAboutMe =
     typeof aboutme === 'string'
       ? aboutme.trim()
       : '';
 
-  const hasAboutMe = normalizedAboutMe.length > 0;
+  const hasAboutMe =
+    normalizedAboutMe.length > 0;
 
   const isLongContent =
     normalizedAboutMe.length > MAX_CHARS;
@@ -48,7 +52,6 @@ const AboutMeDisplay = ({
 
   return (
     <View style={styles.aboutCard}>
-
       {/* =========================
           HEADER
       ========================= */}
@@ -57,43 +60,37 @@ const AboutMeDisplay = ({
           <View style={styles.aboutIconContainer}>
             <MaterialCommunityIcons
               name="account-heart-outline"
-              size={21}
-              color={COLORS.primary}
+              size={20}
+              color={theme.icon.muted}
             />
           </View>
 
           <View style={styles.aboutTitleContent}>
-            <Text style={styles.aboutTitle}>
-              About Me
-            </Text>
+            <AppText style={styles.aboutTitle}>
+              {tSafe('about_me', 'About Me')}
+            </AppText>
 
-            <Text style={styles.aboutSubtitle}>
-              A little about this cleaner
-            </Text>
+            <AppText style={styles.aboutSubtitle}>
+              {tSafe(
+                'about_me_cleaner_subtitle',
+                'A little about this cleaner'
+              )}
+            </AppText>
           </View>
         </View>
 
-        {/* 
-          EDIT BUTTON
-          Will NEVER render when:
-          - mode === "display"
-          - isHost === true
-        */}
+        {/* Edit button only appears in editable cleaner mode */}
         {!isReadOnly && onEdit && (
           <TouchableOpacity
-            style={styles.editButton}
             onPress={onEdit}
-            activeOpacity={0.75}
+            style={styles.editButton}
+            activeOpacity={0.7}
           >
             <MaterialCommunityIcons
-              name="pencil-outline"
-              size={17}
-              color={COLORS.primary}
+              name="pencil"
+              size={20}
+              color={theme.icon.muted}
             />
-
-            <Text style={styles.editButtonText}>
-              Edit
-            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -104,25 +101,26 @@ const AboutMeDisplay = ({
       <View style={styles.aboutContent}>
         {hasAboutMe ? (
           <>
-            <Text style={styles.aboutText}>
+            <AppText style={styles.aboutText}>
               {displayedText}
-            </Text>
+            </AppText>
 
-            {/* 
-              Only show Read More / Read Less
-              when the content is actually long.
-            */}
+            {/* Read More / Read Less */}
             {isLongContent && (
               <TouchableOpacity
                 style={styles.readMoreButton}
                 onPress={() =>
-                  setExpanded(previous => !previous)
+                  setExpanded(
+                    (previous) => !previous
+                  )
                 }
                 activeOpacity={0.7}
               >
-                <Text style={styles.readMoreText}>
-                  {expanded ? 'Read less' : 'Read more'}
-                </Text>
+                <AppText style={styles.readMoreText}>
+                  {expanded
+                    ? tSafe('read_less', 'Read less')
+                    : tSafe('read_more', 'Read more')}
+                </AppText>
 
                 <MaterialCommunityIcons
                   name={
@@ -131,7 +129,7 @@ const AboutMeDisplay = ({
                       : 'chevron-down'
                   }
                   size={18}
-                  color={COLORS.primary}
+                  color={theme.brand.primary}
                 />
               </TouchableOpacity>
             )}
@@ -145,23 +143,23 @@ const AboutMeDisplay = ({
               <MaterialCommunityIcons
                 name="account-heart-outline"
                 size={34}
-                color={COLORS.primary}
+                color={theme.brand.primary}
               />
             </View>
 
-            <Text style={styles.emptyTitle}>
+            <AppText style={styles.emptyTitle}>
               {tSafe(
                 'no_about_me_title',
                 'No About Me Yet'
               )}
-            </Text>
+            </AppText>
 
-            <Text style={styles.emptySubtitle}>
+            <AppText style={styles.emptySubtitle}>
               {tSafe(
                 'no_about_me_desc',
                 'This cleaner has not added a personal description yet.'
               )}
-            </Text>
+            </AppText>
 
             {/* Only show this in cleaner edit mode */}
             {mode === 'edit' &&
@@ -175,12 +173,17 @@ const AboutMeDisplay = ({
                   <MaterialCommunityIcons
                     name="pencil-outline"
                     size={17}
-                    color={COLORS.primary}
+                    color={theme.brand.primary}
                   />
 
-                  <Text style={styles.emptyEditButtonText}>
-                    {tSafe('add_about_me', 'Add About Me')}
-                  </Text>
+                  <AppText
+                    style={styles.emptyEditButtonText}
+                  >
+                    {tSafe(
+                      'add_about_me',
+                      'Add About Me'
+                    )}
+                  </AppText>
                 </TouchableOpacity>
               )}
           </View>
@@ -190,177 +193,182 @@ const AboutMeDisplay = ({
   );
 };
 
-const styles = StyleSheet.create({
-  aboutCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F0F0F5',
-  },
+const createStyles = (theme) =>
+  StyleSheet.create({
+    aboutCard: {
+      backgroundColor: theme.card.background,
+      borderRadius: 20,
+      padding: 16,
+      marginBottom: 16,
 
-  /* =========================
-     HEADER
-  ========================= */
+      shadowColor:
+        theme.shadow?.color || '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity:
+        theme.shadow?.opacity || 0.05,
+      shadowRadius: 8,
 
-  aboutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 1,
-    paddingTop: 8,
-    paddingBottom: 14,
-  },
+      elevation: 3,
 
-  aboutTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
+      borderWidth: 1,
+      borderColor: theme.card.border,
+    },
 
-  aboutIconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: COLORS.primary + '12',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
+    /* =========================
+       HEADER
+    ========================= */
 
-  aboutTitleContent: {
-    flex: 1,
-  },
+    aboutHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 1,
+      paddingTop: 8,
+      paddingBottom: 14,
+    },
 
-  aboutTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginBottom: 2,
-  },
+    aboutTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
 
-  aboutSubtitle: {
-    fontSize: 12,
-    color: COLORS.gray,
-  },
+    aboutIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor:
+        theme.surface.selected,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
 
-  /* =========================
-     EDIT BUTTON
-  ========================= */
+    aboutTitleContent: {
+      flex: 1,
+    },
 
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary + '10',
-  },
+    aboutTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.text.primary,
+      marginBottom: 2,
+    },
 
-  editButtonText: {
-    marginLeft: 5,
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
+    aboutSubtitle: {
+      fontSize: 12,
+      color: theme.text.secondary,
+    },
 
-  /* =========================
-     CONTENT
-  ========================= */
+    /* =========================
+       EDIT BUTTON
+    ========================= */
 
-  aboutContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-  },
+    editButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.surface.selected,
+    },
 
-  aboutText: {
-    fontSize: 14,
-    lineHeight: 23,
-    color: COLORS.gray,
-  },
+    /* =========================
+       CONTENT
+    ========================= */
 
-  /* =========================
-     READ MORE / LESS
-  ========================= */
+    aboutContent: {
+      paddingHorizontal: 18,
+      paddingBottom: 18,
+    },
 
-  readMoreButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingVertical: 4,
-  },
+    aboutText: {
+      fontSize: 14,
+      lineHeight: 23,
+      color: theme.text.secondary,
+    },
 
-  readMoreText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: COLORS.primary,
-    marginRight: 2,
-  },
+    /* =========================
+       READ MORE / LESS
+    ========================= */
 
-  /* =========================
-     EMPTY STATE
-  ========================= */
+    readMoreButton: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 10,
+      paddingVertical: 4,
+    },
 
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-  },
-  
-  emptyIconContainer: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
-    backgroundColor: COLORS.primary + '12',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  
-  emptySubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    maxWidth: 280,
-  },
-  
-  emptyEditButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary + '10',
-  },
-  
-  emptyEditButtonText: {
-    marginLeft: 5,
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-});
+    readMoreText: {
+      fontSize: 12,
+      fontWeight: '400',
+      color: theme.brand.primary,
+      marginRight: 2,
+    },
+
+    /* =========================
+       EMPTY STATE
+    ========================= */
+
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+      paddingVertical: 28,
+    },
+
+    emptyIconContainer: {
+      width: 58,
+      height: 58,
+      borderRadius: 18,
+      backgroundColor:
+        theme.brand.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14,
+    },
+
+    emptyTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.text.primary,
+      textAlign: 'center',
+      marginBottom: 5,
+    },
+
+    emptySubtitle: {
+      fontSize: 13,
+      lineHeight: 19,
+      color: theme.text.secondary,
+      textAlign: 'center',
+      maxWidth: 280,
+    },
+
+    emptyEditButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 14,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+      borderRadius: 10,
+      backgroundColor:
+        theme.surface.selected,
+    },
+
+    emptyEditButtonText: {
+      marginLeft: 5,
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.brand.primary,
+    },
+  });
 
 export default AboutMeDisplay;
-
 // import React from 'react';
 // import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 // import { MaterialCommunityIcons } from '@expo/vector-icons';

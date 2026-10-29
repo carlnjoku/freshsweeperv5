@@ -1,1331 +1,96 @@
-// import React, { useEffect, useState, useContext } from 'react';
-// import {
-//   SafeAreaView,
-//   StyleSheet,
-//   ScrollView,
-//   Text,
-//   View,
-//   Alert,
-//   Keyboard,
-//   TouchableOpacity,
-//   Platform,
-//   ActivityIndicator,
-// } from 'react-native';
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useCallback,
+} from 'react';
 
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { useRoute } from '@react-navigation/native';
-// import ROUTES from '../../constants/routes';
-// import COLORS from '../../constants/colors';
-// import { useNavigation } from '@react-navigation/native';
-// import * as Animatable from 'react-native-animatable';
-// import { AuthContext } from '../../context/AuthContext';
-// import { useNotification } from '../../hooks/useNotification';
-// import * as Notifications from 'expo-notifications';
-// import Button from '../../components/shared/Button';
-// import { db } from '../../services/firebase/config';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import { ref, get, set } from 'firebase/database';
-// import axios from 'axios';
-// import * as Device from 'expo-device';
-// import { useTranslation } from 'react-i18next';
-// import { TextInput } from 'react-native-paper';
-// import * as WebBrowser from 'expo-web-browser';
-// import * as AuthSession from 'expo-auth-session';
-// import * as Google from 'expo-auth-session/providers/google';
-// import userService from '../../services/connection/userService';
-// import useInviteToken from '../../hooks/useInviteToken';
-// import { navigationRef } from '../../App';
-// import { LanguageContext } from '../../context/LanguageContext';
-// import { tSafe } from '../../utils/tSafe'; // added import
-
-// // Initialize WebBrowser for auth
-// WebBrowser.maybeCompleteAuthSession();
-
-// const Signin = () => {
-//   // const inviteToken = useInviteToken(); // 🔹 Get token from deep link
-
-//   const { language } = useContext(LanguageContext);
-//   const writeUserData = (userData) => {
-//     console.log('-------#####---------', userData);
-//     alert(language);
-//     try {
-//       // setDoc(doc(db, "userChats", userData._id), {});
-//       const userId = userData._id;
-//       const firstname = userData.firstname;
-//       const lastname = userData.lastname;
-//       const email = userData.email;
-//       const avatar = userData.avatar;
-//       const userRef = `users/${userId}`;
-//       const userDatabaseRef = ref(db, userRef);
-//       set(userDatabaseRef, {
-//         userId: userId,
-//         firstname: firstname,
-//         lastname: lastname,
-//         language: language,
-//         email: email,
-//         avatar: avatar,
-//       });
-
-//       const unreadMsgRef = `unreadMessages/${userId}`;
-//       const unreadMsgDatabaseRef = ref(db, unreadMsgRef);
-//       set(unreadMsgDatabaseRef, {});
-//       alert('Data written successfully!');
-//     } catch (error) {
-//       console.error('Error writing data: ', error);
-//       // alert("An error occurred while writing data.");
-//     }
-//   };
-
-//   const route = useRoute();
-
-//   const inviteToken = route.params?.inviteToken; // 🔹 Get token from deep link
-//   // const route = useRoute()
-
-//   const navigation = useNavigation();
-
-//   const rootNavigation = navigation?.getParent();
-
-//   console.log('Roooot-------------t', rootNavigation);
-
-//   const { t } = useTranslation();
-//   const { login, loginWithEmailPassword } = useContext(AuthContext);
-
-//   // Use the hook only once and get all values
-//   const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
-
-//   const [inputs, setInputs] = React.useState({ email: '', password: '' });
-//   const [fbCurrentUser, setFBCurrentUser] = React.useState({});
-//   const [errors, setErrors] = React.useState({});
-//   const [loading, setLoading] = React.useState(false);
-//   const [errMsg, setErrMsg] = React.useState(false);
-//   const [device_name, setDeviceName] = React.useState('');
-//   const [os_type, setOsType] = React.useState('false');
-//   const [secureTextEntry, setSecureTextEntry] = useState(true);
-//   const [googleLoading, setGoogleLoading] = useState(false);
-
-//   // Google OAuth setup - Simple version
-//   const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-//     expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
-//     iosClientId:
-//       Platform.OS === 'ios'
-//         ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com'
-//         : undefined,
-//     androidClientId:
-//       Platform.OS === 'android'
-//         ? '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com'
-//         // ? '283581670255-ikalnp6e8d90un2dfsmbqmvektqdj38m.apps.googleusercontent.com'
-//         : undefined,
-//     scopes: ['profile', 'email'],
-//     redirectUri: AuthSession.makeRedirectUri({
-//       useProxy: true,
-//     }),
-//   });
-
-//   // Setup notification handlers
-//   useEffect(() => {
-//     Notifications.setNotificationHandler({
-//       handleNotification: async () => ({
-//         shouldShowAlert: true,
-//         shouldPlaySound: true,
-//         shouldSetBadge: true,
-//       }),
-//     });
-
-//     const responseListener = Notifications.addNotificationReceivedListener(handleNotificationResponse);
-
-//     return () => {
-//       if (responseListener) {
-//         Notifications.removeNotificationSubscription(responseListener);
-//       }
-//     };
-//   }, []);
-
-//   // Handle Google OAuth response
-//   useEffect(() => {
-//     const handleGoogleResponse = async () => {
-//       if (googleResponse?.type === 'success') {
-//         setGoogleLoading(true);
-
-//         try {
-//           const { authentication } = googleResponse;
-//           console.log('✅ Google auth successful, ID token received');
-
-//           // Send to backend
-//           const response = await fetch('https://www.freshsweeper.com/api/auth/google_auth', {
-//             method: 'POST',
-//             headers: {
-//               'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({
-//               token: authentication.idToken,
-//               userType: null, // For sign-in
-//             }),
-//           });
-
-//           const data = await response.json();
-
-//           if (response.ok && data.status === 'success') {
-//             const userData = data.data;
-
-//             // Register for push notifications
-//             await registerForPushNotificationsAsync(userData._id);
-
-//             await fetchUserFirebaseData(userData._id, userData);
-
-//             if (navigationRef.current) {
-//               if (inviteToken) {
-//                 navigationRef.current.reset({
-//                   index: 0,
-//                   routes: [
-//                     {
-//                       name: 'Public',
-//                       state: {
-//                         routes: [{ name: 'InviteGate', params: { inviteToken } }],
-//                       },
-//                     },
-//                   ],
-//                 });
-//               } else {
-//                 navigationRef.current.reset({
-//                   index: 0,
-//                   routes: [{ name: userData.userType === 'host' ? 'Host' : 'Cleaner' }],
-//                 });
-//               }
-//             }
-//           } else {
-//             throw new Error(data.message || tSafe('signin_failed', 'Sign-in failed'));
-//           }
-//         } catch (error) {
-//           console.error('Google sign-in error:', error);
-//           Alert.alert(tSafe('error', 'Error'), error.message || tSafe('google_signin_failed', 'Google sign-in failed'));
-//         } finally {
-//           setGoogleLoading(false);
-//         }
-//       } else if (googleResponse?.type === 'error') {
-//         console.error('Google auth error:', googleResponse.error);
-//         if (googleResponse.error?.code !== 'ERR_REQUEST_CANCELED') {
-//           Alert.alert(tSafe('error', 'Error'), tSafe('google_signin_failed', 'Google sign-in failed'));
-//         }
-//         setGoogleLoading(false);
-//       }
-//     };
-
-//     handleGoogleResponse();
-//   }, [googleResponse]);
-
-//   // Simple Google sign-in function
-//   const handleGoogleSignIn = async (emailHint = null) => {
-//     if (!request) {
-//       console.log('Google request not ready yet');
-//       Alert.alert('Please wait', 'Google Sign-In is initialising. Try again in a second.');
-//       return;
-//     }
-//     try {
-//       setGoogleLoading(true);
-
-//       // Add extra params for email hint if provided
-//       const extraParams = emailHint ? { login_hint: emailHint } : {};
-
-//       await googlePromptAsync(extraParams);
-//     } catch (error) {
-//       console.error('Google prompt error:', error);
-//       setGoogleLoading(false);
-//     }
-//   };
-
-//   const getDeviceInfo = async () => {
-//     const deviceName = Device.deviceName;
-//     const osFull = Device.osName || '';
-//     const osVersion = Device.osVersion;
-//     let osType = 'Unknown OS';
-//     setDeviceName(deviceName);
-//     setOsType(Device.os_type);
-
-//     if (osFull.toLowerCase().includes('android')) {
-//       osType = 'Android';
-//     } else if (osFull.toLowerCase().includes('ios')) {
-//       osType = 'iOS';
-//     }
-
-//     console.log(`Device Name: ${deviceName}`);
-//     console.log(`OS Type: ${osType}`);
-//     console.log(`OS Version: ${osVersion}`);
-//   };
-
-//   useEffect(() => {
-//     if (expoPushToken) {
-//       console.log('Expo Push Token:', expoPushToken);
-//     }
-
-//     getDeviceInfo();
-//   }, [expoPushToken]);
-
-//   const fetchUserFirebaseData = async (uid, response) => {
-//     try {
-//       const mySnapshot = await get(ref(db, `users/${uid}`));
-//       setFBCurrentUser(mySnapshot.val());
-
-//       console.log('Get me my user', mySnapshot.val());
-//       const data_to_send = {
-//         resp: response,
-//         fbUser: mySnapshot.val(),
-//         expo_push_token: expoPushToken,
-//       };
-
-//       login(data_to_send);
-
-//       // Update expo push token if different
-//       if (response.expo_push_token !== expoPushToken) {
-//         const userTokenData = {
-//           userId: uid,
-//           expo_push_token: expoPushToken,
-//         };
-//         // userService.updateExpoPushToken(userTokenData)
-//       }
-//     } catch (error) {
-//       console.error('Error fetching Firebase data:', error);
-//       // Even if Firebase fails, still login the user
-//       // const data_to_send = {
-//       //     resp: response,
-//       //     fbUser: null,
-//       //     expo_push_token: expoPushToken
-//       // }
-//       // login(data_to_send);
-//     }
-//   };
-
-//   const validate = async () => {
-//     Keyboard.dismiss();
-//     let isValid = true;
-//     if (!inputs.email) {
-//       handleError(
-//         <Animatable.View animation="fadeInUpBig">
-//           <Text style={{ color: COLORS.red }}>{tSafe('please_enter_email', 'Please enter email')}</Text>
-//         </Animatable.View>,
-//         'email'
-//       );
-//       isValid = false;
-//     }
-//     if (!inputs.password) {
-//       handleError(
-//         <Animatable.View animation="fadeInUpBig">
-//           <Text style={{ color: COLORS.red }}>{tSafe('please_enter_password', 'Please enter password')}</Text>
-//         </Animatable.View>,
-//         'password'
-//       );
-//       isValid = false;
-//     }
-//     if (isValid) {
-//       setLoading(!loading);
-//       handleLogin();
-//     }
-//   };
-
-//   const handleLogin = async () => {
-//     setLoading(true);
-//     // Log current root state for debugging
-//     try {
-//       const result = await loginWithEmailPassword(inputs.email, inputs.password);
-
-//       if (result.success) {
-//         const userData = result.data;
-
-//         // Register push token
-//         await registerForPushNotificationsAsync(userData._id);
-
-//         // Update AuthContext (this will cause re-render but rootNav remains valid)
-//         // await fetchUserFirebaseData(userData._id, userData);
-//         // writeUserData(userData)
-//         console.log('✅ AuthContext updated, now navigating...');
-//         console.log('Invite token:', inviteToken);
-//         console.log('User type:', userData.userType);
-//         console.log('Target screen:', userData.userType === 'host' ? 'Host' : 'Cleaner');
-
-//         if (navigationRef.current) {
-//           if (inviteToken) {
-//             navigationRef.current.reset({
-//               index: 0,
-//               routes: [
-//                 {
-//                   name: 'Public',
-//                   state: {
-//                     routes: [{ name: 'InviteGate', params: { inviteToken } }],
-//                   },
-//                 },
-//               ],
-//             });
-//           } else {
-//             navigationRef.current.reset({
-//               index: 0,
-//               routes: [{ name: userData.userType === 'host' ? 'Host' : 'Cleaner' }],
-//             });
-//           }
-//         } else {
-//           console.error('❌ Navigation ref not available');
-//         }
-//       } else {
-//         // // Handle different error types
-//         console.log('❌ Login failed with type:', result.type);
-
-//         switch (result.type) {
-//           case 'GOOGLE_ACCOUNT':
-//             showGoogleAccountAlertDirect(result.email);
-//             break;
-
-//           case 'NO_PASSWORD':
-//             showNoPasswordAlertDirect(result.email);
-//             break;
-
-//           case 'VERIFICATION_REQUIRED':
-//             Alert.alert(
-//               tSafe('verification_required', 'Verification Required'),
-//               tSafe('verify_email_before_login', 'Please verify your email before logging in.'),
-//               [
-//                 {
-//                   text: tSafe('resend_verification', 'Resend Verification'),
-//                   onPress: () => resendVerification(result.email),
-//                 },
-//                 { text: tSafe('ok', 'OK'), style: 'default' },
-//               ]
-//             );
-//             break;
-
-//           default:
-//             Alert.alert(tSafe('login_failed', 'Login Failed'), result.error);
-//         }
-//       }
-//     } catch (error) {
-//       // console.error('Login error:', error);
-//       Alert.alert(tSafe('error', 'Error'), tSafe('something_went_wrong', 'Something went wrong'));
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const showGoogleAccountAlertDirect = (email) => {
-//     Alert.alert(
-//       tSafe('account_created_with_google', 'Account Created with Google'),
-//       tSafe('google_signin_prompt', 'This account was created using Google. Would you like to sign in with Google?'),
-//       [
-//         {
-//           text: tSafe('sign_in_with_google', 'Sign in with Google'),
-//           onPress: () => {
-//             handleGoogleSignIn(email);
-//           },
-//         },
-//         {
-//           text: tSafe('set_password_instead', 'Set Password Instead'),
-//           onPress: () => {
-//             navigation.navigate(ROUTES.set_password, {
-//               email: email,
-//             });
-//           },
-//         },
-//         {
-//           text: tSafe('cancel', 'Cancel'),
-//           style: 'cancel',
-//         },
-//       ]
-//     );
-//   };
-
-//   const showNoPasswordAlertDirect = (email) => {
-//     Alert.alert(
-//       tSafe('password_required', 'Password Required'),
-//       tSafe('set_password_first', 'You need to set a password for your account first.'),
-//       [
-//         {
-//           text: tSafe('set_password', 'Set Password'),
-//           onPress: () => {
-//             navigation.navigate(ROUTES.set_password, {
-//               email: email,
-//             });
-//           },
-//         },
-//         {
-//           text: tSafe('use_google_instead', 'Use Google Instead'),
-//           onPress: () => {
-//             handleGoogleSignIn(email);
-//           },
-//         },
-//         {
-//           text: tSafe('cancel', 'Cancel'),
-//           style: 'cancel',
-//         },
-//       ]
-//     );
-//   };
-
-//   const resendVerification = async (email) => {
-//     try {
-//       const API_CONFIG = { baseUrl: 'https://www.freshsweeper.com/api' };
-//       await axios.post(`${API_CONFIG.baseUrl}/auth/resend_verification`, { email });
-//       Alert.alert(tSafe('success', 'Success'), tSafe('verification_email_sent', 'Verification email sent!'));
-//     } catch (error) {
-//       Alert.alert(tSafe('error', 'Error'), tSafe('failed_resend_verification', 'Failed to resend verification email.'));
-//     }
-//   };
-
-//   const handleOnchange = (text, input) => {
-//     setInputs((prevState) => ({ ...prevState, [input]: text }));
-//   };
-
-//   const handleError = (error, input) => {
-//     setErrors((prevState) => ({ ...prevState, [input]: error }));
-//   };
-
-//   const togglePasswordVisibility = () => {
-//     setSecureTextEntry(!secureTextEntry);
-//   };
-
-//   return (
-//     <SafeAreaView style={{ flex: 1, justifyContent: 'center', backgroundColor: COLORS.white }}>
-//       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-//         <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-//       </TouchableOpacity>
-
-//       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20 }}>
-//         <View style={{ paddingTop: 120, paddingHorizontal: 0 }}>
-//           <View style={styles.header}>
-//             <Text style={styles.text_header}>{t('welcome')}</Text>
-//           </View>
-
-//           <TextInput
-//             mode="outlined"
-//             label={tSafe('email', 'Email')}
-//             autoCapitalize="none"
-//             placeholder={tSafe('enter_your_email', 'Enter your email')}
-//             placeholderTextColor={COLORS.gray}
-//             outlineColor="#D8D8D8"
-//             value={inputs.email}
-//             activeOutlineColor={COLORS.primary}
-//             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-//             onChangeText={(text) => handleOnchange(text, 'email')}
-//             onFocus={() => handleError(null, 'email')}
-//             error={errors.email}
-//             left={<TextInput.Icon icon="email" style={{ marginTop: 10 }} fontSize="small" />}
-//           />
-
-//           <TextInput
-//             mode="outlined"
-//             autoCapitalize="none"
-//             onChangeText={(text) => handleOnchange(text, 'password')}
-//             onFocus={() => handleError(null, 'password')}
-//             left={<TextInput.Icon icon="lock-outline" style={{ marginTop: 10 }} size={20} />}
-//             label={tSafe('password', 'Password')}
-//             placeholder={tSafe('enter_password', 'Enter Password')}
-//             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-//             outlineColor="#D8D8D8"
-//             activeOutlineColor={COLORS.primary}
-//             error={errors.password}
-//             secureTextEntry={secureTextEntry}
-//             right={
-//               <TextInput.Icon
-//                 icon={secureTextEntry ? 'eye-off' : 'eye'}
-//                 onPress={togglePasswordVisibility}
-//                 size={20}
-//               />
-//             }
-//           />
-
-//           <Text
-//             onPress={() => navigation.navigate(ROUTES.forgot_password)}
-//             style={{ textAlign: 'right', marginTop: 0, marginBottom: 10, fontSize: 12, color: COLORS.primary }}
-//           >
-//             {tSafe('forgot_password', 'Forgot Password')}
-//           </Text>
-
-//           <Button title={t('login', 'Login')} loading={loading} onPress={validate} />
-
-          
-
-//           <Text
-//             onPress={() => navigation.navigate(ROUTES.getting_started)}
-//             style={{ color: COLORS.black, fontWeight: 'bold', textAlign: 'center', fontSize: 16, marginTop: 20 }}
-//           >
-//             {t('i_dont_have_account', 'I do not have an account')}
-//           </Text>
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// export default Signin;
-
-// const styles = StyleSheet.create({
-//   header: {
-//     flex: 0,
-//     justifyContent: 'center',
-//     paddingTop: 60,
-//     paddingBottom: 20,
-//   },
-//   text_header: {
-//     color: COLORS.dark,
-//     textAlign: 'center',
-//     fontWeight: 'bold',
-//     fontSize: 30,
-//   },
-//   googleButton: {
-//     backgroundColor: '#fff',
-//     borderWidth: 1,
-//     borderColor: '#ddd',
-//     borderRadius: 8,
-//     padding: 15,
-//     marginTop: 20,
-//     alignItems: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//     elevation: 2,
-//   },
-//   googleButtonContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   googleIcon: {
-//     marginRight: 12,
-//   },
-//   googleButtonText: {
-//     color: '#3c4043',
-//     fontSize: 16,
-//     fontWeight: '500',
-//   },
-//   backButton: {
-//     position: 'absolute',
-//     top: 50,
-//     left: 20,
-//     zIndex: 10,
-//     width: 44,
-//     height: 44,
-//     borderRadius: 22,
-//     backgroundColor: '#f5f5f5',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 2,
-//   },
-// });
-
-
-
-
-
-
-// import React, { useEffect, useState, useContext } from 'react';
-// import {
-//   SafeAreaView,
-//   StyleSheet,
-//   ScrollView,
-//   Text,
-//   View,
-//   Alert,
-//   Keyboard,
-//   TouchableOpacity,
-//   Platform,
-//   ActivityIndicator,
-// } from 'react-native';
-
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { useRoute } from '@react-navigation/native';
-// import ROUTES from '../../constants/routes';
-// import COLORS from '../../constants/colors';
-// import { useNavigation } from '@react-navigation/native';
-// import * as Animatable from 'react-native-animatable';
-// import { AuthContext } from '../../context/AuthContext';
-// import { useNotification } from '../../hooks/useNotification';
-// import * as Notifications from 'expo-notifications';
-// import Button from '../../components/shared/Button';
-// import { db } from '../../services/firebase/config';
-// import { MaterialCommunityIcons } from '@expo/vector-icons';
-// import { ref, get, set } from 'firebase/database';
-// import axios from 'axios';
-// import * as Device from 'expo-device';
-// import { useTranslation } from 'react-i18next';
-// import { TextInput } from 'react-native-paper';
-// import * as WebBrowser from 'expo-web-browser';
-// import * as AuthSession from 'expo-auth-session';
-// import * as Google from 'expo-auth-session/providers/google';
-// import userService from '../../services/connection/userService';
-// import useInviteToken from '../../hooks/useInviteToken';
-// import { navigationRef } from '../../App';
-// import { LanguageContext } from '../../context/LanguageContext';
-// import { tSafe } from '../../utils/tSafe';
-
-// // Initialize WebBrowser for auth
-// WebBrowser.maybeCompleteAuthSession();
-
-// const Signin = () => {
-//   const { language } = useContext(LanguageContext);
-//   const route = useRoute();
-//   const navigation = useNavigation(); // ✅ Use local navigation prop for all navigation
-
-//   const inviteToken = route.params?.inviteToken;
-
-//   const { t } = useTranslation();
-//   const { login, loginWithEmailPassword } = useContext(AuthContext);
-
-//   const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
-
-//   const [inputs, setInputs] = React.useState({ email: '', password: '' });
-//   const [fbCurrentUser, setFBCurrentUser] = React.useState({});
-//   const [errors, setErrors] = React.useState({});
-//   const [loading, setLoading] = React.useState(false);
-//   const [errMsg, setErrMsg] = React.useState(false);
-//   const [device_name, setDeviceName] = React.useState('');
-//   const [os_type, setOsType] = React.useState('false');
-//   const [secureTextEntry, setSecureTextEntry] = useState(true);
-//   const [googleLoading, setGoogleLoading] = useState(false);
-
-//   // Google OAuth setup - Simple version
-//   const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-//     expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
-//     iosClientId:
-//       Platform.OS === 'ios'
-//         ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com'
-//         : undefined,
-//     androidClientId:
-//       Platform.OS === 'android'
-//         ? '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com'
-//         : undefined,
-//     scopes: ['profile', 'email'],
-//     redirectUri: AuthSession.makeRedirectUri({
-//       useProxy: true,
-//     }),
-//   });
-
-//   // Setup notification handlers
-//   useEffect(() => {
-//     Notifications.setNotificationHandler({
-//       handleNotification: async () => ({
-//         shouldShowAlert: true,
-//         shouldPlaySound: true,
-//         shouldSetBadge: true,
-//       }),
-//     });
-
-//     const responseListener = Notifications.addNotificationReceivedListener(handleNotificationResponse);
-
-//     return () => {
-//       if (responseListener) {
-//         Notifications.removeNotificationSubscription(responseListener);
-//       }
-//     };
-//   }, []);
-
-//   // Handle Google OAuth response
-//   useEffect(() => {
-//     const handleGoogleResponse = async () => {
-//       if (googleResponse?.type === 'success') {
-//         setGoogleLoading(true);
-
-//         try {
-//           const { authentication } = googleResponse;
-//           console.log('✅ Google auth successful, ID token received');
-
-//           const response = await fetch('https://www.freshsweeper.com/api/auth/google_auth', {
-//             method: 'POST',
-//             headers: {
-//               'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({
-//               token: authentication.idToken,
-//               userType: null,
-//             }),
-//           });
-
-//           const data = await response.json();
-
-//           if (response.ok && data.status === 'success') {
-//             const userData = data.data;
-
-//             // ✅ Non-blocking push registration
-//             try {
-//               await registerForPushNotificationsAsync(userData._id);
-//             } catch (pushError) {
-//               console.warn('Push registration failed during Google login:', pushError);
-//             }
-
-//             await fetchUserFirebaseData(userData._id, userData);
-
-//             // ✅ Use local navigation prop
-//             if (inviteToken) {
-//               navigation.reset({
-//                 index: 0,
-//                 routes: [
-//                   {
-//                     name: 'Public',
-//                     state: {
-//                       routes: [{ name: 'InviteGate', params: { inviteToken } }],
-//                     },
-//                   },
-//                 ],
-//               });
-//             } else {
-//               const targetScreen = userData.userType === 'host' ? 'Host' : 'Cleaner';
-//               navigation.reset({
-//                 index: 0,
-//                 routes: [{ name: targetScreen }],
-//               });
-//             }
-//           } else {
-//             throw new Error(data.message || tSafe('signin_failed', 'Sign-in failed'));
-//           }
-//         } catch (error) {
-//           console.error('Google sign-in error:', error);
-//           Alert.alert(tSafe('error', 'Error'), error.message || tSafe('google_signin_failed', 'Google sign-in failed'));
-//         } finally {
-//           setGoogleLoading(false);
-//         }
-//       } else if (googleResponse?.type === 'error') {
-//         console.error('Google auth error:', googleResponse.error);
-//         if (googleResponse.error?.code !== 'ERR_REQUEST_CANCELED') {
-//           Alert.alert(tSafe('error', 'Error'), tSafe('google_signin_failed', 'Google sign-in failed'));
-//         }
-//         setGoogleLoading(false);
-//       }
-//     };
-
-//     handleGoogleResponse();
-//   }, [googleResponse]);
-
-//   const handleGoogleSignIn = async (emailHint = null) => {
-//     if (!googleRequest) {
-//       console.log('Google request not ready yet');
-//       Alert.alert('Please wait', 'Google Sign-In is initialising. Try again in a second.');
-//       return;
-//     }
-//     try {
-//       setGoogleLoading(true);
-//       const extraParams = emailHint ? { login_hint: emailHint } : {};
-//       await googlePromptAsync(extraParams);
-//     } catch (error) {
-//       console.error('Google prompt error:', error);
-//       setGoogleLoading(false);
-//     }
-//   };
-
-//   const getDeviceInfo = async () => {
-//     const deviceName = Device.deviceName;
-//     const osFull = Device.osName || '';
-//     const osVersion = Device.osVersion;
-//     let osType = 'Unknown OS';
-//     setDeviceName(deviceName);
-//     setOsType(Device.os_type);
-
-//     if (osFull.toLowerCase().includes('android')) {
-//       osType = 'Android';
-//     } else if (osFull.toLowerCase().includes('ios')) {
-//       osType = 'iOS';
-//     }
-
-//     console.log(`Device Name: ${deviceName}`);
-//     console.log(`OS Type: ${osType}`);
-//     console.log(`OS Version: ${osVersion}`);
-//   };
-
-//   useEffect(() => {
-//     if (expoPushToken) {
-//       console.log('Expo Push Token:', expoPushToken);
-//     }
-//     getDeviceInfo();
-//   }, [expoPushToken]);
-
-//   const writeUserData = (userData) => {
-//     console.log('-------#####---------', userData);
-//     try {
-//       const userId = userData._id;
-//       const firstname = userData.firstname;
-//       const lastname = userData.lastname;
-//       const email = userData.email;
-//       const avatar = userData.avatar;
-//       const userRef = `users/${userId}`;
-//       const userDatabaseRef = ref(db, userRef);
-//       set(userDatabaseRef, {
-//         userId: userId,
-//         firstname: firstname,
-//         lastname: lastname,
-//         language: language,
-//         email: email,
-//         avatar: avatar,
-//       });
-
-//       const unreadMsgRef = `unreadMessages/${userId}`;
-//       const unreadMsgDatabaseRef = ref(db, unreadMsgRef);
-//       set(unreadMsgDatabaseRef, {});
-//       // ✅ Removed alert('Data written successfully!') because it interrupts the flow
-//       console.log('Data written successfully!');
-//     } catch (error) {
-//       console.error('Error writing data: ', error);
-//     }
-//   };
-
-//   const fetchUserFirebaseData = async (uid, response) => {
-//     try {
-//       const mySnapshot = await get(ref(db, `users/${uid}`));
-//       setFBCurrentUser(mySnapshot.val());
-
-//       console.log('Get me my user', mySnapshot.val());
-//       const data_to_send = {
-//         resp: response,
-//         fbUser: mySnapshot.val(),
-//         expo_push_token: expoPushToken,
-//       };
-
-//       // ✅ This updates the AuthContext, which is critical
-//       login(data_to_send);
-
-//       if (response.expo_push_token !== expoPushToken) {
-//         const userTokenData = {
-//           userId: uid,
-//           expo_push_token: expoPushToken,
-//         };
-//         // userService.updateExpoPushToken(userTokenData)
-//       }
-//     } catch (error) {
-//       console.error('Error fetching Firebase data:', error);
-//       // Even if Firebase fails, still login the user
-//       const data_to_send = {
-//         resp: response,
-//         fbUser: null,
-//         expo_push_token: expoPushToken,
-//       };
-//       login(data_to_send);
-//     }
-//   };
-
-//   const validate = async () => {
-//     Keyboard.dismiss();
-//     let isValid = true;
-//     if (!inputs.email) {
-//       handleError(
-//         <Animatable.View animation="fadeInUpBig">
-//           <Text style={{ color: COLORS.red }}>{tSafe('please_enter_email', 'Please enter email')}</Text>
-//         </Animatable.View>,
-//         'email'
-//       );
-//       isValid = false;
-//     }
-//     if (!inputs.password) {
-//       handleError(
-//         <Animatable.View animation="fadeInUpBig">
-//           <Text style={{ color: COLORS.red }}>{tSafe('please_enter_password', 'Please enter password')}</Text>
-//         </Animatable.View>,
-//         'password'
-//       );
-//       isValid = false;
-//     }
-//     if (isValid) {
-//       setLoading(!loading);
-//       handleLogin();
-//     }
-//   };
-
-//   const handleLogin = async () => {
-//     setLoading(true);
-//     try {
-//       const result = await loginWithEmailPassword(inputs.email, inputs.password);
-
-//       if (result.success) {
-//         const userData = result.data;
-
-//         // ✅ Non-blocking push registration - catches errors so login always proceeds
-//         try {
-//           await registerForPushNotificationsAsync(userData._id);
-//         } catch (pushError) {
-//           console.warn('Push registration failed, continuing login:', pushError);
-//         }
-
-//         // ✅ CRITICAL: Update AuthContext (was commented out before)
-//         await fetchUserFirebaseData(userData._id, userData);
-//         // writeUserData(userData) // Uncomment if needed
-
-//         console.log('✅ AuthContext updated, now navigating...');
-//         console.log('Invite token:', inviteToken);
-//         console.log('User type:', userData.userType);
-
-//         // ✅ Use local navigation prop instead of navigationRef.current
-//         if (inviteToken) {
-//           navigation.reset({
-//             index: 0,
-//             routes: [
-//               {
-//                 name: 'Public',
-//                 state: {
-//                   routes: [{ name: 'InviteGate', params: { inviteToken } }],
-//                 },
-//               },
-//             ],
-//           });
-//         } else {
-//           // ✅ Safe fallback for userType
-//           let targetScreen = 'Cleaner';
-//           if (userData.userType === 'host') {
-//             targetScreen = 'Host';
-//           } else if (userData.userType === 'cleaner') {
-//             targetScreen = 'Cleaner';
-//           } else {
-//             console.warn('⚠️ Unknown userType received:', userData.userType, 'Defaulting to Cleaner');
-//           }
-
-//           navigation.reset({
-//             index: 0,
-//             routes: [{ name: targetScreen }],
-//           });
-//         }
-//       } else {
-//         console.log('❌ Login failed with type:', result.type);
-
-//         switch (result.type) {
-//           case 'GOOGLE_ACCOUNT':
-//             showGoogleAccountAlertDirect(result.email);
-//             break;
-
-//           case 'NO_PASSWORD':
-//             showNoPasswordAlertDirect(result.email);
-//             break;
-
-//           case 'VERIFICATION_REQUIRED':
-//             Alert.alert(
-//               tSafe('verification_required', 'Verification Required'),
-//               tSafe('verify_email_before_login', 'Please verify your email before logging in.'),
-//               [
-//                 {
-//                   text: tSafe('resend_verification', 'Resend Verification'),
-//                   onPress: () => resendVerification(result.email),
-//                 },
-//                 { text: tSafe('ok', 'OK'), style: 'default' },
-//               ]
-//             );
-//             break;
-
-//           default:
-//             Alert.alert(tSafe('login_failed', 'Login Failed'), result.error);
-//         }
-//       }
-//     } catch (error) {
-//       console.error('Login error:', error);
-//       Alert.alert(tSafe('error', 'Error'), tSafe('something_went_wrong', 'Something went wrong'));
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const showGoogleAccountAlertDirect = (email) => {
-//     Alert.alert(
-//       tSafe('account_created_with_google', 'Account Created with Google'),
-//       tSafe('google_signin_prompt', 'This account was created using Google. Would you like to sign in with Google?'),
-//       [
-//         {
-//           text: tSafe('sign_in_with_google', 'Sign in with Google'),
-//           onPress: () => {
-//             handleGoogleSignIn(email);
-//           },
-//         },
-//         {
-//           text: tSafe('set_password_instead', 'Set Password Instead'),
-//           onPress: () => {
-//             navigation.navigate(ROUTES.set_password, {
-//               email: email,
-//             });
-//           },
-//         },
-//         {
-//           text: tSafe('cancel', 'Cancel'),
-//           style: 'cancel',
-//         },
-//       ]
-//     );
-//   };
-
-//   const showNoPasswordAlertDirect = (email) => {
-//     Alert.alert(
-//       tSafe('password_required', 'Password Required'),
-//       tSafe('set_password_first', 'You need to set a password for your account first.'),
-//       [
-//         {
-//           text: tSafe('set_password', 'Set Password'),
-//           onPress: () => {
-//             navigation.navigate(ROUTES.set_password, {
-//               email: email,
-//             });
-//           },
-//         },
-//         {
-//           text: tSafe('use_google_instead', 'Use Google Instead'),
-//           onPress: () => {
-//             handleGoogleSignIn(email);
-//           },
-//         },
-//         {
-//           text: tSafe('cancel', 'Cancel'),
-//           style: 'cancel',
-//         },
-//       ]
-//     );
-//   };
-
-//   const resendVerification = async (email) => {
-//     try {
-//       const API_CONFIG = { baseUrl: 'https://www.freshsweeper.com/api' };
-//       await axios.post(`${API_CONFIG.baseUrl}/auth/resend_verification`, { email });
-//       Alert.alert(tSafe('success', 'Success'), tSafe('verification_email_sent', 'Verification email sent!'));
-//     } catch (error) {
-//       Alert.alert(tSafe('error', 'Error'), tSafe('failed_resend_verification', 'Failed to resend verification email.'));
-//     }
-//   };
-
-//   const handleOnchange = (text, input) => {
-//     setInputs((prevState) => ({ ...prevState, [input]: text }));
-//   };
-
-//   const handleError = (error, input) => {
-//     setErrors((prevState) => ({ ...prevState, [input]: error }));
-//   };
-
-//   const togglePasswordVisibility = () => {
-//     setSecureTextEntry(!secureTextEntry);
-//   };
-
-//   return (
-//     <SafeAreaView style={{ flex: 1, justifyContent: 'center', backgroundColor: COLORS.white }}>
-//       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-//         <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-//       </TouchableOpacity>
-
-//       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20 }}>
-//         <View style={{ paddingTop: 120, paddingHorizontal: 0 }}>
-//           <View style={styles.header}>
-//             <Text style={styles.text_header}>{t('welcome')}</Text>
-//           </View>
-
-//           {/* <TextInput
-//             mode="outlined"
-//             label={tSafe('email', 'Email')}
-//             autoCapitalize="none"
-//             placeholder={tSafe('enter_your_email', 'Enter your email')}
-//             placeholderTextColor={COLORS.gray}
-//             outlineColor="#D8D8D8"
-//             value={inputs.email}
-//             activeOutlineColor={COLORS.primary}
-//             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-//             onChangeText={(text) => handleOnchange(text, 'email')}
-//             onFocus={() => handleError(null, 'email')}
-//             error={errors.email}
-//             left={<TextInput.Icon icon="email" style={{ marginTop: 10 }} fontSize="small" />}
-//           /> */}
-
-//           <TextInput
-//             mode="outlined"
-//             label={tSafe('email', 'Email')}
-//             autoCapitalize="none"
-//             placeholder={tSafe('enter_your_email', 'Enter your email')}
-//             placeholderTextColor={COLORS.gray}
-//             outlineColor="#D8D8D8"
-//             value={inputs.email}
-//             activeOutlineColor={COLORS.primary}
-//             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-//             onChangeText={(text) => handleOnchange(text.trim(), 'email')}  // 👈 ADDED .trim() HERE
-//             onFocus={() => handleError(null, 'email')}
-//             error={errors.email}
-//             left={<TextInput.Icon icon="email" style={{ marginTop: 10 }} fontSize="small" />}
-//           />
-
-//           <TextInput
-//             mode="outlined"
-//             autoCapitalize="none"
-//             onChangeText={(text) => handleOnchange(text, 'password')}
-//             onFocus={() => handleError(null, 'password')}
-//             left={<TextInput.Icon icon="lock-outline" style={{ marginTop: 10 }} size={20} />}
-//             label={tSafe('password', 'Password')}
-//             placeholder={tSafe('enter_password', 'Enter Password')}
-//             style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-//             outlineColor="#D8D8D8"
-//             activeOutlineColor={COLORS.primary}
-//             error={errors.password}
-//             secureTextEntry={secureTextEntry}
-//             right={
-//               <TextInput.Icon
-//                 icon={secureTextEntry ? 'eye-off' : 'eye'}
-//                 onPress={togglePasswordVisibility}
-//                 size={20}
-//               />
-//             }
-//           />
-
-//           <Text
-//             onPress={() => navigation.navigate(ROUTES.forgot_password)}
-//             style={{ textAlign: 'right', marginTop: 0, marginBottom: 10, fontSize: 12, color: COLORS.primary }}
-//           >
-//             {tSafe('forgot_password', 'Forgot Password')}
-//           </Text>
-
-//           <Button title={t('login', 'Login')} loading={loading} onPress={validate} />
-
-//           <Text
-//             onPress={() => navigation.navigate(ROUTES.getting_started)}
-//             style={{ color: COLORS.black, fontWeight: 'bold', textAlign: 'center', fontSize: 16, marginTop: 20 }}
-//           >
-//             {t('i_dont_have_account', 'I do not have an account')}
-//           </Text>
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// export default Signin;
-
-// const styles = StyleSheet.create({
-//   header: {
-//     flex: 0,
-//     justifyContent: 'center',
-//     paddingTop: 60,
-//     paddingBottom: 20,
-//   },
-//   text_header: {
-//     color: COLORS.dark,
-//     textAlign: 'center',
-//     fontWeight: 'bold',
-//     fontSize: 30,
-//   },
-//   googleButton: {
-//     backgroundColor: '#fff',
-//     borderWidth: 1,
-//     borderColor: '#ddd',
-//     borderRadius: 8,
-//     padding: 15,
-//     marginTop: 20,
-//     alignItems: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//     elevation: 2,
-//   },
-//   googleButtonContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   googleIcon: {
-//     marginRight: 12,
-//   },
-//   googleButtonText: {
-//     color: '#3c4043',
-//     fontSize: 16,
-//     fontWeight: '500',
-//   },
-//   backButton: {
-//     position: 'absolute',
-//     top: 50,
-//     left: 20,
-//     zIndex: 10,
-//     width: 44,
-//     height: 44,
-//     borderRadius: 22,
-//     backgroundColor: '#f5f5f5',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 2,
-//   },
-// });
-
-
-
-import React, { useEffect, useState, useContext } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   ScrollView,
   Text,
   View,
-  Alert, // Keep this import even though we use alert() - it's a fallback
+  Alert,
   Keyboard,
   TouchableOpacity,
-  Platform,
   ActivityIndicator,
+  Platform,
+  StatusBar,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+
 import ROUTES from '../../constants/routes';
-import COLORS from '../../constants/colors';
-import { useNavigation } from '@react-navigation/native';
+
 import * as Animatable from 'react-native-animatable';
+
 import { AuthContext } from '../../context/AuthContext';
+import { LanguageContext } from '../../context/LanguageContext';
+
 import { useNotification } from '../../hooks/useNotification';
+
 import * as Notifications from 'expo-notifications';
+
 import Button from '../../components/shared/Button';
-import { db } from '../../services/firebase/config';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ref, get, set } from 'firebase/database';
+
 import axios from 'axios';
-import * as Device from 'expo-device';
+
 import { useTranslation } from 'react-i18next';
 import { TextInput } from 'react-native-paper';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import userService from '../../services/connection/userService';
+
 import useInviteToken from '../../hooks/useInviteToken';
-import { navigationRef } from '../../App';
-import { LanguageContext } from '../../context/LanguageContext';
+
 import { tSafe } from '../../utils/tSafe';
 
+import { useTheme } from '../../theme';
 
-// Initialize WebBrowser for auth
-WebBrowser.maybeCompleteAuthSession();
+
+
+
 
 const Signin = () => {
   const { language } = useContext(LanguageContext);
+
   const route = useRoute();
-  const navigation = useNavigation(); // ✅ Use local navigation prop for all navigation
+  const navigation = useNavigation();
+
+  const { theme, isDark } = useTheme();
 
   const inviteToken = route.params?.inviteToken;
 
   const { t } = useTranslation();
-  const { login, loginWithEmailPassword } = useContext(AuthContext);
 
-  const { expoPushToken, registerForPushNotificationsAsync, handleNotificationResponse } = useNotification();
+  const {
+    login,
+    loginWithEmailPassword,
+  } = useContext(AuthContext);
 
-  const [inputs, setInputs] = React.useState({ email: '', password: '' });
-  const [fbCurrentUser, setFBCurrentUser] = React.useState({});
-  const [errors, setErrors] = React.useState({});
-  const [loading, setLoading] = React.useState(false);
-  const [errMsg, setErrMsg] = React.useState(false);
-  const [device_name, setDeviceName] = React.useState('');
-  const [os_type, setOsType] = React.useState('false');
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const {
+    expoPushToken,
+    registerForPushNotificationsAsync,
+    handleNotificationResponse,
+  } = useNotification();
 
-  // Google OAuth setup - Simple version
-  const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-    expoClientId: '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com',
-    iosClientId:
-      Platform.OS === 'ios'
-        ? '283581670255-i89tij454i1l0705lovhrthq7n761b5a.apps.googleusercontent.com'
-        : undefined,
-    androidClientId:
-      Platform.OS === 'android'
-        ? '283581670255-bg5umkf8vnai35ur0hp1i6cepv5fko1v.apps.googleusercontent.com'
-        : undefined,
-    scopes: ['profile', 'email'],
-    redirectUri: AuthSession.makeRedirectUri({
-      useProxy: true,
-    }),
+  const [inputs, setInputs] = useState({
+    email: '',
+    password: '',
   });
 
-  // Setup notification handlers
+  const [errors, setErrors] = useState({});
+
+  const [loading, setLoading] = useState(false);
+
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
+
+
+  // ---------------------------------------------------------------------------
+  // NOTIFICATION SETUP
+  // ---------------------------------------------------------------------------
+
   useEffect(() => {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -1335,714 +100,1472 @@ const Signin = () => {
       }),
     });
 
-    const responseListener = Notifications.addNotificationReceivedListener(handleNotificationResponse);
+    const responseListener =
+      Notifications.addNotificationReceivedListener(
+        handleNotificationResponse
+      );
 
     return () => {
       if (responseListener) {
-        Notifications.removeNotificationSubscription(responseListener);
+        Notifications.removeNotificationSubscription(
+          responseListener
+        );
       }
     };
+  }, [handleNotificationResponse]);
+
+
+  // ---------------------------------------------------------------------------
+  // SESSION STORAGE
+  // ---------------------------------------------------------------------------
+
+  const persistSession = useCallback(async (userData) => {
+    if (!userData) {
+      return;
+    }
+
+    try {
+      if (userData.token) {
+        await AsyncStorage.setItem(
+          '@auth_token',
+          userData.token
+        );
+      }
+
+      if (userData.refresh_token) {
+        await AsyncStorage.setItem(
+          '@refresh_token',
+          userData.refresh_token
+        );
+      }
+
+      if (userData._id) {
+        await AsyncStorage.setItem(
+          '@user_id',
+          String(userData._id)
+        );
+      }
+
+      if (userData.userType) {
+        await AsyncStorage.setItem(
+          '@user_type',
+          userData.userType
+        );
+      }
+
+      await AsyncStorage.setItem(
+        '@user_data',
+        JSON.stringify(userData)
+      );
+
+      console.log('✅ Sign-in session persisted');
+    } catch (error) {
+      console.error(
+        '❌ Failed to persist sign-in session:',
+        error
+      );
+    }
   }, []);
 
-  // Handle Google OAuth response
-  // useEffect(() => {
-  //   const handleGoogleResponse = async () => {
-  //     if (googleResponse?.type === 'success') {
-  //       setGoogleLoading(true);
 
-  //       try {
-  //         const { authentication } = googleResponse;
-  //         console.log('✅ Google auth successful, ID token received');
+  // ---------------------------------------------------------------------------
+  // COMPLETE LOGIN
+  // ---------------------------------------------------------------------------
 
-  //         const response = await fetch('https://www.freshsweeper.com/api/auth/google_auth', {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           },
-  //           body: JSON.stringify({
-  //             token: authentication.idToken,
-  //             userType: null,
-  //           }),
-  //         });
+  const completeLogin = useCallback(
+    async (userData) => {
+      if (!userData?._id) {
+        throw new Error(
+          tSafe(
+            'invalid_login_response',
+            'Invalid login response. Please try again.'
+          )
+        );
+      }
 
-  //         const data = await response.json();
+      if (!userData.userType) {
+        throw new Error(
+          tSafe(
+            'missing_user_type',
+            'Your account type could not be determined.'
+          )
+        );
+      }
 
-  //         if (response.ok && data.status === 'success') {
-  //           const userData = data.data;
+      /*
+       * Persist the session first.
+       */
+      await persistSession(userData);
 
-  //           // ✅ Non-blocking push registration
-  //           try {
-  //             await registerForPushNotificationsAsync(userData._id);
-  //           } catch (pushError) {
-  //             console.warn('Push registration failed during Google login:', pushError);
-  //           }
+      /*
+       * CRITICAL:
+       * Update AuthContext so the rest of the application knows
+       * that the user is authenticated.
+       */
+      await login({
+        resp: userData,
+      });
 
-  //           await fetchUserFirebaseData(userData._id, userData);
+      console.log('✅ AuthContext updated');
+      console.log('👤 User:', userData._id);
+      console.log('👤 Type:', userData.userType);
 
-  //           // ✅ Use local navigation prop
-  //           if (inviteToken) {
-  //             navigation.reset({
-  //               index: 0,
-  //               routes: [
-  //                 {
-  //                   name: 'Public',
-  //                   state: {
-  //                     routes: [{ name: 'InviteGate', params: { inviteToken } }],
-  //                   },
-  //                 },
-  //               ],
-  //             });
-  //           } else {
-  //             const targetScreen = userData.userType === 'host' ? 'Host' : 'Cleaner';
-  //             navigation.reset({
-  //               index: 0,
-  //               routes: [{ name: targetScreen }],
-  //             });
-  //           }
-  //         } else {
-  //           throw new Error(data.message || tSafe('signin_failed', 'Sign-in failed'));
-  //         }
-  //       } catch (error) {
-  //         console.error('Google sign-in error:', error);
-  //         // ✅ Using global alert() instead of Alert.alert()
-  //         alert(tSafe('error', 'Error') + ': ' + (error.message || tSafe('google_signin_failed', 'Google sign-in failed')));
-  //       } finally {
-  //         setGoogleLoading(false);
-  //       }
-  //     } else if (googleResponse?.type === 'error') {
-  //       console.error('Google auth error:', googleResponse.error);
-  //       if (googleResponse.error?.code !== 'ERR_REQUEST_CANCELED') {
-  //         // ✅ Using global alert() instead of Alert.alert()
-  //         alert(tSafe('error', 'Error') + ': ' + tSafe('google_signin_failed', 'Google sign-in failed'));
-  //       }
-  //       setGoogleLoading(false);
-  //     }
-  //   };
+      /*
+       * Register push notifications without blocking login.
+       */
+      try {
+        await registerForPushNotificationsAsync(
+          userData._id
+        );
+      } catch (pushError) {
+        console.warn(
+          '⚠️ Push registration failed, continuing login:',
+          pushError
+        );
+      }
 
-  //   handleGoogleResponse();
-  // }, [googleResponse]);
+      /*
+       * Invite flow takes priority.
+       */
+      if (inviteToken) {
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Public',
+              state: {
+                routes: [
+                  {
+                    name: 'InviteGate',
+                    params: {
+                      inviteToken,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
 
-  // useEffect(() => {
-  //   const handleGoogleResponse = async () => {
-  //     if (googleResponse?.type === 'success') {
-  //       setGoogleLoading(true);
-  //       try {
-  //         const { authentication } = googleResponse;
-  //         const response = await fetch('https://www.freshsweeper.com/api/auth/google_auth', {
-  //           method: 'POST',
-  //           headers: { 'Content-Type': 'application/json' },
-  //           body: JSON.stringify({
-  //             token: authentication.idToken,
-  //             userType: null,
-  //           }),
-  //         });
-  
-  //         const data = await response.json();
-  
-  //         if (response.ok && data.status === 'success') {
-  //           const userData = data.data;
-  
-  //           // Non-blocking push registration
-  //           try {
-  //             await registerForPushNotificationsAsync(userData._id);
-  //           } catch (pushError) {
-  //             console.warn('Push registration failed:', pushError);
-  //           }
-  
-  //           // await fetchUserFirebaseData(userData._id, userData);
-  
-  //           // ✅ Use local navigation, not navigationRef
-  //           if (inviteToken) {
-  //             navigation.reset({
-  //               index: 0,
-  //               routes: [
-  //                 {
-  //                   name: 'Public',
-  //                   state: {
-  //                     routes: [{ name: 'InviteGate', params: { inviteToken } }],
-  //                   },
-  //                 },
-  //               ],
-  //             });
-  //           } else {
-  //             const targetScreen = userData.userType === 'host' ? 'Host' : 'Cleaner';
-  //             navigation.reset({
-  //               index: 0,
-  //               routes: [{ name: targetScreen }],
-  //             });
-  //           }
-  //         } else {
-  //           // Handle deactivated account
-  //           if (response.status === 403 && data.detail?.toLowerCase().includes('deactivated')) {
-  //             alert('Your account has been deactivated. Please contact support.');
-  //             setGoogleLoading(false);
-  //             return;
-  //           }
-  //           throw new Error(data.message || data.detail || 'Sign-in failed');
-  //         }
-  //       } catch (error) {
-  //         console.error('Google sign-in error:', error);
-  //         alert('Google sign-in failed: ' + error.message);
-  //       } finally {
-  //         setGoogleLoading(false);
-  //       }
-  //     }
-  //   };
-  
-  //   handleGoogleResponse();
-  // }, [googleResponse]);
-  
+        return;
+      }
+
+      /*
+       * Normal dashboard routing.
+       */
+      let targetScreen = null;
+
+      if (userData.userType === 'host') {
+        targetScreen = 'Host';
+      } else if (userData.userType === 'cleaner') {
+        targetScreen = 'Cleaner';
+      }
+
+      if (!targetScreen) {
+        throw new Error(
+          tSafe(
+            'invalid_user_type',
+            'Your account type is invalid. Please contact support.'
+          )
+        );
+      }
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: targetScreen,
+          },
+        ],
+      });
+    },
+    [
+      inviteToken,
+      login,
+      navigation,
+      persistSession,
+      registerForPushNotificationsAsync,
+    ]
+  );
+
+
+  // ---------------------------------------------------------------------------
+  // GOOGLE RESPONSE
+  // ---------------------------------------------------------------------------
+
   useEffect(() => {
     const handleGoogleResponse = async () => {
       if (googleResponse?.type === 'success') {
         setGoogleLoading(true);
-  
+
         try {
           const { authentication } = googleResponse;
-          console.log('✅ Google auth successful, ID token received');
-          // alert(authentication)
-          const response = await fetch('https://www.freshsweeper.com/api/auth/google_auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: authentication.idToken,
-              userType: null, // For sign-in
-            }),
-          });
-  
-          const data = await response.json();
-  
-          // 🟢 NEW: Handle 403 (deactivated account)
-          // if (response.status === 403 && data.detail?.toLowerCase().includes('deactivated')) {
-          //   alert('Your account has been deactivated. Please contact support.');
-          //   setGoogleLoading(false);
-          //   return;
-          // }
 
-          if (response.status === 403 && data.detail?.toLowerCase().includes('deactivated')) {
-            Alert.alert(
-              'Account Deactivated',
-              'Your account has been deactivated. If you think this is a mistake, please contact our support team for assistance.',
-              [{ text: 'OK', style: 'default' }]
+          if (!authentication?.idToken) {
+            throw new Error(
+              tSafe(
+                'google_token_missing',
+                'Google authentication token was not received.'
+              )
             );
-            setGoogleLoading(false);
+          }
+
+          console.log(
+            '✅ Google authentication successful'
+          );
+
+          const response = await fetch(
+            'https://www.freshsweeper.com/api/auth/google_auth',
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type': 'application/json',
+              },
+
+              body: JSON.stringify({
+                token: authentication.idToken,
+                userType: null,
+              }),
+            }
+          );
+
+          let data = null;
+
+          try {
+            data = await response.json();
+          } catch {
+            data = null;
+          }
+
+
+          // ---------------------------------------------------------------
+          // ACCOUNT DEACTIVATED
+          // ---------------------------------------------------------------
+
+          if (
+            response.status === 403 &&
+            data?.detail
+              ?.toLowerCase()
+              ?.includes('deactivated')
+          ) {
+            Alert.alert(
+              tSafe(
+                'account_deactivated',
+                'Account Deactivated'
+              ),
+
+              tSafe(
+                'account_deactivated_message',
+                'Your account has been deactivated. If you think this is a mistake, please contact our support team for assistance.'
+              ),
+
+              [
+                {
+                  text: tSafe('ok', 'OK'),
+                  style: 'default',
+                },
+              ]
+            );
+
             return;
           }
-  
-          if (response.ok && data.status === 'success') {
-            const userData = data.data;
-  
-            // Non-blocking push registration
-            try {
-              await registerForPushNotificationsAsync(userData._id);
-            } catch (pushError) {
-              console.warn('Push registration failed, continuing login:', pushError);
-            }
-  
-            await fetchUserFirebaseData(userData._id, userData);
-  
-            if (inviteToken) {
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'Public',
-                    state: {
-                      routes: [{ name: 'InviteGate', params: { inviteToken } }],
-                    },
-                  },
-                ],
-              });
-            } else {
-              const targetScreen = userData.userType === 'host' ? 'Host' : 'Cleaner';
-              navigation.reset({
-                index: 0,
-                routes: [{ name: targetScreen }],
-              });
-            }
-          } else {
-            // Other errors (e.g., invalid token)
-            throw new Error(data.message || data.detail || 'Sign-in failed');
+
+
+          // ---------------------------------------------------------------
+          // ROLE REQUIRED
+          // ---------------------------------------------------------------
+
+          if (
+            data?.status === 'needs_role' ||
+            data?.needs_role === true ||
+            data?.data?.needs_role === true ||
+            data?.data?.requires_user_type === true
+          ) {
+            /*
+             * This normally should be handled by LoginOptions.
+             * Keeping this fallback here makes the sign-in screen
+             * robust if the backend determines that this Google
+             * account is new.
+             */
+
+            navigation.navigate(
+              ROUTES.getting_started,
+              {
+                googleSignup: true,
+
+                googleCredential: {
+                  authentication,
+                  idToken: authentication.idToken,
+                },
+
+                googleUser:
+                  data?.data?.user ||
+                  data?.data ||
+                  null,
+
+                inviteToken,
+              }
+            );
+
+            return;
           }
+
+
+          // ---------------------------------------------------------------
+          // SUCCESS
+          // ---------------------------------------------------------------
+
+          if (
+            response.ok &&
+            data?.status === 'success' &&
+            data?.data
+          ) {
+            const userData = data.data;
+
+            await completeLogin(userData);
+
+            return;
+          }
+
+
+          // ---------------------------------------------------------------
+          // OTHER BACKEND ERROR
+          // ---------------------------------------------------------------
+
+          throw new Error(
+            data?.message ||
+            data?.detail ||
+            tSafe(
+              'signin_failed',
+              'Sign-in failed'
+            )
+          );
+
         } catch (error) {
-          console.error('Google sign-in error:', error);
-          alert('Google sign-in failed: ' + error.message);
+          console.error(
+            '❌ Google sign-in error:',
+            error
+          );
+
+          Alert.alert(
+            tSafe('error', 'Error'),
+            error?.message ||
+              tSafe(
+                'google_signin_failed',
+                'Google sign-in failed.'
+              )
+          );
         } finally {
           setGoogleLoading(false);
         }
-      } else if (googleResponse?.type === 'error') {
-        console.error('Google auth error:', googleResponse.error);
-        if (googleResponse.error?.code !== 'ERR_REQUEST_CANCELED') {
-          alert('Google sign-in failed');
+
+      } else if (
+        googleResponse?.type === 'error'
+      ) {
+        console.error(
+          'Google authentication error:',
+          googleResponse.error
+        );
+
+        if (
+          googleResponse.error?.code !==
+          'ERR_REQUEST_CANCELED'
+        ) {
+          Alert.alert(
+            tSafe('error', 'Error'),
+            tSafe(
+              'google_signin_failed',
+              'Google sign-in failed.'
+            )
+          );
         }
+
         setGoogleLoading(false);
       }
     };
-  
-    handleGoogleResponse();
-  }, [googleResponse]);
 
-  const handleGoogleSignIn = async (emailHint = null) => {
+    handleGoogleResponse();
+  }, [
+    completeLogin,
+    inviteToken,
+    navigation,
+  ]);
+
+
+  // ---------------------------------------------------------------------------
+  // GOOGLE SIGN-IN
+  // ---------------------------------------------------------------------------
+
+  const handleGoogleSignIn = async (
+    emailHint = null
+  ) => {
     if (!googleRequest) {
-      console.log('Google request not ready yet');
-      // ✅ Using global alert() instead of Alert.alert()
-      Alert.alert('Please wait: Google Sign-In is initialising. Try again in a second.');
-      
+      Alert.alert(
+        tSafe(
+          'please_wait',
+          'Please wait'
+        ),
+        tSafe(
+          'google_initializing',
+          'Google Sign-In is initializing. Please try again in a moment.'
+        )
+      );
+
       return;
     }
+
     try {
       setGoogleLoading(true);
-      const extraParams = emailHint ? { login_hint: emailHint } : {};
+
+      const extraParams = emailHint
+        ? {
+            login_hint: emailHint,
+          }
+        : {};
+
       await googlePromptAsync(extraParams);
     } catch (error) {
-      console.error('Google prompt error:', error);
+      console.error(
+        '❌ Google prompt error:',
+        error
+      );
+
       setGoogleLoading(false);
+
+      Alert.alert(
+        tSafe('error', 'Error'),
+        tSafe(
+          'google_signin_failed',
+          'Google sign-in failed.'
+        )
+      );
     }
   };
 
-  const getDeviceInfo = async () => {
-    const deviceName = Device.deviceName;
-    const osFull = Device.osName || '';
-    const osVersion = Device.osVersion;
-    let osType = 'Unknown OS';
-    setDeviceName(deviceName);
-    setOsType(Device.os_type);
 
-    if (osFull.toLowerCase().includes('android')) {
-      osType = 'Android';
-    } else if (osFull.toLowerCase().includes('ios')) {
-      osType = 'iOS';
-    }
-
-    console.log(`Device Name: ${deviceName}`);
-    console.log(`OS Type: ${osType}`);
-    console.log(`OS Version: ${osVersion}`);
-  };
-
-  useEffect(() => {
-    if (expoPushToken) {
-      console.log('Expo Push Token:', expoPushToken);
-    }
-    getDeviceInfo();
-  }, [expoPushToken]);
-
-  const writeUserData = (userData) => {
-    console.log('-------#####---------', userData);
-    try {
-      const userId = userData._id;
-      const firstname = userData.firstname;
-      const lastname = userData.lastname;
-      const email = userData.email;
-      const avatar = userData.avatar;
-      const userRef = `users/${userId}`;
-      const userDatabaseRef = ref(db, userRef);
-      set(userDatabaseRef, {
-        userId: userId,
-        firstname: firstname,
-        lastname: lastname,
-        language: language,
-        email: email,
-        avatar: avatar,
-      });
-
-      const unreadMsgRef = `unreadMessages/${userId}`;
-      const unreadMsgDatabaseRef = ref(db, unreadMsgRef);
-      set(unreadMsgDatabaseRef, {});
-      console.log('Data written successfully!');
-    } catch (error) {
-      console.error('Error writing data: ', error);
-    }
-  };
-
-  const fetchUserFirebaseData = async (uid, response) => {
-    try {
-      const mySnapshot = await get(ref(db, `users/${uid}`));
-      setFBCurrentUser(mySnapshot.val());
-
-      console.log('Get me my user', mySnapshot.val());
-      const data_to_send = {
-        resp: response,
-        fbUser: mySnapshot.val(),
-        expo_push_token: expoPushToken,
-      };
-
-      // ✅ This updates the AuthContext, which is critical
-      login(data_to_send);
-
-      if (response.expo_push_token !== expoPushToken) {
-        const userTokenData = {
-          userId: uid,
-          expo_push_token: expoPushToken,
-        };
-        // userService.updateExpoPushToken(userTokenData)
-      }
-    } catch (error) {
-      console.error('Error fetching Firebase data:', error);
-      // Even if Firebase fails, still login the user
-      const data_to_send = {
-        resp: response,
-        fbUser: null,
-        expo_push_token: expoPushToken,
-      };
-      login(data_to_send);
-    }
-  };
+  // ---------------------------------------------------------------------------
+  // EMAIL LOGIN
+  // ---------------------------------------------------------------------------
 
   const validate = async () => {
     Keyboard.dismiss();
+
     let isValid = true;
-    
-    // ✅ Trim email before validation
-    const trimmedEmail = inputs.email.trim();
-    
+
+    const trimmedEmail =
+      inputs.email.trim();
+
     if (!trimmedEmail) {
       handleError(
         <Animatable.View animation="fadeInUpBig">
-          <Text style={{ color: COLORS.red }}>{tSafe('please_enter_email', 'Please enter email')}</Text>
+          <Text
+            style={{
+              color: theme.status.error,
+            }}
+          >
+            {tSafe(
+              'please_enter_email',
+              'Please enter email'
+            )}
+          </Text>
         </Animatable.View>,
         'email'
       );
+
       isValid = false;
     }
+
     if (!inputs.password) {
       handleError(
         <Animatable.View animation="fadeInUpBig">
-          <Text style={{ color: COLORS.red }}>{tSafe('please_enter_password', 'Please enter password')}</Text>
+          <Text
+            style={{
+              color: theme.status.error,
+            }}
+          >
+            {tSafe(
+              'please_enter_password',
+              'Please enter password'
+            )}
+          </Text>
         </Animatable.View>,
         'password'
       );
+
       isValid = false;
     }
-    if (isValid) {
-      setLoading(true); // ✅ FIXED: Always set to true, not toggling
-      handleLogin(trimmedEmail); // ✅ Pass the trimmed email
+
+    if (!isValid) {
+      return;
     }
+
+    await handleLogin(trimmedEmail);
   };
 
-  const handleLogin = async (trimmedEmail) => {
-    setLoading(true);
-    try {
-      // ✅ Use the trimmed email here
-      const result = await loginWithEmailPassword(trimmedEmail, inputs.password);
 
-      if (result.success) {
+  const handleLogin = async (
+    trimmedEmail
+  ) => {
+    setLoading(true);
+
+    try {
+      const result =
+        await loginWithEmailPassword(
+          trimmedEmail,
+          inputs.password
+        );
+
+      if (result?.success) {
         const userData = result.data;
 
-        // ✅ Non-blocking push registration - catches errors so login always proceeds
-        try {
-          await registerForPushNotificationsAsync(userData._id);
-        } catch (pushError) {
-          console.warn('Push registration failed, continuing login:', pushError);
+        if (!userData?._id) {
+          throw new Error(
+            tSafe(
+              'invalid_login_response',
+              'Invalid login response. Please try again.'
+            )
+          );
         }
 
-        // ✅ CRITICAL: Update AuthContext (was commented out before)
-        // await fetchUserFirebaseData(userData._id, userData);
+        /*
+         * IMPORTANT:
+         * Explicitly update the AuthContext.
+         *
+         * This keeps email login consistent with
+         * Google login and the rest of the application.
+         */
+        await completeLogin(userData);
 
-        console.log('✅ AuthContext updated, now navigating...');
-        console.log('Invite token:', inviteToken);
-        console.log('User type:', userData.userType);
+        console.log(
+          '✅ Email login completed successfully'
+        );
 
-        // ✅ Use local navigation prop instead of navigationRef.current
-        if (inviteToken) {
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'Public',
-                state: {
-                  routes: [{ name: 'InviteGate', params: { inviteToken } }],
-                },
-              },
-            ],
-          });
-        } else {
-          // ✅ Safe fallback for userType
-          let targetScreen = 'Cleaner';
-          if (userData.userType === 'host') {
-            targetScreen = 'Host';
-          } else if (userData.userType === 'cleaner') {
-            targetScreen = 'Cleaner';
-          } else {
-            console.warn('⚠️ Unknown userType received:', userData.userType, 'Defaulting to Cleaner');
-          }
-
-          navigation.reset({
-            index: 0,
-            routes: [{ name: targetScreen }],
-          });
-        }
       } else {
-        console.log('❌ Login failed with type:', result.type);
+        console.log(
+          '❌ Login failed:',
+          result?.type
+        );
 
-        // switch (result.type) {
-        //   case 'GOOGLE_ACCOUNT':
-        //     showGoogleAccountAlertDirect(result.email);
-        //     break;
-
-        //   case 'NO_PASSWORD':
-        //     showNoPasswordAlertDirect(result.email);
-        //     break;
-
-        //   case 'VERIFICATION_REQUIRED':
-        //     // ✅ Using global alert() with multiple lines
-        //     alert(
-        //       tSafe('verification_required', 'Verification Required') + '\n\n' +
-        //       tSafe('verify_email_before_login', 'Please verify your email before logging in.')
-        //     );
-        //     break;
-
-        //   default:
-        //     // ✅ Using global alert() instead of Alert.alert()
-        //     alert(tSafe('login_failed', 'Login Failed') + ': ' + result.error);
-        // }
-        switch (result.type) {
-          case 'GOOGLE_ACCOUNT':
-            showGoogleAccountAlertDirect(result.email);
-            break;
-        
+        switch (result?.type) {
+          
           case 'NO_PASSWORD':
-            showNoPasswordAlertDirect(result.email);
-            break;
-        
-          case 'VERIFICATION_REQUIRED':
-            alert(
-              tSafe('verification_required', 'Verification Required') + '\n\n' +
-              tSafe('verify_email_before_login', 'Please verify your email before logging in.')
+            showNoPasswordAlertDirect(
+              result.email
             );
             break;
-        
-          // ✅ New case for deactivated accounts
+
+          case 'VERIFICATION_REQUIRED':
+            Alert.alert(
+              tSafe(
+                'verification_required',
+                'Verification Required'
+              ),
+
+              tSafe(
+                'verify_email_before_login',
+                'Please verify your email before logging in.'
+              )
+            );
+            break;
+
           case 'ACCOUNT_DEACTIVATED':
             Alert.alert(
-              'Account Deactivated',
-              'Your account has been deactivated. If you think this is a mistake, please contact our support team for assistance.',
-              [{ text: 'OK', style: 'default' }]
+              tSafe(
+                'account_deactivated',
+                'Account Deactivated'
+              ),
+
+              tSafe(
+                'account_deactivated_message',
+                'Your account has been deactivated. If you think this is a mistake, please contact our support team for assistance.'
+              ),
+
+              [
+                {
+                  text: tSafe(
+                    'ok',
+                    'OK'
+                  ),
+                  style: 'default',
+                },
+              ]
             );
             break;
-        
+
           default:
-            alert(tSafe('login_failed', 'Login Failed') + ': ' + result.error);
+            Alert.alert(
+              tSafe(
+                'login_failed',
+                'Login Failed'
+              ),
+
+              result?.error ||
+                tSafe(
+                  'something_went_wrong',
+                  'Something went wrong.'
+                )
+            );
         }
       }
+
     } catch (error) {
-      console.error('Login error:', error);
-      console.error('Full error object:', error);
-      // ✅ Using global alert() instead of Alert.alert()
-      alert(tSafe('error', 'Error') + ': ' + tSafe('something_went_wrong', 'Something went wrong'));
+      console.error(
+        '❌ Login error:',
+        error
+      );
+
+      Alert.alert(
+        tSafe('error', 'Error'),
+        tSafe(
+          'something_went_wrong',
+          'Something went wrong.'
+        )
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const showGoogleAccountAlertDirect = (email) => {
-    // ✅ Using global alert() - but this is simple, for complex alerts we keep Alert.alert
-    // For complex buttons, Alert.alert is fine since it's imported
+
+  // // ---------------------------------------------------------------------------
+  // // GOOGLE ACCOUNT ALERT
+  // // ---------------------------------------------------------------------------
+
+  // const showGoogleAccountAlertDirect = (
+  //   email
+  // ) => {
+  //   Alert.alert(
+  //     tSafe(
+  //       'account_created_with_google',
+  //       'Account Created with Google'
+  //     ),
+
+  //     tSafe(
+  //       'google_signin_prompt',
+  //       'This account was created using Google. Would you like to sign in with Google?'
+  //     ),
+
+  //     [
+  //       {
+  //         text: tSafe(
+  //           'sign_in_with_google',
+  //           'Sign in with Google'
+  //         ),
+
+  //         onPress: () => {
+  //           handleGoogleSignIn(email);
+  //         },
+  //       },
+
+  //       {
+  //         text: tSafe(
+  //           'set_password_instead',
+  //           'Set Password Instead'
+  //         ),
+
+  //         onPress: () => {
+  //           navigation.navigate(
+  //             ROUTES.set_password,
+  //             {
+  //               email,
+  //             }
+  //           );
+  //         },
+  //       },
+
+  //       {
+  //         text: tSafe(
+  //           'cancel',
+  //           'Cancel'
+  //         ),
+
+  //         style: 'cancel',
+  //       },
+  //     ]
+  //   );
+  // };
+
+
+  // ---------------------------------------------------------------------------
+  // NO PASSWORD ALERT
+  // ---------------------------------------------------------------------------
+
+  const showNoPasswordAlertDirect = (
+    email
+  ) => {
     Alert.alert(
-      tSafe('account_created_with_google', 'Account Created with Google'),
-      tSafe('google_signin_prompt', 'This account was created using Google. Would you like to sign in with Google?'),
+      tSafe(
+        'password_required',
+        'Password Required'
+      ),
+
+      tSafe(
+        'set_password_first',
+        'You need to set a password for your account first.'
+      ),
+
       [
         {
-          text: tSafe('sign_in_with_google', 'Sign in with Google'),
+          text: tSafe(
+            'set_password',
+            'Set Password'
+          ),
+
+          onPress: () => {
+            navigation.navigate(
+              ROUTES.set_password,
+              {
+                email,
+              }
+            );
+          },
+        },
+
+        {
+          text: tSafe(
+            'use_google_instead',
+            'Use Google Instead'
+          ),
+
           onPress: () => {
             handleGoogleSignIn(email);
           },
         },
+
         {
-          text: tSafe('set_password_instead', 'Set Password Instead'),
-          onPress: () => {
-            navigation.navigate(ROUTES.set_password, {
-              email: email,
-            });
-          },
-        },
-        {
-          text: tSafe('cancel', 'Cancel'),
+          text: tSafe(
+            'cancel',
+            'Cancel'
+          ),
+
           style: 'cancel',
         },
       ]
     );
   };
 
-  const showNoPasswordAlertDirect = (email) => {
-    // ✅ Using global alert() - keeping Alert.alert for complex buttons
-    Alert.alert(
-      tSafe('password_required', 'Password Required'),
-      tSafe('set_password_first', 'You need to set a password for your account first.'),
-      [
-        {
-          text: tSafe('set_password', 'Set Password'),
-          onPress: () => {
-            navigation.navigate(ROUTES.set_password, {
-              email: email,
-            });
-          },
-        },
-        {
-          text: tSafe('use_google_instead', 'Use Google Instead'),
-          onPress: () => {
-            handleGoogleSignIn(email);
-          },
-        },
-        {
-          text: tSafe('cancel', 'Cancel'),
-          style: 'cancel',
-        },
-      ]
-    );
-  };
 
-  const resendVerification = async (email) => {
+  // ---------------------------------------------------------------------------
+  // RESEND VERIFICATION
+  // ---------------------------------------------------------------------------
+
+  const resendVerification = async (
+    email
+  ) => {
     try {
-      const API_CONFIG = { baseUrl: 'https://www.freshsweeper.com/api' };
-      await axios.post(`${API_CONFIG.baseUrl}/auth/resend_verification`, { email });
-      alert(tSafe('success', 'Success') + ': ' + tSafe('verification_email_sent', 'Verification email sent!'));
+      const API_CONFIG = {
+        baseUrl:
+          'https://www.freshsweeper.com/api',
+      };
+
+      await axios.post(
+        `${API_CONFIG.baseUrl}/auth/resend_verification`,
+        {
+          email,
+        }
+      );
+
+      Alert.alert(
+        tSafe(
+          'success',
+          'Success'
+        ),
+
+        tSafe(
+          'verification_email_sent',
+          'Verification email sent!'
+        )
+      );
+
     } catch (error) {
-      alert(tSafe('error', 'Error') + ': ' + tSafe('failed_resend_verification', 'Failed to resend verification email.'));
+      console.error(
+        'Resend verification error:',
+        error
+      );
+
+      Alert.alert(
+        tSafe(
+          'error',
+          'Error'
+        ),
+
+        tSafe(
+          'failed_resend_verification',
+          'Failed to resend verification email.'
+        )
+      );
     }
   };
 
-  const handleOnchange = (text, input) => {
-    setInputs((prevState) => ({ ...prevState, [input]: text }));
+
+  // ---------------------------------------------------------------------------
+  // INPUT HANDLERS
+  // ---------------------------------------------------------------------------
+
+  const handleOnchange = (
+    text,
+    input
+  ) => {
+    setInputs(
+      (prevState) => ({
+        ...prevState,
+        [input]: text,
+      })
+    );
   };
 
-  const handleError = (error, input) => {
-    setErrors((prevState) => ({ ...prevState, [input]: error }));
+
+  const handleError = (
+    error,
+    input
+  ) => {
+    setErrors(
+      (prevState) => ({
+        ...prevState,
+        [input]: error,
+      })
+    );
   };
+
 
   const togglePasswordVisibility = () => {
-    setSecureTextEntry(!secureTextEntry);
+    setSecureTextEntry(
+      (previous) => !previous
+    );
   };
 
+
+  // ---------------------------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------------------------
+
   return (
-    <SafeAreaView style={{ flex: 1, justifyContent: 'center', backgroundColor: COLORS.white }}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate(ROUTES.getting_started)}>
-        <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        {
+          backgroundColor:
+            theme.background.default,
+        },
+      ]}
+    >
+      <StatusBar
+        barStyle={
+          isDark
+            ? 'light-content'
+            : 'dark-content'
+        }
+        backgroundColor={
+          theme.background.default
+        }
+      />
+
+      {/* Back Button */}
+      <TouchableOpacity
+        style={[
+          styles.backButton,
+          {
+            backgroundColor:
+              theme.surface.elevated,
+
+            borderColor:
+              theme.border.default,
+
+            shadowColor:
+              theme.shadow?.color ||
+              '#000000',
+          },
+        ]}
+        activeOpacity={0.75}
+        onPress={() =>
+          navigation.navigate(
+            ROUTES.login_options
+          )
+        }
+      >
+        <MaterialCommunityIcons
+          name="arrow-left"
+          size={24}
+          color={theme.icon.default}
+        />
       </TouchableOpacity>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20 }}>
-        <View style={{ paddingTop: 120, paddingHorizontal: 0 }}>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={
+          styles.scrollContent
+        }
+      >
+        <View style={styles.container}>
+
+          {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.text_header}>{t('welcome')}</Text>
+            <View
+              style={[
+                styles.brandIcon,
+                {
+                  backgroundColor:
+                    theme.brand.primaryLight,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="account-outline"
+                size={30}
+                color={
+                  theme.brand.primary
+                }
+              />
+            </View>
+
+            <Text
+              style={[
+                styles.textHeader,
+                {
+                  color:
+                    theme.text.primary,
+                },
+              ]}
+            >
+              {tSafe(
+                'welcome',
+                'Welcome'
+              )}
+            </Text>
+
+            <Text
+              style={[
+                styles.subtitle,
+                {
+                  color:
+                    theme.text.secondary,
+                },
+              ]}
+            >
+              {tSafe(
+                'sign_in_to_continue',
+                'Sign in to continue to Freshsweeper'
+              )}
+            </Text>
           </View>
 
-          {/* ✅ Email field with .trim() */}
-          <TextInput
-            mode="outlined"
-            label={tSafe('email', 'Email')}
-            autoCapitalize="none"
-            placeholder={tSafe('enter_your_email', 'Enter your email')}
-            placeholderTextColor={COLORS.gray}
-            outlineColor="#D8D8D8"
-            value={inputs.email}
-            activeOutlineColor={COLORS.primary}
-            style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-            onChangeText={(text) => handleOnchange(text.trim(), 'email')}
-            onFocus={() => handleError(null, 'email')}
-            error={errors.email}
-            left={<TextInput.Icon icon="email" style={{ marginTop: 10 }} fontSize="small" />}
-          />
 
-          <TextInput
-            mode="outlined"
-            autoCapitalize="none"
-            onChangeText={(text) => handleOnchange(text, 'password')}
-            onFocus={() => handleError(null, 'password')}
-            left={<TextInput.Icon icon="lock-outline" style={{ marginTop: 10 }} size={20} />}
-            label={tSafe('password', 'Password')}
-            placeholder={tSafe('enter_password', 'Enter Password')}
-            style={{ marginBottom: 10, fontSize: 14, backgroundColor: '#fff' }}
-            outlineColor="#D8D8D8"
-            activeOutlineColor={COLORS.primary}
-            error={errors.password}
-            secureTextEntry={secureTextEntry}
-            right={
-              <TextInput.Icon
-                icon={secureTextEntry ? 'eye-off' : 'eye'}
-                onPress={togglePasswordVisibility}
-                size={20}
-              />
-            }
-          />
+          {/* Email */}
+          <View style={styles.formSection}>
 
-          <Text
-            onPress={() => navigation.navigate(ROUTES.forgot_password)}
-            style={{ textAlign: 'right', marginTop: 0, marginBottom: 10, fontSize: 12, color: COLORS.primary }}
-          >
-            {tSafe('forgot_password', 'Forgot Password')}
-          </Text>
+            <TextInput
+              mode="outlined"
+              label={tSafe(
+                'email',
+                'Email'
+              )}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              placeholder={tSafe(
+                'enter_your_email',
+                'Enter your email'
+              )}
+              placeholderTextColor={
+                theme.input.placeholder
+              }
+              value={inputs.email}
+              onChangeText={(text) =>
+                handleOnchange(
+                  text.trim(),
+                  'email'
+                )
+              }
+              onFocus={() =>
+                handleError(
+                  null,
+                  'email'
+                )
+              }
+              error={!!errors.email}
+              outlineColor={
+                errors.email
+                  ? theme.status.error
+                  : theme.input.border
+              }
+              activeOutlineColor={
+                errors.email
+                  ? theme.status.error
+                  : theme.input.focus
+              }
+              textColor={
+                theme.input.text
+              }
+              theme={{
+                colors: {
+                  primary:
+                    theme.input.focus,
 
-          <Button title={t('login', 'Login')} loading={loading} onPress={validate} />
+                  onSurface:
+                    theme.input.text,
 
-          <Text
-            onPress={() => navigation.navigate(ROUTES.getting_started)}
-            style={{ color: COLORS.black, fontWeight: 'bold', textAlign: 'center', fontSize: 16, marginTop: 20 }}
-          >
-            {t('i_dont_have_account', 'I do not have an account')}
-          </Text>
+                  onSurfaceVariant:
+                    theme.text.secondary,
+
+                  outline:
+                    theme.input.border,
+
+                  background:
+                    theme.input.background,
+                },
+              }}
+              style={[
+                styles.input,
+                {
+                  backgroundColor:
+                    theme.input.background,
+                },
+              ]}
+              left={
+                <TextInput.Icon
+                  icon="email-outline"
+                  color={
+                    theme.icon.muted
+                  }
+                />
+              }
+            />
+
+            {errors.email && (
+              <View style={styles.errorContainer}>
+                {errors.email}
+              </View>
+            )}
+
+
+            {/* Password */}
+            <TextInput
+              mode="outlined"
+              autoCapitalize="none"
+              autoCorrect={false}
+              label={tSafe(
+                'password',
+                'Password'
+              )}
+              placeholder={tSafe(
+                'enter_password',
+                'Enter Password'
+              )}
+              placeholderTextColor={
+                theme.input.placeholder
+              }
+              value={inputs.password}
+              onChangeText={(text) =>
+                handleOnchange(
+                  text,
+                  'password'
+                )
+              }
+              onFocus={() =>
+                handleError(
+                  null,
+                  'password'
+                )
+              }
+              error={!!errors.password}
+              secureTextEntry={
+                secureTextEntry
+              }
+              outlineColor={
+                errors.password
+                  ? theme.status.error
+                  : theme.input.border
+              }
+              activeOutlineColor={
+                errors.password
+                  ? theme.status.error
+                  : theme.input.focus
+              }
+              textColor={
+                theme.input.text
+              }
+              theme={{
+                colors: {
+                  primary:
+                    theme.input.focus,
+
+                  onSurface:
+                    theme.input.text,
+
+                  onSurfaceVariant:
+                    theme.text.secondary,
+
+                  outline:
+                    theme.input.border,
+
+                  background:
+                    theme.input.background,
+                },
+              }}
+              style={[
+                styles.input,
+                {
+                  backgroundColor:
+                    theme.input.background,
+                },
+              ]}
+              left={
+                <TextInput.Icon
+                  icon="lock-outline"
+                  color={
+                    theme.icon.muted
+                  }
+                />
+              }
+              right={
+                <TextInput.Icon
+                  icon={
+                    secureTextEntry
+                      ? 'eye-off-outline'
+                      : 'eye-outline'
+                  }
+                  color={
+                    theme.icon.muted
+                  }
+                  onPress={
+                    togglePasswordVisibility
+                  }
+                />
+              }
+            />
+
+            {errors.password && (
+              <View style={styles.errorContainer}>
+                {errors.password}
+              </View>
+            )}
+
+
+            {/* Forgot Password */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={
+                styles.forgotContainer
+              }
+              onPress={() =>
+                navigation.navigate(
+                  ROUTES.forgot_password
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.forgotText,
+                  {
+                    color:
+                      theme.brand.primary,
+                  },
+                ]}
+              >
+                {tSafe(
+                  'forgot_password',
+                  'Forgot Password'
+                )}
+              </Text>
+            </TouchableOpacity>
+
+
+            {/* Login */}
+            <Button
+              title={tSafe(
+                'login',
+                'Login'
+              )}
+              loading={loading}
+              onPress={validate}
+            />
+
+
+            {/* Google Sign In */}
+            {/* <TouchableOpacity
+              activeOpacity={0.8}
+              disabled={
+                googleLoading ||
+                loading
+              }
+              style={[
+                styles.googleButton,
+                {
+                  backgroundColor:
+                    theme.surface.elevated,
+
+                  borderColor:
+                    theme.border.default,
+
+                  opacity:
+                    googleLoading ||
+                    loading
+                      ? 0.6
+                      : 1,
+
+                  shadowColor:
+                    theme.shadow?.color ||
+                    '#000000',
+                },
+              ]}
+              onPress={() =>
+                handleGoogleSignIn()
+              }
+            >
+              <View
+                style={
+                  styles.googleButtonContent
+                }
+              >
+                {googleLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={
+                      theme.brand.primary
+                    }
+                  />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons
+                      name="google"
+                      size={21}
+                      color="#4285F4"
+                      style={
+                        styles.googleIcon
+                      }
+                    />
+
+                    <Text
+                      style={[
+                        styles.googleButtonText,
+                        {
+                          color:
+                            theme.text.primary,
+                        },
+                      ]}
+                    >
+                      {tSafe(
+                        'continue_with_google',
+                        'Continue with Google'
+                      )}
+                    </Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity> */}
+
+
+            {/* Create Account */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={
+                styles.createAccountButton
+              }
+              onPress={() =>
+                navigation.navigate(
+                  ROUTES.getting_started
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.createAccountText,
+                  {
+                    color:
+                      theme.text.primary,
+                  },
+                ]}
+              >
+                {tSafe(
+                  'i_dont_have_account',
+                  'I do not have an account'
+                )}
+              </Text>
+
+              <Text
+                style={[
+                  styles.createAccountLink,
+                  {
+                    color:
+                      theme.brand.primary,
+                  },
+                ]}
+              >
+                {tSafe(
+                  'create_account',
+                  'Create Account'
+                )}
+              </Text>
+            </TouchableOpacity>
+
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+
 export default Signin;
 
+
+// -----------------------------------------------------------------------------
+// STYLES
+// -----------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: 72,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+
+  container: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+  },
+
   header: {
-    flex: 0,
-    justifyContent: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  text_header: {
-    color: COLORS.dark,
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 30,
-  },
-  googleButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    marginTop: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    paddingTop: 45,
+    paddingBottom: 30,
+  },
+
+  brandIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+
+  textHeader: {
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '800',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginTop: 8,
+    paddingHorizontal: 20,
+  },
+
+  formSection: {
+    width: '100%',
+  },
+
+  input: {
+    marginBottom: 10,
+    fontSize: 14,
+  },
+
+  errorContainer: {
+    marginTop: -5,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+
+  forgotContainer: {
+    alignSelf: 'flex-end',
+    marginTop: 0,
+    marginBottom: 18,
+    paddingVertical: 4,
+  },
+
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  googleButton: {
+    minHeight: 54,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
     elevation: 2,
   },
+
   googleButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   googleIcon: {
     marginRight: 12,
   },
+
   googleButtonText: {
-    color: '#3c4043',
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  createAccountButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 28,
+    paddingVertical: 12,
+  },
+
+  createAccountText: {
+    fontSize: 14,
     fontWeight: '500',
   },
+
+  createAccountLink: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 5,
+  },
+
   backButton: {
     position: 'absolute',
     top: 50,
     left: 20,
     zIndex: 10,
+
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f5f5f5',
+
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+
+    borderWidth: 1,
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },

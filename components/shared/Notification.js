@@ -1,68 +1,183 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
+
+
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Alert,
   RefreshControl,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+
 import ROUTES from '../../constants/routes';
 import { AuthContext } from '../../context/AuthContext';
+import { useTheme } from '../../theme';
+import userService from '../../services/connection/userService';
 
-// API base URL - adjust based on your environment
-const API_BASE_URL = 'https://www.freshsweeper.com/api'; // Change to your actual API URL
-
+const API_BASE_URL = 'https://www.freshsweeper.com/api';
 
 const Notification = () => {
-  const { currentUser, updateNotificationUnreadCount } = useContext(AuthContext); // ✅ get updater
+  const {
+    currentUser,
+    updateNotificationUnreadCount,
+  } = useContext(AuthContext);
 
+  const { theme, isDark } = useTheme();
   const navigation = useNavigation();
+
+  console.log('NOTIFICATION SCREEN DEBUG:', {
+    isDark,
+    background: theme.background.default,
+    surface: theme.surface.default,
+    elevated: theme.surface.elevated,
+    selected: theme.surface.selected,
+    card: theme.card,
+});
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme]
+  );
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-  // Compute unread count from list
-  const computeUnreadCount = (list) => {
-    return list.filter(n => n.status === 'sent' || n.status === 'delivered').length;
-  };
+  /*
+   * ------------------------------------------------------------
+   * HELPERS
+   * ------------------------------------------------------------
+   */
 
-  // Update unread count in context whenever notifications change
+  const isUnread = useCallback((notification) => {
+    return (
+      notification?.status === 'sent' ||
+      notification?.status === 'delivered'
+    );
+  }, []);
+
+  const computeUnreadCount = useCallback(
+    (list) => {
+      return list.filter(isUnread).length;
+    },
+    [isUnread]
+  );
+
+  const getNotificationType = useCallback((notification) => {
+    return (
+      notification?.metadata?.status ||
+      notification?.type ||
+      'system_alert'
+    );
+  }, []);
+
+  const getScreenParams = useCallback((notification) => {
+    return notification?.metadata?.screen_params || {};
+  }, []);
+
+  /*
+   * ------------------------------------------------------------
+   * UNREAD COUNT
+   * ------------------------------------------------------------
+   */
+
   useEffect(() => {
-    updateNotificationUnreadCount(computeUnreadCount(notifications));
-  }, [notifications, updateNotificationUnreadCount]);
-
-  // Fetch notifications from API
-  const fetchNotifications = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/notifications/user/${currentUser._id}?userType=${currentUser.userType}&limit=50`
+    if (typeof updateNotificationUnreadCount === 'function') {
+      updateNotificationUnreadCount(
+        computeUnreadCount(notifications)
       );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      Alert.alert('Error', 'Failed to load notifications');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
-  };
+  }, [
+    notifications,
+    computeUnreadCount,
+    updateNotificationUnreadCount,
+  ]);
 
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
+  /*
+   * ------------------------------------------------------------
+   * FETCH NOTIFICATIONS
+   * ------------------------------------------------------------
+   */
+
+  const fetchNotifications = useCallback(
+    async (showRefreshIndicator = false) => {
+      if (!currentUser?._id || !currentUser?.userType) {
+        setNotifications([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      if (showRefreshIndicator) {
+        setRefreshing(true);
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/notifications/user/${currentUser._id}?userType=${encodeURIComponent(
+            currentUser.userType
+          )}&limit=50`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `HTTP error! status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        const normalizedNotifications = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.notifications)
+            ? data.notifications
+            : [];
+
+        setNotifications(normalizedNotifications);
+      } catch (error) {
+        console.error(
+          'Error fetching notifications:',
+          error
+        );
+
+        if (!showRefreshIndicator) {
+          Alert.alert(
+            'Unable to Load Notifications',
+            'We could not load your notifications. Please try again.'
+          );
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [currentUser?._id, currentUser?.userType]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * MARK AS READ
+   * ------------------------------------------------------------
+   */
+
+  const markAsRead = useCallback(async (notificationId) => {
+    if (!notificationId) return;
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
@@ -75,25 +190,65 @@ const Notification = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to mark as read');
+        throw new Error('Failed to mark notification as read');
       }
 
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notif =>
-          notif._id === notificationId
-            ? { ...notif, status: 'read', readAt: new Date().toISOString() }
-            : notif
+      setNotifications((previous) =>
+        previous.map((notification) =>
+          notification._id === notificationId
+            ? {
+                ...notification,
+                status: 'read',
+                readAt: new Date().toISOString(),
+              }
+            : notification
         )
       );
     } catch (error) {
-      console.error('Error marking as read:', error);
-      // Don't show alert for read errors to avoid interrupting user flow
+      console.error(
+        'Error marking notification as read:',
+        error
+      );
     }
-  };
+  }, []);
 
-  // Delete notification
-  const handleDelete = async (notificationId) => {
+  /*
+   * ------------------------------------------------------------
+   * MARK ALL AS READ
+   * ------------------------------------------------------------
+   */
+
+  const markAllAsRead = useCallback(async () => {
+    const unreadNotifications =
+      notifications.filter(isUnread);
+
+    if (unreadNotifications.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.all(
+        unreadNotifications.map((notification) =>
+          markAsRead(notification._id)
+        )
+      );
+    } catch (error) {
+      console.error(
+        'Error marking all notifications as read:',
+        error
+      );
+    }
+  }, [notifications, isUnread, markAsRead]);
+
+  /*
+   * ------------------------------------------------------------
+   * DELETE NOTIFICATION
+   * ------------------------------------------------------------
+   */
+
+  const handleDelete = useCallback(async (notificationId) => {
+    if (!notificationId) return;
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/notifications/${notificationId}`,
@@ -106,656 +261,1447 @@ const Notification = () => {
         throw new Error('Failed to delete notification');
       }
 
-      // Remove from local state
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      setNotifications((previous) =>
+        previous.filter(
+          (notification) =>
+            notification._id !== notificationId
+        )
+      );
     } catch (error) {
-      console.error('Error deleting notification:', error);
-      Alert.alert('Error', 'Failed to delete notification');
+      console.error(
+        'Error deleting notification:',
+        error
+      );
+
+      Alert.alert(
+        'Unable to Delete',
+        'The notification could not be deleted. Please try again.'
+      );
     }
-  };
-
-  // Get the effective notification type (use metadata.status if available, otherwise fall back to type)
-  const getNotificationType = (notification) => {
-    return notification.metadata?.status || notification.type;
-  };
-
-  // Handle notification press - navigate to appropriate screen
-  const handleNotificationPress = (notification) => {
-    const effectiveType = getNotificationType(notification);
-    const { metadata, _id } = notification;
-    const scheduleId = metadata?.schedule_id;
-    const bookingId = metadata?.bookingId;
-    const paymentId = metadata?.paymentId;
-    const propertyId = metadata?.screen_params?.propertyId;
-    const supportTicketId = metadata?.supportTicketId;
-    const chatId = metadata?.chatId;
-    const payment_intent_id = metadata?.screen_params?.paymentIntentId;
-    const requestId = metadata?.screen_params?.requestId;
-    
-  
-    // Mark as read first
-    markAsRead(_id);
-  
-    // Navigate based on notification type
-    switch (effectiveType) {
-      // === CLEANING REQUEST NOTIFICATIONS ===
-      case 'cleaning_request':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_schedule_review, { 
-            scheduleId: scheduleId,
-            notificationId: _id 
-          });
-        } else {
-          navigation.navigate(ROUTES.host_booking_status, { 
-            scheduleId: scheduleId || bookingId,
-            notificationId: _id 
-          });
-        }
-        break;
-  
-      case 'payment_confirmed':
-        navigation.navigate(ROUTES.host_receipt_details, { 
-          scheduleId: scheduleId || bookingId,
-          payment_intent_id:payment_intent_id,
-          notificationId: _id 
-        });
-        break;
-        
-      case 'payment_confirmed_cleaner':
-        navigation.navigate(ROUTES.cleaner_schedule_details_view, { 
-          scheduleId: scheduleId,
-          notificationId: _id 
-        });
-        break;
-
-      case 'schedule_confirmed':
-        navigation.navigate(ROUTES.host_booking_detail, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id,
-          
-        });
-        break;
-    
-      case 'cleaner_accepted_schedule':
-        navigation.navigate(ROUTES.host_schedule_request, {
-          scheduleId: scheduleId,
-          requestId:requestId
-        })
-        break;
-      case 'cleaner_clocked_in':
-        navigation.navigate(ROUTES.host_task_progress, { 
-          scheduleId: scheduleId,
-          mode:"in_progress",
-          notificationId: _id,
-          
-        });
-        break;
-  
-      case 'schedule_cancelled':
-        navigation.navigate(ROUTES.host_cancellation_details, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id 
-        });
-        break;
-  
-      case 'schedule_reminder':
-        navigation.navigate(ROUTES.host_booking_detail, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id,
-          isReminder: true 
-        });
-        break;
-  
-      // === CLEANING STATUS NOTIFICATIONS ===
-      case 'cleaning_started':
-        navigation.navigate(ROUTES.cleaning_status, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id,
-          status: 'started'
-        });
-        break;
-  
-      case 'cleaning_completed':
-        navigation.navigate(ROUTES.cleaning_status, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id,
-          status: 'completed'
-        });
-        break;
-  
-      case 'cleaning_delayed':
-        navigation.navigate(ROUTES.cleaning_status, { 
-          scheduleId: scheduleId || bookingId,
-          notificationId: _id,
-          status: 'delayed',
-          delayReason: metadata?.delayReason 
-        });
-        break;
-  
-      case 'cleaner_on_the_way':
-        if (currentUser.userType === 'host') {
-          navigation.navigate(ROUTES.cleaner_tracking, { 
-            scheduleId: scheduleId || bookingId,
-            notificationId: _id,
-            cleanerLocation: metadata?.cleanerLocation 
-          });
-        }
-        break;
-
-      // === CLEANER INVITE NOTIFICATIONS ===
-      case 'platform_cleaner_invited':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_property_preview, { 
-            notificationId: _id,
-            propertyId:propertyId
-          });
-        }
-        
-        break;
-      // === CLEANER INVITE NOTIFICATIONS ===
-      case 'cleaner_date_change':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_schedule_date_change, { 
-            notificationId: _id,
-            propertyId:propertyId,
-            scheduleId: metadata.screen_params.scheduleId,
-            requestId: metadata.screen_params.requestId,
-            cleanerId: metadata.screen_params.cleanerId,
-            oldCleaningDate: metadata.screen_params.oldCleaningDate,
-            newCleaningDate: metadata.screen_params.newCleaningDate,
-            propertyName: metadata.screen_params.propertyName,
-            cleaningTime: metadata.screen_params.cleaningTime,
-            group: metadata.screen_params.group,
-          });
-        }
-        
-        break;
-
-      // === SYSTEM & ALERT NOTIFICATIONS ===
-      case 'system_alert':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_all_requests, { 
-            notificationId: _id
-          });
-        } else {
-          navigation.navigate(ROUTES.host_dashboard, { 
-            notificationId: _id
-          });
-        }
-        break;
-
-      // === PAYMENT NOTIFICATIONS ===
-      case 'payment_received':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_earnings, { 
-            paymentId,
-            notificationId: _id 
-          });
-        } else {
-          navigation.navigate(ROUTES.host_payment_history, { 
-            paymentId,
-            notificationId: _id 
-          });
-        }
-        break;
-  
-      case 'payment_pending':
-        navigation.navigate(ROUTES.payment_status, { 
-          paymentId,
-          notificationId: _id,
-          status: 'pending'
-        });
-        break;
-  
-      case 'payment_failed':
-        navigation.navigate(ROUTES.payment_status, { 
-          paymentId,
-          notificationId: _id,
-          status: 'failed'
-        });
-        break;
-        
-      case 'inventory_low':
-        navigation.navigate(ROUTES.host_inventory, { 
-          propertyId: metadata?.screen_params?.propertyId,
-          notificationId: _id
-        });
-        break;
-      
-      // === CLEANER DATE CHANGE ===
-      case 'cleaner_date_change':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_schedule_date_change, {
-            notificationId: _id,
-            propertyId: propertyId,
-            scheduleId: metadata?.screen_params?.scheduleId,
-            requestId: metadata?.screen_params?.requestId,
-            cleanerId: metadata?.screen_params?.cleanerId,
-            oldCleaningDate: metadata?.screen_params?.oldCleaningDate,
-            newCleaningDate: metadata?.screen_params?.newCleaningDate,
-            propertyName: metadata?.screen_params?.propertyName,
-            cleaningTime: metadata?.screen_params?.cleaningTime,
-            group: metadata?.screen_params?.group,
-          });
-        }
-        break;
-
-
-      // === CLEANER REPLACEMENT REQUEST ===
-      case 'replacement_cleaner_request':
-        if (currentUser.userType === 'cleaner') {
-          navigation.navigate(ROUTES.cleaner_replacement_request, {
-            notificationId: _id,
-
-            // IMPORTANT: this is the CHILD replacement request ID
-            scheduleId:
-              metadata?.screen_params?.scheduleId ||
-              metadata?.schedule_id,
-
-            requestId:
-              metadata?.screen_params?.requestId,
-
-            cleanerId:
-              metadata?.screen_params?.cleanerId,
-
-            oldCleaningDate:
-              metadata?.screen_params?.oldCleaningDate,
-
-            newCleaningDate:
-              metadata?.screen_params?.newCleaningDate,
-
-            propertyName:
-              metadata?.screen_params?.propertyName,
-
-            cleaningTime:
-              metadata?.screen_params?.cleaningTime,
-
-            group:
-              metadata?.screen_params?.group,
-          });
-        }
-        break;
-
-
-      // === HOST CLEANER UNAVAILABLE / REPLACEMENT REQUIRED ===
-      case 'cleaner_unavailable_date_change':
-        if (currentUser.userType === 'host') {
-          navigation.navigate(ROUTES.replacement_cleaner, {
-            notificationId: _id,
-
-            scheduleId:
-              metadata?.screen_params?.scheduleId ||
-              metadata?.schedule_id,
-
-            requestId:
-              metadata?.screen_params?.requestId,
-
-            cleanerId:
-              metadata?.screen_params?.cleanerId,
-
-            oldCleaningDate:
-              metadata?.screen_params?.oldCleaningDate,
-
-            newCleaningDate:
-              metadata?.screen_params?.newCleaningDate,
-
-            propertyName:
-              metadata?.screen_params?.propertyName,
-
-            cleaningTime:
-              metadata?.screen_params?.cleaningTime,
-
-            group:
-              metadata?.screen_params?.group,
-          });
-        }
-        break;
-
-      // Default case for unknown types
-      default:
-        console.log('Unknown notification type:', effectiveType);
-        // Navigate to a generic notification detail or stay on list
-        break;
-    }
-  };
-
-  // Get notification icon based on type
-  const getNotificationIcon = (notification) => {
-    const effectiveType = getNotificationType(notification);
-    // Alert.alert('Debug', `Notification type: ${effectiveType}`);
-    
-    const iconMap = {
-      // Cleaning Request & Scheduling
-      cleaning_request: 'calendar-plus',
-      schedule_request: 'calendar-plus',
-      schedule_confirmed: 'calendar-check',
-      schedule_cancelled: 'calendar-remove',
-      schedule_reminder: 'calendar-clock',
-      schedule_modified: 'calendar-edit',
-      schedule_rescheduled: 'calendar-sync',
-      
-      // Cleaning Status
-      cleaning_started: 'play-circle',
-      cleaning_completed: 'check-circle',
-      cleaning_delayed: 'clock-alert',
-      cleaner_on_the_way: 'map-marker-path',
-      
-      // System & Alert
-      system_alert: 'alert-circle',
-      
-      // Payment
-      payment_received: 'credit-card-check',
-      payment_pending: 'clock-outline',
-      payment_failed: 'credit-card-off',
-      payment_refunded: 'cash-refund',
-      
-      // Rating & Review
-      rating_received: 'star',
-      review_received: 'comment-text',
-      
-      // Account
-      account_verified: 'shield-check',
-      profile_approved: 'account-check',
-      document_expiring: 'file-alert',
-
-      cleaner_clocked_in: 'clock-check',
-      upcoming_schedule_reminder: 'clock-alert',
-      cleaner_accepted_schedule: 'account-check',
-      payment_confirmed_cleaner: 'cash-check',
-      payment_released: 'cash-fast',
-      payment_reminder: 'clock-alert',
-      automatic_payment_approved: 'robot',
-      cleaner_finished_cleaning: 'check-circle',
-
-      inventory_low: 'package-variant', 
-    };
-    
-    return iconMap[effectiveType] || 'bell';
-  };
-
-  // Get notification icon color based on type
-  const getNotificationColor = (notification) => {
-    const effectiveType = getNotificationType(notification);
-    
-    const colorMap = {
-      // Cleaning Request & Scheduling
-      cleaning_request: '#FFA500', // Orange
-      schedule_confirmed: '#4CAF50', // Green
-      schedule_cancelled: '#F44336', // Red
-      schedule_reminder: '#2196F3', // Blue
-      schedule_modified: '#FF9800', // Amber
-      schedule_rescheduled: '#9C27B0', // Purple
-      
-      // Cleaning Status
-      cleaning_started: '#2196F3', // Blue
-      cleaning_completed: '#4CAF50', // Green
-      cleaning_delayed: '#FF9800', // Amber
-      cleaner_on_the_way: '#9C27B0', // Purple
-      
-      // System & Alert
-      system_alert: '#FF5722', // Deep Orange
-      
-      // Payment
-      payment_received: '#4CAF50', // Green
-      payment_pending: '#FF9800', // Amber
-      payment_failed: '#F44336', // Red
-      payment_refunded: '#795548', // Brown
-      
-      // Rating & Review
-      rating_received: '#FFC107', // Amber
-      review_received: '#FF9800', // Orange
-      
-      // Account
-      account_verified: '#4CAF50', // Green
-      profile_approved: '#4CAF50', // Green
-      document_expiring: '#FF9800', // Amber
-
-      cleaner_clocked_in: '#4CAF50', // Green - positive action
-      upcoming_schedule_reminder: '#FF9800', // Amber/Oange - warning/reminder
-      cleaner_accepted_schedule: '#4CAF50', // Green - positive confirmation
-      payment_confirmed_cleaner: '#4CAF50', // Green - payment success
-      payment_released: '#4CAF50', // Green - money received
-      payment_reminder: '#FF9800', // Amber/Oange - payment due soon
-      automatic_payment_approved: '#2196F3', // Blue - automated process
-      cleaner_finished_cleaning: '#4CAF50', // Green - task completed
-
-      inventory_low: '#FF9800',
-    };
-    
-    return colorMap[effectiveType] || '#666';
-  };
-
-  // Get notification action text based on type
-  const getActionText = (notification) => {
-    const effectiveType = getNotificationType(notification);
-    
-    const actionMap = {
-      cleaning_request: currentUser.userType === 'cleaner' ? 'View Request' : 'View Status',
-      schedule_confirmed: 'View Booking',
-      schedule_cancelled: 'View Details',
-      schedule_reminder: 'View Booking',
-      schedule_modified: 'View Changes',
-      schedule_rescheduled: 'View New Time',
-      
-      cleaning_started: 'View Progress',
-      cleaning_completed: 'View Completion',
-      cleaning_delayed: 'View Details',
-      cleaner_on_the_way: 'Track Cleaner',
-      
-      system_alert: 'View Details',
-      
-      payment_received: 'View Details',
-      payment_pending: 'View Status',
-      payment_failed: 'Retry Payment',
-      payment_refunded: 'View Refund',
-      
-      rating_received: 'View Rating',
-      review_received: 'Read Review',
-      
-      account_verified: 'View Profile',
-      profile_approved: 'View Profile',
-      document_expiring: 'Update Documents',
-
-      cleaner_clocked_in: 'Track Schedule',
-      upcoming_schedule_reminder: 'View Details',
-      cleaner_accepted_schedule: 'View Schedule',
-      payment_confirmed_cleaner: 'View Payment',
-      payment_released: 'View Earnings',
-      payment_reminder: 'Make Payment',
-      automatic_payment_approved: 'View Details',
-      cleaner_finished_cleaning: 'View Completion',
-      platform_cleaner_invited: 'View Property',
-      inventory_low: 'View Inventory'
-    };
-    
-    return actionMap[effectiveType] || 'View Details';
-  };
-
-  // Format time ago
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    
-    return date.toLocaleDateString();
-  };
-
-  // Check if notification is unread
-  const isUnread = (notification) => {
-    return notification.status === 'sent' || notification.status === 'delivered';
-  };
-
-  // Swipeable delete action
-  const renderRightActions = (notificationId) => (
-    <TouchableOpacity
-      style={styles.deleteButton}
-      onPress={() => {
-        Alert.alert(
-          'Delete Notification',
-          'Are you sure you want to delete this notification?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => handleDelete(notificationId) },
-          ]
-        );
-      }}
-    >
-      <MaterialCommunityIcons name="trash-can" size={24} color="white" />
-    </TouchableOpacity>
-  );
-
-  // Render each notification item
-  const renderItem = ({ item }) => (
-    <Swipeable renderRightActions={() => renderRightActions(item._id)}>
-      <TouchableOpacity 
-        style={[
-          styles.notificationCard, 
-          isUnread(item) && styles.unreadCard
-        ]}
-        onPress={() => handleNotificationPress(item)}
-      >
-        <MaterialCommunityIcons
-          name={getNotificationIcon(item)}
-          size={30}
-          color={getNotificationColor(item)}
-          style={styles.notificationIcon}
-        />
-        
-        <View style={styles.notificationContent}>
-          <View style={styles.notificationHeader}>
-            <Text style={styles.title}>{item.title}</Text>
-            {isUnread(item) && <View style={styles.unreadDot} />}
-          </View>
-          
-          <Text style={styles.message} numberOfLines={2}>
-            {item.message}
-          </Text>
-          
-          <View style={styles.notificationFooter}>
-            <View style={styles.footerLeft}>
-              <Text style={styles.time}>
-                {formatTimeAgo(item.sentAt?.$date || item.createdAt?.$date || item.sentAt || item.createdAt)}
-              </Text>
-              
-              {/* {item.metadata?.schedule_id && (
-                <Text style={styles.scheduleId}>
-                  Schedule: {item.metadata.schedule_id.substring(0, 8)}...
-                </Text>
-              )} */}
-            </View>
-            
-            <View style={styles.actionIndicator}>
-              <Text style={styles.actionText}>
-                {getActionText(item)}
-              </Text>
-              <MaterialCommunityIcons 
-                name="chevron-right" 
-                size={16} 
-                color="#007AFF" 
-              />
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Swipeable>
-  );
-
-  // Filter notifications based on unread toggle
-  const filteredNotifications = showUnreadOnly
-    ? notifications.filter(n => isUnread(n))
-    : notifications;
-
-  // Pull to refresh
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchNotifications();
   }, []);
 
-  // Load notifications when screen comes into focus
+  /*
+   * ------------------------------------------------------------
+   * NOTIFICATION NAVIGATION
+   * ------------------------------------------------------------
+   */
+
+  const handleNotificationPress = useCallback(
+    async (notification) => {
+      if (!notification) return;
+
+      const effectiveType =
+        getNotificationType(notification);
+
+      const metadata = notification.metadata || {};
+      const screenParams = getScreenParams(notification);
+      const notificationId = notification._id;
+
+      const scheduleId =
+        screenParams.scheduleId ||
+        metadata.schedule_id;
+
+      const bookingId =
+        screenParams.bookingId ||
+        metadata.bookingId;
+
+      const paymentId =
+        screenParams.paymentId ||
+        metadata.paymentId;
+
+      const propertyId =
+        screenParams.propertyId ||
+        metadata.propertyId;
+
+      const supportTicketId =
+        screenParams.supportTicketId ||
+        metadata.supportTicketId;
+
+      const chatId =
+        screenParams.chatId ||
+        metadata.chatId;
+
+      const paymentIntentId =
+        screenParams.paymentIntentId ||
+        metadata.paymentIntentId;
+
+      const requestId =
+        screenParams.requestId ||
+        metadata.requestId;
+
+      /*
+       * Mark read before navigating.
+       */
+      await markAsRead(notificationId);
+
+      switch (effectiveType) {
+        /*
+         * ========================================================
+         * CLEANING REQUESTS
+         * ========================================================
+         */
+
+        case 'cleaning_request':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_schedule_review,
+              {
+                scheduleId,
+                notificationId,
+              }
+            );
+          } else {
+            navigation.navigate(
+              ROUTES.host_booking_status,
+              {
+                scheduleId: scheduleId || bookingId,
+                notificationId,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * PAYMENTS
+         * ========================================================
+         */
+
+        case 'payment_confirmed':
+          navigation.navigate(
+            ROUTES.host_receipt_details,
+            {
+              scheduleId: scheduleId || bookingId,
+              payment_intent_id: paymentIntentId,
+              notificationId,
+            }
+          );
+          break;
+
+        case 'payment_confirmed_cleaner':
+          navigation.navigate(
+            ROUTES.cleaner_schedule_details_view,
+            {
+              scheduleId,
+              notificationId,
+            }
+          );
+          break;
+
+        case 'payment_received':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_earnings,
+              {
+                paymentId,
+                notificationId,
+              }
+            );
+          } else {
+            navigation.navigate(
+              ROUTES.host_payment_history,
+              {
+                paymentId,
+                notificationId,
+              }
+            );
+          }
+          break;
+
+        case 'payment_pending':
+          navigation.navigate(
+            ROUTES.payment_status,
+            {
+              paymentId,
+              notificationId,
+              status: 'pending',
+            }
+          );
+          break;
+
+        case 'payment_failed':
+          navigation.navigate(
+            ROUTES.payment_status,
+            {
+              paymentId,
+              notificationId,
+              status: 'failed',
+            }
+          );
+          break;
+
+        /*
+         * ========================================================
+         * SCHEDULE
+         * ========================================================
+         */
+
+        case 'schedule_confirmed':
+          navigation.navigate(
+            ROUTES.host_booking_detail,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+            }
+          );
+          break;
+
+        case 'cleaner_accepted_schedule':
+          navigation.navigate(
+            ROUTES.host_recommended_cleaners,
+            {
+              scheduleId,
+              requestId,
+            }
+          );
+          break;
+
+        case 'cleaner_clocked_in':
+          navigation.navigate(
+            ROUTES.host_task_progress,
+            {
+              scheduleId,
+              mode: 'in_progress',
+              notificationId,
+            }
+          );
+          break;
+
+        case 'schedule_cancelled':
+          navigation.navigate(
+            ROUTES.host_cancellation_details,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+            }
+          );
+          break;
+
+        case 'schedule_reminder':
+          navigation.navigate(
+            ROUTES.host_booking_detail,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+              isReminder: true,
+            }
+          );
+          break;
+
+        /*
+         * ========================================================
+         * CLEANING STATUS
+         * ========================================================
+         */
+
+        case 'cleaning_started':
+          navigation.navigate(
+            ROUTES.cleaning_status,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+              status: 'started',
+            }
+          );
+          break;
+
+        case 'cleaning_completed':
+          navigation.navigate(
+            ROUTES.cleaning_status,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+              status: 'completed',
+            }
+          );
+          break;
+
+        case 'cleaning_delayed':
+          navigation.navigate(
+            ROUTES.cleaning_status,
+            {
+              scheduleId: scheduleId || bookingId,
+              notificationId,
+              status: 'delayed',
+              delayReason: metadata?.delayReason,
+            }
+          );
+          break;
+
+        case 'cleaner_on_the_way':
+          if (currentUser?.userType === 'host') {
+            navigation.navigate(
+              ROUTES.cleaner_tracking,
+              {
+                scheduleId: scheduleId || bookingId,
+                notificationId,
+                cleanerLocation:
+                  metadata?.cleanerLocation,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * CLEANER INVITES
+         * ========================================================
+         */
+
+        case 'platform_cleaner_invited':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_property_preview,
+              {
+                notificationId,
+                propertyId,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * DATE CHANGE
+         * ========================================================
+         */
+
+        case 'cleaner_date_change':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_schedule_date_change,
+              {
+                notificationId,
+                propertyId,
+                scheduleId,
+                requestId,
+                cleanerId:
+                  screenParams.cleanerId ||
+                  metadata.cleanerId,
+                oldCleaningDate:
+                  screenParams.oldCleaningDate,
+                newCleaningDate:
+                  screenParams.newCleaningDate,
+                propertyName:
+                  screenParams.propertyName,
+                cleaningTime:
+                  screenParams.cleaningTime,
+                group: screenParams.group,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * MANUAL SCHEDULE CHANGE
+         * ========================================================
+         */
+
+        case 'cleaner_manual_schedule_change':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_manual_schedule_date_change,
+              {
+                notificationId,
+                propertyId,
+                scheduleId,
+                requestId,
+                cleanerId:
+                  screenParams.cleanerId ||
+                  metadata.cleanerId,
+                oldCleaningDate:
+                  screenParams.oldCleaningDate,
+                newCleaningDate:
+                  screenParams.newCleaningDate,
+                propertyName:
+                  screenParams.propertyName,
+                cleaningTime:
+                  screenParams.cleaningTime,
+                group: screenParams.group,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * REPLACEMENT CLEANER REQUEST
+         * ========================================================
+         */
+
+        case 'replacement_cleaner_request':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_replacement_request,
+              {
+                notificationId,
+
+                // IMPORTANT:
+                // This is the CHILD replacement request ID.
+                scheduleId:
+                  screenParams.scheduleId ||
+                  metadata.schedule_id,
+
+                requestId:
+                  screenParams.requestId,
+
+                cleanerId:
+                  screenParams.cleanerId,
+
+                oldCleaningDate:
+                  screenParams.oldCleaningDate,
+
+                newCleaningDate:
+                  screenParams.newCleaningDate,
+
+                propertyName:
+                  screenParams.propertyName,
+
+                cleaningTime:
+                  screenParams.cleaningTime,
+
+                group:
+                  screenParams.group,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * HOST REPLACEMENT REQUIRED
+         * ========================================================
+         */
+
+        /*
+          * ========================================================
+          * HOST REPLACEMENT REQUIRED
+          * ========================================================
+          */
+
+          case 'cleaner_unavailable_date_change': {
+            if (currentUser?.userType !== 'host') {
+              break;
+            }
+
+            const replacementScheduleId =
+              screenParams.scheduleId ||
+              metadata.schedule_id;
+
+            const replacementRequestId =
+              screenParams.requestId ||
+              metadata.requestId;
+
+            // Both IDs identify the existing parent replacement workflow.
+            if (!replacementScheduleId || !replacementRequestId) {
+              console.error(
+                'Cannot open replacement workflow: missing IDs',
+                {
+                  scheduleId: replacementScheduleId,
+                  requestId: replacementRequestId,
+                }
+              );
+
+              Alert.alert(
+                'Unable to Open Replacement',
+                'The replacement workflow information is incomplete. Please refresh your notifications and try again.'
+              );
+
+              break;
+            }
+
+            try {
+              /*
+              * Check the existing workflow BEFORE deciding
+              * which replacement screen to open.
+              *
+              * This is a read-only request. It does not submit
+              * replacement requests or contact additional cleaners.
+              */
+              const response =
+                await userService.getReplacementRequestStatus(
+                  replacementScheduleId,
+                  replacementRequestId
+                );
+
+              const workflow = response?.data || {};
+
+              const existingRequests = Array.isArray(
+                workflow.requests
+              )
+                ? workflow.requests
+                : [];
+
+              const requestCount =
+                Number.isFinite(workflow.requestCount)
+                  ? workflow.requestCount
+                  : existingRequests.length;
+
+              const replacementParams = {
+                notificationId,
+
+                scheduleId: replacementScheduleId,
+                requestId: replacementRequestId,
+
+                cleanerId:
+                  screenParams.cleanerId ||
+                  metadata.cleanerId,
+
+                oldCleaningDate:
+                  screenParams.oldCleaningDate ||
+                  workflow.oldCleaningDate,
+
+                newCleaningDate:
+                  screenParams.newCleaningDate ||
+                  workflow.newCleaningDate,
+
+                propertyName:
+                  screenParams.propertyName ||
+                  workflow.propertyName,
+
+                cleaningTime:
+                  screenParams.cleaningTime ||
+                  workflow.cleaningTime,
+
+                group:
+                  screenParams.group ||
+                  workflow.group,
+              };
+
+              if (requestCount > 0) {
+                /*
+                * Requests already exist.
+                *
+                * Reopen the existing workflow. Never send the
+                * host back to cleaner selection just because
+                * they tapped the notification again.
+                */
+                console.log(
+                  'Replacement requests already submitted. Opening existing status screen.',
+                  {
+                    scheduleId: replacementScheduleId,
+                    requestId: replacementRequestId,
+                    requestCount,
+                  }
+                );
+
+                navigation.navigate(
+                  ROUTES.host_replacement_request_status,
+                  {
+                    ...replacementParams,
+                    source: 'notification_existing_workflow',
+                    requests: existingRequests,
+                    totalRequests: requestCount,
+                  }
+                );
+              } else {
+                /*
+                * The workflow exists, but no replacement requests
+                * have been submitted yet.
+                *
+                * The host can proceed to cleaner selection.
+                */
+                console.log(
+                  'No replacement requests submitted yet. Opening cleaner selection.',
+                  {
+                    scheduleId: replacementScheduleId,
+                    requestId: replacementRequestId,
+                  }
+                );
+
+                navigation.navigate(
+                  ROUTES.host_replacement_cleaner,
+                  replacementParams
+                );
+              }
+            } catch (error) {
+              /*
+              * IMPORTANT:
+              *
+              * Do not automatically open ReplacementCleaner
+              * when this check fails. A network error or inactive
+              * workflow must not be mistaken for zero requests.
+              */
+              console.error(
+                'Failed to check existing replacement workflow:',
+                error?.response?.data ||
+                  error?.message ||
+                  error
+              );
+
+              Alert.alert(
+                'Unable to Check Replacement Status',
+                error?.response?.data?.detail ||
+                  'We could not verify whether replacement requests have already been submitted. Please try again.'
+              );
+            }
+
+            break;
+          }
+
+        /*
+         * ========================================================
+         * SYSTEM
+         * ========================================================
+         */
+
+        case 'system_alert':
+          if (currentUser?.userType === 'cleaner') {
+            navigation.navigate(
+              ROUTES.cleaner_all_requests,
+              {
+                notificationId,
+              }
+            );
+          } else {
+            navigation.navigate(
+              ROUTES.host_dashboard,
+              {
+                notificationId,
+              }
+            );
+          }
+          break;
+
+        /*
+         * ========================================================
+         * INVENTORY
+         * ========================================================
+         */
+
+        case 'inventory_low':
+          navigation.navigate(
+            ROUTES.host_inventory,
+            {
+              propertyId,
+              notificationId,
+            }
+          );
+          break;
+
+        /*
+         * ========================================================
+         * DEFAULT
+         * ========================================================
+         */
+
+        default:
+          console.log(
+            'Unknown notification type:',
+            effectiveType
+          );
+          break;
+      }
+    },
+    [
+      currentUser,
+      navigation,
+      getNotificationType,
+      getScreenParams,
+      markAsRead,
+    ]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * ICONS
+   * ------------------------------------------------------------
+   */
+
+  const getNotificationIcon = useCallback(
+    (notification) => {
+      const effectiveType =
+        getNotificationType(notification);
+
+      const iconMap = {
+        cleaning_request: 'calendar-plus',
+        schedule_request: 'calendar-plus',
+        schedule_confirmed: 'calendar-check',
+        schedule_cancelled: 'calendar-remove',
+        schedule_reminder: 'calendar-clock',
+        schedule_modified: 'calendar-edit',
+        schedule_rescheduled: 'calendar-sync',
+
+        cleaning_started: 'play-circle',
+        cleaning_completed: 'check-circle',
+        cleaning_delayed: 'clock-alert',
+        cleaner_on_the_way: 'map-marker-path',
+
+        system_alert: 'alert-circle',
+
+        payment_received: 'credit-card-check',
+        payment_pending: 'clock-outline',
+        payment_failed: 'credit-card-off',
+        payment_refunded: 'cash-refund',
+
+        rating_received: 'star',
+        review_received: 'comment-text',
+
+        account_verified: 'shield-check',
+        profile_approved: 'account-check',
+        document_expiring: 'file-alert',
+
+        cleaner_clocked_in: 'clock-check',
+        upcoming_schedule_reminder: 'clock-alert',
+        cleaner_accepted_schedule: 'account-check',
+
+        payment_confirmed: 'cash-check',
+        payment_confirmed_cleaner: 'cash-check',
+        payment_released: 'cash-fast',
+        payment_reminder: 'clock-alert',
+        automatic_payment_approved: 'robot',
+
+        cleaner_finished_cleaning: 'check-circle',
+
+        platform_cleaner_invited: 'home-search',
+        cleaner_date_change: 'calendar-sync',
+        cleaner_manual_schedule_change: 'calendar-edit',
+        replacement_cleaner_request: 'account-switch',
+        cleaner_unavailable_date_change: 'account-alert',
+
+        inventory_low: 'package-variant',
+      };
+
+      return iconMap[effectiveType] || 'bell-outline';
+    },
+    [getNotificationType]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * SEMANTIC NOTIFICATION COLOR
+   * ------------------------------------------------------------
+   */
+
+  const getNotificationColor = useCallback(
+    (notification) => {
+      const effectiveType =
+        getNotificationType(notification);
+
+      const colorMap = {
+        cleaning_request: theme.status.warning,
+        schedule_request: theme.status.warning,
+
+        schedule_confirmed: theme.status.success,
+        schedule_cancelled: theme.status.error,
+        schedule_reminder: theme.status.info,
+        schedule_modified: theme.status.warning,
+        schedule_rescheduled: theme.brand.primary,
+
+        cleaning_started: theme.status.info,
+        cleaning_completed: theme.status.success,
+        cleaning_delayed: theme.status.warning,
+        cleaner_on_the_way: theme.brand.primary,
+
+        system_alert: theme.status.error,
+
+        payment_received: theme.status.success,
+        payment_pending: theme.status.warning,
+        payment_failed: theme.status.error,
+        payment_refunded: theme.text.secondary,
+
+        rating_received: theme.status.warning,
+        review_received: theme.status.warning,
+
+        account_verified: theme.status.success,
+        profile_approved: theme.status.success,
+        document_expiring: theme.status.warning,
+
+        cleaner_clocked_in: theme.status.success,
+        upcoming_schedule_reminder: theme.status.warning,
+        cleaner_accepted_schedule: theme.status.success,
+
+        payment_confirmed: theme.status.success,
+        payment_confirmed_cleaner: theme.status.success,
+        payment_released: theme.status.success,
+        payment_reminder: theme.status.warning,
+        automatic_payment_approved: theme.status.info,
+
+        cleaner_finished_cleaning: theme.status.success,
+
+        platform_cleaner_invited: theme.brand.primary,
+        cleaner_date_change: theme.brand.primary,
+        cleaner_manual_schedule_change: theme.brand.primary,
+
+        replacement_cleaner_request: theme.status.warning,
+        cleaner_unavailable_date_change: theme.status.warning,
+
+        inventory_low: theme.status.warning,
+      };
+
+      return (
+        colorMap[effectiveType] ||
+        theme.icon.muted
+      );
+    },
+    [getNotificationType, theme]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * ACTION LABEL
+   * ------------------------------------------------------------
+   */
+
+  const getActionText = useCallback(
+    (notification) => {
+      const effectiveType =
+        getNotificationType(notification);
+
+      const actionMap = {
+        cleaning_request:
+          currentUser?.userType === 'cleaner'
+            ? 'View Request'
+            : 'View Status',
+
+        schedule_confirmed: 'View Booking',
+        schedule_cancelled: 'View Details',
+        schedule_reminder: 'View Booking',
+        schedule_modified: 'View Changes',
+        schedule_rescheduled: 'View New Time',
+
+        cleaning_started: 'View Progress',
+        cleaning_completed: 'View Completion',
+        cleaning_delayed: 'View Details',
+        cleaner_on_the_way: 'Track Cleaner',
+
+        system_alert: 'View Details',
+
+        payment_received: 'View Details',
+        payment_pending: 'View Status',
+        payment_failed: 'Retry Payment',
+        payment_refunded: 'View Refund',
+
+        rating_received: 'View Rating',
+        review_received: 'Read Review',
+
+        account_verified: 'View Profile',
+        profile_approved: 'View Profile',
+        document_expiring: 'Update Documents',
+
+        cleaner_clocked_in: 'Track Schedule',
+        upcoming_schedule_reminder: 'View Details',
+        cleaner_accepted_schedule: 'View Schedule',
+
+        payment_confirmed: 'View Receipt',
+        payment_confirmed_cleaner: 'View Payment',
+
+        payment_released: 'View Earnings',
+        payment_reminder: 'Make Payment',
+        automatic_payment_approved: 'View Details',
+
+        cleaner_finished_cleaning: 'View Completion',
+
+        platform_cleaner_invited: 'View Property',
+        cleaner_date_change: 'Review Change',
+        cleaner_manual_schedule_change:
+          'Review Change',
+
+        replacement_cleaner_request:
+          'Review Request',
+
+        cleaner_unavailable_date_change:
+          'Find Replacement',
+
+        inventory_low: 'View Inventory',
+      };
+
+      return (
+        actionMap[effectiveType] ||
+        'View Details'
+      );
+    },
+    [currentUser?.userType, getNotificationType]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * TIME
+   * ------------------------------------------------------------
+   */
+
+  const formatTimeAgo = useCallback((dateString) => {
+    if (!dateString) {
+      return 'Recently';
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Recently';
+    }
+
+    const now = new Date();
+    const diffInSeconds = Math.max(
+      0,
+      Math.floor((now - date) / 1000)
+    );
+
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    }
+
+    if (diffInSeconds < 3600) {
+      return `${Math.floor(
+        diffInSeconds / 60
+      )}m ago`;
+    }
+
+    if (diffInSeconds < 86400) {
+      return `${Math.floor(
+        diffInSeconds / 3600
+      )}h ago`;
+    }
+
+    if (diffInSeconds < 604800) {
+      return `${Math.floor(
+        diffInSeconds / 86400
+      )}d ago`;
+    }
+
+    return date.toLocaleDateString();
+  }, []);
+
+  /*
+   * ------------------------------------------------------------
+   * DELETE ACTION
+   * ------------------------------------------------------------
+   */
+
+  const renderRightActions = useCallback(
+    (notificationId) => (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={styles.deleteButton}
+        onPress={() => {
+          Alert.alert(
+            'Delete Notification',
+            'Are you sure you want to delete this notification?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () =>
+                  handleDelete(notificationId),
+              },
+            ]
+          );
+        }}
+      >
+        <MaterialCommunityIcons
+          name="trash-can-outline"
+          size={23}
+          color={theme.icon.inverse}
+        />
+
+        <Text style={styles.deleteText}>
+          Delete
+        </Text>
+      </TouchableOpacity>
+    ),
+    [
+      handleDelete,
+      styles.deleteButton,
+      styles.deleteText,
+      theme.icon.inverse,
+    ]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * NOTIFICATION CARD
+   * ------------------------------------------------------------
+   */
+
+  const renderItem = useCallback(
+    ({ item }) => {
+      const unread = isUnread(item);
+      const notificationColor =
+        getNotificationColor(item);
+
+      const timestamp =
+        item?.sentAt?.$date ||
+        item?.createdAt?.$date ||
+        item?.sentAt ||
+        item?.createdAt;
+
+      return (
+        <Swipeable
+          renderRightActions={() =>
+            renderRightActions(item._id)
+          }
+          overshootRight={false}
+        >
+          <TouchableOpacity
+            activeOpacity={0.82}
+            style={[
+              styles.notificationCard,
+              unread && styles.unreadCard,
+            ]}
+            onPress={() =>
+              handleNotificationPress(item)
+            }
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  backgroundColor:
+                    `${notificationColor}18`,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={getNotificationIcon(item)}
+                size={24}
+                color={notificationColor}
+              />
+            </View>
+
+            <View style={styles.notificationContent}>
+              <View style={styles.notificationHeader}>
+                <Text
+                  style={styles.title}
+                  numberOfLines={1}
+                >
+                  {item?.title || 'Notification'}
+                </Text>
+
+                {unread && (
+                  <View
+                    style={[
+                      styles.unreadBadge,
+                      {
+                        backgroundColor:
+                          theme.brand.primary,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={
+                        styles.unreadBadgeText
+                      }
+                    >
+                      NEW
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <Text
+                style={styles.message}
+                numberOfLines={3}
+              >
+                {item?.message ||
+                  'You have a new notification.'}
+              </Text>
+
+              <View
+                style={styles.notificationFooter}
+              >
+                <View style={styles.footerLeft}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={13}
+                    color={theme.text.muted}
+                  />
+
+                  <Text style={styles.time}>
+                    {formatTimeAgo(timestamp)}
+                  </Text>
+                </View>
+
+                <View
+                  style={styles.actionIndicator}
+                >
+                  <Text
+                    style={styles.actionText}
+                    numberOfLines={1}
+                  >
+                    {getActionText(item)}
+                  </Text>
+
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={17}
+                    color={theme.brand.primary}
+                  />
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Swipeable>
+      );
+    },
+    [
+      formatTimeAgo,
+      getActionText,
+      getNotificationColor,
+      getNotificationIcon,
+      handleNotificationPress,
+      isUnread,
+      renderRightActions,
+      styles,
+      theme,
+    ]
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * FILTER
+   * ------------------------------------------------------------
+   */
+
+  const unreadCount = useMemo(
+    () => computeUnreadCount(notifications),
+    [notifications, computeUnreadCount]
+  );
+
+  const filteredNotifications = useMemo(() => {
+    if (showUnreadOnly) {
+      return notifications.filter(isUnread);
+    }
+
+    return notifications;
+  }, [
+    notifications,
+    showUnreadOnly,
+    isUnread,
+  ]);
+
+  /*
+   * ------------------------------------------------------------
+   * REFRESH
+   * ------------------------------------------------------------
+   */
+
+  const onRefresh = useCallback(() => {
+    fetchNotifications(true);
+  }, [fetchNotifications]);
+
+  /*
+   * ------------------------------------------------------------
+   * SCREEN FOCUS
+   * ------------------------------------------------------------
+   */
+
   useFocusEffect(
     useCallback(() => {
-      fetchNotifications();
-    }, [currentUser._id, currentUser.userType])
+      fetchNotifications(false);
+    }, [fetchNotifications])
   );
+
+  /*
+   * ------------------------------------------------------------
+   * LOADING
+   * ------------------------------------------------------------
+   */
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading notifications...</Text>
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.background.default}
+        />
+  
+        <View style={styles.loadingIcon}>
+          <MaterialCommunityIcons
+            name="bell-outline"
+            size={30}
+            color={theme.brand.primary}
+          />
+        </View>
+  
+        <ActivityIndicator
+          size="small"
+          color={theme.brand.primary}
+        />
+  
+        <Text style={styles.loadingText}>
+          Loading notifications...
+        </Text>
       </View>
     );
   }
 
+  /*
+   * ------------------------------------------------------------
+   * MAIN SCREEN
+   * ------------------------------------------------------------
+   */
+
   return (
     <View style={styles.container}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background.default}
+      />
+      
+      {/* <StatusBar
+        barStyle={
+          isDark
+            ? 'light-content'
+            : 'dark-content'
+        }
+        backgroundColor={
+          theme.background.default
+        }
+      /> */}
+
+      {/* ======================================================
+          HEADER
+          ====================================================== */}
+
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          
-          <TouchableOpacity 
-            onPress={() => setShowUnreadOnly(prev => !prev)}
-            style={styles.filterButton}
+        <View style={styles.headerTop}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerTitle}>
+              Notifications
+            </Text>
+
+            <Text style={styles.headerSubtitle}>
+              Stay up to date with your activity
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.headerCount,
+              {
+                backgroundColor:
+                  unreadCount > 0
+                    ? theme.brand.primary
+                    : theme.surface.elevated,
+                borderColor:
+                  unreadCount > 0
+                    ? theme.brand.primary
+                    : theme.border.default,
+              },
+            ]}
           >
             <MaterialCommunityIcons
-              name={showUnreadOnly ? 'filter-off' : 'filter'}
-              size={26}
-              color="#007AFF"
+              name="bell-outline"
+              size={17}
+              color={
+                unreadCount > 0
+                  ? theme.text.inverse
+                  : theme.icon.muted
+              }
             />
-            <Text style={styles.filterText}>
-              {showUnreadOnly ? 'Show All' : 'Unread Only'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.statsRow}>
-          <Text style={styles.statsText}>
-            {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
-            {showUnreadOnly && ` (${notifications.filter(n => isUnread(n)).length} unread)`}
-          </Text>
-          
-          {notifications.filter(n => isUnread(n)).length > 0 && (
-            <TouchableOpacity 
-              onPress={async () => {
-                // Mark all as read
-                const unreadNotifications = notifications.filter(n => isUnread(n));
-                for (const notification of unreadNotifications) {
-                  await markAsRead(notification._id);
-                }
-              }}
+
+            <Text
+              style={[
+                styles.headerCountText,
+                {
+                  color:
+                    unreadCount > 0
+                      ? theme.text.inverse
+                      : theme.text.secondary,
+                },
+              ]}
             >
-              <Text style={styles.markAllReadText}>Mark all read</Text>
+              {unreadCount}
+            </Text>
+          </View>
+        </View>
+
+        {/* Filter / summary bar */}
+        <View style={styles.controlsRow}>
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsText}>
+              {filteredNotifications.length}{' '}
+              {filteredNotifications.length === 1
+                ? 'notification'
+                : 'notifications'}
+            </Text>
+
+            {unreadCount > 0 && (
+              <View
+                style={[
+                  styles.unreadSummary,
+                  {
+                    backgroundColor:
+                      theme.brand.primaryLight,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.summaryDot,
+                    {
+                      backgroundColor:
+                        theme.brand.primary,
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.unreadSummaryText,
+                    {
+                      color:
+                        theme.brand.primary,
+                    },
+                  ]}
+                >
+                  {unreadCount} unread
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.headerActions}>
+            {unreadCount > 0 && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={markAllAsRead}
+                style={styles.markAllButton}
+              >
+                <MaterialCommunityIcons
+                  name="check-all"
+                  size={17}
+                  color={theme.brand.primary}
+                />
+
+                <Text
+                  style={styles.markAllText}
+                >
+                  Mark all read
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() =>
+                setShowUnreadOnly(
+                  (previous) => !previous
+                )
+              }
+              style={[
+                styles.filterButton,
+                showUnreadOnly &&
+                  styles.filterButtonActive,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={
+                  showUnreadOnly
+                    ? 'filter'
+                    : 'filter-outline'
+                }
+                size={18}
+                color={
+                  showUnreadOnly
+                    ? theme.text.inverse
+                    : theme.brand.primary
+                }
+              />
+
+              <Text
+                style={[
+                  styles.filterText,
+                  showUnreadOnly &&
+                    styles.filterTextActive,
+                ]}
+              >
+                {showUnreadOnly
+                  ? 'Unread'
+                  : 'All'}
+              </Text>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
       </View>
 
+      {/* ======================================================
+          LIST
+          ====================================================== */}
+
       <FlatList
         data={filteredNotifications}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item, index) =>
+          item?._id || `notification-${index}`
+        }
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          filteredNotifications.length === 0 &&
+            styles.emptyListContent,
+        ]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.brand.primary}
+            colors={[theme.brand.primary]}
+            progressBackgroundColor={
+              theme.surface.elevated
+            }
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons 
-              name="bell-off" 
-              size={64} 
-              color="#CCCCCC" 
-            />
+            <View
+              style={[
+                styles.emptyIconContainer,
+                {
+                  backgroundColor:
+                    theme.brand.primaryLight,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={
+                  showUnreadOnly
+                    ? 'check-all'
+                    : 'bell-off-outline'
+                }
+                size={42}
+                color={theme.brand.primary}
+              />
+            </View>
+
             <Text style={styles.emptyText}>
-              {showUnreadOnly ? 'No unread notifications' : 'No notifications yet'}
+              {showUnreadOnly
+                ? 'You’re all caught up'
+                : 'No notifications yet'}
             </Text>
+
             <Text style={styles.emptySubtext}>
-              {showUnreadOnly ? 'You\'re all caught up!' : 'Notifications will appear here'}
+              {showUnreadOnly
+                ? 'There are no unread notifications right now.'
+                : 'When something important happens, your notifications will appear here.'}
             </Text>
+
+            {showUnreadOnly &&
+              notifications.length > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.emptyAction}
+                  onPress={() =>
+                    setShowUnreadOnly(false)
+                  }
+                >
+                  <Text
+                    style={styles.emptyActionText}
+                  >
+                    View all notifications
+                  </Text>
+
+                  <MaterialCommunityIcons
+                    name="arrow-right"
+                    size={17}
+                    color={theme.button.primaryText}
+                  />
+                </TouchableOpacity>
+              )}
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -764,163 +1710,411 @@ const Notification = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#666',
-  },
-  header: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  filterText: {
-    marginLeft: 4,
-    color: '#007AFF',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  statsText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  markAllReadText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  listContent: {
-    paddingVertical: 8,
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    marginHorizontal: 16,
-    marginVertical: 4,
-    padding: 12,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  unreadCard: {
-    backgroundColor: '#f0f7ff',
-    borderLeftWidth: 3,
-    borderLeftColor: '#007AFF',
-  },
-  notificationIcon: {
-    marginRight: 12,
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  notificationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#007AFF',
-    marginLeft: 8,
-  },
-  message: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 6,
-  },
-  notificationFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  footerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  time: {
-    fontSize: 12,
-    color: '#999',
-    marginRight: 12,
-  },
-  scheduleId: {
-    fontSize: 12,
-    color: '#999',
-  },
-  actionIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 13,
-    color: '#007AFF',
-    marginRight: 4,
-  },
-  deleteButton: {
-    backgroundColor: '#ff3b30',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 70,
-    marginVertical: 4,
-    borderRadius: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-});
+/*
+ * ================================================================
+ * STYLES
+ * ================================================================
+ */
+
+const createStyles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.default,
+    },
+
+    centerContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background.default,
+      paddingHorizontal: 24,
+    },
+
+    loadingIcon: {
+      width: 62,
+      height: 62,
+      borderRadius: 31,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.brand.primaryLight,
+      marginBottom: 16,
+    },
+
+    loadingText: {
+      marginTop: 10,
+      fontSize: 14,
+      color: theme.text.secondary,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * HEADER
+     * ------------------------------------------------------------
+     */
+
+    header: {
+      backgroundColor: theme.surface.elevated,
+      paddingHorizontal: 18,
+      paddingTop: 18,
+      paddingBottom: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.divider,
+    },
+
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    titleContainer: {
+      flex: 1,
+      paddingRight: 16,
+    },
+
+    headerTitle: {
+      fontSize: 25,
+      lineHeight: 31,
+      fontWeight: '800',
+      letterSpacing: -0.5,
+      color: theme.text.primary,
+    },
+
+    headerSubtitle: {
+      marginTop: 3,
+      fontSize: 13,
+      lineHeight: 18,
+      color: theme.text.secondary,
+    },
+
+    headerCount: {
+      minWidth: 50,
+      height: 36,
+      paddingHorizontal: 10,
+      borderRadius: 18,
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+    },
+
+    headerCountText: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * CONTROLS
+     * ------------------------------------------------------------
+     */
+
+    controlsRow: {
+      marginTop: 17,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    statsContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
+    },
+
+    statsText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.text.secondary,
+    },
+
+    unreadSummary: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 10,
+      gap: 5,
+    },
+
+    summaryDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+
+    unreadSummaryText: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+
+    markAllButton: {
+      height: 34,
+      paddingHorizontal: 9,
+      borderRadius: 17,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+
+    markAllText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.brand.primary,
+    },
+
+    filterButton: {
+      height: 34,
+      paddingHorizontal: 11,
+      borderRadius: 17,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      backgroundColor: theme.brand.primaryLight,
+      borderWidth: 1,
+      borderColor: theme.brand.primaryLight,
+    },
+
+    filterButtonActive: {
+      backgroundColor: theme.brand.primary,
+      borderColor: theme.brand.primary,
+    },
+
+    filterText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.brand.primary,
+    },
+
+    filterTextActive: {
+      color: theme.text.inverse,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * LIST
+     * ------------------------------------------------------------
+     */
+
+    listContent: {
+      paddingTop: 10,
+      paddingBottom: 28,
+    },
+
+    emptyListContent: {
+      flexGrow: 1,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * NOTIFICATION CARD
+     * ------------------------------------------------------------
+     */
+
+    notificationCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: theme.card.background,
+      marginHorizontal: 16,
+      marginVertical: 5,
+      padding: 14,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: theme.card.border,
+
+      shadowColor: theme.shadow.color,
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: theme.shadow.opacity,
+      shadowRadius: 8,
+
+      elevation: 2,
+    },
+
+    unreadCard: {
+      borderColor: theme.brand.primary,
+      backgroundColor: theme.surface.selected,
+    },
+
+    iconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+
+    notificationContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    notificationHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 5,
+    },
+
+    title: {
+      flex: 1,
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: '700',
+      color: theme.text.primary,
+      paddingRight: 8,
+    },
+
+    unreadBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+
+    unreadBadgeText: {
+      fontSize: 8,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+      color: theme.text.inverse,
+    },
+
+    message: {
+      fontSize: 13,
+      lineHeight: 19,
+      color: theme.text.secondary,
+      marginBottom: 10,
+    },
+
+    notificationFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: 22,
+    },
+
+    footerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexShrink: 1,
+    },
+
+    time: {
+      fontSize: 11,
+      color: theme.text.muted,
+      marginLeft: 4,
+    },
+
+    actionIndicator: {
+      maxWidth: '52%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginLeft: 8,
+    },
+
+    actionText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.brand.primary,
+      marginRight: 2,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * DELETE
+     * ------------------------------------------------------------
+     */
+
+    deleteButton: {
+      width: 82,
+      marginVertical: 5,
+      marginRight: 16,
+      borderRadius: 16,
+      backgroundColor: theme.status.error,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    deleteText: {
+      marginTop: 4,
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.icon.inverse,
+    },
+
+    /*
+     * ------------------------------------------------------------
+     * EMPTY STATE
+     * ------------------------------------------------------------
+     */
+
+    emptyContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 32,
+      paddingTop: 40,
+      paddingBottom: 60,
+    },
+
+    emptyIconContainer: {
+      width: 86,
+      height: 86,
+      borderRadius: 43,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+
+    emptyText: {
+      fontSize: 20,
+      lineHeight: 26,
+      fontWeight: '800',
+      color: theme.text.primary,
+      textAlign: 'center',
+    },
+
+    emptySubtext: {
+      maxWidth: 330,
+      marginTop: 8,
+      fontSize: 14,
+      lineHeight: 21,
+      color: theme.text.secondary,
+      textAlign: 'center',
+    },
+
+    emptyAction: {
+      marginTop: 20,
+      paddingHorizontal: 16,
+      height: 42,
+      borderRadius: 21,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      backgroundColor:
+        theme.button.primaryBackground,
+    },
+
+    emptyActionText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.button.primaryText,
+    },
+  });
 
 export default Notification;

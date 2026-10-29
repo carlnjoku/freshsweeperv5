@@ -261,10 +261,10 @@ export function useNotification() {
                 projectId: projectId
             });
             
-            debugLog('success', '✅ Token generated successfully', { 
+            debugLog('success', '✅ Token generated successfully', {
                 tokenLength: tokenData.data.length,
-                tokenPreview: tokenData.data.substring(0, 30) + '...',
-                fullToken: tokenData.data // For debugging
+                tokenPreview:
+                    tokenData.data.substring(0, 30) + '...'
             });
             
             return tokenData.data;
@@ -459,7 +459,7 @@ export function useNotification() {
                 // await sendLocalTestNotification();
                 
                 // Also log to console for easy debugging
-                console.log('🎯 PUSH TOKEN GENERATED:', token);
+                console.log('🎯 PUSH TOKEN GENERATED:', token? `${token.substring(0, 30)}...`: 'none');
                 console.log('📱 Device:', Device.deviceName);
                 console.log('📱 Platform:', Platform.OS);
                 console.log('📱 Project ID:', Constants.expoConfig?.extra?.eas?.projectId);

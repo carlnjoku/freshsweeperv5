@@ -78,16 +78,25 @@
 
 
 
-import React, { useContext, useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import COLORS from "../../constants/colors";
-import { languages } from "../../data";
-import { LanguageContext } from "../../context/LanguageContext";
-import { tSafe } from "../../utils/tSafe";
+import React, { useContext, useState, useEffect } from 'react';
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+import { languages } from '../../data';
+import { LanguageContext } from '../../context/LanguageContext';
+import { tSafe } from '../../utils/tSafe';
+import { useTheme } from '../../theme';
+import AppText from '../../ui/AppText';
 
 export default function ChangeLanguage() {
+  const { theme } = useTheme();
   const { language, changeLanguage } = useContext(LanguageContext);
+
   const [selectedLanguage, setSelectedLanguage] = useState(language);
 
   // Sync selected language when context language changes
@@ -97,50 +106,96 @@ export default function ChangeLanguage() {
 
   const handleLanguageChange = async (langCode) => {
     setSelectedLanguage(langCode);
-    await changeLanguage(langCode); // This will update storage, i18n, and backend
+    await changeLanguage(langCode);
   };
+
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{tSafe("select_language", "Select Language")}</Text>
+      <AppText
+        variant="title"
+        style={styles.title}
+      >
+        {tSafe('select_language', 'Select Language')}
+      </AppText>
 
       <FlatList
         data={languages}
-        keyExtractor={(item) => item.value} // Ensure each item has a unique id
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.languageOption}
-            onPress={() => handleLanguageChange(item.value)}
-          >
-            <Text
+        keyExtractor={(item) => item.value}
+        renderItem={({ item }) => {
+          const isSelected = selectedLanguage === item.value;
+
+          return (
+            <TouchableOpacity
               style={[
-                styles.languageText,
-                selectedLanguage === item.value && styles.selectedText,
+                styles.languageOption,
+                isSelected && styles.selectedOption,
               ]}
+              onPress={() => handleLanguageChange(item.value)}
+              activeOpacity={0.7}
             >
-              {item.label}
-            </Text>
-            {selectedLanguage === item.value && (
-              <Icon name="checkmark" size={24} color="#007BFF" />
-            )}
-          </TouchableOpacity>
-        )}
+              <AppText
+                style={[
+                  styles.languageText,
+                  isSelected && styles.selectedText,
+                ]}
+              >
+                {item.label}
+              </AppText>
+
+              {isSelected && (
+                <Icon
+                  name="checkmark"
+                  size={24}
+                  color={theme.brand.primary}
+                />
+              )}
+            </TouchableOpacity>
+          );
+        }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: COLORS.dark },
-  languageOption: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-  },
-  languageText: { fontSize: 18 },
-  selectedText: { fontWeight: "bold", color: "#007BFF" },
-});
+const createStyles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: theme.background.default,
+    },
+
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: theme.text.primary,
+    },
+
+    languageOption: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 15,
+      paddingHorizontal: 4,
+      borderBottomWidth: 1,
+      borderColor: theme.divider,
+    },
+
+    selectedOption: {
+      backgroundColor: theme.surface.selected,
+    },
+
+    languageText: {
+      fontSize: 18,
+      color: theme.text.primary,
+    },
+
+    selectedText: {
+      fontWeight: 'bold',
+      color: theme.brand.primary,
+    },
+  });

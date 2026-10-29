@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, {
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from 'react';
 import {
   View,
   Text,
@@ -6,7 +12,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
 import PropertyDetails from './CreateBookingContents/PropertyDetails';
 import { AuthContext } from '../../context/AuthContext';
@@ -14,7 +20,6 @@ import Duration from './CreateBookingContents/Duration';
 import CleaningTask from './CreateBookingContents/CleaningTask';
 import Review from './CreateBookingContents/Review';
 import { AntDesign } from '@expo/vector-icons';
-import COLORS from '../../constants/colors';
 import * as Animatable from 'react-native-animatable';
 import { useBookingContext } from '../../context/BookingContext';
 import { useNavigation } from '@react-navigation/native';
@@ -22,44 +27,60 @@ import userService from '../../services/connection/userService';
 import { calculateCleaningTimeByTasks } from '../../utils/calculateCleaningTimeByTasks';
 import ROUTES from '../../constants/routes';
 import StepsIndicator from '../../components/shared/StepsIndicator';
-import { before_photos, checklist } from '../../utils/tasks_photo';
+import {
+  before_photos,
+  checklist,
+} from '../../utils/tasks_photo';
 import HeaderWithStatusBarAndClose from '../../components/shared/HeaderWithStatusBarAndClose';
 import { addExtraCleaningTasks } from '../../utils/addExtraCleaningTasks';
 import Toast from 'react-native-toast-message';
 import { formatDateToYYYYMMDD } from '../../utils/formatDate';
 import { tSafe } from '../../utils/tSafe';
+import { useTheme } from '../../theme';
 
-const NewBooking = ({ schedule, close_modal, mode }) => {
+const NewBooking = ({
+  schedule,
+  close_modal,
+  mode,
+}) => {
   const { currentUser } = useContext(AuthContext);
+
   const {
     formData,
     setFormData,
     setModalVisible,
     modalVisible,
     resetFormData,
-    handleCreateSchedule
+    handleCreateSchedule,
   } = useBookingContext();
 
   const navigation = useNavigation();
 
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
+
   const [step, setStep] = useState(1);
   const [extras, setExtras] = useState([]);
   const [checkList, setChecklist] = useState([]);
-  const [updated_task_checklist, setUpdatedTaskChecklist] = useState([]);
+  const [
+    updated_task_checklist,
+    setUpdatedTaskChecklist,
+  ] = useState([]);
 
   // Validation states
-  const [stepValidations, setStepValidations] = useState({
-    step1: false,
-    step2: false,
-    step3: false,
-    step4: true
-  });
+  const [stepValidations, setStepValidations] =
+    useState({
+      step1: false,
+      step2: false,
+      step3: false,
+      step4: true,
+    });
 
   const validationRef = useRef({
     step1: false,
     step2: false,
     step3: false,
-    step4: true
+    step4: true,
   });
 
   // Refs for tracking
@@ -67,64 +88,80 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
   const prevFormDataRef = useRef({});
 
   const taskTimes = {
-    "Window Washing": 20,
-    "Inside Cabinets": 15,
-    "Carpet Cleaning": 30,
-    "Upholstery Cleaning": 20,
-    "Tile & Grout Cleaning": 50,
-    "Hardwood Floor Refinishing": 50,
-    "Inside Fridge": 5,
-    "Inside Oven": 30,
-    "Pet Cleanup": 20,
-    "Dishwasher": 30,
-    "Laundry": 30,
-    "Exterior": 120,
+    'Window Washing': 20,
+    'Inside Cabinets': 15,
+    'Carpet Cleaning': 30,
+    'Upholstery Cleaning': 20,
+    'Tile & Grout Cleaning': 50,
+    'Hardwood Floor Refinishing': 50,
+    'Inside Fridge': 5,
+    'Inside Oven': 30,
+    'Pet Cleanup': 20,
+    Dishwasher: 30,
+    Laundry: 30,
+    Exterior: 120,
   };
 
   // Form change effect
   useEffect(() => {
     if (
-      prevFormDataRef.current.aptId !== formData.aptId ||
-      prevFormDataRef.current.checklistId !== formData.checklistId ||
-      prevFormDataRef.current.checklists?.length !== formData.checklists?.length
+      prevFormDataRef.current.aptId !==
+        formData.aptId ||
+      prevFormDataRef.current.checklistId !==
+        formData.checklistId ||
+      prevFormDataRef.current.checklists
+        ?.length !== formData.checklists?.length
     ) {
       if (step === 1) {
         const hasChecklist =
           formData.checklistId ||
-          (formData.checklists && formData.checklists.length > 0);
+          (formData.checklists &&
+            formData.checklists.length > 0);
 
-        const isValid = formData.aptId && hasChecklist;
+        const isValid =
+          formData.aptId && hasChecklist;
+
         validateForm(isValid);
       }
 
       prevFormDataRef.current = {
         aptId: formData.aptId,
         checklistId: formData.checklistId,
-        checklists: formData.checklists
+        checklists: formData.checklists,
       };
     }
   }, [
     formData.aptId,
     formData.checklistId,
     formData.checklists,
-    step
+    step,
   ]);
 
   // Modal open/close effect
   useEffect(() => {
-    if (schedule && !formData.cleaning_date) {
+    if (
+      schedule &&
+      !formData.cleaning_date
+    ) {
       setFormData(schedule.schedule);
     }
 
     if (modalVisible) {
       checklistCreatedRef.current = false;
 
-      if (step === 1 && formData.aptId) {
+      if (
+        step === 1 &&
+        formData.aptId
+      ) {
         const hasChecklist =
           formData.checklistId ||
-          (formData.checklists && formData.checklists.length > 0);
+          (formData.checklists &&
+            formData.checklists.length > 0);
 
-        validateForm(formData.aptId && hasChecklist);
+        validateForm(
+          formData.aptId &&
+            hasChecklist
+        );
       }
     }
 
@@ -133,14 +170,14 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
         step1: false,
         step2: false,
         step3: false,
-        step4: true
+        step4: true,
       };
 
       setStepValidations({
         step1: false,
         step2: false,
         step3: false,
-        step4: true
+        step4: true,
       });
 
       prevFormDataRef.current = {};
@@ -150,218 +187,309 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
     modalVisible,
     mode,
     resetFormData,
-    setFormData
+    setFormData,
   ]);
 
   // Log step changes
   useEffect(() => {
     console.log(
       `Step changed to ${step}, validation:`,
-      validationRef.current[`step${step}`]
+      validationRef.current[
+        `step${step}`
+      ]
     );
   }, [step]);
 
   // Validation helper
-  const validateForm = useCallback((isFormValid) => {
-    validationRef.current[`step${step}`] = isFormValid;
+  const validateForm = useCallback(
+    (isFormValid) => {
+      validationRef.current[
+        `step${step}`
+      ] = isFormValid;
 
-    setStepValidations(prev => ({
-      ...prev,
-      [`step${step}`]: isFormValid
-    }));
-  }, [step]);
-
-  const forceStep1Validation = useCallback(() => {
-    if (step === 1) {
-      const hasChecklist =
-        formData.checklistId ||
-        (formData.checklists && formData.checklists.length > 0);
-
-      validateForm(formData.aptId && hasChecklist);
-    }
-  }, [
-    step,
-    formData.aptId,
-    formData.checklistId,
-    formData.checklists,
-    validateForm
-  ]);
-
-  const resetSubsequentStepsValidation = useCallback((fromStep) => {
-    for (let i = fromStep + 1; i <= 3; i++) {
-      validationRef.current[`step${i}`] = false;
-
-      setStepValidations(prev => ({
+      setStepValidations((prev) => ({
         ...prev,
-        [`step${i}`]: false
+        [`step${step}`]:
+          isFormValid,
       }));
-    }
-  }, []);
+    },
+    [step]
+  );
 
-  const getCurrentStepValidation = useCallback(() => {
-    return validationRef.current[`step${step}`];
-  }, [step]);
+  const forceStep1Validation =
+    useCallback(() => {
+      if (step === 1) {
+        const hasChecklist =
+          formData.checklistId ||
+          (formData.checklists &&
+            formData.checklists.length > 0);
+
+        validateForm(
+          formData.aptId &&
+            hasChecklist
+        );
+      }
+    }, [
+      step,
+      formData.aptId,
+      formData.checklistId,
+      formData.checklists,
+      validateForm,
+    ]);
+
+  const resetSubsequentStepsValidation =
+    useCallback((fromStep) => {
+      for (
+        let i = fromStep + 1;
+        i <= 3;
+        i++
+      ) {
+        validationRef.current[
+          `step${i}`
+        ] = false;
+
+        setStepValidations((prev) => ({
+          ...prev,
+          [`step${i}`]: false,
+        }));
+      }
+    }, []);
+
+  const getCurrentStepValidation =
+    useCallback(() => {
+      return validationRef.current[
+        `step${step}`
+      ];
+    }, [step]);
 
   // Checklist callback
-  const handleChecklistCreatedCallback = useCallback((checklistData) => {
-    checklistCreatedRef.current = true;
+  const handleChecklistCreatedCallback =
+    useCallback(
+      (checklistData) => {
+        checklistCreatedRef.current = true;
 
-    setTimeout(() => {
-      forceStep1Validation();
-    }, 100);
-  }, [forceStep1Validation]);
-
-  // Form handlers
-  const handleOnCleaningTime = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      cleaning_time: value
-    }));
-  }, [setFormData]);
-
-  const handleOnCleaningDate = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      cleaning_date: value
-    }));
-  }, [setFormData]);
-
-  const handleSelectedProperty = useCallback((text, input) => {
-    setFormData(prev => ({
-      ...prev,
-      [input]: text
-    }));
-  }, [setFormData]);
-
-  const handleCleanignExtraSelection = useCallback((selectedExtras) => {
-    setExtras(selectedExtras);
-  }, []);
-
-  const handleExtraTaskTime = useCallback((extra_task, input) => {
-    const extraCleaningTime = calculateCleaningTimeByTasks(
-      extra_task,
-      taskTimes
+        setTimeout(() => {
+          forceStep1Validation();
+        }, 100);
+      },
+      [forceStep1Validation]
     );
 
-    setFormData(prev => ({
-      ...prev,
-      [input]: extraCleaningTime
-    }));
-  }, [setFormData]);
+  // Form handlers
+  const handleOnCleaningTime =
+    useCallback(
+      (value) => {
+        setFormData((prev) => ({
+          ...prev,
+          cleaning_time: value,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handleTotalTaskTime = useCallback((totalTime, input) => {
-    setFormData(prev => ({
-      ...prev,
-      [input]: totalTime
-    }));
-  }, [setFormData]);
+  const handleOnCleaningDate =
+    useCallback(
+      (value) => {
+        setFormData((prev) => ({
+          ...prev,
+          cleaning_date: value,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handleBedroomBathroom = useCallback((text, input) => {
-    setFormData(prev => ({
-      ...prev,
-      [input]: text
-    }));
-  }, [setFormData]);
+  const handleSelectedProperty =
+    useCallback(
+      (text, input) => {
+        setFormData((prev) => ({
+          ...prev,
+          [input]: text,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handleNextStep = useCallback(() => {
-    if (getCurrentStepValidation()) {
-      setStep(prev => prev + 1);
-    }
-  }, [getCurrentStepValidation]);
+  const handleCleanignExtraSelection =
+    useCallback((selectedExtras) => {
+      setExtras(selectedExtras);
+    }, []);
 
-  const handlePrevStep = useCallback(() => {
-    if (step > 1) {
-      setStep(prev => prev - 1);
-    }
-  }, [step]);
+  const handleExtraTaskTime =
+    useCallback(
+      (extra_task, input) => {
+        const extraCleaningTime =
+          calculateCleaningTimeByTasks(
+            extra_task,
+            taskTimes
+          );
 
-  const handleEditStep = useCallback((stp) => {
-    setStep(stp);
-  }, []);
+        setFormData((prev) => ({
+          ...prev,
+          [input]: extraCleaningTime,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handleInputChange = useCallback((name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }, [setFormData]);
+  const handleTotalTaskTime =
+    useCallback(
+      (totalTime, input) => {
+        setFormData((prev) => ({
+          ...prev,
+          [input]: totalTime,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handleClose = useCallback(() => {
-    setModalVisible(false);
-    resetFormData();
-  }, [setModalVisible, resetFormData]);
+  const handleBedroomBathroom =
+    useCallback(
+      (text, input) => {
+        setFormData((prev) => ({
+          ...prev,
+          [input]: text,
+        }));
+      },
+      [setFormData]
+    );
 
-  const handlePropertyChange = useCallback((newPropertyData) => {
-    resetSubsequentStepsValidation(1);
+  const handleNextStep =
+    useCallback(() => {
+      if (getCurrentStepValidation()) {
+        setStep((prev) => prev + 1);
+      }
+    }, [getCurrentStepValidation]);
 
-    setFormData(prev => ({
-      ...prev,
-      ...newPropertyData,
-      cleaning_date: '',
-      cleaning_time: '',
-      cleaning_end_time: '',
-      total_cleaning_fee: newPropertyData.regular_cleaning_fee || 0,
-      total_cleaning_time: newPropertyData.regular_cleaning_time || 0
-    }));
+  const handlePrevStep =
+    useCallback(() => {
+      if (step > 1) {
+        setStep((prev) => prev - 1);
+      }
+    }, [step]);
 
-    setTimeout(() => {
-      forceStep1Validation();
-    }, 100);
-  }, [
-    resetSubsequentStepsValidation,
-    setFormData,
-    forceStep1Validation
-  ]);
+  const handleEditStep =
+    useCallback((stp) => {
+      setStep(stp);
+    }, []);
 
-  const createTaskChecklist = useCallback(() => {
-    if (formData.extra && formData.extra.length > 0) {
-      const formattedExtras = formData.extra.map((item, index) => ({
-        id: index + 1,
-        label: item.label,
-        value: item
-      }));
+  const handleInputChange =
+    useCallback(
+      (name, value) => {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      },
+      [setFormData]
+    );
 
-      const cleanedArray = formattedExtras.map(service => {
-        const {
-          icon,
-          price,
-          ...valueWithoutIconAndPrice
-        } = service.value;
+  const handleClose =
+    useCallback(() => {
+      setModalVisible(false);
+      resetFormData();
+    }, [
+      setModalVisible,
+      resetFormData,
+    ]);
 
-        return {
-          ...service,
-          value: valueWithoutIconAndPrice
-        };
-      });
+  const handlePropertyChange =
+    useCallback(
+      (newPropertyData) => {
+        resetSubsequentStepsValidation(1);
 
-      const formattedRegular = formData.regular_cleaning.map(
-        (item, index) => ({
-          id: index + 1,
-          label: item.label,
-          value: item
-        })
-      );
+        setFormData((prev) => ({
+          ...prev,
+          ...newPropertyData,
+          cleaning_date: '',
+          cleaning_time: '',
+          cleaning_end_time: '',
+          total_cleaning_fee:
+            newPropertyData.regular_cleaning_fee ||
+            0,
+          total_cleaning_time:
+            newPropertyData.regular_cleaning_time ||
+            0,
+        }));
 
-      setUpdatedTaskChecklist([
-        ...cleanedArray,
-        ...formattedRegular
-      ]);
-    } else {
-      const formattedRegular =
-        formData.regular_cleaning?.map((item, index) => ({
-          id: index + 1,
-          label: item.label,
-          value: item
-        })) || [];
+        setTimeout(() => {
+          forceStep1Validation();
+        }, 100);
+      },
+      [
+        resetSubsequentStepsValidation,
+        setFormData,
+        forceStep1Validation,
+      ]
+    );
 
-      setUpdatedTaskChecklist(formattedRegular);
-    }
-  }, [
-    formData.extra,
-    formData.regular_cleaning
-  ]);
+  const createTaskChecklist =
+    useCallback(() => {
+      if (
+        formData.extra &&
+        formData.extra.length > 0
+      ) {
+        const formattedExtras =
+          formData.extra.map(
+            (item, index) => ({
+              id: index + 1,
+              label: item.label,
+              value: item,
+            })
+          );
 
-  console.log("Print the schedule", formData);
+        const cleanedArray =
+          formattedExtras.map(
+            (service) => {
+              const {
+                icon,
+                price,
+                ...valueWithoutIconAndPrice
+              } = service.value;
+
+              return {
+                ...service,
+                value:
+                  valueWithoutIconAndPrice,
+              };
+            }
+          );
+
+        const formattedRegular =
+          formData.regular_cleaning.map(
+            (item, index) => ({
+              id: index + 1,
+              label: item.label,
+              value: item,
+            })
+          );
+
+        setUpdatedTaskChecklist([
+          ...cleanedArray,
+          ...formattedRegular,
+        ]);
+      } else {
+        const formattedRegular =
+          formData.regular_cleaning?.map(
+            (item, index) => ({
+              id: index + 1,
+              label: item.label,
+              value: item,
+            })
+          ) || [];
+
+        setUpdatedTaskChecklist(
+          formattedRegular
+        );
+      }
+    }, [
+      formData.extra,
+      formData.regular_cleaning,
+    ]);
+
+  console.log(
+    'Print the schedule',
+    formData
+  );
 
   /**
    * New host-selection schedule creation flow.
@@ -370,91 +498,116 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
    * Cleaner recommendations, cleaner requests, selection, payment,
    * and final assignment happen in the host-selection flow.
    */
-  const handleSubmit = useCallback(async () => {
-    const formattedData = {
-      ...formData,
-      cleaning_date: formatDateToYYYYMMDD(formData.cleaning_date)
-    };
+  const handleSubmit = useCallback(
+    async () => {
+      const formattedData = {
+        ...formData,
+        cleaning_date:
+          formatDateToYYYYMMDD(
+            formData.cleaning_date
+          ),
+      };
 
-    const updatedChecklist = addExtraCleaningTasks(
+      const updatedChecklist =
+        addExtraCleaningTasks(
+          checklist,
+          formattedData.extra
+        );
+
+      const data = {
+        hostInfo: currentUser,
+        schedule: formattedData,
+        checklist: updatedChecklist,
+        before_photos: before_photos,
+      };
+
+      try {
+        const response =
+          await userService.createSchedule(
+            data
+          );
+
+        if (response.status !== 200) {
+          throw new Error(
+            'Failed to create schedule'
+          );
+        }
+
+        const scheduleId =
+          response.data?.schedule_id;
+
+        if (!scheduleId) {
+          throw new Error(
+            'Schedule was created but no schedule_id was returned'
+          );
+        }
+
+        Toast.show({
+          type: 'success',
+          text1: tSafe(
+            'schedule_created',
+            'Schedule created! Let’s build your cleaning team.'
+          ),
+        });
+
+        // Close/reset the schedule creation modal before navigating.
+        handleCreateSchedule(false);
+
+        // Give the modal/context a moment to close before
+        // navigating to the host cleaner recommendation flow.
+        setTimeout(() => {
+          navigation.navigate(
+            ROUTES.host_recommended_cleaners,
+            { scheduleId }
+          );
+        }, 300);
+      } catch (err) {
+        console.log(
+          'Schedule creation error:',
+          err
+        );
+
+        Toast.show({
+          type: 'error',
+          text1: tSafe(
+            'error_title',
+            'Something went wrong'
+          ),
+          text2: tSafe(
+            'try_again',
+            'Please try again'
+          ),
+        });
+      }
+    },
+    [
+      formData,
       checklist,
-      formattedData.extra
-    );
+      currentUser,
+      handleCreateSchedule,
+      navigation,
+    ]
+  );
 
-    const data = {
-      hostInfo: currentUser,
-      schedule: formattedData,
-      checklist: updatedChecklist,
-      before_photos: before_photos
-    };
-
-    try {
-      const response = await userService.createSchedule(data);
-
-      if (response.status !== 200) {
-        throw new Error('Failed to create schedule');
-      }
-
-      const scheduleId = response.data?.schedule_id;
-
-      if (!scheduleId) {
-        throw new Error(
-          'Schedule was created but no schedule_id was returned'
-        );
-      }
-
-      Toast.show({
-        type: 'success',
-        text1: tSafe(
-          'schedule_created',
-          'Schedule created! Let’s build your cleaning team.'
-        )
-      });
-
-      // Close/reset the schedule creation modal before navigating.
-      handleCreateSchedule(false);
-
-      // Give the modal/context a moment to close before replacing
-      // the current screen with the host cleaner recommendation flow.
-      setTimeout(() => {
-        navigation.navigate(
-          ROUTES.host_recommended_cleaners,
-          { scheduleId }
-        );
-      }, 300);
-    } catch (err) {
-      console.log('Schedule creation error:', err);
-
-      Toast.show({
-        type: 'error',
-        text1: tSafe(
-          'error_title',
-          'Something went wrong'
-        ),
-        text2: tSafe(
-          'try_again',
-          'Please try again'
-        )
-      });
-    }
-  }, [
-    formData,
-    checklist,
-    currentUser,
-    handleCreateSchedule,
-    navigation
-  ]);
-
-  // Render
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.keyboardContainer}
+      behavior={
+        Platform.OS === 'ios'
+          ? 'padding'
+          : undefined
+      }
     >
       <View style={styles.container}>
         <StatusBar
-          barStyle="dark-content"
-          backgroundColor="white"
+          barStyle={
+            isDark
+              ? 'light-content'
+              : 'dark-content'
+          }
+          backgroundColor={
+            theme.background.default
+          }
         />
 
         <HeaderWithStatusBarAndClose
@@ -467,27 +620,38 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
 
         <StepsIndicator step={step} />
 
-        {!getCurrentStepValidation() && step < 4 && (
-          <View style={styles.validationBanner}>
-            <AntDesign
-              name="exclamationcircle"
-              size={16}
-              color="#fff"
-            />
+        {!getCurrentStepValidation() &&
+          step < 4 && (
+            <View
+              style={
+                styles.validationBanner
+              }
+            >
+              <AntDesign
+                name="exclamationcircle"
+                size={16}
+                color={
+                  theme.text.inverse
+                }
+              />
 
-            <Text style={styles.validationText}>
-              {step === 1
-                ? tSafe(
-                    'validation_step1',
-                    'Please select a property and ensure it has a checklist'
-                  )
-                : tSafe(
-                    'validation_general',
-                    'Please fill in all required fields to continue'
-                  )}
-            </Text>
-          </View>
-        )}
+              <Text
+                style={
+                  styles.validationText
+                }
+              >
+                {step === 1
+                  ? tSafe(
+                      'validation_step1',
+                      'Please select a property and ensure it has a checklist'
+                    )
+                  : tSafe(
+                      'validation_general',
+                      'Please fill in all required fields to continue'
+                    )}
+              </Text>
+            </View>
+          )}
 
         <View style={styles.content}>
           <View style={styles.form}>
@@ -497,13 +661,25 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                 duration={550}
               >
                 <PropertyDetails
-                  selectedProperty={handleSelectedProperty}
+                  selectedProperty={
+                    handleSelectedProperty
+                  }
                   formData={formData}
-                  setFormData={setFormData}
-                  validateForm={validateForm}
-                  onPropertyChange={handlePropertyChange}
-                  navigation={navigation}
-                  onChecklistCreated={handleChecklistCreatedCallback}
+                  setFormData={
+                    setFormData
+                  }
+                  validateForm={
+                    validateForm
+                  }
+                  onPropertyChange={
+                    handlePropertyChange
+                  }
+                  navigation={
+                    navigation
+                  }
+                  onChecklistCreated={
+                    handleChecklistCreatedCallback
+                  }
                 />
               </Animatable.View>
             )}
@@ -514,11 +690,19 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                 duration={600}
               >
                 <Duration
-                  getCleanTime={handleOnCleaningTime}
-                  getCleanDate={handleOnCleaningDate}
+                  getCleanTime={
+                    handleOnCleaningTime
+                  }
+                  getCleanDate={
+                    handleOnCleaningDate
+                  }
                   formData={formData}
-                  setFormData={setFormData}
-                  validateForm={validateForm}
+                  setFormData={
+                    setFormData
+                  }
+                  validateForm={
+                    validateForm
+                  }
                 />
               </Animatable.View>
             )}
@@ -529,14 +713,26 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                 duration={600}
               >
                 <CleaningTask
-                  onExtraSelect={handleCleanignExtraSelection}
-                  extraTasks={handleExtraTaskTime}
-                  totalTaskTime={handleTotalTaskTime}
-                  roomBathChange={handleBedroomBathroom}
+                  onExtraSelect={
+                    handleCleanignExtraSelection
+                  }
+                  extraTasks={
+                    handleExtraTaskTime
+                  }
+                  totalTaskTime={
+                    handleTotalTaskTime
+                  }
+                  roomBathChange={
+                    handleBedroomBathroom
+                  }
                   formData={formData}
-                  setFormData={setFormData}
+                  setFormData={
+                    setFormData
+                  }
                   extras={extras}
-                  validateForm={validateForm}
+                  validateForm={
+                    validateForm
+                  }
                 />
               </Animatable.View>
             )}
@@ -547,11 +743,17 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                 duration={600}
               >
                 <Review
-                  onExtraSelect={handleCleanignExtraSelection}
+                  onExtraSelect={
+                    handleCleanignExtraSelection
+                  }
                   formData={formData}
-                  setFormData={setFormData}
+                  setFormData={
+                    setFormData
+                  }
                   extras={extras}
-                  validateForm={validateForm}
+                  validateForm={
+                    validateForm
+                  }
                   step={handleEditStep}
                 />
               </Animatable.View>
@@ -559,28 +761,45 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
           </View>
         </View>
 
-        <View style={styles.footerSticky}>
+        <View
+          style={styles.footerSticky}
+        >
           <View style={styles.buttonRow}>
             {step > 1 && (
               <TouchableOpacity
-                style={styles.previous_button}
+                style={
+                  styles.previousButton
+                }
                 onPress={handlePrevStep}
               >
-                <View style={styles.previous_icon}>
+                <View
+                  style={
+                    styles.previousIcon
+                  }
+                >
                   <AntDesign
                     name="caretleft"
                     size={20}
-                    color={COLORS.gray}
+                    color={
+                      theme.text.secondary
+                    }
                   />
 
-                  <Text style={styles.previous_buttonText}>
-                    {tSafe('previous', ' Previous')}
+                  <Text
+                    style={
+                      styles.previousButtonText
+                    }
+                  >
+                    {tSafe(
+                      'previous',
+                      ' Previous'
+                    )}
                   </Text>
                 </View>
               </TouchableOpacity>
             )}
 
-            <View style={{ flex: 1 }} />
+            <View style={styles.spacer} />
 
             {step < 4 ? (
               <TouchableOpacity
@@ -590,11 +809,20 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                     ? styles.validButton
                     : styles.invalidButton,
                 ]}
-                onPress={handleNextStep}
-                disabled={!getCurrentStepValidation()}
+                onPress={
+                  handleNextStep
+                }
+                disabled={
+                  !getCurrentStepValidation()
+                }
               >
-                <Text style={styles.buttonText}>
-                  {tSafe('next', 'Next')}
+                <Text
+                  style={styles.buttonText}
+                >
+                  {tSafe(
+                    'next',
+                    'Next'
+                  )}
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -602,8 +830,13 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
                 style={styles.button}
                 onPress={handleSubmit}
               >
-                <Text style={styles.buttonText}>
-                  {tSafe('save_publish', 'Save & Publish')}
+                <Text
+                  style={styles.buttonText}
+                >
+                  {tSafe(
+                    'save_publish',
+                    'Save & Publish'
+                  )}
                 </Text>
               </TouchableOpacity>
             )}
@@ -614,106 +847,846 @@ const NewBooking = ({ schedule, close_modal, mode }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
+const createStyles = (theme) =>
+  StyleSheet.create({
+    keyboardContainer: {
+      flex: 1,
+    },
 
-  content: {
-    flex: 1,
-  },
+    container: {
+      flex: 1,
+      backgroundColor:
+        theme.background.default,
+    },
 
-  form: {
-    flex: 1,
-    padding: 20,
-  },
+    content: {
+      flex: 1,
+    },
 
-  validationBanner: {
-    backgroundColor: '#FF6B6B',
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 20,
-    marginTop: 10,
-    borderRadius: 8,
-  },
+    form: {
+      flex: 1,
+      padding: 20,
+    },
 
-  validationText: {
-    color: '#fff',
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
-  },
+    validationBanner: {
+      backgroundColor:
+        theme.status.error,
+      padding: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 20,
+      marginTop: 10,
+      borderRadius: 8,
+    },
 
-  footerSticky: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light_gray_1,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
+    validationText: {
+      color: theme.text.inverse,
+      marginLeft: 8,
+      fontSize: 14,
+      fontWeight: '500',
+      flexShrink: 1,
+    },
 
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+    footerSticky: {
+      borderTopWidth: 1,
+      borderTopColor: theme.divider,
+      paddingVertical: 15,
+      paddingHorizontal: 20,
+      backgroundColor:
+        theme.surface.elevated,
+    },
 
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 50,
-    minWidth: 120,
-    alignItems: 'center',
-  },
+    buttonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
 
-  previous_button: {
-    backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
+    button: {
+      backgroundColor:
+        theme.button.primaryBackground,
+      paddingVertical: 12,
+      paddingHorizontal: 25,
+      borderRadius: 50,
+      minWidth: 120,
+      alignItems: 'center',
+    },
 
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    previousButton: {
+      backgroundColor:
+        'transparent',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 5,
+    },
 
-  previous_buttonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+    buttonText: {
+      color: theme.button.primaryText,
+      fontSize: 16,
+      fontWeight: '600',
+    },
 
-  previous_icon: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+    previousButtonText: {
+      color: theme.text.secondary,
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
 
-  nextButton: {
-    backgroundColor: 'gray',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 50,
-    minWidth: 120,
-    alignItems: 'center',
-  },
+    previousIcon: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
 
-  validButton: {
-    backgroundColor: COLORS.primary,
-  },
+    nextButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 25,
+      borderRadius: 50,
+      minWidth: 120,
+      alignItems: 'center',
+    },
 
-  invalidButton: {
-    backgroundColor: 'gray',
-  },
-});
+    validButton: {
+      backgroundColor:
+        theme.button.primaryBackground,
+    },
+
+    invalidButton: {
+      backgroundColor:
+        theme.button.disabledBackground,
+    },
+
+    spacer: {
+      flex: 1,
+    },
+  });
 
 export default NewBooking;
+
+
+
+
+
+
+
+
+// import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   StatusBar,
+//   KeyboardAvoidingView,
+//   Platform,
+//   TouchableOpacity
+// } from 'react-native';
+// import PropertyDetails from './CreateBookingContents/PropertyDetails';
+// import { AuthContext } from '../../context/AuthContext';
+// import Duration from './CreateBookingContents/Duration';
+// import CleaningTask from './CreateBookingContents/CleaningTask';
+// import Review from './CreateBookingContents/Review';
+// import { AntDesign } from '@expo/vector-icons';
+// import COLORS from '../../constants/colors';
+// import * as Animatable from 'react-native-animatable';
+// import { useBookingContext } from '../../context/BookingContext';
+// import { useNavigation } from '@react-navigation/native';
+// import userService from '../../services/connection/userService';
+// import { calculateCleaningTimeByTasks } from '../../utils/calculateCleaningTimeByTasks';
+// import ROUTES from '../../constants/routes';
+// import StepsIndicator from '../../components/shared/StepsIndicator';
+// import { before_photos, checklist } from '../../utils/tasks_photo';
+// import HeaderWithStatusBarAndClose from '../../components/shared/HeaderWithStatusBarAndClose';
+// import { addExtraCleaningTasks } from '../../utils/addExtraCleaningTasks';
+// import Toast from 'react-native-toast-message';
+// import { formatDateToYYYYMMDD } from '../../utils/formatDate';
+// import { tSafe } from '../../utils/tSafe';
+
+// const NewBooking = ({ schedule, close_modal, mode }) => {
+//   const { currentUser } = useContext(AuthContext);
+//   const {
+//     formData,
+//     setFormData,
+//     setModalVisible,
+//     modalVisible,
+//     resetFormData,
+//     handleCreateSchedule
+//   } = useBookingContext();
+
+//   const navigation = useNavigation();
+
+//   const [step, setStep] = useState(1);
+//   const [extras, setExtras] = useState([]);
+//   const [checkList, setChecklist] = useState([]);
+//   const [updated_task_checklist, setUpdatedTaskChecklist] = useState([]);
+
+//   // Validation states
+//   const [stepValidations, setStepValidations] = useState({
+//     step1: false,
+//     step2: false,
+//     step3: false,
+//     step4: true
+//   });
+
+//   const validationRef = useRef({
+//     step1: false,
+//     step2: false,
+//     step3: false,
+//     step4: true
+//   });
+
+//   // Refs for tracking
+//   const checklistCreatedRef = useRef(false);
+//   const prevFormDataRef = useRef({});
+
+//   const taskTimes = {
+//     "Window Washing": 20,
+//     "Inside Cabinets": 15,
+//     "Carpet Cleaning": 30,
+//     "Upholstery Cleaning": 20,
+//     "Tile & Grout Cleaning": 50,
+//     "Hardwood Floor Refinishing": 50,
+//     "Inside Fridge": 5,
+//     "Inside Oven": 30,
+//     "Pet Cleanup": 20,
+//     "Dishwasher": 30,
+//     "Laundry": 30,
+//     "Exterior": 120,
+//   };
+
+//   // Form change effect
+//   useEffect(() => {
+//     if (
+//       prevFormDataRef.current.aptId !== formData.aptId ||
+//       prevFormDataRef.current.checklistId !== formData.checklistId ||
+//       prevFormDataRef.current.checklists?.length !== formData.checklists?.length
+//     ) {
+//       if (step === 1) {
+//         const hasChecklist =
+//           formData.checklistId ||
+//           (formData.checklists && formData.checklists.length > 0);
+
+//         const isValid = formData.aptId && hasChecklist;
+//         validateForm(isValid);
+//       }
+
+//       prevFormDataRef.current = {
+//         aptId: formData.aptId,
+//         checklistId: formData.checklistId,
+//         checklists: formData.checklists
+//       };
+//     }
+//   }, [
+//     formData.aptId,
+//     formData.checklistId,
+//     formData.checklists,
+//     step
+//   ]);
+
+//   // Modal open/close effect
+//   useEffect(() => {
+//     if (schedule && !formData.cleaning_date) {
+//       setFormData(schedule.schedule);
+//     }
+
+//     if (modalVisible) {
+//       checklistCreatedRef.current = false;
+
+//       if (step === 1 && formData.aptId) {
+//         const hasChecklist =
+//           formData.checklistId ||
+//           (formData.checklists && formData.checklists.length > 0);
+
+//         validateForm(formData.aptId && hasChecklist);
+//       }
+//     }
+
+//     if (!modalVisible) {
+//       validationRef.current = {
+//         step1: false,
+//         step2: false,
+//         step3: false,
+//         step4: true
+//       };
+
+//       setStepValidations({
+//         step1: false,
+//         step2: false,
+//         step3: false,
+//         step4: true
+//       });
+
+//       prevFormDataRef.current = {};
+//     }
+//   }, [
+//     schedule,
+//     modalVisible,
+//     mode,
+//     resetFormData,
+//     setFormData
+//   ]);
+
+//   // Log step changes
+//   useEffect(() => {
+//     console.log(
+//       `Step changed to ${step}, validation:`,
+//       validationRef.current[`step${step}`]
+//     );
+//   }, [step]);
+
+//   // Validation helper
+//   const validateForm = useCallback((isFormValid) => {
+//     validationRef.current[`step${step}`] = isFormValid;
+
+//     setStepValidations(prev => ({
+//       ...prev,
+//       [`step${step}`]: isFormValid
+//     }));
+//   }, [step]);
+
+//   const forceStep1Validation = useCallback(() => {
+//     if (step === 1) {
+//       const hasChecklist =
+//         formData.checklistId ||
+//         (formData.checklists && formData.checklists.length > 0);
+
+//       validateForm(formData.aptId && hasChecklist);
+//     }
+//   }, [
+//     step,
+//     formData.aptId,
+//     formData.checklistId,
+//     formData.checklists,
+//     validateForm
+//   ]);
+
+//   const resetSubsequentStepsValidation = useCallback((fromStep) => {
+//     for (let i = fromStep + 1; i <= 3; i++) {
+//       validationRef.current[`step${i}`] = false;
+
+//       setStepValidations(prev => ({
+//         ...prev,
+//         [`step${i}`]: false
+//       }));
+//     }
+//   }, []);
+
+//   const getCurrentStepValidation = useCallback(() => {
+//     return validationRef.current[`step${step}`];
+//   }, [step]);
+
+//   // Checklist callback
+//   const handleChecklistCreatedCallback = useCallback((checklistData) => {
+//     checklistCreatedRef.current = true;
+
+//     setTimeout(() => {
+//       forceStep1Validation();
+//     }, 100);
+//   }, [forceStep1Validation]);
+
+//   // Form handlers
+//   const handleOnCleaningTime = useCallback((value) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       cleaning_time: value
+//     }));
+//   }, [setFormData]);
+
+//   const handleOnCleaningDate = useCallback((value) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       cleaning_date: value
+//     }));
+//   }, [setFormData]);
+
+//   const handleSelectedProperty = useCallback((text, input) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [input]: text
+//     }));
+//   }, [setFormData]);
+
+//   const handleCleanignExtraSelection = useCallback((selectedExtras) => {
+//     setExtras(selectedExtras);
+//   }, []);
+
+//   const handleExtraTaskTime = useCallback((extra_task, input) => {
+//     const extraCleaningTime = calculateCleaningTimeByTasks(
+//       extra_task,
+//       taskTimes
+//     );
+
+//     setFormData(prev => ({
+//       ...prev,
+//       [input]: extraCleaningTime
+//     }));
+//   }, [setFormData]);
+
+//   const handleTotalTaskTime = useCallback((totalTime, input) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [input]: totalTime
+//     }));
+//   }, [setFormData]);
+
+//   const handleBedroomBathroom = useCallback((text, input) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [input]: text
+//     }));
+//   }, [setFormData]);
+
+//   const handleNextStep = useCallback(() => {
+//     if (getCurrentStepValidation()) {
+//       setStep(prev => prev + 1);
+//     }
+//   }, [getCurrentStepValidation]);
+
+//   const handlePrevStep = useCallback(() => {
+//     if (step > 1) {
+//       setStep(prev => prev - 1);
+//     }
+//   }, [step]);
+
+//   const handleEditStep = useCallback((stp) => {
+//     setStep(stp);
+//   }, []);
+
+//   const handleInputChange = useCallback((name, value) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [name]: value
+//     }));
+//   }, [setFormData]);
+
+//   const handleClose = useCallback(() => {
+//     setModalVisible(false);
+//     resetFormData();
+//   }, [setModalVisible, resetFormData]);
+
+//   const handlePropertyChange = useCallback((newPropertyData) => {
+//     resetSubsequentStepsValidation(1);
+
+//     setFormData(prev => ({
+//       ...prev,
+//       ...newPropertyData,
+//       cleaning_date: '',
+//       cleaning_time: '',
+//       cleaning_end_time: '',
+//       total_cleaning_fee: newPropertyData.regular_cleaning_fee || 0,
+//       total_cleaning_time: newPropertyData.regular_cleaning_time || 0
+//     }));
+
+//     setTimeout(() => {
+//       forceStep1Validation();
+//     }, 100);
+//   }, [
+//     resetSubsequentStepsValidation,
+//     setFormData,
+//     forceStep1Validation
+//   ]);
+
+//   const createTaskChecklist = useCallback(() => {
+//     if (formData.extra && formData.extra.length > 0) {
+//       const formattedExtras = formData.extra.map((item, index) => ({
+//         id: index + 1,
+//         label: item.label,
+//         value: item
+//       }));
+
+//       const cleanedArray = formattedExtras.map(service => {
+//         const {
+//           icon,
+//           price,
+//           ...valueWithoutIconAndPrice
+//         } = service.value;
+
+//         return {
+//           ...service,
+//           value: valueWithoutIconAndPrice
+//         };
+//       });
+
+//       const formattedRegular = formData.regular_cleaning.map(
+//         (item, index) => ({
+//           id: index + 1,
+//           label: item.label,
+//           value: item
+//         })
+//       );
+
+//       setUpdatedTaskChecklist([
+//         ...cleanedArray,
+//         ...formattedRegular
+//       ]);
+//     } else {
+//       const formattedRegular =
+//         formData.regular_cleaning?.map((item, index) => ({
+//           id: index + 1,
+//           label: item.label,
+//           value: item
+//         })) || [];
+
+//       setUpdatedTaskChecklist(formattedRegular);
+//     }
+//   }, [
+//     formData.extra,
+//     formData.regular_cleaning
+//   ]);
+
+//   console.log("Print the schedule", formData);
+
+//   /**
+//    * New host-selection schedule creation flow.
+//    *
+//    * Schedule creation only creates the schedule and returns its ID.
+//    * Cleaner recommendations, cleaner requests, selection, payment,
+//    * and final assignment happen in the host-selection flow.
+//    */
+//   const handleSubmit = useCallback(async () => {
+//     const formattedData = {
+//       ...formData,
+//       cleaning_date: formatDateToYYYYMMDD(formData.cleaning_date)
+//     };
+
+//     const updatedChecklist = addExtraCleaningTasks(
+//       checklist,
+//       formattedData.extra
+//     );
+
+//     const data = {
+//       hostInfo: currentUser,
+//       schedule: formattedData,
+//       checklist: updatedChecklist,
+//       before_photos: before_photos
+//     };
+
+//     try {
+//       const response = await userService.createSchedule(data);
+
+//       if (response.status !== 200) {
+//         throw new Error('Failed to create schedule');
+//       }
+
+//       const scheduleId = response.data?.schedule_id;
+
+//       if (!scheduleId) {
+//         throw new Error(
+//           'Schedule was created but no schedule_id was returned'
+//         );
+//       }
+
+//       Toast.show({
+//         type: 'success',
+//         text1: tSafe(
+//           'schedule_created',
+//           'Schedule created! Let’s build your cleaning team.'
+//         )
+//       });
+
+//       // Close/reset the schedule creation modal before navigating.
+//       handleCreateSchedule(false);
+
+//       // Give the modal/context a moment to close before replacing
+//       // the current screen with the host cleaner recommendation flow.
+//       setTimeout(() => {
+//         navigation.navigate(
+//           ROUTES.host_recommended_cleaners,
+//           { scheduleId }
+//         );
+//       }, 300);
+//     } catch (err) {
+//       console.log('Schedule creation error:', err);
+
+//       Toast.show({
+//         type: 'error',
+//         text1: tSafe(
+//           'error_title',
+//           'Something went wrong'
+//         ),
+//         text2: tSafe(
+//           'try_again',
+//           'Please try again'
+//         )
+//       });
+//     }
+//   }, [
+//     formData,
+//     checklist,
+//     currentUser,
+//     handleCreateSchedule,
+//     navigation
+//   ]);
+
+//   // Render
+//   return (
+//     <KeyboardAvoidingView
+//       style={{ flex: 1 }}
+//       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+//     >
+//       <View style={styles.container}>
+//         <StatusBar
+//           barStyle="dark-content"
+//           backgroundColor="white"
+//         />
+
+//         <HeaderWithStatusBarAndClose
+//           title={tSafe(
+//             'create_schedule',
+//             'Create Schedule'
+//           )}
+//           onClose={handleClose}
+//         />
+
+//         <StepsIndicator step={step} />
+
+//         {!getCurrentStepValidation() && step < 4 && (
+//           <View style={styles.validationBanner}>
+//             <AntDesign
+//               name="exclamationcircle"
+//               size={16}
+//               color="#fff"
+//             />
+
+//             <Text style={styles.validationText}>
+//               {step === 1
+//                 ? tSafe(
+//                     'validation_step1',
+//                     'Please select a property and ensure it has a checklist'
+//                   )
+//                 : tSafe(
+//                     'validation_general',
+//                     'Please fill in all required fields to continue'
+//                   )}
+//             </Text>
+//           </View>
+//         )}
+
+//         <View style={styles.content}>
+//           <View style={styles.form}>
+//             {step === 1 && (
+//               <Animatable.View
+//                 animation="slideInRight"
+//                 duration={550}
+//               >
+//                 <PropertyDetails
+//                   selectedProperty={handleSelectedProperty}
+//                   formData={formData}
+//                   setFormData={setFormData}
+//                   validateForm={validateForm}
+//                   onPropertyChange={handlePropertyChange}
+//                   navigation={navigation}
+//                   onChecklistCreated={handleChecklistCreatedCallback}
+//                 />
+//               </Animatable.View>
+//             )}
+
+//             {step === 2 && (
+//               <Animatable.View
+//                 animation="slideInRight"
+//                 duration={600}
+//               >
+//                 <Duration
+//                   getCleanTime={handleOnCleaningTime}
+//                   getCleanDate={handleOnCleaningDate}
+//                   formData={formData}
+//                   setFormData={setFormData}
+//                   validateForm={validateForm}
+//                 />
+//               </Animatable.View>
+//             )}
+
+//             {step === 3 && (
+//               <Animatable.View
+//                 animation="slideInRight"
+//                 duration={600}
+//               >
+//                 <CleaningTask
+//                   onExtraSelect={handleCleanignExtraSelection}
+//                   extraTasks={handleExtraTaskTime}
+//                   totalTaskTime={handleTotalTaskTime}
+//                   roomBathChange={handleBedroomBathroom}
+//                   formData={formData}
+//                   setFormData={setFormData}
+//                   extras={extras}
+//                   validateForm={validateForm}
+//                 />
+//               </Animatable.View>
+//             )}
+
+//             {step === 4 && (
+//               <Animatable.View
+//                 animation="slideInRight"
+//                 duration={600}
+//               >
+//                 <Review
+//                   onExtraSelect={handleCleanignExtraSelection}
+//                   formData={formData}
+//                   setFormData={setFormData}
+//                   extras={extras}
+//                   validateForm={validateForm}
+//                   step={handleEditStep}
+//                 />
+//               </Animatable.View>
+//             )}
+//           </View>
+//         </View>
+
+//         <View style={styles.footerSticky}>
+//           <View style={styles.buttonRow}>
+//             {step > 1 && (
+//               <TouchableOpacity
+//                 style={styles.previous_button}
+//                 onPress={handlePrevStep}
+//               >
+//                 <View style={styles.previous_icon}>
+//                   <AntDesign
+//                     name="caretleft"
+//                     size={20}
+//                     color={COLORS.gray}
+//                   />
+
+//                   <Text style={styles.previous_buttonText}>
+//                     {tSafe('previous', ' Previous')}
+//                   </Text>
+//                 </View>
+//               </TouchableOpacity>
+//             )}
+
+//             <View style={{ flex: 1 }} />
+
+//             {step < 4 ? (
+//               <TouchableOpacity
+//                 style={[
+//                   styles.nextButton,
+//                   getCurrentStepValidation()
+//                     ? styles.validButton
+//                     : styles.invalidButton,
+//                 ]}
+//                 onPress={handleNextStep}
+//                 disabled={!getCurrentStepValidation()}
+//               >
+//                 <Text style={styles.buttonText}>
+//                   {tSafe('next', 'Next')}
+//                 </Text>
+//               </TouchableOpacity>
+//             ) : (
+//               <TouchableOpacity
+//                 style={styles.button}
+//                 onPress={handleSubmit}
+//               >
+//                 <Text style={styles.buttonText}>
+//                   {tSafe('save_publish', 'Save & Publish')}
+//                 </Text>
+//               </TouchableOpacity>
+//             )}
+//           </View>
+//         </View>
+//       </View>
+//     </KeyboardAvoidingView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#f9f9f9',
+//   },
+
+//   content: {
+//     flex: 1,
+//   },
+
+//   form: {
+//     flex: 1,
+//     padding: 20,
+//   },
+
+//   validationBanner: {
+//     backgroundColor: '#FF6B6B',
+//     padding: 10,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginHorizontal: 20,
+//     marginTop: 10,
+//     borderRadius: 8,
+//   },
+
+//   validationText: {
+//     color: '#fff',
+//     marginLeft: 8,
+//     fontSize: 14,
+//     fontWeight: '500',
+//   },
+
+//   footerSticky: {
+//     borderTopWidth: 1,
+//     borderTopColor: COLORS.light_gray_1,
+//     paddingVertical: 15,
+//     paddingHorizontal: 20,
+//     backgroundColor: '#fff',
+//   },
+
+//   buttonRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//   },
+
+//   button: {
+//     backgroundColor: COLORS.primary,
+//     paddingVertical: 12,
+//     paddingHorizontal: 25,
+//     borderRadius: 50,
+//     minWidth: 120,
+//     alignItems: 'center',
+//   },
+
+//   previous_button: {
+//     backgroundColor: 'transparent',
+//     paddingVertical: 12,
+//     paddingHorizontal: 20,
+//     borderRadius: 5,
+//   },
+
+//   buttonText: {
+//     color: '#ffffff',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+
+//   previous_buttonText: {
+//     color: '#000',
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//   },
+
+//   previous_icon: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//   },
+
+//   nextButton: {
+//     backgroundColor: 'gray',
+//     paddingVertical: 12,
+//     paddingHorizontal: 25,
+//     borderRadius: 50,
+//     minWidth: 120,
+//     alignItems: 'center',
+//   },
+
+//   validButton: {
+//     backgroundColor: COLORS.primary,
+//   },
+
+//   invalidButton: {
+//     backgroundColor: 'gray',
+//   },
+// });
+
+// export default NewBooking;
 
 
 
